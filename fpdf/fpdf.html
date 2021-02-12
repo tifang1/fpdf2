@@ -51,13 +51,13 @@ import math
 import os
 import pickle
 import re
+import sys
 import warnings
 import zlib
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from functools import wraps
-from hashlib import md5
 from pathlib import Path
 from uuid import uuid4
 
@@ -71,6 +71,7 @@ from .util import (
     escape_parens,
     substr,
 )
+from .util.deprecation import WarnOnDeprecatedModuleAttributes
 from .util.syntax import (
     create_dictionary_string as pdf_d,
     create_list_string as pdf_l,
@@ -85,8 +86,6 @@ HERE = Path(__file__).resolve().parent
 # Global variables
 FPDF_VERSION = &#34;2.3.0&#34;
 FPDF_FONT_DIR = HERE / &#34;font&#34;
-FPDF_CACHE_MODE = 0  # 0 - in same folder, 1 - none, 2 - hash
-FPDF_CACHE_DIR = None
 SYSTEM_TTFONTS = None
 
 PAGE_FORMATS = {
@@ -169,7 +168,20 @@ def check_page(fn):
 class FPDF:
     &#34;&#34;&#34;PDF Generation class&#34;&#34;&#34;
 
-    def __init__(self, orientation=&#34;P&#34;, unit=&#34;mm&#34;, format=&#34;A4&#34;):
+    def __init__(
+        self, orientation=&#34;portrait&#34;, unit=&#34;mm&#34;, format=&#34;A4&#34;, font_cache_dir=True
+    ):
+        &#34;&#34;&#34;
+        Args:
+            orientation (str): &#34;portrait&#34; (&#34;P&#34;) or &#34;landscape&#34; (&#34;L&#34;).
+                Default to &#34;portrait&#34;.
+            unit (str): &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;. Default to &#34;mm&#34;.
+            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34; or &#34;legal&#34;.
+                Default to &#34;a4&#34;.
+            font_cache_dir (Path or str): directory where pickle files
+                for TTF font files are kept.
+                The default is `True`, meaning the current folder.
+        &#34;&#34;&#34;
         # Initialization of properties
         self.offsets = {}  # array of object offsets
         self.page = 0  # current page number
@@ -197,6 +209,7 @@ class FPDF:
         self.text_color = &#34;0 g&#34;
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
+        self.font_cache_dir = font_cache_dir
 
         # Standard fonts
         self.core_fonts = {
@@ -695,12 +708,11 @@ class FPDF:
                     break
             else:
                 raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
-            if FPDF_CACHE_MODE == 0:
-                unifilename = Path() / f&#34;{ttffilename.stem}.pkl&#34;
-            elif FPDF_CACHE_MODE == 2:
-                unifilename = FPDF_CACHE_DIR / f&#34;{_hashpath(ttffilename)}.pkl&#34;
-            else:
-                unifilename = None
+
+            cache_dir = (
+                Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+            )
+            unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
             # include numbers in the subset! (if alias present)
             sbarr = list(range(57 if self.str_alias_nb_pages else 32))
@@ -2545,12 +2557,6 @@ class FPDF:
             recorder.replay()
 
 
-def _hashpath(fn):
-    h = md5()
-    h.update(fn.encode(&#34;UTF-8&#34;))
-    return h.hexdigest()
-
-
 def _sizeof_fmt(num, suffix=&#34;B&#34;):
     # Recipe from: https://stackoverflow.com/a/1094933/636849
     for unit in [&#34;&#34;, &#34;Ki&#34;, &#34;Mi&#34;, &#34;Gi&#34;, &#34;Ti&#34;, &#34;Pi&#34;, &#34;Ei&#34;, &#34;Zi&#34;]:
@@ -2558,6 +2564,9 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
             return f&#34;{num:3.1f}{unit}{suffix}&#34;
         num /= 1024
     return f&#34;{num:.1f}Yi{suffix}&#34;
+
+
+sys.modules[__name__].__class__ = WarnOnDeprecatedModuleAttributes
 
 
 __all__ = [&#34;FPDF&#34;, &#34;load_cache&#34;, &#34;get_page_format&#34;, &#34;PAGE_FORMATS&#34;]</code></pre>
@@ -2655,10 +2664,25 @@ case insensitive key (the name of the new format) and 2-tuple value of
 <dl>
 <dt id="fpdf.fpdf.FPDF"><code class="flex name class">
 <span>class <span class="ident">FPDF</span></span>
-<span>(</span><span>orientation='P', unit='mm', format='A4')</span>
+<span>(</span><span>orientation='portrait', unit='mm', format='A4', font_cache_dir=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>PDF Generation class</p></div>
+<div class="desc"><p>PDF Generation class</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
+<dd>"portrait" ("P") or "landscape" ("L").
+Default to "portrait".</dd>
+<dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
+<dd>"pt", "mm", "cm" or "in". Default to "mm".</dd>
+<dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
+<dd>"a3", "a4", "a5", "letter" or "legal".
+Default to "a4".</dd>
+<dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
+<dd>directory where pickle files
+for TTF font files are kept.
+The default is <code>True</code>, meaning the current folder.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -2666,7 +2690,20 @@ case insensitive key (the name of the new format) and 2-tuple value of
 <pre><code class="python">class FPDF:
     &#34;&#34;&#34;PDF Generation class&#34;&#34;&#34;
 
-    def __init__(self, orientation=&#34;P&#34;, unit=&#34;mm&#34;, format=&#34;A4&#34;):
+    def __init__(
+        self, orientation=&#34;portrait&#34;, unit=&#34;mm&#34;, format=&#34;A4&#34;, font_cache_dir=True
+    ):
+        &#34;&#34;&#34;
+        Args:
+            orientation (str): &#34;portrait&#34; (&#34;P&#34;) or &#34;landscape&#34; (&#34;L&#34;).
+                Default to &#34;portrait&#34;.
+            unit (str): &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;. Default to &#34;mm&#34;.
+            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34; or &#34;legal&#34;.
+                Default to &#34;a4&#34;.
+            font_cache_dir (Path or str): directory where pickle files
+                for TTF font files are kept.
+                The default is `True`, meaning the current folder.
+        &#34;&#34;&#34;
         # Initialization of properties
         self.offsets = {}  # array of object offsets
         self.page = 0  # current page number
@@ -2694,6 +2731,7 @@ case insensitive key (the name of the new format) and 2-tuple value of
         self.text_color = &#34;0 g&#34;
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
+        self.font_cache_dir = font_cache_dir
 
         # Standard fonts
         self.core_fonts = {
@@ -3192,12 +3230,11 @@ case insensitive key (the name of the new format) and 2-tuple value of
                     break
             else:
                 raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
-            if FPDF_CACHE_MODE == 0:
-                unifilename = Path() / f&#34;{ttffilename.stem}.pkl&#34;
-            elif FPDF_CACHE_MODE == 2:
-                unifilename = FPDF_CACHE_DIR / f&#34;{_hashpath(ttffilename)}.pkl&#34;
-            else:
-                unifilename = None
+
+            cache_dir = (
+                Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+            )
+            unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
             # include numbers in the subset! (if alias present)
             sbarr = list(range(57 if self.str_alias_nb_pages else 32))
@@ -5121,12 +5158,11 @@ def epw(self):
                 break
         else:
             raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
-        if FPDF_CACHE_MODE == 0:
-            unifilename = Path() / f&#34;{ttffilename.stem}.pkl&#34;
-        elif FPDF_CACHE_MODE == 2:
-            unifilename = FPDF_CACHE_DIR / f&#34;{_hashpath(ttffilename)}.pkl&#34;
-        else:
-            unifilename = None
+
+        cache_dir = (
+            Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+        )
+        unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
         # include numbers in the subset! (if alias present)
         sbarr = list(range(57 if self.str_alias_nb_pages else 32))

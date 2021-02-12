@@ -27,16 +27,17 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">#!/usr/bin/env python
+import sys
+
 from .fpdf import (
     FPDF,
-    FPDF_CACHE_DIR as _FPDF_CACHE_DIR,
-    FPDF_CACHE_MODE as _FPDF_CACHE_MODE,
     FPDF_FONT_DIR as _FPDF_FONT_DIR,
     FPDF_VERSION as _FPDF_VERSION,
     SYSTEM_TTFONTS as _SYSTEM_TTFONTS,
 )
 from .html import HTMLMixin
 from .template import Template
+from .util.deprecation import WarnOnDeprecatedModuleAttributes
 
 FPDF_VERSION = _FPDF_VERSION
 &#34;&#34;&#34;Current FPDF Version, also available via `__version__` (which is read by `setup.py`):
@@ -48,19 +49,14 @@ FPDF_VERSION = _FPDF_VERSION
 &lt;/pre&gt;
 &#34;&#34;&#34;
 
-FPDF_CACHE_MODE = _FPDF_CACHE_MODE
-
-FPDF_CACHE_DIR = _FPDF_CACHE_DIR
-&#34;&#34;&#34;This is the directory where pickle files for TTF font files are kept
-containing meta-data and stuffs.
-&#34;&#34;&#34;
-
 FPDF_FONT_DIR = _FPDF_FONT_DIR
 &#34;&#34;&#34;This is the location of where to look for fonts.&#34;&#34;&#34;
 
 SYSTEM_TTFONTS = _SYSTEM_TTFONTS
 &#34;&#34;&#34;This is the directory searched for fonts when a font file path is not given.
 &#34;&#34;&#34;
+
+sys.modules[__name__].__class__ = WarnOnDeprecatedModuleAttributes
 
 __license__ = &#34;LGPL 3.0&#34;
 
@@ -77,8 +73,6 @@ __all__ = [
     &#34;HTMLMixin&#34;,
     # FPDF Constants
     &#34;FPDF_VERSION&#34;,
-    &#34;FPDF_CACHE_MODE&#34;,
-    &#34;FPDF_CACHE_DIR&#34;,
     &#34;FPDF_FONT_DIR&#34;,
     &#34;SYSTEM_TTFONTS&#34;,
 ]</code></pre>
@@ -128,11 +122,6 @@ __all__ = [
 <section>
 <h2 class="section-title" id="header-variables">Global variables</h2>
 <dl>
-<dt id="fpdf.FPDF_CACHE_DIR"><code class="name">var <span class="ident">FPDF_CACHE_DIR</span></code></dt>
-<dd>
-<div class="desc"><p>This is the directory where pickle files for TTF font files are kept
-containing meta-data and stuffs.</p></div>
-</dd>
 <dt id="fpdf.FPDF_FONT_DIR"><code class="name">var <span class="ident">FPDF_FONT_DIR</span></code></dt>
 <dd>
 <div class="desc"><p>This is the location of where to look for fonts.</p></div>
@@ -161,10 +150,25 @@ containing meta-data and stuffs.</p></div>
 <dl>
 <dt id="fpdf.FPDF"><code class="flex name class">
 <span>class <span class="ident">FPDF</span></span>
-<span>(</span><span>orientation='P', unit='mm', format='A4')</span>
+<span>(</span><span>orientation='portrait', unit='mm', format='A4', font_cache_dir=True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>PDF Generation class</p></div>
+<div class="desc"><p>PDF Generation class</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
+<dd>"portrait" ("P") or "landscape" ("L").
+Default to "portrait".</dd>
+<dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
+<dd>"pt", "mm", "cm" or "in". Default to "mm".</dd>
+<dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
+<dd>"a3", "a4", "a5", "letter" or "legal".
+Default to "a4".</dd>
+<dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
+<dd>directory where pickle files
+for TTF font files are kept.
+The default is <code>True</code>, meaning the current folder.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -172,7 +176,20 @@ containing meta-data and stuffs.</p></div>
 <pre><code class="python">class FPDF:
     &#34;&#34;&#34;PDF Generation class&#34;&#34;&#34;
 
-    def __init__(self, orientation=&#34;P&#34;, unit=&#34;mm&#34;, format=&#34;A4&#34;):
+    def __init__(
+        self, orientation=&#34;portrait&#34;, unit=&#34;mm&#34;, format=&#34;A4&#34;, font_cache_dir=True
+    ):
+        &#34;&#34;&#34;
+        Args:
+            orientation (str): &#34;portrait&#34; (&#34;P&#34;) or &#34;landscape&#34; (&#34;L&#34;).
+                Default to &#34;portrait&#34;.
+            unit (str): &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;. Default to &#34;mm&#34;.
+            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34; or &#34;legal&#34;.
+                Default to &#34;a4&#34;.
+            font_cache_dir (Path or str): directory where pickle files
+                for TTF font files are kept.
+                The default is `True`, meaning the current folder.
+        &#34;&#34;&#34;
         # Initialization of properties
         self.offsets = {}  # array of object offsets
         self.page = 0  # current page number
@@ -200,6 +217,7 @@ containing meta-data and stuffs.</p></div>
         self.text_color = &#34;0 g&#34;
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
+        self.font_cache_dir = font_cache_dir
 
         # Standard fonts
         self.core_fonts = {
@@ -698,12 +716,11 @@ containing meta-data and stuffs.</p></div>
                     break
             else:
                 raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
-            if FPDF_CACHE_MODE == 0:
-                unifilename = Path() / f&#34;{ttffilename.stem}.pkl&#34;
-            elif FPDF_CACHE_MODE == 2:
-                unifilename = FPDF_CACHE_DIR / f&#34;{_hashpath(ttffilename)}.pkl&#34;
-            else:
-                unifilename = None
+
+            cache_dir = (
+                Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+            )
+            unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
             # include numbers in the subset! (if alias present)
             sbarr = list(range(57 if self.str_alias_nb_pages else 32))
@@ -2627,12 +2644,11 @@ def epw(self):
                 break
         else:
             raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
-        if FPDF_CACHE_MODE == 0:
-            unifilename = Path() / f&#34;{ttffilename.stem}.pkl&#34;
-        elif FPDF_CACHE_MODE == 2:
-            unifilename = FPDF_CACHE_DIR / f&#34;{_hashpath(ttffilename)}.pkl&#34;
-        else:
-            unifilename = None
+
+        cache_dir = (
+            Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+        )
+        unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
         # include numbers in the subset! (if alias present)
         sbarr = list(range(57 if self.str_alias_nb_pages else 32))
@@ -5765,7 +5781,6 @@ def write(
 </li>
 <li><h3><a href="#header-variables">Global variables</a></h3>
 <ul class="">
-<li><code><a title="fpdf.FPDF_CACHE_DIR" href="#fpdf.FPDF_CACHE_DIR">FPDF_CACHE_DIR</a></code></li>
 <li><code><a title="fpdf.FPDF_FONT_DIR" href="#fpdf.FPDF_FONT_DIR">FPDF_FONT_DIR</a></code></li>
 <li><code><a title="fpdf.FPDF_VERSION" href="#fpdf.FPDF_VERSION">FPDF_VERSION</a></code></li>
 <li><code><a title="fpdf.SYSTEM_TTFONTS" href="#fpdf.SYSTEM_TTFONTS">SYSTEM_TTFONTS</a></code></li>
