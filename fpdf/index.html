@@ -205,6 +205,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.links = {}  # array of internal links
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
+        self.current_font = {}  # current font
         self.font_family = &#34;&#34;  # current font family
         self.font_style = &#34;&#34;  # current font style
         self.font_size_pt = 12  # current font size in points
@@ -237,7 +238,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
             &#34;zapfdingbats&#34;: &#34;ZapfDingbats&#34;,
         }
         self.core_fonts_encoding = &#34;latin-1&#34;
-
+        # Replace these fonts with these core fonts
+        self.font_aliases = {
+            &#34;arial&#34;: &#34;helvetica&#34;,
+            &#34;couriernew&#34;: &#34;courier&#34;,
+            &#34;timesnewroman&#34;: &#34;times&#34;,
+        }
         # Scale factor
         if unit == &#34;pt&#34;:
             self.k = 1
@@ -702,10 +708,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise ValueError(
                 f&#34;Unknown style provided (only B &amp; I letters are allowed): {style}&#34;
             )
-        fontkey = f&#34;{family}{style}&#34;
+        fontkey = f&#34;{family.lower()}{style}&#34;
 
-        # Font already added!
-        if fontkey in self.fonts:
+        # Check if font already added or one of the core fonts
+        if fontkey in self.fonts or fontkey in self.core_fonts:
             return
         if uni:
             for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
@@ -764,7 +770,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     except OSError as e:
                         if e.errno != errno.EACCES:
                             raise  # Not a permission error.
-                del ttf
 
             self.fonts[fontkey] = {
                 &#34;i&#34;: len(self.fonts) + 1,
@@ -840,14 +845,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         if not family:
             family = self.font_family
-        if family.lower() == &#34;arial&#34; and (family + style) not in self.fonts:
-            warnings.warn(&#34;Substitutting Arial by core font Helvetica&#34;)
-            family = &#34;helvetica&#34;
-        elif family.lower() in (&#34;symbol&#34;, &#34;zapfdingbats&#34;) and style:
-            warnings.warn(
-                &#39;Built-in fonts Symbol &amp; Zapfdingbats only have a single &#34;style&#34;&#39;
-            )
-            style = &#34;&#34;
+
+        family = family.lower()
         style = &#34;&#34;.join(sorted(style.upper()))
         if any(letter not in &#34;BIU&#34; for letter in style):
             raise ValueError(
@@ -858,6 +857,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
             style = style.replace(&#34;U&#34;, &#34;&#34;)
         else:
             self.underline = 0
+
+        if family in self.font_aliases and family + style not in self.fonts:
+            warnings.warn(
+                f&#34;Substituting font {family} by core font &#34;
+                f&#34;{self.font_aliases[family]}&#34;
+            )
+            family = self.font_aliases[family]
+        elif family in (&#34;symbol&#34;, &#34;zapfdingbats&#34;) and style:
+            warnings.warn(
+                f&#34;Built-in font {family} only has a single &#39;style&#39; and can&#39;t be bold &#34;
+                f&#34;or italic&#34;
+            )
+            style = &#34;&#34;
+
         if size == 0:
             size = self.font_size_pt
 
@@ -872,28 +885,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
         # Test if used for the first time
         fontkey = family + style
         if fontkey not in self.fonts:
-            # Being flexible: try a fontkey with lowercase family:
-            fontkey_alt = family.lower() + style
-            if fontkey_alt in self.fonts:
-                fontkey = fontkey_alt
-            else:
-                if fontkey not in self.core_fonts or fontkey not in fpdf_charwidths:
-                    fontkey = fontkey_alt
-                    if fontkey not in self.core_fonts or fontkey not in fpdf_charwidths:
-                        raise FPDFException(
-                            &#34;Undefined font: &#34;
-                            + fontkey
-                            + &#34; - Use built-in fonts or FPDF.add_font() beforehand&#34;
-                        )
-                i = len(self.fonts) + 1
-                self.fonts[fontkey] = {
-                    &#34;i&#34;: i,
-                    &#34;type&#34;: &#34;core&#34;,
-                    &#34;name&#34;: self.core_fonts[fontkey],
-                    &#34;up&#34;: -100,
-                    &#34;ut&#34;: 50,
-                    &#34;cw&#34;: fpdf_charwidths[fontkey],
-                }
+            if fontkey not in self.core_fonts:
+                raise FPDFException(
+                    f&#34;Undefined font: {fontkey} - &#34;
+                    f&#34;Use built-in fonts or FPDF.add_font() beforehand&#34;
+                )
+            # If it&#39;s one of the core fonts, add it to self.fonts
+            self.fonts[fontkey] = {
+                &#34;i&#34;: len(self.fonts) + 1,
+                &#34;type&#34;: &#34;core&#34;,
+                &#34;name&#34;: self.core_fonts[fontkey],
+                &#34;up&#34;: -100,
+                &#34;ut&#34;: 50,
+                &#34;cw&#34;: fpdf_charwidths[fontkey],
+            }
 
         # Select it
         self.font_family = family
@@ -2630,10 +2635,10 @@ def epw(self):
         raise ValueError(
             f&#34;Unknown style provided (only B &amp; I letters are allowed): {style}&#34;
         )
-    fontkey = f&#34;{family}{style}&#34;
+    fontkey = f&#34;{family.lower()}{style}&#34;
 
-    # Font already added!
-    if fontkey in self.fonts:
+    # Check if font already added or one of the core fonts
+    if fontkey in self.fonts or fontkey in self.core_fonts:
         return
     if uni:
         for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
@@ -2692,7 +2697,6 @@ def epw(self):
                 except OSError as e:
                     if e.errno != errno.EACCES:
                         raise  # Not a permission error.
-            del ttf
 
         self.fonts[fontkey] = {
             &#34;i&#34;: len(self.fonts) + 1,
@@ -4451,14 +4455,8 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     &#34;&#34;&#34;
     if not family:
         family = self.font_family
-    if family.lower() == &#34;arial&#34; and (family + style) not in self.fonts:
-        warnings.warn(&#34;Substitutting Arial by core font Helvetica&#34;)
-        family = &#34;helvetica&#34;
-    elif family.lower() in (&#34;symbol&#34;, &#34;zapfdingbats&#34;) and style:
-        warnings.warn(
-            &#39;Built-in fonts Symbol &amp; Zapfdingbats only have a single &#34;style&#34;&#39;
-        )
-        style = &#34;&#34;
+
+    family = family.lower()
     style = &#34;&#34;.join(sorted(style.upper()))
     if any(letter not in &#34;BIU&#34; for letter in style):
         raise ValueError(
@@ -4469,6 +4467,20 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
         style = style.replace(&#34;U&#34;, &#34;&#34;)
     else:
         self.underline = 0
+
+    if family in self.font_aliases and family + style not in self.fonts:
+        warnings.warn(
+            f&#34;Substituting font {family} by core font &#34;
+            f&#34;{self.font_aliases[family]}&#34;
+        )
+        family = self.font_aliases[family]
+    elif family in (&#34;symbol&#34;, &#34;zapfdingbats&#34;) and style:
+        warnings.warn(
+            f&#34;Built-in font {family} only has a single &#39;style&#39; and can&#39;t be bold &#34;
+            f&#34;or italic&#34;
+        )
+        style = &#34;&#34;
+
     if size == 0:
         size = self.font_size_pt
 
@@ -4483,28 +4495,20 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     # Test if used for the first time
     fontkey = family + style
     if fontkey not in self.fonts:
-        # Being flexible: try a fontkey with lowercase family:
-        fontkey_alt = family.lower() + style
-        if fontkey_alt in self.fonts:
-            fontkey = fontkey_alt
-        else:
-            if fontkey not in self.core_fonts or fontkey not in fpdf_charwidths:
-                fontkey = fontkey_alt
-                if fontkey not in self.core_fonts or fontkey not in fpdf_charwidths:
-                    raise FPDFException(
-                        &#34;Undefined font: &#34;
-                        + fontkey
-                        + &#34; - Use built-in fonts or FPDF.add_font() beforehand&#34;
-                    )
-            i = len(self.fonts) + 1
-            self.fonts[fontkey] = {
-                &#34;i&#34;: i,
-                &#34;type&#34;: &#34;core&#34;,
-                &#34;name&#34;: self.core_fonts[fontkey],
-                &#34;up&#34;: -100,
-                &#34;ut&#34;: 50,
-                &#34;cw&#34;: fpdf_charwidths[fontkey],
-            }
+        if fontkey not in self.core_fonts:
+            raise FPDFException(
+                f&#34;Undefined font: {fontkey} - &#34;
+                f&#34;Use built-in fonts or FPDF.add_font() beforehand&#34;
+            )
+        # If it&#39;s one of the core fonts, add it to self.fonts
+        self.fonts[fontkey] = {
+            &#34;i&#34;: len(self.fonts) + 1,
+            &#34;type&#34;: &#34;core&#34;,
+            &#34;name&#34;: self.core_fonts[fontkey],
+            &#34;up&#34;: -100,
+            &#34;ut&#34;: 50,
+            &#34;cw&#34;: fpdf_charwidths[fontkey],
+        }
 
     # Select it
     self.font_family = family
