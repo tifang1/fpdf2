@@ -59,12 +59,12 @@ from datetime import datetime
 from enum import IntEnum
 from functools import wraps
 from pathlib import Path
-from uuid import uuid4
 
 from .errors import FPDFException, FPDFPageFormatException
 from .fonts import fpdf_charwidths
 from .image_parsing import get_img_info, load_resource
 from .recorder import FPDFRecorder
+from .structure_tree import MarkedContent, StructureTreeBuilder
 from .ttfonts import TTFontFile
 from .util import (
     enclose_in_parens,
@@ -75,7 +75,6 @@ from .util.deprecation import WarnOnDeprecatedModuleAttributes
 from .util.syntax import (
     create_dictionary_string as pdf_d,
     create_list_string as pdf_l,
-    create_name as pdf_name,
     create_stream as pdf_stream,
     iobj_ref as pdf_ref,
 )
@@ -94,6 +93,17 @@ PAGE_FORMATS = {
     &#34;a5&#34;: (420.94, 595.28),
     &#34;letter&#34;: (612, 792),
     &#34;legal&#34;: (612, 1008),
+}
+LAYOUT_NAMES = {
+    &#34;single&#34;: &#34;/SinglePage&#34;,
+    &#34;continuous&#34;: &#34;/OneColumn&#34;,
+    &#34;two&#34;: &#34;/TwoColumnLeft&#34;,
+}
+ZOOM_CONFIGS = {
+    &#34;default&#34;: (&#34;/Fit&#34;,),  # TODO FIXME
+    &#34;fullpage&#34;: (&#34;/Fit&#34;,),
+    &#34;fullwidth&#34;: (&#34;/FitH&#34;, &#34;null&#34;),
+    &#34;real&#34;: (&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, &#34;1&#34;),
 }
 
 
@@ -211,6 +221,10 @@ class FPDF:
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
+        self._marked_contents = []  # list of MarkedContent
+        self._struct_parents_id_per_page = {}  # {page_object_id -&gt; StructParents ID}
+        # Only set if a Structure Tree is added to the document:
+        self._struct_tree_root_obj_id = None
 
         # Standard fonts
         self.core_fonts = {
@@ -370,19 +384,20 @@ class FPDF:
         self.page_break_trigger = self.h - margin
 
     def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
-        &#34;&#34;&#34;Set display mode in viewer
-
-        The &#34;zoom&#34; argument may be &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;,
-        &#39;default&#39;, or a number, interpreted as a percentage.
         &#34;&#34;&#34;
-        if zoom in [&#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;] or not isinstance(
-            zoom, str
-        ):
+        Set display mode in viewer
+
+        Args:
+            zoom: either &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;, &#39;default&#39;,
+                or a number, interpreted as a percentage.
+            layout (str): either &#34;single&#34;, &#34;continuous&#34; or &#34;two&#34;.
+        &#34;&#34;&#34;
+        if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
             self.zoom_mode = zoom
         else:
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
-        if layout in [&#34;single&#34;, &#34;continuous&#34;, &#34;two&#34;, &#34;default&#34;]:
+        if layout in LAYOUT_NAMES:
             self.layout_mode = layout
         else:
             raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
@@ -1535,6 +1550,8 @@ class FPDF:
         h=0,
         type=&#34;&#34;,
         link=&#34;&#34;,
+        title=None,
+        alt_text=None,
     ):
         &#34;&#34;&#34;
         Put an image on the page.
@@ -1564,6 +1581,9 @@ class FPDF:
             type (str): [**DEPRECATED**] unused, will be removed in a later version.
             link (str): optional link to add on the image, internal
                 (identifier returned by `add_link`) or external URL.
+            title (str): optional
+            alt_text (str): optional alternative text describing the image,
+                for accessibility purposes
         &#34;&#34;&#34;
         if type:
             warnings.warn(
@@ -1573,7 +1593,7 @@ class FPDF:
         if isinstance(name, str):
             img = None
         else:
-            name, img = uuid4(), name
+            name, img = str(name), name
         if name not in self.images:
             info = get_img_info(img or load_resource(name))
             info[&#34;i&#34;] = len(self.images) + 1
@@ -1599,16 +1619,41 @@ class FPDF:
 
         if x is None:
             x = self.x
-        self._out(
-            (
-                f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
-                f&#34;{(self.h - y - h) * self.k:.2f} cm /I{info[&#39;i&#39;]} Do Q&#34;
-            )
+
+        stream_content = (
+            f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
+            f&#34;{(self.h - y - h) * self.k:.2f} cm /I{info[&#39;i&#39;]} Do Q&#34;
         )
+        if title or alt_text:
+            with self._marked_sequence(title=title, alt_text=alt_text):
+                self._out(stream_content)
+        else:
+            self._out(stream_content)
         if link:
             self.link(x, y, w, h, link)
 
         return info
+
+    @contextmanager
+    def _marked_sequence(self, **kwargs):
+        page_object_id = self._current_page_object_id()
+        struct_parents_id = self._struct_parents_id_per_page.get(page_object_id)
+        if struct_parents_id is None:
+            struct_parents_id = len(self._struct_parents_id_per_page)
+            self._struct_parents_id_per_page[page_object_id] = struct_parents_id
+        mcid = sum(
+            1 for mc in self._marked_contents if mc.page_object_id == page_object_id
+        )
+        self._marked_contents.append(
+            MarkedContent(page_object_id, struct_parents_id, mcid, **kwargs)
+        )
+        self._out(f&#34;/P &lt;&lt;/MCID {mcid}&gt;&gt; BDC&#34;)
+        yield
+        self._out(&#34;EMC&#34;)
+
+    def _current_page_object_id(self):
+        # Predictable given that _putpages is invoked first in _enddoc:
+        return 2 * self.page + 1
 
     @check_page
     def ln(self, h=None):
@@ -1685,7 +1730,7 @@ class FPDF:
         return txt
 
     def _putpages(self):
-        nb = self.page
+        nb = self.page  # total number of pages
         if self.str_alias_nb_pages:
             substituted = False
             # Replace number of pages in fonts using subsets (unicode)
@@ -1771,6 +1816,9 @@ class FPDF:
                 self._out(f&#34;{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency&#34; &#34;/CS /DeviceRGB&gt;&gt;&#34;)
+            spid = self._struct_parents_id_per_page.get(self.n)
+            if spid is not None:
+                self._out(f&#34;/StructParents {spid}&#34;)
             self._out(f&#34;/Contents {self.n + 1} 0 R&gt;&gt;&#34;)
             self._out(&#34;endobj&#34;)
 
@@ -2128,9 +2176,7 @@ class FPDF:
         self._out(f&#34;/W [{&#39;&#39;.join(w)}]&#34;)
 
     def _putimages(self):
-        i = [(x[1][&#34;i&#34;], x[1]) for x in self.images.items()]
-        i.sort()
-        for _, info in i:
+        for info in sorted(self.images.values(), key=lambda info: info[&#34;i&#34;]):
             self._putimage(info)
             del info[&#34;data&#34;]
             if &#34;smask&#34; in info:
@@ -2238,13 +2284,22 @@ class FPDF:
             self._out(&#34;&gt;&gt;&#34;)
             self._out(&#34;endobj&#34;)
 
+    def _put_structure_tree(self):
+        &#34;Builds a Structure Hierarchy, including image alternate descriptions&#34;
+        struct_builder = StructureTreeBuilder(self._marked_contents)
+        # This property is later used by _putcatalog to insert a reference to the StructTreeRoot:
+        self._struct_tree_root_obj_id = self.n + 1
+        struct_builder.serialize(
+            first_object_id=self._struct_tree_root_obj_id, fpdf=self
+        )
+
     def _putinfo(self):
         info_d = {
-            pdf_name(&#34;title&#34;): enclose_in_parens(getattr(self, &#34;title&#34;, None)),
-            pdf_name(&#34;subject&#34;): enclose_in_parens(getattr(self, &#34;subject&#34;, None)),
-            pdf_name(&#34;author&#34;): enclose_in_parens(getattr(self, &#34;author&#34;, None)),
-            pdf_name(&#34;keywords&#34;): enclose_in_parens(getattr(self, &#34;keywords&#34;, None)),
-            pdf_name(&#34;creator&#34;): enclose_in_parens(getattr(self, &#34;creator&#34;, None)),
+            &#34;/Title&#34;: enclose_in_parens(getattr(self, &#34;title&#34;, None)),
+            &#34;/Subject&#34;: enclose_in_parens(getattr(self, &#34;subject&#34;, None)),
+            &#34;/Author&#34;: enclose_in_parens(getattr(self, &#34;author&#34;, None)),
+            &#34;/Keywords&#34;: enclose_in_parens(getattr(self, &#34;keywords&#34;, None)),
+            &#34;/Creator&#34;: enclose_in_parens(getattr(self, &#34;creator&#34;, None)),
         }
 
         if hasattr(self, &#34;creation_date&#34;):
@@ -2257,37 +2312,31 @@ class FPDF:
                 ) from error
         else:
             date_string = f&#34;{datetime.now():%Y%m%d%H%M%S}&#34;
-        info_d[pdf_name(&#34;CreationDate&#34;)] = enclose_in_parens(f&#34;D:{date_string}&#34;)
+        info_d[&#34;/CreationDate&#34;] = enclose_in_parens(f&#34;D:{date_string}&#34;)
 
         self._out(pdf_d(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
     def _putcatalog(self):
         catalog_d = {
-            pdf_name(&#34;type&#34;): pdf_name(&#34;catalog&#34;),
-            pdf_name(&#34;pages&#34;): pdf_ref(1),
+            &#34;/Type&#34;: &#34;/Catalog&#34;,
+            # Pages is always the 1st object of the document, cf. the end of _putpages:
+            &#34;/Pages&#34;: pdf_ref(1),
         }
 
-        zoom_configs = {
-            &#34;default&#34;: [&#34;/Fit&#34;],  # TODO FIXME
-            &#34;fullpage&#34;: [&#34;/Fit&#34;],
-            &#34;fullwidth&#34;: [&#34;/FitH&#34;, &#34;null&#34;],
-            &#34;real&#34;: [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, &#34;1&#34;],
-        }
-        zoom_config = [pdf_ref(3), *zoom_configs.get(self.zoom_mode, [])]
-        # zoom_config is a number, not one of the allowed strings
-        if not zoom_config:
+        if self.zoom_mode in ZOOM_CONFIGS:
+            zoom_config = [
+                pdf_ref(3),  # reference to object ID of the 1st page
+                *ZOOM_CONFIGS[self.zoom_mode],
+            ]
+        else:  # zoom_mode is a number, not one of the allowed strings:
             zoom_config = [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, str(self.zoom_mode / 100)]
+        catalog_d[&#34;/OpenAction&#34;] = pdf_l(zoom_config)
 
-        catalog_d[pdf_name(&#34;OpenAction&#34;)] = pdf_l(zoom_config)
-
-        layout_names = {
-            &#34;single&#34;: pdf_name(&#34;SinglePage&#34;),
-            &#34;continuous&#34;: pdf_name(&#34;OneColumn&#34;),
-            &#34;two&#34;: pdf_name(&#34;TwoColumnLeft&#34;),
-        }
-
-        if self.layout_mode in layout_names:
-            catalog_d[pdf_name(&#34;PageLayout&#34;)] = layout_names[self.layout_mode]
+        if self.layout_mode in LAYOUT_NAMES:
+            catalog_d[&#34;/PageLayout&#34;] = LAYOUT_NAMES[self.layout_mode]
+        if self._struct_tree_root_obj_id:
+            catalog_d[&#34;/MarkInfo&#34;] = pdf_d({&#34;/Marked&#34;: &#34;true&#34;})
+            catalog_d[&#34;/StructTreeRoot&#34;] = pdf_ref(self._struct_tree_root_obj_id)
 
         self._out(pdf_d(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
 
@@ -2296,8 +2345,8 @@ class FPDF:
 
     def _puttrailer(self):
         self._out(f&#34;/Size {self.n + 1}&#34;)
-        self._out(f&#34;/Root {pdf_ref(self.n)}&#34;)
-        self._out(f&#34;/Info {pdf_ref(self.n - 1)}&#34;)
+        self._out(f&#34;/Root {pdf_ref(self.n)}&#34;)  # Catalog object index
+        self._out(f&#34;/Info {pdf_ref(self.n - 1)}&#34;)  # Info object index
 
     def _enddoc(self):
         LOGGER.debug(&#34;Final doc sections size summary:&#34;)
@@ -2306,6 +2355,8 @@ class FPDF:
         with self._trace_size(&#34;pages&#34;):
             self._putpages()
         self._putresources()  # trace_size is performed inside
+        if self._marked_contents:
+            self._put_structure_tree()
         # Info
         with self._trace_size(&#34;info&#34;):
             self._newobj()
@@ -2382,6 +2433,7 @@ class FPDF:
         self.n += 1
         self.offsets[self.n] = len(self.buffer)
         self._out(f&#34;{self.n} 0 obj&#34;)
+        return self.n
 
     def _dounderline(self, x, y, txt):
         # Underline text
@@ -2738,6 +2790,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
+        self._marked_contents = []  # list of MarkedContent
+        self._struct_parents_id_per_page = {}  # {page_object_id -&gt; StructParents ID}
+        # Only set if a Structure Tree is added to the document:
+        self._struct_tree_root_obj_id = None
 
         # Standard fonts
         self.core_fonts = {
@@ -2897,19 +2953,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.page_break_trigger = self.h - margin
 
     def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
-        &#34;&#34;&#34;Set display mode in viewer
-
-        The &#34;zoom&#34; argument may be &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;,
-        &#39;default&#39;, or a number, interpreted as a percentage.
         &#34;&#34;&#34;
-        if zoom in [&#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;] or not isinstance(
-            zoom, str
-        ):
+        Set display mode in viewer
+
+        Args:
+            zoom: either &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;, &#39;default&#39;,
+                or a number, interpreted as a percentage.
+            layout (str): either &#34;single&#34;, &#34;continuous&#34; or &#34;two&#34;.
+        &#34;&#34;&#34;
+        if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
             self.zoom_mode = zoom
         else:
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
-        if layout in [&#34;single&#34;, &#34;continuous&#34;, &#34;two&#34;, &#34;default&#34;]:
+        if layout in LAYOUT_NAMES:
             self.layout_mode = layout
         else:
             raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
@@ -4062,6 +4119,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         h=0,
         type=&#34;&#34;,
         link=&#34;&#34;,
+        title=None,
+        alt_text=None,
     ):
         &#34;&#34;&#34;
         Put an image on the page.
@@ -4091,6 +4150,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
             type (str): [**DEPRECATED**] unused, will be removed in a later version.
             link (str): optional link to add on the image, internal
                 (identifier returned by `add_link`) or external URL.
+            title (str): optional
+            alt_text (str): optional alternative text describing the image,
+                for accessibility purposes
         &#34;&#34;&#34;
         if type:
             warnings.warn(
@@ -4100,7 +4162,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if isinstance(name, str):
             img = None
         else:
-            name, img = uuid4(), name
+            name, img = str(name), name
         if name not in self.images:
             info = get_img_info(img or load_resource(name))
             info[&#34;i&#34;] = len(self.images) + 1
@@ -4126,16 +4188,41 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         if x is None:
             x = self.x
-        self._out(
-            (
-                f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
-                f&#34;{(self.h - y - h) * self.k:.2f} cm /I{info[&#39;i&#39;]} Do Q&#34;
-            )
+
+        stream_content = (
+            f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
+            f&#34;{(self.h - y - h) * self.k:.2f} cm /I{info[&#39;i&#39;]} Do Q&#34;
         )
+        if title or alt_text:
+            with self._marked_sequence(title=title, alt_text=alt_text):
+                self._out(stream_content)
+        else:
+            self._out(stream_content)
         if link:
             self.link(x, y, w, h, link)
 
         return info
+
+    @contextmanager
+    def _marked_sequence(self, **kwargs):
+        page_object_id = self._current_page_object_id()
+        struct_parents_id = self._struct_parents_id_per_page.get(page_object_id)
+        if struct_parents_id is None:
+            struct_parents_id = len(self._struct_parents_id_per_page)
+            self._struct_parents_id_per_page[page_object_id] = struct_parents_id
+        mcid = sum(
+            1 for mc in self._marked_contents if mc.page_object_id == page_object_id
+        )
+        self._marked_contents.append(
+            MarkedContent(page_object_id, struct_parents_id, mcid, **kwargs)
+        )
+        self._out(f&#34;/P &lt;&lt;/MCID {mcid}&gt;&gt; BDC&#34;)
+        yield
+        self._out(&#34;EMC&#34;)
+
+    def _current_page_object_id(self):
+        # Predictable given that _putpages is invoked first in _enddoc:
+        return 2 * self.page + 1
 
     @check_page
     def ln(self, h=None):
@@ -4212,7 +4299,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         return txt
 
     def _putpages(self):
-        nb = self.page
+        nb = self.page  # total number of pages
         if self.str_alias_nb_pages:
             substituted = False
             # Replace number of pages in fonts using subsets (unicode)
@@ -4298,6 +4385,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 self._out(f&#34;{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency&#34; &#34;/CS /DeviceRGB&gt;&gt;&#34;)
+            spid = self._struct_parents_id_per_page.get(self.n)
+            if spid is not None:
+                self._out(f&#34;/StructParents {spid}&#34;)
             self._out(f&#34;/Contents {self.n + 1} 0 R&gt;&gt;&#34;)
             self._out(&#34;endobj&#34;)
 
@@ -4655,9 +4745,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(f&#34;/W [{&#39;&#39;.join(w)}]&#34;)
 
     def _putimages(self):
-        i = [(x[1][&#34;i&#34;], x[1]) for x in self.images.items()]
-        i.sort()
-        for _, info in i:
+        for info in sorted(self.images.values(), key=lambda info: info[&#34;i&#34;]):
             self._putimage(info)
             del info[&#34;data&#34;]
             if &#34;smask&#34; in info:
@@ -4765,13 +4853,22 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._out(&#34;&gt;&gt;&#34;)
             self._out(&#34;endobj&#34;)
 
+    def _put_structure_tree(self):
+        &#34;Builds a Structure Hierarchy, including image alternate descriptions&#34;
+        struct_builder = StructureTreeBuilder(self._marked_contents)
+        # This property is later used by _putcatalog to insert a reference to the StructTreeRoot:
+        self._struct_tree_root_obj_id = self.n + 1
+        struct_builder.serialize(
+            first_object_id=self._struct_tree_root_obj_id, fpdf=self
+        )
+
     def _putinfo(self):
         info_d = {
-            pdf_name(&#34;title&#34;): enclose_in_parens(getattr(self, &#34;title&#34;, None)),
-            pdf_name(&#34;subject&#34;): enclose_in_parens(getattr(self, &#34;subject&#34;, None)),
-            pdf_name(&#34;author&#34;): enclose_in_parens(getattr(self, &#34;author&#34;, None)),
-            pdf_name(&#34;keywords&#34;): enclose_in_parens(getattr(self, &#34;keywords&#34;, None)),
-            pdf_name(&#34;creator&#34;): enclose_in_parens(getattr(self, &#34;creator&#34;, None)),
+            &#34;/Title&#34;: enclose_in_parens(getattr(self, &#34;title&#34;, None)),
+            &#34;/Subject&#34;: enclose_in_parens(getattr(self, &#34;subject&#34;, None)),
+            &#34;/Author&#34;: enclose_in_parens(getattr(self, &#34;author&#34;, None)),
+            &#34;/Keywords&#34;: enclose_in_parens(getattr(self, &#34;keywords&#34;, None)),
+            &#34;/Creator&#34;: enclose_in_parens(getattr(self, &#34;creator&#34;, None)),
         }
 
         if hasattr(self, &#34;creation_date&#34;):
@@ -4784,37 +4881,31 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 ) from error
         else:
             date_string = f&#34;{datetime.now():%Y%m%d%H%M%S}&#34;
-        info_d[pdf_name(&#34;CreationDate&#34;)] = enclose_in_parens(f&#34;D:{date_string}&#34;)
+        info_d[&#34;/CreationDate&#34;] = enclose_in_parens(f&#34;D:{date_string}&#34;)
 
         self._out(pdf_d(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
     def _putcatalog(self):
         catalog_d = {
-            pdf_name(&#34;type&#34;): pdf_name(&#34;catalog&#34;),
-            pdf_name(&#34;pages&#34;): pdf_ref(1),
+            &#34;/Type&#34;: &#34;/Catalog&#34;,
+            # Pages is always the 1st object of the document, cf. the end of _putpages:
+            &#34;/Pages&#34;: pdf_ref(1),
         }
 
-        zoom_configs = {
-            &#34;default&#34;: [&#34;/Fit&#34;],  # TODO FIXME
-            &#34;fullpage&#34;: [&#34;/Fit&#34;],
-            &#34;fullwidth&#34;: [&#34;/FitH&#34;, &#34;null&#34;],
-            &#34;real&#34;: [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, &#34;1&#34;],
-        }
-        zoom_config = [pdf_ref(3), *zoom_configs.get(self.zoom_mode, [])]
-        # zoom_config is a number, not one of the allowed strings
-        if not zoom_config:
+        if self.zoom_mode in ZOOM_CONFIGS:
+            zoom_config = [
+                pdf_ref(3),  # reference to object ID of the 1st page
+                *ZOOM_CONFIGS[self.zoom_mode],
+            ]
+        else:  # zoom_mode is a number, not one of the allowed strings:
             zoom_config = [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, str(self.zoom_mode / 100)]
+        catalog_d[&#34;/OpenAction&#34;] = pdf_l(zoom_config)
 
-        catalog_d[pdf_name(&#34;OpenAction&#34;)] = pdf_l(zoom_config)
-
-        layout_names = {
-            &#34;single&#34;: pdf_name(&#34;SinglePage&#34;),
-            &#34;continuous&#34;: pdf_name(&#34;OneColumn&#34;),
-            &#34;two&#34;: pdf_name(&#34;TwoColumnLeft&#34;),
-        }
-
-        if self.layout_mode in layout_names:
-            catalog_d[pdf_name(&#34;PageLayout&#34;)] = layout_names[self.layout_mode]
+        if self.layout_mode in LAYOUT_NAMES:
+            catalog_d[&#34;/PageLayout&#34;] = LAYOUT_NAMES[self.layout_mode]
+        if self._struct_tree_root_obj_id:
+            catalog_d[&#34;/MarkInfo&#34;] = pdf_d({&#34;/Marked&#34;: &#34;true&#34;})
+            catalog_d[&#34;/StructTreeRoot&#34;] = pdf_ref(self._struct_tree_root_obj_id)
 
         self._out(pdf_d(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
 
@@ -4823,8 +4914,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def _puttrailer(self):
         self._out(f&#34;/Size {self.n + 1}&#34;)
-        self._out(f&#34;/Root {pdf_ref(self.n)}&#34;)
-        self._out(f&#34;/Info {pdf_ref(self.n - 1)}&#34;)
+        self._out(f&#34;/Root {pdf_ref(self.n)}&#34;)  # Catalog object index
+        self._out(f&#34;/Info {pdf_ref(self.n - 1)}&#34;)  # Info object index
 
     def _enddoc(self):
         LOGGER.debug(&#34;Final doc sections size summary:&#34;)
@@ -4833,6 +4924,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         with self._trace_size(&#34;pages&#34;):
             self._putpages()
         self._putresources()  # trace_size is performed inside
+        if self._marked_contents:
+            self._put_structure_tree()
         # Info
         with self._trace_size(&#34;info&#34;):
             self._newobj()
@@ -4909,6 +5002,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.n += 1
         self.offsets[self.n] = len(self.buffer)
         self._out(f&#34;{self.n} 0 obj&#34;)
+        return self.n
 
     def _dounderline(self, x, y, txt):
         # Underline text
@@ -5886,7 +5980,7 @@ def ellipse(self, x, y, w, h, style=None):
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.image"><code class="name flex">
-<span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='')</span>
+<span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='', title=None, alt_text=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Put an image on the page.</p>
@@ -5921,6 +6015,11 @@ it is automatically calculated.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the image, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional</dd>
+<dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional alternative text describing the image,
+for accessibility purposes</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -5936,6 +6035,8 @@ def image(
     h=0,
     type=&#34;&#34;,
     link=&#34;&#34;,
+    title=None,
+    alt_text=None,
 ):
     &#34;&#34;&#34;
     Put an image on the page.
@@ -5965,6 +6066,9 @@ def image(
         type (str): [**DEPRECATED**] unused, will be removed in a later version.
         link (str): optional link to add on the image, internal
             (identifier returned by `add_link`) or external URL.
+        title (str): optional
+        alt_text (str): optional alternative text describing the image,
+            for accessibility purposes
     &#34;&#34;&#34;
     if type:
         warnings.warn(
@@ -5974,7 +6078,7 @@ def image(
     if isinstance(name, str):
         img = None
     else:
-        name, img = uuid4(), name
+        name, img = str(name), name
     if name not in self.images:
         info = get_img_info(img or load_resource(name))
         info[&#34;i&#34;] = len(self.images) + 1
@@ -6000,12 +6104,16 @@ def image(
 
     if x is None:
         x = self.x
-    self._out(
-        (
-            f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
-            f&#34;{(self.h - y - h) * self.k:.2f} cm /I{info[&#39;i&#39;]} Do Q&#34;
-        )
+
+    stream_content = (
+        f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
+        f&#34;{(self.h - y - h) * self.k:.2f} cm /I{info[&#39;i&#39;]} Do Q&#34;
     )
+    if title or alt_text:
+        with self._marked_sequence(title=title, alt_text=alt_text):
+            self._out(stream_content)
+    else:
+        self._out(stream_content)
     if link:
         self.link(x, y, w, h, link)
 
@@ -6834,26 +6942,33 @@ in the unit specified to FPDF constructor</dd>
 </code></dt>
 <dd>
 <div class="desc"><p>Set display mode in viewer</p>
-<p>The "zoom" argument may be 'fullpage', 'fullwidth', 'real',
-'default', or a number, interpreted as a percentage.</p></div>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>zoom</code></strong></dt>
+<dd>either 'fullpage', 'fullwidth', 'real', 'default',
+or a number, interpreted as a percentage.</dd>
+<dt><strong><code>layout</code></strong> :&ensp;<code>str</code></dt>
+<dd>either "single", "continuous" or "two".</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
-    &#34;&#34;&#34;Set display mode in viewer
-
-    The &#34;zoom&#34; argument may be &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;,
-    &#39;default&#39;, or a number, interpreted as a percentage.
     &#34;&#34;&#34;
-    if zoom in [&#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;] or not isinstance(
-        zoom, str
-    ):
+    Set display mode in viewer
+
+    Args:
+        zoom: either &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;, &#39;default&#39;,
+            or a number, interpreted as a percentage.
+        layout (str): either &#34;single&#34;, &#34;continuous&#34; or &#34;two&#34;.
+    &#34;&#34;&#34;
+    if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
         self.zoom_mode = zoom
     else:
         raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
-    if layout in [&#34;single&#34;, &#34;continuous&#34;, &#34;two&#34;, &#34;default&#34;]:
+    if layout in LAYOUT_NAMES:
         self.layout_mode = layout
     else:
         raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)</code></pre>

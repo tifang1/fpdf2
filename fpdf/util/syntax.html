@@ -56,10 +56,10 @@ escape non-printable ascii characters, described on page 57.</p>
 <code>0 obj</code> vs <code>0 R</code>. (Page 64 of Adobe Reference)</p>
 <p>The structure of this data, in python/dict form, is thus:
 third_obj = {
-pdf_name('Type'): pdf_name('Page'),
-pdf_name('Parent'): iobj_ref(1),
-pdf_name('Resources'): iobj_ref(2),
-pdf_name('Contents'): iobj_ref(4),
+'/Type': '/Page'),
+'/Parent': iobj_ref(1),
+'/Resources': iobj_ref(2),
+'/Contents': iobj_ref(4),
 }</p>
 <p>Some additional notes:</p>
 <p>Streams are of the form:</p>
@@ -122,10 +122,10 @@ escape non-printable ascii characters, described on page 57.
 
 The structure of this data, in python/dict form, is thus:
 third_obj = {
-  pdf_name(&#39;Type&#39;): pdf_name(&#39;Page&#39;),
-  pdf_name(&#39;Parent&#39;): iobj_ref(1),
-  pdf_name(&#39;Resources&#39;): iobj_ref(2),
-  pdf_name(&#39;Contents&#39;): iobj_ref(4),
+  &#39;/Type&#39;: &#39;/Page&#39;),
+  &#39;/Parent&#39;: iobj_ref(1),
+  &#39;/Resources&#39;: iobj_ref(2),
+  &#39;/Contents&#39;: iobj_ref(4),
 }
 
 Some additional notes:
@@ -148,12 +148,6 @@ that string.
 As of this writing, I am not sure how length is actually calculated, so this
 remains something to be looked into.
 &#34;&#34;&#34;
-
-
-def create_name(name):
-    if name.startswith(&#34;/&#34;):
-        name = name[1:]
-    return f&#34;/{name[0].upper()}{name[1:]}&#34;
 
 
 def clear_empty_fields(d):
@@ -183,7 +177,7 @@ def create_dictionary_string(
     return &#34;&#34;.join(
         [
             open_dict,
-            field_join.join(key_value_join.join(f) for f in dict_.items()),
+            field_join.join(key_value_join.join(map(str, f)) for f in dict_.items()),
             close_dict,
         ]
     )
@@ -202,14 +196,7 @@ def iobj_ref(n):
 def create_stream(stream):
     if isinstance(stream, (bytearray, bytes)):
         stream = str(stream, &#34;latin-1&#34;)
-    return &#34;\n&#34;.join([&#34;stream&#34;, stream, &#34;endstream&#34;])
-
-
-if __name__ == &#34;__main__&#34;:
-    print(create_name(&#34;/ok&#34;))
-    print(create_name(&#34;ok&#34;))
-    print(create_name(&#34;Ok&#34;))
-    print(create_name(&#34;/Ok&#34;))</code></pre>
+    return &#34;\n&#34;.join([&#34;stream&#34;, stream, &#34;endstream&#34;])</code></pre>
 </details>
 </section>
 <section>
@@ -270,7 +257,7 @@ if __name__ == &#34;__main__&#34;:
     return &#34;&#34;.join(
         [
             open_dict,
-            field_join.join(key_value_join.join(f) for f in dict_.items()),
+            field_join.join(key_value_join.join(map(str, f)) for f in dict_.items()),
             close_dict,
         ]
     )</code></pre>
@@ -288,21 +275,6 @@ if __name__ == &#34;__main__&#34;:
 <pre><code class="python">def create_list_string(list_):
     &#34;&#34;&#34;format list of strings as PDF array&#34;&#34;&#34;
     return f&#34;[{&#39; &#39;.join(list_)}]&#34;</code></pre>
-</details>
-</dd>
-<dt id="fpdf.util.syntax.create_name"><code class="name flex">
-<span>def <span class="ident">create_name</span></span>(<span>name)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def create_name(name):
-    if name.startswith(&#34;/&#34;):
-        name = name[1:]
-    return f&#34;/{name[0].upper()}{name[1:]}&#34;</code></pre>
 </details>
 </dd>
 <dt id="fpdf.util.syntax.create_stream"><code class="name flex">
@@ -355,7 +327,6 @@ if __name__ == &#34;__main__&#34;:
 <li><code><a title="fpdf.util.syntax.clear_empty_fields" href="#fpdf.util.syntax.clear_empty_fields">clear_empty_fields</a></code></li>
 <li><code><a title="fpdf.util.syntax.create_dictionary_string" href="#fpdf.util.syntax.create_dictionary_string">create_dictionary_string</a></code></li>
 <li><code><a title="fpdf.util.syntax.create_list_string" href="#fpdf.util.syntax.create_list_string">create_list_string</a></code></li>
-<li><code><a title="fpdf.util.syntax.create_name" href="#fpdf.util.syntax.create_name">create_name</a></code></li>
 <li><code><a title="fpdf.util.syntax.create_stream" href="#fpdf.util.syntax.create_stream">create_stream</a></code></li>
 <li><code><a title="fpdf.util.syntax.iobj_ref" href="#fpdf.util.syntax.iobj_ref">iobj_ref</a></code></li>
 </ul>
