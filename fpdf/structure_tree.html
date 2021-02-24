@@ -57,7 +57,8 @@ from .util.syntax import create_dictionary_string as pdf_d, iobj_ref as pdf_ref
 class MarkedContent(NamedTuple):
     page_object_id: int  # refers to the first page displaying this marked content
     struct_parents_id: int
-    mcid: int
+    struct_type: str
+    mcid: Optional[int] = None
     title: Optional[str] = None
     alt_text: Optional[str] = None
 
@@ -152,7 +153,7 @@ class PDFArray(list):
         elif all(isinstance(elem, int) for elem in self):
             serialized_elems = &#34; &#34;.join(map(str, self))
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f&#34;PDFArray.serialize with self={self}&#34;)
         return f&#34;[{serialized_elems}]&#34;
 
 
@@ -245,9 +246,9 @@ class StructureTreeBuilder:
     def add_marked_content(self, marked_content):
         page = PDFObject(marked_content.page_object_id)
         struct_elem = StructElem(
-            struct_type=&#34;/Figure&#34;,
+            struct_type=marked_content.struct_type,
             parent=self.doc_struct_elem,
-            kids=[marked_content.mcid],
+            kids=[] if marked_content.mcid is None else [marked_content.mcid],
             page=page,
             title=marked_content.title,
             alt=marked_content.alt_text,
@@ -320,10 +321,10 @@ class StructureTreeBuilder:
 <dl>
 <dt id="fpdf.structure_tree.MarkedContent"><code class="flex name class">
 <span>class <span class="ident">MarkedContent</span></span>
-<span>(</span><span>page_object_id: int, struct_parents_id: int, mcid: int, title: Optional[str] = None, alt_text: Optional[str] = None)</span>
+<span>(</span><span>page_object_id: int, struct_parents_id: int, struct_type: str, mcid: Optional[int] = None, title: Optional[str] = None, alt_text: Optional[str] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>MarkedContent(page_object_id, struct_parents_id, mcid, title, alt_text)</p></div>
+<div class="desc"><p>MarkedContent(page_object_id, struct_parents_id, struct_type, mcid, title, alt_text)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -331,7 +332,8 @@ class StructureTreeBuilder:
 <pre><code class="python">class MarkedContent(NamedTuple):
     page_object_id: int  # refers to the first page displaying this marked content
     struct_parents_id: int
-    mcid: int
+    struct_type: str
+    mcid: Optional[int] = None
     title: Optional[str] = None
     alt_text: Optional[str] = None</code></pre>
 </details>
@@ -343,11 +345,11 @@ class StructureTreeBuilder:
 <dl>
 <dt id="fpdf.structure_tree.MarkedContent.alt_text"><code class="name">var <span class="ident">alt_text</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>Alias for field number 4</p></div>
+<div class="desc"><p>Alias for field number 5</p></div>
 </dd>
-<dt id="fpdf.structure_tree.MarkedContent.mcid"><code class="name">var <span class="ident">mcid</span> : int</code></dt>
+<dt id="fpdf.structure_tree.MarkedContent.mcid"><code class="name">var <span class="ident">mcid</span> : Optional[int]</code></dt>
 <dd>
-<div class="desc"><p>Alias for field number 2</p></div>
+<div class="desc"><p>Alias for field number 3</p></div>
 </dd>
 <dt id="fpdf.structure_tree.MarkedContent.page_object_id"><code class="name">var <span class="ident">page_object_id</span> : int</code></dt>
 <dd>
@@ -357,9 +359,13 @@ class StructureTreeBuilder:
 <dd>
 <div class="desc"><p>Alias for field number 1</p></div>
 </dd>
+<dt id="fpdf.structure_tree.MarkedContent.struct_type"><code class="name">var <span class="ident">struct_type</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 2</p></div>
+</dd>
 <dt id="fpdf.structure_tree.MarkedContent.title"><code class="name">var <span class="ident">title</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"><p>Alias for field number 3</p></div>
+<div class="desc"><p>Alias for field number 4</p></div>
 </dd>
 </dl>
 </dd>
@@ -461,7 +467,7 @@ The argument must be an iterable if specified.</p></div>
         elif all(isinstance(elem, int) for elem in self):
             serialized_elems = &#34; &#34;.join(map(str, self))
         else:
-            raise NotImplementedError
+            raise NotImplementedError(f&#34;PDFArray.serialize with self={self}&#34;)
         return f&#34;[{serialized_elems}]&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -485,7 +491,7 @@ The argument must be an iterable if specified.</p></div>
     elif all(isinstance(elem, int) for elem in self):
         serialized_elems = &#34; &#34;.join(map(str, self))
     else:
-        raise NotImplementedError
+        raise NotImplementedError(f&#34;PDFArray.serialize with self={self}&#34;)
     return f&#34;[{serialized_elems}]&#34;</code></pre>
 </details>
 </dd>
@@ -847,9 +853,9 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
     def add_marked_content(self, marked_content):
         page = PDFObject(marked_content.page_object_id)
         struct_elem = StructElem(
-            struct_type=&#34;/Figure&#34;,
+            struct_type=marked_content.struct_type,
             parent=self.doc_struct_elem,
-            kids=[marked_content.mcid],
+            kids=[] if marked_content.mcid is None else [marked_content.mcid],
             page=page,
             title=marked_content.title,
             alt=marked_content.alt_text,
@@ -908,9 +914,9 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <pre><code class="python">def add_marked_content(self, marked_content):
     page = PDFObject(marked_content.page_object_id)
     struct_elem = StructElem(
-        struct_type=&#34;/Figure&#34;,
+        struct_type=marked_content.struct_type,
         parent=self.doc_struct_elem,
-        kids=[marked_content.mcid],
+        kids=[] if marked_content.mcid is None else [marked_content.mcid],
         page=page,
         title=marked_content.title,
         alt=marked_content.alt_text,
@@ -1009,11 +1015,12 @@ and this method output will be meaningless.</p></div>
 <ul>
 <li>
 <h4><code><a title="fpdf.structure_tree.MarkedContent" href="#fpdf.structure_tree.MarkedContent">MarkedContent</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="fpdf.structure_tree.MarkedContent.alt_text" href="#fpdf.structure_tree.MarkedContent.alt_text">alt_text</a></code></li>
 <li><code><a title="fpdf.structure_tree.MarkedContent.mcid" href="#fpdf.structure_tree.MarkedContent.mcid">mcid</a></code></li>
 <li><code><a title="fpdf.structure_tree.MarkedContent.page_object_id" href="#fpdf.structure_tree.MarkedContent.page_object_id">page_object_id</a></code></li>
 <li><code><a title="fpdf.structure_tree.MarkedContent.struct_parents_id" href="#fpdf.structure_tree.MarkedContent.struct_parents_id">struct_parents_id</a></code></li>
+<li><code><a title="fpdf.structure_tree.MarkedContent.struct_type" href="#fpdf.structure_tree.MarkedContent.struct_type">struct_type</a></code></li>
 <li><code><a title="fpdf.structure_tree.MarkedContent.title" href="#fpdf.structure_tree.MarkedContent.title">title</a></code></li>
 </ul>
 </li>
