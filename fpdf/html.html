@@ -36,9 +36,10 @@ __license__ = &#34;LGPL 3.0&#34;
 # Inspired by tuto5.py and several examples from fpdf.org, html2fpdf, etc.
 
 import html
+import logging
 from html.parser import HTMLParser
 
-DEBUG = False
+LOGGER = logging.getLogger(__name__)
 
 
 def px2mm(px):
@@ -145,15 +146,13 @@ class HTML2FPDF(HTMLParser):
                 if not self.theader_out:
                     self.output_table_header()
                 self.box_shadow(w, h, bgcolor)
-                if DEBUG:
-                    print(&#34;td cell&#34;, self.pdf.x, w, data, &#34;*&#34;)
+                LOGGER.debug(&#34;td cell %s %s %s *&#34;, self.pdf.x, w, data)
                 self.pdf.cell(w, h, data, border=border, ln=0, align=align)
         elif self.table is not None:
             # ignore anything else than td inside a table
             pass
         elif self.align:
-            if DEBUG:
-                print(&#34;cell&#34;, data, &#34;*&#34;)
+            LOGGER.debug(&#34;cell %s *&#34;, data)
             self.pdf.cell(
                 0,
                 self.h,
@@ -168,13 +167,11 @@ class HTML2FPDF(HTMLParser):
             if self.href:
                 self.put_link(self.href, data)
             else:
-                if DEBUG:
-                    print(&#34;write&#34;, data, &#34;*&#34;)
+                LOGGER.debug(&#34;write %s *&#34;)
                 self.pdf.write(self.h, data)
 
     def box_shadow(self, w, h, bgcolor):
-        if DEBUG:
-            print(&#34;box_shadow&#34;, w, h, bgcolor)
+        LOGGER.debug(&#34;box_shadow %s %s %s&#34;, w, h, bgcolor)
         if bgcolor:
             fill_color = self.pdf.fill_color
             self.pdf.set_fill_color(*bgcolor)
@@ -216,8 +213,7 @@ class HTML2FPDF(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        if DEBUG:
-            print(&#34;STARTTAG&#34;, tag, attrs)
+        LOGGER.debug(&#34;STARTTAG %s %s&#34;)
         if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
             self.set_style(tag, True)
         if tag == &#34;a&#34;:
@@ -331,8 +327,7 @@ class HTML2FPDF(HTMLParser):
 
     def handle_endtag(self, tag):
         # Closing tag
-        if DEBUG:
-            print(&#34;ENDTAG&#34;, tag)
+        LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
         if tag in (&#34;h1&#34;, &#34;h2&#34;, &#34;h3&#34;, &#34;h4&#34;, &#34;h5&#34;, &#34;h6&#34;):
             self.pdf.ln(self.h)
             self.set_font()
@@ -384,8 +379,7 @@ class HTML2FPDF(HTMLParser):
             self.tr = None
         if tag in (&#34;td&#34;, &#34;th&#34;):
             if self.th:
-                if DEBUG:
-                    print(&#34;revert style&#34;)
+                LOGGER.debug(&#34;revert style&#34;)
                 self.set_style(&#34;b&#34;, False)  # revert style
             self.table_col_index += int(self.td.get(&#34;colspan&#34;, &#34;1&#34;))
             self.td = None
@@ -405,8 +399,7 @@ class HTML2FPDF(HTMLParser):
         if size:
             self.font_size = size
             self.h = size / 72 * 25.4
-            if DEBUG:
-                print(&#34;H&#34;, self.h)
+            LOGGER.debug(&#34;H %s&#34;, self.h)
         style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
         self.pdf.set_font(self.font_face or &#34;times&#34;, style, self.font_size or 12)
         self.pdf.set_font_size(self.font_size or 12)
@@ -416,8 +409,7 @@ class HTML2FPDF(HTMLParser):
         if tag:
             self.style[tag.lower()] = enable
         style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
-        if DEBUG:
-            print(&#34;SET_FONT_STYLE&#34;, style)
+        LOGGER.debug(&#34;SET_FONT_STYLE %s&#34;, style)
         self.pdf.set_font(style=style)
 
     def set_text_color(self, r=None, g=0, b=0):
@@ -601,15 +593,13 @@ to new image URLs</dd>
                 if not self.theader_out:
                     self.output_table_header()
                 self.box_shadow(w, h, bgcolor)
-                if DEBUG:
-                    print(&#34;td cell&#34;, self.pdf.x, w, data, &#34;*&#34;)
+                LOGGER.debug(&#34;td cell %s %s %s *&#34;, self.pdf.x, w, data)
                 self.pdf.cell(w, h, data, border=border, ln=0, align=align)
         elif self.table is not None:
             # ignore anything else than td inside a table
             pass
         elif self.align:
-            if DEBUG:
-                print(&#34;cell&#34;, data, &#34;*&#34;)
+            LOGGER.debug(&#34;cell %s *&#34;, data)
             self.pdf.cell(
                 0,
                 self.h,
@@ -624,13 +614,11 @@ to new image URLs</dd>
             if self.href:
                 self.put_link(self.href, data)
             else:
-                if DEBUG:
-                    print(&#34;write&#34;, data, &#34;*&#34;)
+                LOGGER.debug(&#34;write %s *&#34;)
                 self.pdf.write(self.h, data)
 
     def box_shadow(self, w, h, bgcolor):
-        if DEBUG:
-            print(&#34;box_shadow&#34;, w, h, bgcolor)
+        LOGGER.debug(&#34;box_shadow %s %s %s&#34;, w, h, bgcolor)
         if bgcolor:
             fill_color = self.pdf.fill_color
             self.pdf.set_fill_color(*bgcolor)
@@ -672,8 +660,7 @@ to new image URLs</dd>
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        if DEBUG:
-            print(&#34;STARTTAG&#34;, tag, attrs)
+        LOGGER.debug(&#34;STARTTAG %s %s&#34;)
         if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
             self.set_style(tag, True)
         if tag == &#34;a&#34;:
@@ -787,8 +774,7 @@ to new image URLs</dd>
 
     def handle_endtag(self, tag):
         # Closing tag
-        if DEBUG:
-            print(&#34;ENDTAG&#34;, tag)
+        LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
         if tag in (&#34;h1&#34;, &#34;h2&#34;, &#34;h3&#34;, &#34;h4&#34;, &#34;h5&#34;, &#34;h6&#34;):
             self.pdf.ln(self.h)
             self.set_font()
@@ -840,8 +826,7 @@ to new image URLs</dd>
             self.tr = None
         if tag in (&#34;td&#34;, &#34;th&#34;):
             if self.th:
-                if DEBUG:
-                    print(&#34;revert style&#34;)
+                LOGGER.debug(&#34;revert style&#34;)
                 self.set_style(&#34;b&#34;, False)  # revert style
             self.table_col_index += int(self.td.get(&#34;colspan&#34;, &#34;1&#34;))
             self.td = None
@@ -861,8 +846,7 @@ to new image URLs</dd>
         if size:
             self.font_size = size
             self.h = size / 72 * 25.4
-            if DEBUG:
-                print(&#34;H&#34;, self.h)
+            LOGGER.debug(&#34;H %s&#34;, self.h)
         style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
         self.pdf.set_font(self.font_face or &#34;times&#34;, style, self.font_size or 12)
         self.pdf.set_font_size(self.font_size or 12)
@@ -872,8 +856,7 @@ to new image URLs</dd>
         if tag:
             self.style[tag.lower()] = enable
         style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
-        if DEBUG:
-            print(&#34;SET_FONT_STYLE&#34;, style)
+        LOGGER.debug(&#34;SET_FONT_STYLE %s&#34;, style)
         self.pdf.set_font(style=style)
 
     def set_text_color(self, r=None, g=0, b=0):
@@ -911,8 +894,7 @@ to new image URLs</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def box_shadow(self, w, h, bgcolor):
-    if DEBUG:
-        print(&#34;box_shadow&#34;, w, h, bgcolor)
+    LOGGER.debug(&#34;box_shadow %s %s %s&#34;, w, h, bgcolor)
     if bgcolor:
         fill_color = self.pdf.fill_color
         self.pdf.set_fill_color(*bgcolor)
@@ -986,15 +968,13 @@ to new image URLs</dd>
             if not self.theader_out:
                 self.output_table_header()
             self.box_shadow(w, h, bgcolor)
-            if DEBUG:
-                print(&#34;td cell&#34;, self.pdf.x, w, data, &#34;*&#34;)
+            LOGGER.debug(&#34;td cell %s %s %s *&#34;, self.pdf.x, w, data)
             self.pdf.cell(w, h, data, border=border, ln=0, align=align)
     elif self.table is not None:
         # ignore anything else than td inside a table
         pass
     elif self.align:
-        if DEBUG:
-            print(&#34;cell&#34;, data, &#34;*&#34;)
+        LOGGER.debug(&#34;cell %s *&#34;, data)
         self.pdf.cell(
             0,
             self.h,
@@ -1009,8 +989,7 @@ to new image URLs</dd>
         if self.href:
             self.put_link(self.href, data)
         else:
-            if DEBUG:
-                print(&#34;write&#34;, data, &#34;*&#34;)
+            LOGGER.debug(&#34;write %s *&#34;)
             self.pdf.write(self.h, data)</code></pre>
 </details>
 </dd>
@@ -1025,8 +1004,7 @@ to new image URLs</dd>
 </summary>
 <pre><code class="python">def handle_endtag(self, tag):
     # Closing tag
-    if DEBUG:
-        print(&#34;ENDTAG&#34;, tag)
+    LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
     if tag in (&#34;h1&#34;, &#34;h2&#34;, &#34;h3&#34;, &#34;h4&#34;, &#34;h5&#34;, &#34;h6&#34;):
         self.pdf.ln(self.h)
         self.set_font()
@@ -1078,8 +1056,7 @@ to new image URLs</dd>
         self.tr = None
     if tag in (&#34;td&#34;, &#34;th&#34;):
         if self.th:
-            if DEBUG:
-                print(&#34;revert style&#34;)
+            LOGGER.debug(&#34;revert style&#34;)
             self.set_style(&#34;b&#34;, False)  # revert style
         self.table_col_index += int(self.td.get(&#34;colspan&#34;, &#34;1&#34;))
         self.td = None
@@ -1105,8 +1082,7 @@ to new image URLs</dd>
 </summary>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     attrs = dict(attrs)
-    if DEBUG:
-        print(&#34;STARTTAG&#34;, tag, attrs)
+    LOGGER.debug(&#34;STARTTAG %s %s&#34;)
     if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
         self.set_style(tag, True)
     if tag == &#34;a&#34;:
@@ -1315,8 +1291,7 @@ to new image URLs</dd>
     if size:
         self.font_size = size
         self.h = size / 72 * 25.4
-        if DEBUG:
-            print(&#34;H&#34;, self.h)
+        LOGGER.debug(&#34;H %s&#34;, self.h)
     style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
     self.pdf.set_font(self.font_face or &#34;times&#34;, style, self.font_size or 12)
     self.pdf.set_font_size(self.font_size or 12)</code></pre>
@@ -1336,8 +1311,7 @@ to new image URLs</dd>
     if tag:
         self.style[tag.lower()] = enable
     style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
-    if DEBUG:
-        print(&#34;SET_FONT_STYLE&#34;, style)
+    LOGGER.debug(&#34;SET_FONT_STYLE %s&#34;, style)
     self.pdf.set_font(style=style)</code></pre>
 </details>
 </dd>
