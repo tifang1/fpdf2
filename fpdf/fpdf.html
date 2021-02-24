@@ -410,6 +410,15 @@ class FPDF:
         &#34;&#34;&#34;Title of document&#34;&#34;&#34;
         self.title = title
 
+    def set_lang(self, lang):
+        &#34;&#34;&#34;
+        A language identifier specifying the natural language for all text in the document
+        except where overridden by language specifications for structure elements or marked content.
+        A language identifier can either be the empty text string, to indicate that the language is unknown,
+        or a Language-Tag as defined in RFC 3066, &#34;Tags for the Identification of Languages&#34;.
+        &#34;&#34;&#34;
+        self.lang = lang
+
     def set_subject(self, subject):
         &#34;&#34;&#34;Subject of document&#34;&#34;&#34;
         self.subject = subject
@@ -2322,6 +2331,9 @@ class FPDF:
             # Pages is always the 1st object of the document, cf. the end of _putpages:
             &#34;/Pages&#34;: pdf_ref(1),
         }
+        lang = enclose_in_parens(getattr(self, &#34;lang&#34;, None))
+        if lang:
+            catalog_d[&#34;/Lang&#34;] = lang
 
         if self.zoom_mode in ZOOM_CONFIGS:
             zoom_config = [
@@ -2979,6 +2991,15 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;Title of document&#34;&#34;&#34;
         self.title = title
 
+    def set_lang(self, lang):
+        &#34;&#34;&#34;
+        A language identifier specifying the natural language for all text in the document
+        except where overridden by language specifications for structure elements or marked content.
+        A language identifier can either be the empty text string, to indicate that the language is unknown,
+        or a Language-Tag as defined in RFC 3066, &#34;Tags for the Identification of Languages&#34;.
+        &#34;&#34;&#34;
+        self.lang = lang
+
     def set_subject(self, subject):
         &#34;&#34;&#34;Subject of document&#34;&#34;&#34;
         self.subject = subject
@@ -4891,6 +4912,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
             # Pages is always the 1st object of the document, cf. the end of _putpages:
             &#34;/Pages&#34;: pdf_ref(1),
         }
+        lang = enclose_in_parens(getattr(self, &#34;lang&#34;, None))
+        if lang:
+            catalog_d[&#34;/Lang&#34;] = lang
 
         if self.zoom_mode in ZOOM_CONFIGS:
             zoom_config = [
@@ -7188,6 +7212,28 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     self.keywords = keywords</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.set_lang"><code class="name flex">
+<span>def <span class="ident">set_lang</span></span>(<span>self, lang)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A language identifier specifying the natural language for all text in the document
+except where overridden by language specifications for structure elements or marked content.
+A language identifier can either be the empty text string, to indicate that the language is unknown,
+or a Language-Tag as defined in RFC 3066, "Tags for the Identification of Languages".</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_lang(self, lang):
+    &#34;&#34;&#34;
+    A language identifier specifying the natural language for all text in the document
+    except where overridden by language specifications for structure elements or marked content.
+    A language identifier can either be the empty text string, to indicate that the language is unknown,
+    or a Language-Tag as defined in RFC 3066, &#34;Tags for the Identification of Languages&#34;.
+    &#34;&#34;&#34;
+    self.lang = lang</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.set_left_margin"><code class="name flex">
 <span>def <span class="ident">set_left_margin</span></span>(<span>self, margin)</span>
 </code></dt>
@@ -7683,6 +7729,7 @@ def write(self, h, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.set_font" href="#fpdf.fpdf.FPDF.set_font">set_font</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_font_size" href="#fpdf.fpdf.FPDF.set_font_size">set_font_size</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_keywords" href="#fpdf.fpdf.FPDF.set_keywords">set_keywords</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.set_lang" href="#fpdf.fpdf.FPDF.set_lang">set_lang</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_left_margin" href="#fpdf.fpdf.FPDF.set_left_margin">set_left_margin</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_line_width" href="#fpdf.fpdf.FPDF.set_line_width">set_line_width</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_link" href="#fpdf.fpdf.FPDF.set_link">set_link</a></code></li>
