@@ -621,6 +621,42 @@ The default is <code>True</code>, meaning the current folder.</dd>
             f&#34;{(self.h - y2) * self.k:.2f} l S&#34;
         )
 
+    @check_page
+    def polyline(self, point_list, fill=False, polygon=False):
+        &#34;&#34;&#34;
+        Draws lines between two or more points.
+
+        Args:
+            point_list (list of tuples): List of Abscissa and Ordinate of
+                                        segments that should be drawn
+            fill (bool): If true then polyline should be filled
+            polygon (bool): If true, close path before stroking
+        &#34;&#34;&#34;
+        operator = &#34;m&#34;
+        for point in point_list:
+            self._out(
+                f&#34;{point[0] * self.k:.2f} {(self.h - point[1]) * self.k:.2f} {operator}&#34;
+            )
+            operator = &#34;l&#34;
+        if polygon:
+            self._out(&#34; h &#34;)
+        if fill:
+            self._out(&#34; B &#34;)
+        else:
+            self._out(&#34; S &#34;)
+
+    @check_page
+    def polygon(self, point_list, fill=False):
+        &#34;&#34;&#34;
+        Outputs a polygon defined by three or more points.
+
+        Args:
+            point_list (list of tuples): List of Abscissa and Ordinate of
+                                        polygon that should be drawn
+            fill (bool): If true polygon will be filled
+        &#34;&#34;&#34;
+        self.polyline(point_list, fill=fill, polygon=True)
+
     def _set_dash(self, dash_length=None, space_length=None):
         dash = &#34;&#34;
         if dash_length and space_length:
@@ -4239,6 +4275,80 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
     return False</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.polygon"><code class="name flex">
+<span>def <span class="ident">polygon</span></span>(<span>self, point_list, fill=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs a polygon defined by three or more points.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>point_list</code></strong> :&ensp;<code>list</code> of <code>tuples</code></dt>
+<dd>List of Abscissa and Ordinate of
+polygon that should be drawn</dd>
+<dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true polygon will be filled</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def polygon(self, point_list, fill=False):
+    &#34;&#34;&#34;
+    Outputs a polygon defined by three or more points.
+
+    Args:
+        point_list (list of tuples): List of Abscissa and Ordinate of
+                                    polygon that should be drawn
+        fill (bool): If true polygon will be filled
+    &#34;&#34;&#34;
+    self.polyline(point_list, fill=fill, polygon=True)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.polyline"><code class="name flex">
+<span>def <span class="ident">polyline</span></span>(<span>self, point_list, fill=False, polygon=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Draws lines between two or more points.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>point_list</code></strong> :&ensp;<code>list</code> of <code>tuples</code></dt>
+<dd>List of Abscissa and Ordinate of
+segments that should be drawn</dd>
+<dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true then polyline should be filled</dd>
+<dt><strong><code>polygon</code></strong> :&ensp;<code>bool</code></dt>
+<dd>If true, close path before stroking</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def polyline(self, point_list, fill=False, polygon=False):
+    &#34;&#34;&#34;
+    Draws lines between two or more points.
+
+    Args:
+        point_list (list of tuples): List of Abscissa and Ordinate of
+                                    segments that should be drawn
+        fill (bool): If true then polyline should be filled
+        polygon (bool): If true, close path before stroking
+    &#34;&#34;&#34;
+    operator = &#34;m&#34;
+    for point in point_list:
+        self._out(
+            f&#34;{point[0] * self.k:.2f} {(self.h - point[1]) * self.k:.2f} {operator}&#34;
+        )
+        operator = &#34;l&#34;
+    if polygon:
+        self._out(&#34; h &#34;)
+    if fill:
+        self._out(&#34; B &#34;)
+    else:
+        self._out(&#34; S &#34;)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.rect"><code class="name flex">
 <span>def <span class="ident">rect</span></span>(<span>self, x, y, w, h, style=None)</span>
 </code></dt>
@@ -6035,6 +6145,8 @@ def write(
 <li><code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">output</a></code></li>
 <li><code><a title="fpdf.FPDF.page_no" href="#fpdf.FPDF.page_no">page_no</a></code></li>
 <li><code><a title="fpdf.FPDF.perform_page_break_if_need_be" href="#fpdf.FPDF.perform_page_break_if_need_be">perform_page_break_if_need_be</a></code></li>
+<li><code><a title="fpdf.FPDF.polygon" href="#fpdf.FPDF.polygon">polygon</a></code></li>
+<li><code><a title="fpdf.FPDF.polyline" href="#fpdf.FPDF.polyline">polyline</a></code></li>
 <li><code><a title="fpdf.FPDF.rect" href="#fpdf.FPDF.rect">rect</a></code></li>
 <li><code><a title="fpdf.FPDF.rect_clip" href="#fpdf.FPDF.rect_clip">rect_clip</a></code></li>
 <li><code><a title="fpdf.FPDF.rotate" href="#fpdf.FPDF.rotate">rotate</a></code></li>
