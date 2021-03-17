@@ -226,6 +226,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
+        self.xmp_metadata = None
+        # Only set if XMP metadata is added to the document:
+        self._xmp_metadata_obj_id = None
         self._marked_contents = []  # list of MarkedContent
         self._struct_parents_id_per_page = {}  # {page_object_id -&gt; StructParent(s) ID}
         # Only set if a Structure Tree is added to the document:
@@ -444,9 +447,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;Creator of document&#34;&#34;&#34;
         self.creator = creator
 
+    def set_producer(self, producer):
+        &#34;&#34;&#34;Producer of document&#34;&#34;&#34;
+        self.producer = producer
+
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
         self.creation_date = datetime.now() if date is None else date
+
+    def set_xmp_metadata(self, xmp_metadata):
+        if &#34;&lt;?xpacket&#34; in xmp_metadata[:50]:
+            raise ValueError(
+                &#34;fpdf2 already performs XMP metadata wrapping in a &lt;?xpacket&gt; tag&#34;
+            )
+        self.xmp_metadata = xmp_metadata
 
     def set_doc_option(self, opt, value):
         &#34;&#34;&#34;Set document option&#34;&#34;&#34;
@@ -2385,6 +2399,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
             first_object_id=self._struct_tree_root_obj_id, fpdf=self
         )
 
+    def _put_xmp_metadata(self):
+        xpacket = f&#39;&lt;?xpacket begin=&#34;ï»¿&#34; id=&#34;W5M0MpCehiHzreSzNTczkc9d&#34;?&gt;\n{self.xmp_metadata}\n&lt;?xpacket end=&#34;w&#34;?&gt;\n&#39;
+        self._newobj()
+        self._out(f&#34;&lt;&lt;/Type /Metadata /Subtype /XML /Length {len(xpacket)}&gt;&gt;&#34;)
+        self._out(pdf_stream(xpacket))
+        self._out(&#34;endobj&#34;)
+        self._xmp_metadata_obj_id = self.n
+
     def _putinfo(self):
         info_d = {
             &#34;/Title&#34;: enclose_in_parens(getattr(self, &#34;title&#34;, None)),
@@ -2392,6 +2414,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             &#34;/Author&#34;: enclose_in_parens(getattr(self, &#34;author&#34;, None)),
             &#34;/Keywords&#34;: enclose_in_parens(getattr(self, &#34;keywords&#34;, None)),
             &#34;/Creator&#34;: enclose_in_parens(getattr(self, &#34;creator&#34;, None)),
+            &#34;/Producer&#34;: enclose_in_parens(getattr(self, &#34;producer&#34;, None)),
         }
 
         if hasattr(self, &#34;creation_date&#34;):
@@ -2429,6 +2452,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         if self.layout_mode in LAYOUT_NAMES:
             catalog_d[&#34;/PageLayout&#34;] = LAYOUT_NAMES[self.layout_mode]
+        if self._xmp_metadata_obj_id:
+            catalog_d[&#34;/Metadata&#34;] = pdf_ref(self._xmp_metadata_obj_id)
         if self._struct_tree_root_obj_id:
             catalog_d[&#34;/MarkInfo&#34;] = pdf_d({&#34;/Marked&#34;: &#34;true&#34;})
             catalog_d[&#34;/StructTreeRoot&#34;] = pdf_ref(self._struct_tree_root_obj_id)
@@ -2452,6 +2477,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._putresources()  # trace_size is performed inside
         if self._marked_contents:
             self._put_structure_tree()
+        if self.xmp_metadata:
+            self._put_xmp_metadata()
         # Info
         with self._trace_size(&#34;info&#34;):
             self._newobj()
@@ -5000,6 +5027,20 @@ Also sets the current FPDF.y on the page to this minimum vertical position.</p>
     self.r_margin = right</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.set_producer"><code class="name flex">
+<span>def <span class="ident">set_producer</span></span>(<span>self, producer)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Producer of document</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_producer(self, producer):
+    &#34;&#34;&#34;Producer of document&#34;&#34;&#34;
+    self.producer = producer</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.set_right_margin"><code class="name flex">
 <span>def <span class="ident">set_right_margin</span></span>(<span>self, margin)</span>
 </code></dt>
@@ -5123,6 +5164,23 @@ Also sets the current FPDF.y on the page to this minimum vertical position.</p>
 <pre><code class="python">def set_x(self, x):
     &#34;&#34;&#34;Set x position&#34;&#34;&#34;
     self.x = x if x &gt;= 0 else self.w + x</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.set_xmp_metadata"><code class="name flex">
+<span>def <span class="ident">set_xmp_metadata</span></span>(<span>self, xmp_metadata)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_xmp_metadata(self, xmp_metadata):
+    if &#34;&lt;?xpacket&#34; in xmp_metadata[:50]:
+        raise ValueError(
+            &#34;fpdf2 already performs XMP metadata wrapping in a &lt;?xpacket&gt; tag&#34;
+        )
+    self.xmp_metadata = xmp_metadata</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_xy"><code class="name flex">
@@ -6169,6 +6227,7 @@ def write(
 <li><code><a title="fpdf.FPDF.set_link" href="#fpdf.FPDF.set_link">set_link</a></code></li>
 <li><code><a title="fpdf.FPDF.set_margin" href="#fpdf.FPDF.set_margin">set_margin</a></code></li>
 <li><code><a title="fpdf.FPDF.set_margins" href="#fpdf.FPDF.set_margins">set_margins</a></code></li>
+<li><code><a title="fpdf.FPDF.set_producer" href="#fpdf.FPDF.set_producer">set_producer</a></code></li>
 <li><code><a title="fpdf.FPDF.set_right_margin" href="#fpdf.FPDF.set_right_margin">set_right_margin</a></code></li>
 <li><code><a title="fpdf.FPDF.set_stretching" href="#fpdf.FPDF.set_stretching">set_stretching</a></code></li>
 <li><code><a title="fpdf.FPDF.set_subject" href="#fpdf.FPDF.set_subject">set_subject</a></code></li>
@@ -6176,6 +6235,7 @@ def write(
 <li><code><a title="fpdf.FPDF.set_title" href="#fpdf.FPDF.set_title">set_title</a></code></li>
 <li><code><a title="fpdf.FPDF.set_top_margin" href="#fpdf.FPDF.set_top_margin">set_top_margin</a></code></li>
 <li><code><a title="fpdf.FPDF.set_x" href="#fpdf.FPDF.set_x">set_x</a></code></li>
+<li><code><a title="fpdf.FPDF.set_xmp_metadata" href="#fpdf.FPDF.set_xmp_metadata">set_xmp_metadata</a></code></li>
 <li><code><a title="fpdf.FPDF.set_xy" href="#fpdf.FPDF.set_xy">set_xy</a></code></li>
 <li><code><a title="fpdf.FPDF.set_y" href="#fpdf.FPDF.set_y">set_y</a></code></li>
 <li><code><a title="fpdf.FPDF.text" href="#fpdf.FPDF.text">text</a></code></li>
