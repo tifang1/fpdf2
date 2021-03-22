@@ -58,6 +58,8 @@ def hex2dec(color=&#34;#000000&#34;):
 class HTML2FPDF(HTMLParser):
     &#34;&#34;&#34;Render basic HTML to FPDF&#34;&#34;&#34;
 
+    LI_TAG_INDENT = 5
+
     def __init__(self, pdf, image_map=None, table_line_separators=False):
         &#34;&#34;&#34;
         Args:
@@ -255,7 +257,7 @@ class HTML2FPDF(HTMLParser):
                 bullet += 1
                 self.bullet[self.indent - 1] = bullet
                 bullet = f&#34;{bullet}. &#34;
-            self.pdf.write(self.h, f&#34;{&#39; &#39; * 5 * self.indent}{bullet} &#34;)
+            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.LI_TAG_INDENT * self.indent}{bullet} &#34;)
             self.set_text_color()
         if tag == &#34;font&#34;:
             # save previous font state:
@@ -508,6 +510,8 @@ to new image URLs</dd>
 <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;&#34;&#34;Render basic HTML to FPDF&#34;&#34;&#34;
 
+    LI_TAG_INDENT = 5
+
     def __init__(self, pdf, image_map=None, table_line_separators=False):
         &#34;&#34;&#34;
         Args:
@@ -705,7 +709,7 @@ to new image URLs</dd>
                 bullet += 1
                 self.bullet[self.indent - 1] = bullet
                 bullet = f&#34;{bullet}. &#34;
-            self.pdf.write(self.h, f&#34;{&#39; &#39; * 5 * self.indent}{bullet} &#34;)
+            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.LI_TAG_INDENT * self.indent}{bullet} &#34;)
             self.set_text_color()
         if tag == &#34;font&#34;:
             # save previous font state:
@@ -888,6 +892,13 @@ to new image URLs</dd>
 <li>html.parser.HTMLParser</li>
 <li>_markupbase.ParserBase</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.html.HTML2FPDF.LI_TAG_INDENT"><code class="name">var <span class="ident">LI_TAG_INDENT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.html.HTML2FPDF.box_shadow"><code class="name flex">
@@ -1129,7 +1140,7 @@ to new image URLs</dd>
             bullet += 1
             self.bullet[self.indent - 1] = bullet
             bullet = f&#34;{bullet}. &#34;
-        self.pdf.write(self.h, f&#34;{&#39; &#39; * 5 * self.indent}{bullet} &#34;)
+        self.pdf.write(self.h, f&#34;{&#39; &#39; * self.LI_TAG_INDENT * self.indent}{bullet} &#34;)
         self.set_text_color()
     if tag == &#34;font&#34;:
         # save previous font state:
@@ -1420,6 +1431,7 @@ to new image URLs</dd>
 <li>
 <h4><code><a title="fpdf.html.HTML2FPDF" href="#fpdf.html.HTML2FPDF">HTML2FPDF</a></code></h4>
 <ul class="two-column">
+<li><code><a title="fpdf.html.HTML2FPDF.LI_TAG_INDENT" href="#fpdf.html.HTML2FPDF.LI_TAG_INDENT">LI_TAG_INDENT</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.box_shadow" href="#fpdf.html.HTML2FPDF.box_shadow">box_shadow</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.error" href="#fpdf.html.HTML2FPDF.error">error</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.handle_data" href="#fpdf.html.HTML2FPDF.handle_data">handle_data</a></code></li>
