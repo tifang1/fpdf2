@@ -787,7 +787,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         # Check if font already added or one of the core fonts
         if fontkey in self.fonts or fontkey in self.core_fonts:
-            warnings.warn(&#34;Core font or font already added: doing nothing&#34;)
+            warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
             return
         if uni:
             for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
@@ -1109,6 +1109,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
         The rotation affects all elements which are printed inside the indented context
         (with the exception of clickable areas).
 
+        Args:
+            angle (float): angle in degrees
+            x (float): abscissa of the center of the rotation
+            y (float): ordinate of the center of the rotation
+
         Notes
         -----
 
@@ -1241,18 +1246,15 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 s += (
                     f&#34;BT 0 Tw {(self.x + dx) * k:.2F} &#34;
                     f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2F} &#34;
-                    f&#34;Td [&#34;
+                    &#34;Td [&#34;
                 )
 
-                t = txt.split(&#34; &#34;)
-                numt = len(t)
-                for i in range(numt):
-                    tx = t[i]
-                    tx = enclose_in_parens(
-                        escape_parens(tx.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
-                    )
-                    s += f&#34;{tx} &#34;
-                    if (i + 1) &lt; numt:
+                words = txt.split(&#34; &#34;)
+                for i, word in enumerate(words):
+                    word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                    s += f&#34;({word}) &#34;
+                    is_last_word = (i + 1) == len(words)
+                    if not is_last_word:
                         adj = -(self.ws * self.k) * 1000 / self.font_size_pt
                         s += f&#34;{adj}({space}) &#34;
                 s += &#34;] TJ&#34;
@@ -1353,8 +1355,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
             align (str): Allows to center or align the text. Possible values are:
-                `L` or empty string: left align (default value) ; `C`: center ;
-                `R`: right align
+                `J`: justify (default value); `L` or empty string: left align ;
+                `C`: center ; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             split_only (bool): if `True`, does not output anything, only perform
@@ -2820,7 +2822,7 @@ def unifontsubset(self):
 
     # Check if font already added or one of the core fonts
     if fontkey in self.fonts or fontkey in self.core_fonts:
-        warnings.warn(&#34;Core font or font already added: doing nothing&#34;)
+        warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
         return
     if uni:
         for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
@@ -3188,18 +3190,15 @@ def cell(self, w, h=0, txt=&#34;&#34;, border=0, ln=0, align=&#34;&#34;, fill=Fa
             s += (
                 f&#34;BT 0 Tw {(self.x + dx) * k:.2F} &#34;
                 f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2F} &#34;
-                f&#34;Td [&#34;
+                &#34;Td [&#34;
             )
 
-            t = txt.split(&#34; &#34;)
-            numt = len(t)
-            for i in range(numt):
-                tx = t[i]
-                tx = enclose_in_parens(
-                    escape_parens(tx.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
-                )
-                s += f&#34;{tx} &#34;
-                if (i + 1) &lt; numt:
+            words = txt.split(&#34; &#34;)
+            for i, word in enumerate(words):
+                word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                s += f&#34;({word}) &#34;
+                is_last_word = (i + 1) == len(words)
+                if not is_last_word:
                     adj = -(self.ws * self.k) * 1000 / self.font_size_pt
                     s += f&#34;{adj}({space}) &#34;
             s += &#34;] TJ&#34;
@@ -3907,8 +3906,8 @@ the background painted.</p>
             (in any order):
             &lt;code&gt;L&lt;/code&gt;: left ; &lt;code&gt;T&lt;/code&gt;: top ; &lt;code&gt;R&lt;/code&gt;: right ; &lt;code&gt;B&lt;/code&gt;: bottom. Default value: 0.
         align (str): Allows to center or align the text. Possible values are:
-            &lt;code&gt;L&lt;/code&gt; or empty string: left align (default value) ; &lt;code&gt;C&lt;/code&gt;: center ;
-            &lt;code&gt;R&lt;/code&gt;: right align
+            &lt;code&gt;J&lt;/code&gt;: justify (default value); &lt;code&gt;L&lt;/code&gt; or empty string: left align ;
+            &lt;code&gt;C&lt;/code&gt;: center ; &lt;code&gt;R&lt;/code&gt;: right align
         fill (bool): Indicates if the cell background must be painted (&lt;code&gt;True&lt;/code&gt;)
             or transparent (&lt;code&gt;False&lt;/code&gt;). Default value: False.
         split_only (bool): if &lt;code&gt;True&lt;/code&gt;, does not output anything, only perform
@@ -3961,8 +3960,8 @@ def multi_cell(
             (in any order):
             `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
         align (str): Allows to center or align the text. Possible values are:
-            `L` or empty string: left align (default value) ; `C`: center ;
-            `R`: right align
+            `J`: justify (default value); `L` or empty string: left align ;
+            `C`: center ; `R`: right align
         fill (bool): Indicates if the cell background must be painted (`True`)
             or transparent (`False`). Default value: False.
         split_only (bool): if `True`, does not output anything, only perform
@@ -4499,6 +4498,15 @@ def rotate(self, angle, x=None, y=None):
 <div class="desc"><p>This method allows to perform a rotation around a given center.</p>
 <p>The rotation affects all elements which are printed inside the indented context
 (with the exception of clickable areas).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>angle in degrees</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dd>abscissa of the center of the rotation</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
+<dd>ordinate of the center of the rotation</dd>
+</dl>
 <h2 id="notes">Notes</h2>
 <p>Only the rendering is altered. The <code>get_x()</code> and <code>get_y()</code> methods are not
 affected, nor the automatic page break mechanism.</p></div>
@@ -4514,6 +4522,11 @@ def rotation(self, angle, x=None, y=None):
 
     The rotation affects all elements which are printed inside the indented context
     (with the exception of clickable areas).
+
+    Args:
+        angle (float): angle in degrees
+        x (float): abscissa of the center of the rotation
+        y (float): ordinate of the center of the rotation
 
     Notes
     -----
