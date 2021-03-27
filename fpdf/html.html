@@ -40,6 +40,7 @@ import logging
 from html.parser import HTMLParser
 
 LOGGER = logging.getLogger(__name__)
+BULLET_WIN1252 = &#34;\x95&#34;  # BULLET character in Windows-1252 encoding
 
 
 def px2mm(px):
@@ -58,20 +59,30 @@ def hex2dec(color=&#34;#000000&#34;):
 class HTML2FPDF(HTMLParser):
     &#34;&#34;&#34;Render basic HTML to FPDF&#34;&#34;&#34;
 
-    LI_TAG_INDENT = 5
-
-    def __init__(self, pdf, image_map=None, table_line_separators=False):
+    def __init__(
+        self,
+        pdf,
+        image_map=None,
+        li_tag_indent=5,
+        table_line_separators=False,
+        ul_bullet_char=BULLET_WIN1252,
+        **_,
+    ):
         &#34;&#34;&#34;
         Args:
             pdf (FPDF): an instance of `fpdf.FPDF`
             image_map (function): an optional one-argument function that map &lt;img&gt; &#34;src&#34;
                 to new image URLs
+            li_tag_indent (int): numeric indentation of &lt;li&gt; elements
             table_line_separators (bool): enable horizontal line separators in &lt;table&gt;
+            ul_bullet_char (str): bullet character for &lt;ul&gt; elements
         &#34;&#34;&#34;
         super().__init__()
         self.pdf = pdf
         self.image_map = image_map or (lambda src: src)
+        self.li_tag_indent = li_tag_indent
         self.table_line_separators = table_line_separators
+        self.ul_bullet_char = ul_bullet_char
         self.style = dict(b=False, i=False, u=False)
         self.href = &#34;&#34;
         self.align = &#34;&#34;
@@ -245,7 +256,7 @@ class HTML2FPDF(HTMLParser):
             self.pdf.ln(3)
         if tag == &#34;ul&#34;:
             self.indent += 1
-            self.bullet.append(&#34;\x95&#34;)
+            self.bullet.append(self.ul_bullet_char)
         if tag == &#34;ol&#34;:
             self.indent += 1
             self.bullet.append(0)
@@ -257,7 +268,7 @@ class HTML2FPDF(HTMLParser):
                 bullet += 1
                 self.bullet[self.indent - 1] = bullet
                 bullet = f&#34;{bullet}. &#34;
-            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.LI_TAG_INDENT * self.indent}{bullet} &#34;)
+            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.li_tag_indent * self.indent}{bullet} &#34;)
             self.set_text_color()
         if tag == &#34;font&#34;:
             # save previous font state:
@@ -439,7 +450,10 @@ class HTML2FPDF(HTMLParser):
 class HTMLMixin:
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-        h2p = HTML2FPDF(self, *args, **kwargs)
+        kwargs2 = vars(self)
+        # Method arguments must override class &amp; instance attributes:
+        kwargs2.update(kwargs)
+        h2p = HTML2FPDF(self, *args, **kwargs2)
         text = html.unescape(text)  # To deal with HTML entities
         h2p.feed(text)</code></pre>
 </details>
@@ -489,7 +503,7 @@ class HTMLMixin:
 <dl>
 <dt id="fpdf.html.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, table_line_separators=False)</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=5, table_line_separators=False, ul_bullet_char='\x95', **_)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -500,8 +514,12 @@ class HTMLMixin:
 <dt><strong><code>image_map</code></strong> :&ensp;<code>function</code></dt>
 <dd>an optional one-argument function that map <img> "src"
 to new image URLs</dd>
+<dt><strong><code>li_tag_indent</code></strong> :&ensp;<code>int</code></dt>
+<dd>numeric indentation of <li> elements</dd>
 <dt><strong><code>table_line_separators</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable horizontal line separators in <table></dd>
+<dt><strong><code>ul_bullet_char</code></strong> :&ensp;<code>str</code></dt>
+<dd>bullet character for <ul> elements</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -510,20 +528,30 @@ to new image URLs</dd>
 <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;&#34;&#34;Render basic HTML to FPDF&#34;&#34;&#34;
 
-    LI_TAG_INDENT = 5
-
-    def __init__(self, pdf, image_map=None, table_line_separators=False):
+    def __init__(
+        self,
+        pdf,
+        image_map=None,
+        li_tag_indent=5,
+        table_line_separators=False,
+        ul_bullet_char=BULLET_WIN1252,
+        **_,
+    ):
         &#34;&#34;&#34;
         Args:
             pdf (FPDF): an instance of `fpdf.FPDF`
             image_map (function): an optional one-argument function that map &lt;img&gt; &#34;src&#34;
                 to new image URLs
+            li_tag_indent (int): numeric indentation of &lt;li&gt; elements
             table_line_separators (bool): enable horizontal line separators in &lt;table&gt;
+            ul_bullet_char (str): bullet character for &lt;ul&gt; elements
         &#34;&#34;&#34;
         super().__init__()
         self.pdf = pdf
         self.image_map = image_map or (lambda src: src)
+        self.li_tag_indent = li_tag_indent
         self.table_line_separators = table_line_separators
+        self.ul_bullet_char = ul_bullet_char
         self.style = dict(b=False, i=False, u=False)
         self.href = &#34;&#34;
         self.align = &#34;&#34;
@@ -697,7 +725,7 @@ to new image URLs</dd>
             self.pdf.ln(3)
         if tag == &#34;ul&#34;:
             self.indent += 1
-            self.bullet.append(&#34;\x95&#34;)
+            self.bullet.append(self.ul_bullet_char)
         if tag == &#34;ol&#34;:
             self.indent += 1
             self.bullet.append(0)
@@ -709,7 +737,7 @@ to new image URLs</dd>
                 bullet += 1
                 self.bullet[self.indent - 1] = bullet
                 bullet = f&#34;{bullet}. &#34;
-            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.LI_TAG_INDENT * self.indent}{bullet} &#34;)
+            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.li_tag_indent * self.indent}{bullet} &#34;)
             self.set_text_color()
         if tag == &#34;font&#34;:
             # save previous font state:
@@ -892,13 +920,6 @@ to new image URLs</dd>
 <li>html.parser.HTMLParser</li>
 <li>_markupbase.ParserBase</li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.html.HTML2FPDF.LI_TAG_INDENT"><code class="name">var <span class="ident">LI_TAG_INDENT</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.html.HTML2FPDF.box_shadow"><code class="name flex">
@@ -1128,7 +1149,7 @@ to new image URLs</dd>
         self.pdf.ln(3)
     if tag == &#34;ul&#34;:
         self.indent += 1
-        self.bullet.append(&#34;\x95&#34;)
+        self.bullet.append(self.ul_bullet_char)
     if tag == &#34;ol&#34;:
         self.indent += 1
         self.bullet.append(0)
@@ -1140,7 +1161,7 @@ to new image URLs</dd>
             bullet += 1
             self.bullet[self.indent - 1] = bullet
             bullet = f&#34;{bullet}. &#34;
-        self.pdf.write(self.h, f&#34;{&#39; &#39; * self.LI_TAG_INDENT * self.indent}{bullet} &#34;)
+        self.pdf.write(self.h, f&#34;{&#39; &#39; * self.li_tag_indent * self.indent}{bullet} &#34;)
         self.set_text_color()
     if tag == &#34;font&#34;:
         # save previous font state:
@@ -1382,7 +1403,10 @@ to new image URLs</dd>
 <pre><code class="python">class HTMLMixin:
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-        h2p = HTML2FPDF(self, *args, **kwargs)
+        kwargs2 = vars(self)
+        # Method arguments must override class &amp; instance attributes:
+        kwargs2.update(kwargs)
+        h2p = HTML2FPDF(self, *args, **kwargs2)
         text = html.unescape(text)  # To deal with HTML entities
         h2p.feed(text)</code></pre>
 </details>
@@ -1399,7 +1423,10 @@ to new image URLs</dd>
 </summary>
 <pre><code class="python">def write_html(self, text, *args, **kwargs):
     &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-    h2p = HTML2FPDF(self, *args, **kwargs)
+    kwargs2 = vars(self)
+    # Method arguments must override class &amp; instance attributes:
+    kwargs2.update(kwargs)
+    h2p = HTML2FPDF(self, *args, **kwargs2)
     text = html.unescape(text)  # To deal with HTML entities
     h2p.feed(text)</code></pre>
 </details>
@@ -1431,7 +1458,6 @@ to new image URLs</dd>
 <li>
 <h4><code><a title="fpdf.html.HTML2FPDF" href="#fpdf.html.HTML2FPDF">HTML2FPDF</a></code></h4>
 <ul class="two-column">
-<li><code><a title="fpdf.html.HTML2FPDF.LI_TAG_INDENT" href="#fpdf.html.HTML2FPDF.LI_TAG_INDENT">LI_TAG_INDENT</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.box_shadow" href="#fpdf.html.HTML2FPDF.box_shadow">box_shadow</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.error" href="#fpdf.html.HTML2FPDF.error">error</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.handle_data" href="#fpdf.html.HTML2FPDF.handle_data">handle_data</a></code></li>

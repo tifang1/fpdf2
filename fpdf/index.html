@@ -5394,7 +5394,10 @@ def write(self, h, txt=&#34;&#34;, link=&#34;&#34;):
 <pre><code class="python">class HTMLMixin:
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-        h2p = HTML2FPDF(self, *args, **kwargs)
+        kwargs2 = vars(self)
+        # Method arguments must override class &amp; instance attributes:
+        kwargs2.update(kwargs)
+        h2p = HTML2FPDF(self, *args, **kwargs2)
         text = html.unescape(text)  # To deal with HTML entities
         h2p.feed(text)</code></pre>
 </details>
@@ -5411,7 +5414,10 @@ def write(self, h, txt=&#34;&#34;, link=&#34;&#34;):
 </summary>
 <pre><code class="python">def write_html(self, text, *args, **kwargs):
     &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-    h2p = HTML2FPDF(self, *args, **kwargs)
+    kwargs2 = vars(self)
+    # Method arguments must override class &amp; instance attributes:
+    kwargs2.update(kwargs)
+    h2p = HTML2FPDF(self, *args, **kwargs2)
     text = html.unescape(text)  # To deal with HTML entities
     h2p.feed(text)</code></pre>
 </details>
