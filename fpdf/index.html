@@ -2483,7 +2483,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._putpages()
         self._putresources()  # trace_size is performed inside
         if self._marked_contents:
-            self._put_structure_tree()
+            with self._trace_size(&#34;structure_tree&#34;):
+                self._put_structure_tree()
         if self.xmp_metadata:
             self._put_xmp_metadata()
         # Info
