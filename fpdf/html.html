@@ -125,13 +125,13 @@ class HTML2FPDF(HTMLParser):
             if not self.table_row_height and height:
                 self.table_row_height = height
             border = int(self.table.get(&#34;border&#34;, 0))
-            if not self.th:
-                align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
-                border = border and &#34;LR&#34;
-            else:
+            if self.th:
                 self.set_style(&#34;B&#34;, True)
                 border = border or &#34;B&#34;
                 align = self.td.get(&#34;align&#34;, &#34;C&#34;)[0].upper()
+            else:
+                align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
+                border = border and &#34;LR&#34;
             bgcolor = hex2dec(self.td.get(&#34;bgcolor&#34;, self.tr.get(&#34;bgcolor&#34;, &#34;&#34;)))
             # parsing table header/footer (drawn later):
             if self.thead is not None:
@@ -344,6 +344,8 @@ class HTML2FPDF(HTMLParser):
                     self.table_col_width
                 ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
                 self.table_col_width.append(self.td[&#34;width&#34;])
+            if attrs:
+                self.align = attrs.get(&#34;align&#34;)
         if tag == &#34;th&#34;:
             self.td = {k.lower(): v for k, v in attrs.items()}
             self.th = True
@@ -363,6 +365,8 @@ class HTML2FPDF(HTMLParser):
                 # &lt;img&gt; in a &lt;td&gt;: its width must not exceed the cell width:
                 td_width = self._td_width()
                 if not width or width &gt; td_width:
+                    if width:  # Preserving image aspect ratio:
+                        height *= td_width / width
                     width = td_width
                 x = self._td_x()
                 if self.align and self.align[0].upper() == &#34;C&#34;:
@@ -650,13 +654,13 @@ to new image URLs</dd>
             if not self.table_row_height and height:
                 self.table_row_height = height
             border = int(self.table.get(&#34;border&#34;, 0))
-            if not self.th:
-                align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
-                border = border and &#34;LR&#34;
-            else:
+            if self.th:
                 self.set_style(&#34;B&#34;, True)
                 border = border or &#34;B&#34;
                 align = self.td.get(&#34;align&#34;, &#34;C&#34;)[0].upper()
+            else:
+                align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
+                border = border and &#34;LR&#34;
             bgcolor = hex2dec(self.td.get(&#34;bgcolor&#34;, self.tr.get(&#34;bgcolor&#34;, &#34;&#34;)))
             # parsing table header/footer (drawn later):
             if self.thead is not None:
@@ -869,6 +873,8 @@ to new image URLs</dd>
                     self.table_col_width
                 ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
                 self.table_col_width.append(self.td[&#34;width&#34;])
+            if attrs:
+                self.align = attrs.get(&#34;align&#34;)
         if tag == &#34;th&#34;:
             self.td = {k.lower(): v for k, v in attrs.items()}
             self.th = True
@@ -888,6 +894,8 @@ to new image URLs</dd>
                 # &lt;img&gt; in a &lt;td&gt;: its width must not exceed the cell width:
                 td_width = self._td_width()
                 if not width or width &gt; td_width:
+                    if width:  # Preserving image aspect ratio:
+                        height *= td_width / width
                     width = td_width
                 x = self._td_x()
                 if self.align and self.align[0].upper() == &#34;C&#34;:
@@ -1081,13 +1089,13 @@ to new image URLs</dd>
         if not self.table_row_height and height:
             self.table_row_height = height
         border = int(self.table.get(&#34;border&#34;, 0))
-        if not self.th:
-            align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
-            border = border and &#34;LR&#34;
-        else:
+        if self.th:
             self.set_style(&#34;B&#34;, True)
             border = border or &#34;B&#34;
             align = self.td.get(&#34;align&#34;, &#34;C&#34;)[0].upper()
+        else:
+            align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
+            border = border and &#34;LR&#34;
         bgcolor = hex2dec(self.td.get(&#34;bgcolor&#34;, self.tr.get(&#34;bgcolor&#34;, &#34;&#34;)))
         # parsing table header/footer (drawn later):
         if self.thead is not None:
@@ -1321,6 +1329,8 @@ to new image URLs</dd>
                 self.table_col_width
             ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
             self.table_col_width.append(self.td[&#34;width&#34;])
+        if attrs:
+            self.align = attrs.get(&#34;align&#34;)
     if tag == &#34;th&#34;:
         self.td = {k.lower(): v for k, v in attrs.items()}
         self.th = True
@@ -1340,6 +1350,8 @@ to new image URLs</dd>
             # &lt;img&gt; in a &lt;td&gt;: its width must not exceed the cell width:
             td_width = self._td_width()
             if not width or width &gt; td_width:
+                if width:  # Preserving image aspect ratio:
+                    height *= td_width / width
                 width = td_width
             x = self._td_x()
             if self.align and self.align[0].upper() == &#34;C&#34;:
