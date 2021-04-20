@@ -1667,8 +1667,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         * when using an animated GIF, only the first frame is used.
 
         Args:
-            name: either a string representing a file path to an image, or a instance of
-            `PIL.Image.Image`
+            name: either a string representing a file path to an image, an io.BytesIO,
+                or a instance of `PIL.Image.Image`
             x (int): optional horizontal position where to put the image on the page.
                 If not specified or equal to None, the current abscissa is used.
             y (int): optional vertical position where to put the image on the page.
@@ -1694,6 +1694,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             )
         if isinstance(name, str):
             img = None
+        elif isinstance(name, io.BytesIO):
+            name, img = hashlib.md5(name.getvalue()).hexdigest(), name
         else:
             name, img = str(name), name
         if name not in self.images:
@@ -3573,8 +3575,8 @@ in order to keep the original proportions
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>name</code></strong></dt>
-<dd>either a string representing a file path to an image, or a instance of</dd>
-<dt><code>PIL.Image.Image</code></dt>
+<dd>either a string representing a file path to an image, an io.BytesIO,
+or a instance of <code>PIL.Image.Image</code></dd>
 <dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
 <dd>optional horizontal position where to put the image on the page.
 If not specified or equal to None, the current abscissa is used.</dd>
@@ -3632,8 +3634,8 @@ def image(
     * when using an animated GIF, only the first frame is used.
 
     Args:
-        name: either a string representing a file path to an image, or a instance of
-        `PIL.Image.Image`
+        name: either a string representing a file path to an image, an io.BytesIO,
+            or a instance of `PIL.Image.Image`
         x (int): optional horizontal position where to put the image on the page.
             If not specified or equal to None, the current abscissa is used.
         y (int): optional vertical position where to put the image on the page.
@@ -3659,6 +3661,8 @@ def image(
         )
     if isinstance(name, str):
         img = None
+    elif isinstance(name, io.BytesIO):
+        name, img = hashlib.md5(name.getvalue()).hexdigest(), name
     else:
         name, img = str(name), name
     if name not in self.images:
