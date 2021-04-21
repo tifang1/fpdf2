@@ -270,6 +270,21 @@
 
   
   
+  
+    <li class="md-nav__item">
+      <a href="Images.html" class="md-nav__link">
+        Images
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
     
   
   
@@ -332,6 +347,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#alternative-description" class="md-nav__link">
+    Alternative description
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -366,14 +388,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_8">
         Layout
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Layout" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_8">
           <span class="md-nav__icon md-icon"></span>
           Layout
         </label>
@@ -582,14 +604,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_18" type="checkbox" id="__nav_18" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_19" type="checkbox" id="__nav_19" >
       
-      <label class="md-nav__link" for="__nav_18">
+      <label class="md-nav__link" for="__nav_19">
         ReferenceManual
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="ReferenceManual" data-md-level="1">
-        <label class="md-nav__title" for="__nav_18">
+        <label class="md-nav__title" for="__nav_19">
           <span class="md-nav__icon md-icon"></span>
           ReferenceManual
         </label>
@@ -1356,6 +1378,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#alternative-description" class="md-nav__link">
+    Alternative description
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1429,8 +1458,13 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Internal link to first page&quot;</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="n">link</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;internal_link.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>Similarly, <code>FPDF.link</code> can be instead of <code>FPDF.cell</code>,
+<p>Similarly, <code>FPDF.link</code> can be used instead of <code>FPDF.cell</code>,
 however <code>write_html</code> does not allow to define internal links.</p>
+<h2 id="alternative-description">Alternative description</h2>
+<p>An optional textual description of the link can be provided, for accessibility purposes:</p>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">link</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="n">width</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">line_height</span><span class="p">,</span> <span class="n">link</span><span class="o">=</span><span class="s2">&quot;https://github.com/PyFPDF/fpdf2&quot;</span><span class="p">,</span>
+         <span class="n">alt_text</span><span class="o">=</span><span class="s2">&quot;GitHub page for fpdf2&quot;</span><span class="p">)</span>
+</code></pre></div>
                 
               
               
@@ -1449,7 +1483,7 @@ however <code>write_html</code> does not allow to define internal links.</p>
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="HTML.html" class="md-footer__link md-footer__link--prev" rel="prev">
+        <a href="Images.html" class="md-footer__link md-footer__link--prev" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1458,7 +1492,7 @@ however <code>write_html</code> does not allow to define internal links.</p>
               <span class="md-footer__direction">
                 Previous
               </span>
-              HTML
+              Images
             </div>
           </div>
         </a>

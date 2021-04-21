@@ -56,6 +56,7 @@ import re
 import sys
 import warnings
 import zlib
+from collections import defaultdict
 from collections.abc import Sequence
 from contextlib import contextmanager
 from datetime import datetime
@@ -120,12 +121,14 @@ class DocumentState(IntEnum):
     CLOSED = 3  # EOF printed
 
 
-class PageLink(NamedTuple):
+class Annotation(NamedTuple):
+    type: str
     x: int
     y: int
     width: int
     height: int
-    link: str
+    contents: str = None
+    link: Union[str, int] = None
     alt_text: Optional[str] = None
 
 
@@ -236,7 +239,7 @@ class FPDF:
         self.font_files = {}  # array of font files
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
-        self.page_links = {}  # array of PageLink
+        self.annots = defaultdict(list)  # map page numbers to arrays of Annotations
         self.links = {}  # array of InternalLink
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
@@ -1056,7 +1059,7 @@ class FPDF:
 
     def link(self, x, y, w, h, link, alt_text=None):
         &#34;&#34;&#34;
-        Puts a link on a rectangular area of the page.
+        Puts a link annotation on a rectangular area of the page.
         Text or image links are generally put via [cell](#fpdf.FPDF.cell),
         [write](#fpdf.FPDF.write) or [image](#fpdf.FPDF.image),
         but this method can be useful for instance to define a clickable area inside an image.
@@ -1066,19 +1069,40 @@ class FPDF:
             y (int): vertical position (from the top) to the bottom side of the link rectangle
             w (int): width of the link rectangle
             h (int): width of the link rectangle
-            link (str): either an URL or a integer returned by `add_link`, defining an internal link to a page
+            link: either an URL or a integer returned by `add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
         &#34;&#34;&#34;
-        if self.page not in self.page_links:
-            self.page_links[self.page] = []
-        self.page_links[self.page].append(
-            PageLink(
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Link&#34;,
                 x * self.k,
                 self.h_pt - y * self.k,
                 w * self.k,
                 h * self.k,
-                link,
-                alt_text,
+                link=link,
+                alt_text=alt_text,
+            )
+        )
+
+    def text_annotation(self, x, y, w, h, text):
+        &#34;&#34;&#34;
+        Puts a text annotation on a rectangular area of the page.
+
+        Args:
+            x (int): horizontal position (from the left) to the left side of the link rectangle
+            y (int): vertical position (from the top) to the bottom side of the link rectangle
+            w (int): width of the link rectangle
+            h (int): width of the link rectangle
+            text (str): text to display
+        &#34;&#34;&#34;
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Text&#34;,
+                x * self.k,
+                self.h_pt - y * self.k,
+                w * self.k,
+                h * self.k,
+                contents=text,
             )
         )
 
@@ -1202,7 +1226,7 @@ class FPDF:
                 `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
-            link (str): optional link to add on the image, internal
+            link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
 
         Returns: a boolean indicating if page break was triggered
@@ -1393,7 +1417,7 @@ class FPDF:
                 or transparent (`False`). Default value: False.
             split_only (bool): if `True`, does not output anything, only perform
                 word-wrapping and return the resulting multi-lines array of strings.
-            link (str): optional link to add on the image, internal
+            link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
             ln (int): Indicates where the current position should go after the call.
                 Possible values are: `0`: to the bottom right ; `1`: to the beginning
@@ -1699,8 +1723,8 @@ class FPDF:
         * when using an animated GIF, only the first frame is used.
 
         Args:
-            name: either a string representing a file path to an image, an io.BytesIO,
-                or a instance of `PIL.Image.Image`
+            name: either a string representing a file path to an image, an URL to an image,
+                an io.BytesIO, or a instance of `PIL.Image.Image`
             x (int): optional horizontal position where to put the image on the page.
                 If not specified or equal to None, the current abscissa is used.
             y (int): optional vertical position where to put the image on the page.
@@ -1882,10 +1906,6 @@ class FPDF:
             dh_pt = self.dw_pt
         filter = &#34;/Filter /FlateDecode &#34; if self.compress else &#34;&#34;
         for n in range(1, nb + 1):
-            # page object from pages[n]
-            # page object from pages[n]#w_pt
-            # page object from pages[n]#h_pt
-            # page object from page_links[n] if page_links and page_links[n]
             # Page
             self._newobj()
             self._out(&#34;&lt;&lt;/Type /Page&#34;)
@@ -1896,19 +1916,19 @@ class FPDF:
                 self._out(f&#34;/MediaBox [0 0 {w_pt:.2f} {h_pt:.2f}]&#34;)
             self._out(&#34;/Resources 2 0 R&#34;)
 
-            if self.page_links and n in self.page_links:
-                # Links
-                annots = &#34;/Annots [&#34;
-                for pl in self.page_links[n]:
+            page_annots = self.annots[n]
+            if page_annots:  # Annotations, e.g. links:
+                annots = &#34;&#34;
+                for annot in page_annots:
                     # first four things in &#39;link&#39; list are coordinates?
                     rect = (
-                        f&#34;{pl.x:.2f} {pl.y:.2f} &#34;
-                        f&#34;{pl.x + pl.width:.2f} {pl.y - pl.height:.2f}&#34;
+                        f&#34;{annot.x:.2f} {annot.y:.2f} &#34;
+                        f&#34;{annot.x + annot.width:.2f} {annot.y - annot.height:.2f}&#34;
                     )
 
                     # start the annotation entry
                     annots += (
-                        f&#34;&lt;&lt;/Type /Annot /Subtype /Link &#34;
+                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type} &#34;
                         f&#34;/Rect [{rect}] /Border [0 0 0] &#34;
                         # Flag &#34;Print&#34; (bit position 3) specifies to print
                         # the annotation when the page is printed.
@@ -1916,27 +1936,32 @@ class FPDF:
                         f&#34;/F 4&#34;
                     )
 
-                    if pl.alt_text is not None:
+                    if annot.contents:
+                        annots += f&#34;/Contents {enclose_in_parens(annot.contents)}&#34;
+
+                    if annot.alt_text is not None:
                         # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
                         # but tests with Adobe Acrobat Reader reveal that the page /StructParents inserted below
                         # is enough to link the marked content in the hierarchy tree with this annotation link.
                         self._add_marked_content(
-                            self.n, struct_type=&#34;/Link&#34;, alt_text=pl.alt_text
+                            self.n, struct_type=&#34;/Link&#34;, alt_text=annot.alt_text
                         )
 
-                    # HTML ending of annotation entry
-                    if isinstance(pl.link, str):
-                        annots += f&#34;/A &lt;&lt;/S /URI /URI {enclose_in_parens(pl.link)}&gt;&gt;&#34;
-                    else:  # Dest type ending of annotation entry
-                        assert pl.link in self.links, (
-                            f&#34;Page {n} has a link with an invalid index: &#34;
-                            f&#34;{pl.link} (doc #links={len(self.links)})&#34;
-                        )
-                        link = self.links[pl.link]
-                        annots += f&#34;/Dest {link.dest(self)}&#34;
+                    if annot.link:
+                        if isinstance(annot.link, str):
+                            annots += (
+                                f&#34;/A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
+                            )
+                        else:  # Dest type ending of annotation entry
+                            assert annot.link in self.links, (
+                                f&#34;Page {n} has a link with an invalid index: &#34;
+                                f&#34;{annot.link} (doc #links={len(self.links)})&#34;
+                            )
+                            link = self.links[annot.link]
+                            annots += f&#34;/Dest {link.dest(self)}&#34;
                     annots += &#34;&gt;&gt;&#34;
                 # End links list
-                self._out(f&#34;{annots}]&#34;)
+                self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency&#34; &#34;/CS /DeviceRGB&gt;&gt;&#34;)
             spid = self._struct_parents_id_per_page.get(self.n)
@@ -3085,7 +3110,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.font_files = {}  # array of font files
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
-        self.page_links = {}  # array of PageLink
+        self.annots = defaultdict(list)  # map page numbers to arrays of Annotations
         self.links = {}  # array of InternalLink
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
@@ -3905,7 +3930,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def link(self, x, y, w, h, link, alt_text=None):
         &#34;&#34;&#34;
-        Puts a link on a rectangular area of the page.
+        Puts a link annotation on a rectangular area of the page.
         Text or image links are generally put via [cell](#fpdf.FPDF.cell),
         [write](#fpdf.FPDF.write) or [image](#fpdf.FPDF.image),
         but this method can be useful for instance to define a clickable area inside an image.
@@ -3915,19 +3940,40 @@ The default is <code>True</code>, meaning the current folder.</dd>
             y (int): vertical position (from the top) to the bottom side of the link rectangle
             w (int): width of the link rectangle
             h (int): width of the link rectangle
-            link (str): either an URL or a integer returned by `add_link`, defining an internal link to a page
+            link: either an URL or a integer returned by `add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
         &#34;&#34;&#34;
-        if self.page not in self.page_links:
-            self.page_links[self.page] = []
-        self.page_links[self.page].append(
-            PageLink(
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Link&#34;,
                 x * self.k,
                 self.h_pt - y * self.k,
                 w * self.k,
                 h * self.k,
-                link,
-                alt_text,
+                link=link,
+                alt_text=alt_text,
+            )
+        )
+
+    def text_annotation(self, x, y, w, h, text):
+        &#34;&#34;&#34;
+        Puts a text annotation on a rectangular area of the page.
+
+        Args:
+            x (int): horizontal position (from the left) to the left side of the link rectangle
+            y (int): vertical position (from the top) to the bottom side of the link rectangle
+            w (int): width of the link rectangle
+            h (int): width of the link rectangle
+            text (str): text to display
+        &#34;&#34;&#34;
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Text&#34;,
+                x * self.k,
+                self.h_pt - y * self.k,
+                w * self.k,
+                h * self.k,
+                contents=text,
             )
         )
 
@@ -4051,7 +4097,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
-            link (str): optional link to add on the image, internal
+            link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
 
         Returns: a boolean indicating if page break was triggered
@@ -4242,7 +4288,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 or transparent (`False`). Default value: False.
             split_only (bool): if `True`, does not output anything, only perform
                 word-wrapping and return the resulting multi-lines array of strings.
-            link (str): optional link to add on the image, internal
+            link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
             ln (int): Indicates where the current position should go after the call.
                 Possible values are: `0`: to the bottom right ; `1`: to the beginning
@@ -4548,8 +4594,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         * when using an animated GIF, only the first frame is used.
 
         Args:
-            name: either a string representing a file path to an image, an io.BytesIO,
-                or a instance of `PIL.Image.Image`
+            name: either a string representing a file path to an image, an URL to an image,
+                an io.BytesIO, or a instance of `PIL.Image.Image`
             x (int): optional horizontal position where to put the image on the page.
                 If not specified or equal to None, the current abscissa is used.
             y (int): optional vertical position where to put the image on the page.
@@ -4731,10 +4777,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             dh_pt = self.dw_pt
         filter = &#34;/Filter /FlateDecode &#34; if self.compress else &#34;&#34;
         for n in range(1, nb + 1):
-            # page object from pages[n]
-            # page object from pages[n]#w_pt
-            # page object from pages[n]#h_pt
-            # page object from page_links[n] if page_links and page_links[n]
             # Page
             self._newobj()
             self._out(&#34;&lt;&lt;/Type /Page&#34;)
@@ -4745,19 +4787,19 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 self._out(f&#34;/MediaBox [0 0 {w_pt:.2f} {h_pt:.2f}]&#34;)
             self._out(&#34;/Resources 2 0 R&#34;)
 
-            if self.page_links and n in self.page_links:
-                # Links
-                annots = &#34;/Annots [&#34;
-                for pl in self.page_links[n]:
+            page_annots = self.annots[n]
+            if page_annots:  # Annotations, e.g. links:
+                annots = &#34;&#34;
+                for annot in page_annots:
                     # first four things in &#39;link&#39; list are coordinates?
                     rect = (
-                        f&#34;{pl.x:.2f} {pl.y:.2f} &#34;
-                        f&#34;{pl.x + pl.width:.2f} {pl.y - pl.height:.2f}&#34;
+                        f&#34;{annot.x:.2f} {annot.y:.2f} &#34;
+                        f&#34;{annot.x + annot.width:.2f} {annot.y - annot.height:.2f}&#34;
                     )
 
                     # start the annotation entry
                     annots += (
-                        f&#34;&lt;&lt;/Type /Annot /Subtype /Link &#34;
+                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type} &#34;
                         f&#34;/Rect [{rect}] /Border [0 0 0] &#34;
                         # Flag &#34;Print&#34; (bit position 3) specifies to print
                         # the annotation when the page is printed.
@@ -4765,27 +4807,32 @@ The default is <code>True</code>, meaning the current folder.</dd>
                         f&#34;/F 4&#34;
                     )
 
-                    if pl.alt_text is not None:
+                    if annot.contents:
+                        annots += f&#34;/Contents {enclose_in_parens(annot.contents)}&#34;
+
+                    if annot.alt_text is not None:
                         # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
                         # but tests with Adobe Acrobat Reader reveal that the page /StructParents inserted below
                         # is enough to link the marked content in the hierarchy tree with this annotation link.
                         self._add_marked_content(
-                            self.n, struct_type=&#34;/Link&#34;, alt_text=pl.alt_text
+                            self.n, struct_type=&#34;/Link&#34;, alt_text=annot.alt_text
                         )
 
-                    # HTML ending of annotation entry
-                    if isinstance(pl.link, str):
-                        annots += f&#34;/A &lt;&lt;/S /URI /URI {enclose_in_parens(pl.link)}&gt;&gt;&#34;
-                    else:  # Dest type ending of annotation entry
-                        assert pl.link in self.links, (
-                            f&#34;Page {n} has a link with an invalid index: &#34;
-                            f&#34;{pl.link} (doc #links={len(self.links)})&#34;
-                        )
-                        link = self.links[pl.link]
-                        annots += f&#34;/Dest {link.dest(self)}&#34;
+                    if annot.link:
+                        if isinstance(annot.link, str):
+                            annots += (
+                                f&#34;/A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
+                            )
+                        else:  # Dest type ending of annotation entry
+                            assert annot.link in self.links, (
+                                f&#34;Page {n} has a link with an invalid index: &#34;
+                                f&#34;{annot.link} (doc #links={len(self.links)})&#34;
+                            )
+                            link = self.links[annot.link]
+                            annots += f&#34;/Dest {link.dest(self)}&#34;
                     annots += &#34;&gt;&gt;&#34;
                 # End links list
-                self._out(f&#34;{annots}]&#34;)
+                self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency&#34; &#34;/CS /DeviceRGB&gt;&gt;&#34;)
             spid = self._struct_parents_id_per_page.get(self.n)
@@ -6111,7 +6158,7 @@ next line ; <code>2</code>: below. Putting 1 is equivalent to putting 0 and call
 <dd>Indicates if the cell background must be painted (<code>True</code>)
 or transparent (<code>False</code>). Default value: False.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
-<dd>optional link to add on the image, internal
+<dd>optional link to add on the cell, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
 </dl>
 <p>Returns: a boolean indicating if page break was triggered</p></div>
@@ -6149,7 +6196,7 @@ def cell(self, w, h=0, txt=&#34;&#34;, border=0, ln=0, align=&#34;&#34;, fill=Fa
             `R`: right align
         fill (bool): Indicates if the cell background must be painted (`True`)
             or transparent (`False`). Default value: False.
-        link (str): optional link to add on the image, internal
+        link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
 
     Returns: a boolean indicating if page break was triggered
@@ -6602,8 +6649,8 @@ in order to keep the original proportions
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>name</code></strong></dt>
-<dd>either a string representing a file path to an image, an io.BytesIO,
-or a instance of <code>PIL.Image.Image</code></dd>
+<dd>either a string representing a file path to an image, an URL to an image,
+an io.BytesIO, or a instance of <code>PIL.Image.Image</code></dd>
 <dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
 <dd>optional horizontal position where to put the image on the page.
 If not specified or equal to None, the current abscissa is used.</dd>
@@ -6661,8 +6708,8 @@ def image(
     * when using an animated GIF, only the first frame is used.
 
     Args:
-        name: either a string representing a file path to an image, an io.BytesIO,
-            or a instance of `PIL.Image.Image`
+        name: either a string representing a file path to an image, an URL to an image,
+            an io.BytesIO, or a instance of `PIL.Image.Image`
         x (int): optional horizontal position where to put the image on the page.
             If not specified or equal to None, the current abscissa is used.
         y (int): optional vertical position where to put the image on the page.
@@ -6890,7 +6937,7 @@ def line(self, x1, y1, x2, y2):
 <span>def <span class="ident">link</span></span>(<span>self, x, y, w, h, link, alt_text=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Puts a link on a rectangular area of the page.
+<div class="desc"><p>Puts a link annotation on a rectangular area of the page.
 Text or image links are generally put via <a href="#fpdf.FPDF.cell">cell</a>,
 <a href="#fpdf.FPDF.write">write</a> or <a href="#fpdf.FPDF.image">image</a>,
 but this method can be useful for instance to define a clickable area inside an image.</p>
@@ -6904,7 +6951,7 @@ but this method can be useful for instance to define a clickable area inside an 
 <dd>width of the link rectangle</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>int</code></dt>
 <dd>width of the link rectangle</dd>
-<dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>link</code></strong></dt>
 <dd>either an URL or a integer returned by <code>add_link</code>, defining an internal link to a page</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional textual description of the link, for accessibility purposes</dd>
@@ -6915,7 +6962,7 @@ but this method can be useful for instance to define a clickable area inside an 
 </summary>
 <pre><code class="python">def link(self, x, y, w, h, link, alt_text=None):
     &#34;&#34;&#34;
-    Puts a link on a rectangular area of the page.
+    Puts a link annotation on a rectangular area of the page.
     Text or image links are generally put via [cell](#fpdf.FPDF.cell),
     [write](#fpdf.FPDF.write) or [image](#fpdf.FPDF.image),
     but this method can be useful for instance to define a clickable area inside an image.
@@ -6925,19 +6972,18 @@ but this method can be useful for instance to define a clickable area inside an 
         y (int): vertical position (from the top) to the bottom side of the link rectangle
         w (int): width of the link rectangle
         h (int): width of the link rectangle
-        link (str): either an URL or a integer returned by `add_link`, defining an internal link to a page
+        link: either an URL or a integer returned by `add_link`, defining an internal link to a page
         alt_text (str): optional textual description of the link, for accessibility purposes
     &#34;&#34;&#34;
-    if self.page not in self.page_links:
-        self.page_links[self.page] = []
-    self.page_links[self.page].append(
-        PageLink(
+    self.annots[self.page].append(
+        Annotation(
+            &#34;Link&#34;,
             x * self.k,
             self.h_pt - y * self.k,
             w * self.k,
             h * self.k,
-            link,
-            alt_text,
+            link=link,
+            alt_text=alt_text,
         )
     )</code></pre>
 </details>
@@ -6999,7 +7045,7 @@ the background painted.</p>
             or transparent (&lt;code&gt;False&lt;/code&gt;). Default value: False.
         split_only (bool): if &lt;code&gt;True&lt;/code&gt;, does not output anything, only perform
             word-wrapping and return the resulting multi-lines array of strings.
-        link (str): optional link to add on the image, internal
+        link (str): optional link to add on the cell, internal
             (identifier returned by &lt;code&gt;add\_link&lt;/code&gt;) or external URL.
         ln (int): Indicates where the current position should go after the call.
             Possible values are: &lt;code&gt;0&lt;/code&gt;: to the bottom right ; &lt;code&gt;1&lt;/code&gt;: to the beginning
@@ -7053,7 +7099,7 @@ def multi_cell(
             or transparent (`False`). Default value: False.
         split_only (bool): if `True`, does not output anything, only perform
             word-wrapping and return the resulting multi-lines array of strings.
-        link (str): optional link to add on the image, internal
+        link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
         ln (int): Indicates where the current position should go after the call.
             Possible values are: `0`: to the bottom right ; `1`: to the beginning
@@ -8428,6 +8474,51 @@ def text(self, x, y, txt=&#34;&#34;):
     self._out(s)</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.text_annotation"><code class="name flex">
+<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, w, h, text)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Puts a text annotation on a rectangular area of the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>horizontal position (from the left) to the left side of the link rectangle</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>vertical position (from the top) to the bottom side of the link rectangle</dd>
+<dt><strong><code>w</code></strong> :&ensp;<code>int</code></dt>
+<dd>width of the link rectangle</dd>
+<dt><strong><code>h</code></strong> :&ensp;<code>int</code></dt>
+<dd>width of the link rectangle</dd>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
+<dd>text to display</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def text_annotation(self, x, y, w, h, text):
+    &#34;&#34;&#34;
+    Puts a text annotation on a rectangular area of the page.
+
+    Args:
+        x (int): horizontal position (from the left) to the left side of the link rectangle
+        y (int): vertical position (from the top) to the bottom side of the link rectangle
+        w (int): width of the link rectangle
+        h (int): width of the link rectangle
+        text (str): text to display
+    &#34;&#34;&#34;
+    self.annots[self.page].append(
+        Annotation(
+            &#34;Text&#34;,
+            x * self.k,
+            self.h_pt - y * self.k,
+            w * self.k,
+            h * self.k,
+            contents=text,
+        )
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.unbreakable"><code class="name flex">
 <span>def <span class="ident">unbreakable</span></span>(<span>self)</span>
 </code></dt>
@@ -8697,6 +8788,7 @@ def write(self, h, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.set_y" href="#fpdf.fpdf.FPDF.set_y">set_y</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.start_section" href="#fpdf.fpdf.FPDF.start_section">start_section</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.text" href="#fpdf.fpdf.FPDF.text">text</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.text_annotation" href="#fpdf.fpdf.FPDF.text_annotation">text_annotation</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.unbreakable" href="#fpdf.fpdf.FPDF.unbreakable">unbreakable</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.unifontsubset" href="#fpdf.fpdf.FPDF.unifontsubset">unifontsubset</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.write" href="#fpdf.fpdf.FPDF.write">write</a></code></li>
