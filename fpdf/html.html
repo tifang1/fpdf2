@@ -107,6 +107,7 @@ class HTML2FPDF(HTMLParser):
         self.tfooter = None  # table footer cells
         self.theader_out = self.tfooter_out = False
         self.table_row_height = 0
+        self.heading_level = None
         self.hsize = dict(h1=2, h2=1.5, h3=1.17, h4=1, h5=0.83, h6=0.67)
         self._only_imgs_in_td = False
 
@@ -141,6 +142,8 @@ class HTML2FPDF(HTMLParser):
             if self.href:
                 self.put_link(self.href, data)
             else:
+                if self.heading_level:
+                    self.pdf.start_section(data, self.heading_level - 1)
                 LOGGER.debug(&#34;write &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
                 self.pdf.write(self.h, data)
 
@@ -272,6 +275,7 @@ class HTML2FPDF(HTMLParser):
             if attrs:
                 self.align = attrs.get(&#34;align&#34;)
         if tag in self.hsize:
+            self.heading_level = int(tag[1:])
             k = self.hsize[tag]
             self.pdf.ln(5 * k)
             self.pdf.set_text_color(150, 0, 0)
@@ -406,11 +410,14 @@ class HTML2FPDF(HTMLParser):
             self.set_style(tag, True)
         if tag == &#34;center&#34;:
             self.align = &#34;Center&#34;
+        if tag == &#34;toc&#34;:
+            self.pdf.insert_toc_placeholder(self.render_toc)
 
     def handle_endtag(self, tag):
         # Closing tag
         LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
-        if tag in (&#34;h1&#34;, &#34;h2&#34;, &#34;h3&#34;, &#34;h4&#34;, &#34;h5&#34;, &#34;h6&#34;):
+        if tag in self.hsize:
+            self.heading_level = None
             self.pdf.ln(self.h)
             self.set_font()
             self.set_text_color()
@@ -512,6 +519,17 @@ class HTML2FPDF(HTMLParser):
         self.pdf.write(self.h, txt, url)
         self.set_style(&#34;u&#34;, False)
         self.set_text_color()
+
+    # pylint: disable=no-self-use
+    def render_toc(self, pdf, outline):
+        &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
+        pdf.ln()
+        for section in outline[1:]:  # skipping top-level h1
+            link = pdf.add_link()
+            pdf.set_link(link, page=section.page_number)
+            text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
+            text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
+            pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)
 
     # Subclasses of _markupbase.ParserBase must implement this:
     def error(self, message):
@@ -647,6 +665,7 @@ to new image URLs</dd>
         self.tfooter = None  # table footer cells
         self.theader_out = self.tfooter_out = False
         self.table_row_height = 0
+        self.heading_level = None
         self.hsize = dict(h1=2, h2=1.5, h3=1.17, h4=1, h5=0.83, h6=0.67)
         self._only_imgs_in_td = False
 
@@ -681,6 +700,8 @@ to new image URLs</dd>
             if self.href:
                 self.put_link(self.href, data)
             else:
+                if self.heading_level:
+                    self.pdf.start_section(data, self.heading_level - 1)
                 LOGGER.debug(&#34;write &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
                 self.pdf.write(self.h, data)
 
@@ -812,6 +833,7 @@ to new image URLs</dd>
             if attrs:
                 self.align = attrs.get(&#34;align&#34;)
         if tag in self.hsize:
+            self.heading_level = int(tag[1:])
             k = self.hsize[tag]
             self.pdf.ln(5 * k)
             self.pdf.set_text_color(150, 0, 0)
@@ -946,11 +968,14 @@ to new image URLs</dd>
             self.set_style(tag, True)
         if tag == &#34;center&#34;:
             self.align = &#34;Center&#34;
+        if tag == &#34;toc&#34;:
+            self.pdf.insert_toc_placeholder(self.render_toc)
 
     def handle_endtag(self, tag):
         # Closing tag
         LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
-        if tag in (&#34;h1&#34;, &#34;h2&#34;, &#34;h3&#34;, &#34;h4&#34;, &#34;h5&#34;, &#34;h6&#34;):
+        if tag in self.hsize:
+            self.heading_level = None
             self.pdf.ln(self.h)
             self.set_font()
             self.set_text_color()
@@ -1053,6 +1078,17 @@ to new image URLs</dd>
         self.set_style(&#34;u&#34;, False)
         self.set_text_color()
 
+    # pylint: disable=no-self-use
+    def render_toc(self, pdf, outline):
+        &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
+        pdf.ln()
+        for section in outline[1:]:  # skipping top-level h1
+            link = pdf.add_link()
+            pdf.set_link(link, page=section.page_number)
+            text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
+            text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
+            pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)
+
     # Subclasses of _markupbase.ParserBase must implement this:
     def error(self, message):
         raise RuntimeError(message)</code></pre>
@@ -1126,6 +1162,8 @@ to new image URLs</dd>
         if self.href:
             self.put_link(self.href, data)
         else:
+            if self.heading_level:
+                self.pdf.start_section(data, self.heading_level - 1)
             LOGGER.debug(&#34;write &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
             self.pdf.write(self.h, data)</code></pre>
 </details>
@@ -1142,7 +1180,8 @@ to new image URLs</dd>
 <pre><code class="python">def handle_endtag(self, tag):
     # Closing tag
     LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
-    if tag in (&#34;h1&#34;, &#34;h2&#34;, &#34;h3&#34;, &#34;h4&#34;, &#34;h5&#34;, &#34;h6&#34;):
+    if tag in self.hsize:
+        self.heading_level = None
         self.pdf.ln(self.h)
         self.set_font()
         self.set_text_color()
@@ -1234,6 +1273,7 @@ to new image URLs</dd>
         if attrs:
             self.align = attrs.get(&#34;align&#34;)
     if tag in self.hsize:
+        self.heading_level = int(tag[1:])
         k = self.hsize[tag]
         self.pdf.ln(5 * k)
         self.pdf.set_text_color(150, 0, 0)
@@ -1367,7 +1407,9 @@ to new image URLs</dd>
     if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
         self.set_style(tag, True)
     if tag == &#34;center&#34;:
-        self.align = &#34;Center&#34;</code></pre>
+        self.align = &#34;Center&#34;
+    if tag == &#34;toc&#34;:
+        self.pdf.insert_toc_placeholder(self.render_toc)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.output_table_footer"><code class="name flex">
@@ -1449,6 +1491,26 @@ to new image URLs</dd>
     self.pdf.write(self.h, txt, url)
     self.set_style(&#34;u&#34;, False)
     self.set_text_color()</code></pre>
+</details>
+</dd>
+<dt id="fpdf.html.HTML2FPDF.render_toc"><code class="name flex">
+<span>def <span class="ident">render_toc</span></span>(<span>self, pdf, outline)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method can be overriden by subclasses to customize the Table of Contents style.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def render_toc(self, pdf, outline):
+    &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
+    pdf.ln()
+    for section in outline[1:]:  # skipping top-level h1
+        link = pdf.add_link()
+        pdf.set_link(link, page=section.page_number)
+        text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
+        text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
+        pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.set_font"><code class="name flex">
@@ -1605,6 +1667,7 @@ to new image URLs</dd>
 <li><code><a title="fpdf.html.HTML2FPDF.output_table_header" href="#fpdf.html.HTML2FPDF.output_table_header">output_table_header</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.output_table_sep" href="#fpdf.html.HTML2FPDF.output_table_sep">output_table_sep</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.put_link" href="#fpdf.html.HTML2FPDF.put_link">put_link</a></code></li>
+<li><code><a title="fpdf.html.HTML2FPDF.render_toc" href="#fpdf.html.HTML2FPDF.render_toc">render_toc</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.set_font" href="#fpdf.html.HTML2FPDF.set_font">set_font</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.set_style" href="#fpdf.html.HTML2FPDF.set_style">set_style</a></code></li>
 <li><code><a title="fpdf.html.HTML2FPDF.set_text_color" href="#fpdf.html.HTML2FPDF.set_text_color">set_text_color</a></code></li>

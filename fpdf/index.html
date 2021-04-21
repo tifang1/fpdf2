@@ -31,13 +31,14 @@ import sys
 
 from .fpdf import (
     FPDF,
+    TitleStyle,
     FPDF_FONT_DIR as _FPDF_FONT_DIR,
     FPDF_VERSION as _FPDF_VERSION,
     SYSTEM_TTFONTS as _SYSTEM_TTFONTS,
 )
 from .html import HTMLMixin
 from .template import Template
-from .util.deprecation import WarnOnDeprecatedModuleAttributes
+from .deprecation import WarnOnDeprecatedModuleAttributes
 
 FPDF_VERSION = _FPDF_VERSION
 &#34;&#34;&#34;Current FPDF Version, also available via `__version__` (which is read by `setup.py`):
@@ -70,6 +71,7 @@ __all__ = [
     # Classes
     &#34;FPDF&#34;,
     &#34;Template&#34;,
+    &#34;TitleStyle&#34;,
     &#34;HTMLMixin&#34;,
     # FPDF Constants
     &#34;FPDF_VERSION&#34;,
@@ -81,6 +83,10 @@ __all__ = [
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
+<dt><code class="name"><a title="fpdf.deprecation" href="deprecation.html">fpdf.deprecation</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="fpdf.errors" href="errors.html">fpdf.errors</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -101,6 +107,13 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></dt>
+<dd>
+<div class="desc"><p>Quoting section 8.2.2 "Document Outline" of the 2006 PDF spec 1.7:</p>
+<blockquote>
+<p>The document outline consists of a tree-structured hierarchy of outline items …</p>
+</blockquote></div>
+</dd>
 <dt><code class="name"><a title="fpdf.recorder" href="recorder.html">fpdf.recorder</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -113,6 +126,10 @@ __all__ = [
 structural information about a document’s content …</p>
 </blockquote></div>
 </dd>
+<dt><code class="name"><a title="fpdf.syntax" href="syntax.html">fpdf.syntax</a></code></dt>
+<dd>
+<div class="desc"><p>PDF Syntax Helpers …</p></div>
+</dd>
 <dt><code class="name"><a title="fpdf.template" href="template.html">fpdf.template</a></code></dt>
 <dd>
 <div class="desc"><p>PDF Template Helper for FPDF.py</p></div>
@@ -121,9 +138,9 @@ structural information about a document’s content …</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="fpdf.util" href="util/index.html">fpdf.util</a></code></dt>
+<dt><code class="name"><a title="fpdf.util" href="util.html">fpdf.util</a></code></dt>
 <dd>
-<div class="desc"><p>Utility Functions</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 </section>
@@ -210,7 +227,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
         self.page_links = {}  # array of PageLink
-        self.links = {}  # array of internal links
+        self.links = {}  # array of InternalLink
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
         self.current_font = {}  # current font
@@ -229,10 +246,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.xmp_metadata = None
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
-        self._marked_contents = []  # list of MarkedContent
+        self.struct_builder = StructureTreeBuilder()
         self._struct_parents_id_per_page = {}  # {page_object_id -&gt; StructParent(s) ID}
         # Only set if a Structure Tree is added to the document:
         self._struct_tree_root_obj_id = None
+        self._outlines_obj_id = None
+        self._toc_placeholder = None  # ToCPlaceholder
+        self._outline = []  # list of OutlineSection
+        self.section_title_styles = {}  # level -&gt; TitleStyle
 
         # Standard fonts
         self.core_fonts = {
@@ -288,6 +309,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.cur_orientation = self.def_orientation
         self.w = self.w_pt / self.k
         self.h = self.h_pt / self.k
+        self.font_size = self.font_size_pt / self.k
 
         # Page spacing
         # Page margins (1 cm)
@@ -297,9 +319,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.x, self.y = self.l_margin, self.t_margin
         self.c_margin = margin / 10.0  # Interior cell margin (1 mm)
         self.line_width = 0.567 / self.k  # line width (0.2 mm)
-        self.set_auto_page_break(
-            True, 2 * margin
-        )  # sets self.auto_page_break, self.b_margin &amp; self.page_break_trigger
+        # sets self.auto_page_break, self.b_margin &amp; self.page_break_trigger:
+        self.set_auto_page_break(True, 2 * margin)
         self.set_display_mode(&#34;fullwidth&#34;)  # Full width display mode
         self.compress = True  # Enable compression by default
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
@@ -1010,7 +1031,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
     def add_link(self):
         &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
         n = len(self.links) + 1
-        self.links[n] = (0, 0)
+        self.links[n] = InternalLink()
         return n
 
     def set_link(self, link, y=0, page=-1):
@@ -1018,9 +1039,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if y == -1:
             y = self.y
         if page == -1:
-            page = self.page
-
-        self.links[link] = [page, y]
+            page_object_id = self._current_page_object_id()
+        else:
+            page_object_id = 2 * page + 1
+        self.links[link] = InternalLink(page_object_id, y)
 
     def link(self, x, y, w, h, link, alt_text=None):
         &#34;&#34;&#34;
@@ -1183,7 +1205,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 &#34;ignored&#34;
             )
             border = 1
-        page_break_triggered = self.perform_page_break_if_need_be(h)
+        page_break_triggered = self._perform_page_break_if_need_be(h)
         if w == 0:
             w = self.w - self.r_margin - self.x
         s = &#34;&#34;
@@ -1300,7 +1322,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         return page_break_triggered
 
-    def perform_page_break_if_need_be(self, h):
+    def _perform_page_break_if_need_be(self, h):
         if (
             self.y + h &gt; self.page_break_trigger
             and not self.in_footer
@@ -1717,7 +1739,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         # Flowing mode
         if y is None:
-            self.perform_page_break_if_need_be(h)
+            self._perform_page_break_if_need_be(h)
             y = self.y
             self.y += h
 
@@ -1741,14 +1763,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
     @contextmanager
     def _marked_sequence(self, **kwargs):
         page_object_id = self._current_page_object_id()
-        mcid = sum(
-            1 for mc in self._marked_contents if mc.page_object_id == page_object_id
-        )
-        self._add_marked_content(
+        mcid = self.struct_builder.next_mcid_for_page(page_object_id)
+        marked_content = self._add_marked_content(
             page_object_id, struct_type=&#34;/Figure&#34;, mcid=mcid, **kwargs
         )
         self._out(f&#34;/P &lt;&lt;/MCID {mcid}&gt;&gt; BDC&#34;)
-        yield
+        yield marked_content
         self._out(&#34;EMC&#34;)
 
     def _add_marked_content(self, page_object_id, **kwargs):
@@ -1757,7 +1777,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             struct_parents_id = len(self._struct_parents_id_per_page)
             self._struct_parents_id_per_page[page_object_id] = struct_parents_id
         marked_content = MarkedContent(page_object_id, struct_parents_id, **kwargs)
-        self._marked_contents.append(marked_content)
+        self.struct_builder.add_marked_content(marked_content)
         return marked_content
 
     def _current_page_object_id(self):
@@ -1841,26 +1861,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
     def _putpages(self):
         nb = self.page  # total number of pages
         if self.str_alias_nb_pages:
-            substituted = False
-            # Replace number of pages in fonts using subsets (unicode)
-            alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
-            encoded_nb = str(nb).encode(&#34;UTF-16BE&#34;)
-            for n in range(1, nb + 1):
-                new_content = self.pages[n][&#34;content&#34;].replace(alias, encoded_nb)
-                substituted |= self.pages[n][&#34;content&#34;] != new_content
-                self.pages[n][&#34;content&#34;] = new_content
-            # Now repeat for no pages in non-subset fonts
-            alias = self.str_alias_nb_pages.encode(&#34;latin-1&#34;)
-            encoded_nb = str(nb).encode(&#34;latin-1&#34;)
-            for n in range(1, nb + 1):
-                new_content = self.pages[n][&#34;content&#34;].replace(alias, encoded_nb)
-                substituted |= self.pages[n][&#34;content&#34;] != new_content
-                self.pages[n][&#34;content&#34;] = new_content
-            if substituted:
-                LOGGER.info(
-                    &#34;Substitution of &#39;%s&#39; was performed in the document&#34;,
-                    self.str_alias_nb_pages,
-                )
+            self._substitute_page_number()
+        if self._toc_placeholder:
+            self._insert_table_of_contents()
         if self.def_orientation == &#34;P&#34;:
             dw_pt = self.dw_pt
             dh_pt = self.dh_pt
@@ -1920,12 +1923,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                             f&#34;{pl.link} (doc #links={len(self.links)})&#34;
                         )
                         link = self.links[pl.link]
-                        # if link[0] in self.orientation_changes: h = w_pt
-                        # else:                                   h = h_pt
-                        annots += (
-                            f&#34;/Dest [{1 + 2 * link[0]} 0 R /XYZ 0 &#34;
-                            f&#34;{h_pt - link[1] * self.k:.2f} null]&#34;
-                        )
+                        annots += f&#34;/Dest {link.dest(self)}&#34;
                     annots += &#34;&gt;&gt;&#34;
                 # End links list
                 self._out(f&#34;{annots}]&#34;)
@@ -1953,6 +1951,44 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(f&#34;/MediaBox [0 0 {dw_pt:.2f} {dh_pt:.2f}]&#34;)
         self._out(&#34;&gt;&gt;&#34;)
         self._out(&#34;endobj&#34;)
+
+    def _substitute_page_number(self):
+        nb = self.page  # total number of pages
+        substituted = False
+        # Replace number of pages in fonts using subsets (unicode)
+        alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
+        encoded_nb = str(nb).encode(&#34;UTF-16BE&#34;)
+        for n in range(1, nb + 1):
+            new_content = self.pages[n][&#34;content&#34;].replace(alias, encoded_nb)
+            substituted |= self.pages[n][&#34;content&#34;] != new_content
+            self.pages[n][&#34;content&#34;] = new_content
+        # Now repeat for no pages in non-subset fonts
+        alias = self.str_alias_nb_pages.encode(&#34;latin-1&#34;)
+        encoded_nb = str(nb).encode(&#34;latin-1&#34;)
+        for n in range(1, nb + 1):
+            new_content = self.pages[n][&#34;content&#34;].replace(alias, encoded_nb)
+            substituted |= self.pages[n][&#34;content&#34;] != new_content
+            self.pages[n][&#34;content&#34;] = new_content
+        if substituted:
+            LOGGER.info(
+                &#34;Substitution of &#39;%s&#39; was performed in the document&#34;,
+                self.str_alias_nb_pages,
+            )
+
+    def _insert_table_of_contents(self):
+        prev_state = self.state
+        tocp = self._toc_placeholder
+        self.page = tocp.start_page
+        # Doc has been closed but we want to write to self.pages[self.page] instead of self.buffer:
+        self.state = DocumentState.GENERATING_PAGE
+        self.y = tocp.y
+        tocp.render_function(self, self._outline)
+        expected_final_age = tocp.start_page + tocp.pages - 1
+        if self.page != expected_final_age:
+            error_msg = &#34;The rendering function passed to FPDF.insert_toc_placeholder triggered to many page breaks: &#34;
+            error_msg += f&#34;page {self.page} was reached while it was expected to span only {tocp.pages} pages&#34;
+            raise FPDFException(error_msg)
+        self.state = prev_state
 
     def _putfonts(self):
         nf = self.n
@@ -2401,11 +2437,17 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def _put_structure_tree(self):
         &#34;Builds a Structure Hierarchy, including image alternate descriptions&#34;
-        struct_builder = StructureTreeBuilder(self._marked_contents)
         # This property is later used by _putcatalog to insert a reference to the StructTreeRoot:
         self._struct_tree_root_obj_id = self.n + 1
-        struct_builder.serialize(
+        self.struct_builder.serialize(
             first_object_id=self._struct_tree_root_obj_id, fpdf=self
+        )
+
+    def _put_document_outline(self):
+        # This property is later used by _putcatalog to insert a reference to the Outlines:
+        self._outlines_obj_id = self.n + 1
+        serialize_outline(
+            self._outline, first_object_id=self._outlines_obj_id, fpdf=self
         )
 
     def _put_xmp_metadata(self):
@@ -2466,6 +2508,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if self._struct_tree_root_obj_id:
             catalog_d[&#34;/MarkInfo&#34;] = pdf_d({&#34;/Marked&#34;: &#34;true&#34;})
             catalog_d[&#34;/StructTreeRoot&#34;] = pdf_ref(self._struct_tree_root_obj_id)
+        if self._outlines_obj_id:
+            catalog_d[&#34;/Outlines&#34;] = pdf_ref(self._outlines_obj_id)
 
         self._out(pdf_d(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
 
@@ -2484,9 +2528,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
         with self._trace_size(&#34;pages&#34;):
             self._putpages()
         self._putresources()  # trace_size is performed inside
-        if self._marked_contents:
+        if not self.struct_builder.empty():
             with self._trace_size(&#34;structure_tree&#34;):
                 self._put_structure_tree()
+        if self._outline:
+            with self._trace_size(&#34;document_outline&#34;):
+                self._put_document_outline()
         if self.xmp_metadata:
             self._put_xmp_metadata()
         # Info
@@ -2743,10 +2790,131 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if prev_y + y_scroll &gt; self.page_break_trigger:
             LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
             recorder.rewind()
-            # Peforming this call through .pdf so that it does not get recorded &amp; replayed:
-            assert recorder.pdf.perform_page_break_if_need_be(y_scroll)
+            # pylint: disable=protected-access
+            # Performing this call through .pdf so that it does not get recorded &amp; replayed:
+            assert recorder.pdf._perform_page_break_if_need_be(y_scroll)
             recorder.replay()
-        LOGGER.debug(&#34;Ending unbreakable block&#34;)</code></pre>
+        LOGGER.debug(&#34;Ending unbreakable block&#34;)
+
+    def insert_toc_placeholder(self, render_toc_function, pages=1):
+        &#34;&#34;&#34;
+        Configure Table Of Contents rendering at the end of the document generation,
+        and reserve some vertical space right now in order to insert it.
+
+        Args:
+            render_toc_function (function): a function that will be invoked to render the ToC.
+                This function will receive 2 parameters: `pdf`, an instance of FPDF, and `outline`,
+                a list of `OutlineSection`.
+            pages (int): the number of pages that the Table of Contents will span,
+                including the current one that will. As many page breaks as the value of this argument
+                will occur immediately after calling this method.
+        &#34;&#34;&#34;
+        if not callable(render_toc_function):
+            raise TypeError(
+                f&#34;The first argument must be a callable, got: {type(render_toc_function)}&#34;
+            )
+        if self._toc_placeholder:
+            raise FPDFException(
+                &#34;A placeholder for the table of contents has already been defined&#34;
+                f&#34; on page {self._toc_placeholder.start_page}&#34;
+            )
+        self._toc_placeholder = ToCPlaceholder(
+            render_toc_function, self.page, self.y, pages
+        )
+        for _ in range(pages):
+            self.add_page()
+
+    def set_section_title_styles(
+        self,
+        level0,
+        level1=None,
+        level2=None,
+        level3=None,
+        level4=None,
+        level5=None,
+        level6=None,
+    ):
+        &#34;&#34;&#34;
+        Defines a style for section titles.
+        After calling this method, calls to `start_section` will render section names visually.
+
+        Args:
+            level0 (TitleStyle): style for the top level section titles
+            level1 (TitleStyle): optional style for the level 1 section titles
+            level2 (TitleStyle): optional style for the level 2 section titles
+            level3 (TitleStyle): optional style for the level 3 section titles
+            level4 (TitleStyle): optional style for the level 4 section titles
+            level5 (TitleStyle): optional style for the level 5 section titles
+            level6 (TitleStyle): optional style for the level 6 section titles
+        &#34;&#34;&#34;
+        for level in (level0, level1, level2, level3, level4, level5, level6):
+            if level and not isinstance(level, TitleStyle):
+                raise TypeError(
+                    f&#34;Arguments must all be TitleStyle instances, got: {type(level)}&#34;
+                )
+        self.section_title_styles = {
+            0: level0,
+            1: level1,
+            2: level2,
+            3: level3,
+            4: level4,
+            5: level5,
+            6: level6,
+        }
+
+    @check_page
+    def start_section(self, name, level=0):
+        &#34;&#34;&#34;
+        Start a section in the document outline.
+        If section_title_styles have been configured,
+        render the section name visually as a title.
+
+        Args:
+            name (str): section name
+            level (int): section level in the document outline. 0 means top-level.
+        &#34;&#34;&#34;
+        if level &lt; 0:
+            raise ValueError(&#39;&#34;level&#34; mut be equal or greater than zero&#39;)
+        if self._outline:
+            if level &gt; self._outline[-1].level + 1:
+                raise ValueError(
+                    f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
+                )
+        internal_link = InternalLink(self._current_page_object_id(), self.y)
+        struct_elem = None
+        if self.section_title_styles:
+            with self._marked_sequence(title=name) as marked_content:
+                struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
+                with self._apply_style(self.section_title_styles[level]):
+                    self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
+        self._outline.append(
+            OutlineSection(name, level, self.page, internal_link, struct_elem)
+        )
+
+    @contextmanager
+    def _apply_style(self, title_style):
+        prev_font = (self.font_family, self.font_style, self.font_size_pt)
+        self.set_font(
+            title_style.font_family, title_style.font_style, title_style.font_size_pt
+        )
+        prev_text_color = self.text_color
+        if title_style.color is not None:
+            if isinstance(title_style.color, Sequence):
+                self.set_text_color(*title_style.color)
+            else:
+                self.set_text_color(title_style.color)
+        prev_underline = self.underline
+        self.underline = title_style.underline
+        if title_style.t_margin:
+            self.ln(title_style.t_margin)
+        if title_style.l_margin:
+            self.set_x(title_style.l_margin)
+        yield
+        if title_style.b_margin:
+            self.ln(title_style.b_margin)
+        self.set_font(*prev_font)
+        self.text_color = prev_text_color
+        self.underline = prev_underline</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -2953,7 +3121,7 @@ def unifontsubset(self):
 <pre><code class="python">def add_link(self):
     &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
     n = len(self.links) + 1
-    self.links[n] = (0, 0)
+    self.links[n] = InternalLink()
     return n</code></pre>
 </details>
 </dd>
@@ -3135,7 +3303,7 @@ def cell(self, w, h=0, txt=&#34;&#34;, border=0, ln=0, align=&#34;&#34;, fill=Fa
             &#34;ignored&#34;
         )
         border = 1
-    page_break_triggered = self.perform_page_break_if_need_be(h)
+    page_break_triggered = self._perform_page_break_if_need_be(h)
     if w == 0:
         w = self.w - self.r_margin - self.x
     s = &#34;&#34;
@@ -3684,7 +3852,7 @@ def image(
 
     # Flowing mode
     if y is None:
-        self.perform_page_break_if_need_be(h)
+        self._perform_page_break_if_need_be(h)
         y = self.y
         self.y += h
 
@@ -3704,6 +3872,56 @@ def image(
         self.link(x, y, w, h, link)
 
     return info</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.insert_toc_placeholder"><code class="name flex">
+<span>def <span class="ident">insert_toc_placeholder</span></span>(<span>self, render_toc_function, pages=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Configure Table Of Contents rendering at the end of the document generation,
+and reserve some vertical space right now in order to insert it.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>render_toc_function</code></strong> :&ensp;<code>function</code></dt>
+<dd>a function that will be invoked to render the ToC.
+This function will receive 2 parameters: <code>pdf</code>, an instance of FPDF, and <code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code>,
+a list of <code>OutlineSection</code>.</dd>
+<dt><strong><code>pages</code></strong> :&ensp;<code>int</code></dt>
+<dd>the number of pages that the Table of Contents will span,
+including the current one that will. As many page breaks as the value of this argument
+will occur immediately after calling this method.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def insert_toc_placeholder(self, render_toc_function, pages=1):
+    &#34;&#34;&#34;
+    Configure Table Of Contents rendering at the end of the document generation,
+    and reserve some vertical space right now in order to insert it.
+
+    Args:
+        render_toc_function (function): a function that will be invoked to render the ToC.
+            This function will receive 2 parameters: `pdf`, an instance of FPDF, and `outline`,
+            a list of `OutlineSection`.
+        pages (int): the number of pages that the Table of Contents will span,
+            including the current one that will. As many page breaks as the value of this argument
+            will occur immediately after calling this method.
+    &#34;&#34;&#34;
+    if not callable(render_toc_function):
+        raise TypeError(
+            f&#34;The first argument must be a callable, got: {type(render_toc_function)}&#34;
+        )
+    if self._toc_placeholder:
+        raise FPDFException(
+            &#34;A placeholder for the table of contents has already been defined&#34;
+            f&#34; on page {self._toc_placeholder.start_page}&#34;
+        )
+    self._toc_placeholder = ToCPlaceholder(
+        render_toc_function, self.page, self.y, pages
+    )
+    for _ in range(pages):
+        self.add_page()</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.interleaved2of5"><code class="name flex">
@@ -4280,40 +4498,6 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
 <pre><code class="python">def page_no(self):
     &#34;&#34;&#34;Get current page number&#34;&#34;&#34;
     return self.page</code></pre>
-</details>
-</dd>
-<dt id="fpdf.FPDF.perform_page_break_if_need_be"><code class="name flex">
-<span>def <span class="ident">perform_page_break_if_need_be</span></span>(<span>self, h)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def perform_page_break_if_need_be(self, h):
-    if (
-        self.y + h &gt; self.page_break_trigger
-        and not self.in_footer
-        and self.accept_page_break
-    ):
-        LOGGER.debug(
-            &#34;Page break on page %d at y=%d for element of height %d&#34;,
-            self.page,
-            self.y,
-            h,
-        )
-        x, ws = self.x, self.ws
-        if ws &gt; 0:
-            self.ws = 0
-            self._out(&#34;0 Tw&#34;)
-        self.add_page(same=True)
-        self.x = x  # restore x but not y after drawing header
-        if ws &gt; 0:
-            self.ws = ws
-            self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
-        return True
-    return False</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.polygon"><code class="name flex">
@@ -4985,9 +5169,10 @@ Also sets the current FPDF.x on the page to this minimum horizontal position.</p
     if y == -1:
         y = self.y
     if page == -1:
-        page = self.page
-
-    self.links[link] = [page, y]</code></pre>
+        page_object_id = self._current_page_object_id()
+    else:
+        page_object_id = 2 * page + 1
+    self.links[link] = InternalLink(page_object_id, y)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_margin"><code class="name flex">
@@ -5091,6 +5276,72 @@ Also sets the current FPDF.y on the page to this minimum vertical position.</p>
         margin (int): margin in the unit specified to FPDF constructor
     &#34;&#34;&#34;
     self.r_margin = margin</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.set_section_title_styles"><code class="name flex">
+<span>def <span class="ident">set_section_title_styles</span></span>(<span>self, level0, level1=None, level2=None, level3=None, level4=None, level5=None, level6=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines a style for section titles.
+After calling this method, calls to <code>start_section</code> will render section names visually.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>level0</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>style for the top level section titles</dd>
+<dt><strong><code>level1</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>optional style for the level 1 section titles</dd>
+<dt><strong><code>level2</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>optional style for the level 2 section titles</dd>
+<dt><strong><code>level3</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>optional style for the level 3 section titles</dd>
+<dt><strong><code>level4</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>optional style for the level 4 section titles</dd>
+<dt><strong><code>level5</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>optional style for the level 5 section titles</dd>
+<dt><strong><code>level6</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dd>optional style for the level 6 section titles</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_section_title_styles(
+    self,
+    level0,
+    level1=None,
+    level2=None,
+    level3=None,
+    level4=None,
+    level5=None,
+    level6=None,
+):
+    &#34;&#34;&#34;
+    Defines a style for section titles.
+    After calling this method, calls to `start_section` will render section names visually.
+
+    Args:
+        level0 (TitleStyle): style for the top level section titles
+        level1 (TitleStyle): optional style for the level 1 section titles
+        level2 (TitleStyle): optional style for the level 2 section titles
+        level3 (TitleStyle): optional style for the level 3 section titles
+        level4 (TitleStyle): optional style for the level 4 section titles
+        level5 (TitleStyle): optional style for the level 5 section titles
+        level6 (TitleStyle): optional style for the level 6 section titles
+    &#34;&#34;&#34;
+    for level in (level0, level1, level2, level3, level4, level5, level6):
+        if level and not isinstance(level, TitleStyle):
+            raise TypeError(
+                f&#34;Arguments must all be TitleStyle instances, got: {type(level)}&#34;
+            )
+    self.section_title_styles = {
+        0: level0,
+        1: level1,
+        2: level2,
+        3: level3,
+        4: level4,
+        5: level5,
+        6: level6,
+    }</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_stretching"><code class="name flex">
@@ -5241,6 +5492,54 @@ Also sets the current FPDF.y on the page to this minimum vertical position.</p>
     self.y = y if y &gt;= 0 else self.h + y</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.start_section"><code class="name flex">
+<span>def <span class="ident">start_section</span></span>(<span>self, name, level=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Start a section in the document outline.
+If section_title_styles have been configured,
+render the section name visually as a title.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>section name</dd>
+<dt><strong><code>level</code></strong> :&ensp;<code>int</code></dt>
+<dd>section level in the document outline. 0 means top-level.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def start_section(self, name, level=0):
+    &#34;&#34;&#34;
+    Start a section in the document outline.
+    If section_title_styles have been configured,
+    render the section name visually as a title.
+
+    Args:
+        name (str): section name
+        level (int): section level in the document outline. 0 means top-level.
+    &#34;&#34;&#34;
+    if level &lt; 0:
+        raise ValueError(&#39;&#34;level&#34; mut be equal or greater than zero&#39;)
+    if self._outline:
+        if level &gt; self._outline[-1].level + 1:
+            raise ValueError(
+                f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
+            )
+    internal_link = InternalLink(self._current_page_object_id(), self.y)
+    struct_elem = None
+    if self.section_title_styles:
+        with self._marked_sequence(title=name) as marked_content:
+            struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
+            with self._apply_style(self.section_title_styles[level]):
+                self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
+    self._outline.append(
+        OutlineSection(name, level, self.page, internal_link, struct_elem)
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.text"><code class="name flex">
 <span>def <span class="ident">text</span></span>(<span>self, x, y, txt='')</span>
 </code></dt>
@@ -5299,8 +5598,9 @@ def unbreakable(self):
     if prev_y + y_scroll &gt; self.page_break_trigger:
         LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
         recorder.rewind()
-        # Peforming this call through .pdf so that it does not get recorded &amp; replayed:
-        assert recorder.pdf.perform_page_break_if_need_be(y_scroll)
+        # pylint: disable=protected-access
+        # Performing this call through .pdf so that it does not get recorded &amp; replayed:
+        assert recorder.pdf._perform_page_break_if_need_be(y_scroll)
         recorder.replay()
     LOGGER.debug(&#34;Ending unbreakable block&#34;)</code></pre>
 </details>
@@ -6174,6 +6474,66 @@ def write(
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.TitleStyle"><code class="flex name class">
+<span>class <span class="ident">TitleStyle</span></span>
+<span>(</span><span>font_family: Optional[str] = None, font_style: Optional[str] = None, font_size_pt: Optional[int] = None, color: Union[int, tuple] = None, underline: bool = False, t_margin: Optional[int] = None, l_margin: Optional[int] = None, b_margin: Optional[int] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>TitleStyle(font_family, font_style, font_size_pt, color, underline, t_margin, l_margin, b_margin)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TitleStyle(NamedTuple):
+    font_family: Optional[str] = None
+    font_style: Optional[str] = None
+    font_size_pt: Optional[int] = None
+    color: Union[int, tuple] = None  # grey scale or (red, green, blue)
+    underline: bool = False
+    t_margin: Optional[int] = None
+    l_margin: Optional[int] = None
+    b_margin: Optional[int] = None</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.tuple</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.TitleStyle.b_margin"><code class="name">var <span class="ident">b_margin</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 7</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.color"><code class="name">var <span class="ident">color</span> : Union[int, tuple]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 3</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.font_family"><code class="name">var <span class="ident">font_family</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 0</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.font_size_pt"><code class="name">var <span class="ident">font_size_pt</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 2</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.font_style"><code class="name">var <span class="ident">font_style</span> : Optional[str]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 1</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.l_margin"><code class="name">var <span class="ident">l_margin</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 6</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.t_margin"><code class="name">var <span class="ident">t_margin</span> : Optional[int]</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 5</p></div>
+</dd>
+<dt id="fpdf.TitleStyle.underline"><code class="name">var <span class="ident">underline</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 4</p></div>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -6185,16 +6545,19 @@ def write(
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
+<li><code><a title="fpdf.deprecation" href="deprecation.html">fpdf.deprecation</a></code></li>
 <li><code><a title="fpdf.errors" href="errors.html">fpdf.errors</a></code></li>
 <li><code><a title="fpdf.fonts" href="fonts.html">fpdf.fonts</a></code></li>
 <li><code><a title="fpdf.fpdf" href="fpdf.html">fpdf.fpdf</a></code></li>
 <li><code><a title="fpdf.html" href="html.html">fpdf.html</a></code></li>
 <li><code><a title="fpdf.image_parsing" href="image_parsing.html">fpdf.image_parsing</a></code></li>
+<li><code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></li>
 <li><code><a title="fpdf.recorder" href="recorder.html">fpdf.recorder</a></code></li>
 <li><code><a title="fpdf.structure_tree" href="structure_tree.html">fpdf.structure_tree</a></code></li>
+<li><code><a title="fpdf.syntax" href="syntax.html">fpdf.syntax</a></code></li>
 <li><code><a title="fpdf.template" href="template.html">fpdf.template</a></code></li>
 <li><code><a title="fpdf.ttfonts" href="ttfonts.html">fpdf.ttfonts</a></code></li>
-<li><code><a title="fpdf.util" href="util/index.html">fpdf.util</a></code></li>
+<li><code><a title="fpdf.util" href="util.html">fpdf.util</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-variables">Global variables</a></h3>
@@ -6227,6 +6590,7 @@ def write(
 <li><code><a title="fpdf.FPDF.get_y" href="#fpdf.FPDF.get_y">get_y</a></code></li>
 <li><code><a title="fpdf.FPDF.header" href="#fpdf.FPDF.header">header</a></code></li>
 <li><code><a title="fpdf.FPDF.image" href="#fpdf.FPDF.image">image</a></code></li>
+<li><code><a title="fpdf.FPDF.insert_toc_placeholder" href="#fpdf.FPDF.insert_toc_placeholder">insert_toc_placeholder</a></code></li>
 <li><code><a title="fpdf.FPDF.interleaved2of5" href="#fpdf.FPDF.interleaved2of5">interleaved2of5</a></code></li>
 <li><code><a title="fpdf.FPDF.line" href="#fpdf.FPDF.line">line</a></code></li>
 <li><code><a title="fpdf.FPDF.link" href="#fpdf.FPDF.link">link</a></code></li>
@@ -6236,7 +6600,6 @@ def write(
 <li><code><a title="fpdf.FPDF.open" href="#fpdf.FPDF.open">open</a></code></li>
 <li><code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">output</a></code></li>
 <li><code><a title="fpdf.FPDF.page_no" href="#fpdf.FPDF.page_no">page_no</a></code></li>
-<li><code><a title="fpdf.FPDF.perform_page_break_if_need_be" href="#fpdf.FPDF.perform_page_break_if_need_be">perform_page_break_if_need_be</a></code></li>
 <li><code><a title="fpdf.FPDF.polygon" href="#fpdf.FPDF.polygon">polygon</a></code></li>
 <li><code><a title="fpdf.FPDF.polyline" href="#fpdf.FPDF.polyline">polyline</a></code></li>
 <li><code><a title="fpdf.FPDF.rect" href="#fpdf.FPDF.rect">rect</a></code></li>
@@ -6263,6 +6626,7 @@ def write(
 <li><code><a title="fpdf.FPDF.set_margins" href="#fpdf.FPDF.set_margins">set_margins</a></code></li>
 <li><code><a title="fpdf.FPDF.set_producer" href="#fpdf.FPDF.set_producer">set_producer</a></code></li>
 <li><code><a title="fpdf.FPDF.set_right_margin" href="#fpdf.FPDF.set_right_margin">set_right_margin</a></code></li>
+<li><code><a title="fpdf.FPDF.set_section_title_styles" href="#fpdf.FPDF.set_section_title_styles">set_section_title_styles</a></code></li>
 <li><code><a title="fpdf.FPDF.set_stretching" href="#fpdf.FPDF.set_stretching">set_stretching</a></code></li>
 <li><code><a title="fpdf.FPDF.set_subject" href="#fpdf.FPDF.set_subject">set_subject</a></code></li>
 <li><code><a title="fpdf.FPDF.set_text_color" href="#fpdf.FPDF.set_text_color">set_text_color</a></code></li>
@@ -6272,6 +6636,7 @@ def write(
 <li><code><a title="fpdf.FPDF.set_xmp_metadata" href="#fpdf.FPDF.set_xmp_metadata">set_xmp_metadata</a></code></li>
 <li><code><a title="fpdf.FPDF.set_xy" href="#fpdf.FPDF.set_xy">set_xy</a></code></li>
 <li><code><a title="fpdf.FPDF.set_y" href="#fpdf.FPDF.set_y">set_y</a></code></li>
+<li><code><a title="fpdf.FPDF.start_section" href="#fpdf.FPDF.start_section">start_section</a></code></li>
 <li><code><a title="fpdf.FPDF.text" href="#fpdf.FPDF.text">text</a></code></li>
 <li><code><a title="fpdf.FPDF.unbreakable" href="#fpdf.FPDF.unbreakable">unbreakable</a></code></li>
 <li><code><a title="fpdf.FPDF.unifontsubset" href="#fpdf.FPDF.unifontsubset">unifontsubset</a></code></li>
@@ -6299,6 +6664,19 @@ def write(
 <li><code><a title="fpdf.Template.split_multicell" href="#fpdf.Template.split_multicell">split_multicell</a></code></li>
 <li><code><a title="fpdf.Template.text" href="#fpdf.Template.text">text</a></code></li>
 <li><code><a title="fpdf.Template.write" href="#fpdf.Template.write">write</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></h4>
+<ul class="two-column">
+<li><code><a title="fpdf.TitleStyle.b_margin" href="#fpdf.TitleStyle.b_margin">b_margin</a></code></li>
+<li><code><a title="fpdf.TitleStyle.color" href="#fpdf.TitleStyle.color">color</a></code></li>
+<li><code><a title="fpdf.TitleStyle.font_family" href="#fpdf.TitleStyle.font_family">font_family</a></code></li>
+<li><code><a title="fpdf.TitleStyle.font_size_pt" href="#fpdf.TitleStyle.font_size_pt">font_size_pt</a></code></li>
+<li><code><a title="fpdf.TitleStyle.font_style" href="#fpdf.TitleStyle.font_style">font_style</a></code></li>
+<li><code><a title="fpdf.TitleStyle.l_margin" href="#fpdf.TitleStyle.l_margin">l_margin</a></code></li>
+<li><code><a title="fpdf.TitleStyle.t_margin" href="#fpdf.TitleStyle.t_margin">t_margin</a></code></li>
+<li><code><a title="fpdf.TitleStyle.underline" href="#fpdf.TitleStyle.underline">underline</a></code></li>
 </ul>
 </li>
 </ul>

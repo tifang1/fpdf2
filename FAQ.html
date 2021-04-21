@@ -368,6 +368,21 @@
   
   
     <li class="md-nav__item">
+      <a href="DocumentOutlineAndTableOfContents.html" class="md-nav__link">
+        Document outline & table of contents
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
       <a href="TextStyling.html" class="md-nav__link">
         Text styling
       </a>
@@ -506,14 +521,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_17" type="checkbox" id="__nav_17" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_18" type="checkbox" id="__nav_18" >
       
-      <label class="md-nav__link" for="__nav_17">
+      <label class="md-nav__link" for="__nav_18">
         ReferenceManual
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="ReferenceManual" data-md-level="1">
-        <label class="md-nav__title" for="__nav_17">
+        <label class="md-nav__title" for="__nav_18">
           <span class="md-nav__icon md-icon"></span>
           ReferenceManual
         </label>
@@ -1253,8 +1268,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-fpdf" class="md-nav__link">
-    What is FPDF?
+  <a href="#what-is-fpdf2" class="md-nav__link">
+    What is fpdf2?
   </a>
   
 </li>
@@ -1335,8 +1350,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#what-is-fpdf" class="md-nav__link">
-    What is FPDF?
+  <a href="#what-is-fpdf2" class="md-nav__link">
+    What is fpdf2?
   </a>
   
 </li>
@@ -1405,7 +1420,7 @@
 <div class="toc">
 <ul>
 <li><a href="#faq">FAQ</a><ul>
-<li><a href="#what-is-fpdf">What is FPDF?</a></li>
+<li><a href="#what-is-fpdf2">What is fpdf2?</a></li>
 <li><a href="#what-is-this-library-not">What is this library not?</a></li>
 <li><a href="#how-does-this-library-compare-to">How does this library compare to ...?</a></li>
 <li><a href="#what-does-the-code-look-like">What does the code look like?</a></li>
@@ -1416,45 +1431,50 @@
 </li>
 </ul>
 </div>
-<h2 id="what-is-fpdf">What is FPDF?</h2>
-<p><code>fpdf2</code> is a library with low-level primitives to easily generate PDF documents.
-This is similar to ReportLab's graphics canvas, but with some methods to output "fluid" cells
+<h2 id="what-is-fpdf2">What is fpdf2?</h2>
+<p><code>fpdf2</code> is a library with low-level primitives to easily generate PDF documents.</p>
+<p>This is similar to <a href="https://www.reportlab.com">ReportLab</a>'s graphics canvas,
+but with some methods to output "fluid" cells
 ("flowables" that can span multiple rows, pages, tables, columns, etc).</p>
-<p>It has two methods ("hooks") that can be implemented in a subclass, <code>headers</code>
-and <code>footers</code>.</p>
-<p>Originally developed in PHP several years ago (as a free alternative to
-proprietary C libraries), it has been ported to many programming languages,
+<p>It has methods ("hooks") that can be implemented in a subclass: <code>headers</code> and <code>footers</code>.</p>
+<p>Originally developed in PHP several years ago (as a free alternative to proprietary C libraries),
+it has been ported to many programming languages,
 including ASP, C++, Java, Pl/SQL, Ruby, Visual Basic, and of course, Python.</p>
 <p>For more information see: <a href="http://www.fpdf.org/en/links.php">http://www.fpdf.org/en/links.php</a></p>
 <h2 id="what-is-this-library-not">What is this library <strong>not</strong>?</h2>
 <p>This library is not a:</p>
 <ul>
 <li>
-<p>charts or widgets library (but you can import PNG or JPG images, use PIL or
-any other library, or draw the figures yourself; see examples)</p>
+<p>charts or widgets library.
+    But you can import PNG or JPG images, use PIL or any other library, or draw the figures yourself.</p>
 </li>
 <li>
-<p>"flexible page layout engine" like
-<a href="http://www.reportlab.com/opensource/">Reportlab</a> PLATYPUS (but it can do
-columns, chapters, etc.; see the <a href="Tutorial.html">Tutorial</a>)</p>
+<p>"flexible page layout engine" like <a href="http://www.reportlab.com/opensource/">Reportlab</a> PLATYPUS.
+    But it can do columns, chapters, etc.; see the <a href="Tutorial.html">Tutorial</a>.</p>
 </li>
 <li>
-<p>XML or object definition language like
-<a href="http://www.geraldoreports.org/">Geraldo Reports</a>, Jasper Reports, or similar
-(but look at <a href="reference/write_html.html">write_html</a> for simple HTML reports and
-<a href="Templates.html">Templates</a> for fill-in-the-blank documents)</p>
+<p>XML or object definition language like <a href="http://www.geraldoreports.org/">Geraldo Reports</a>, Jasper Reports, or similar.
+    Vut look at <a href="reference/write_html.html">write_html</a> for simple HTML reports and <a href="Templates.html">Templates</a> for fill-in-the-blank documents.</p>
 </li>
 <li>
-<p>PDF text extractor, converter, splitter or similar. Look at
-<a href="https://pypi.python.org/pypi/fpdf2">fpdf2</a>.</p>
+<p>PDF text extractor, converter, splitter or similar.</p>
 </li>
 </ul>
 <h2 id="how-does-this-library-compare-to">How does this library compare to ...?</h2>
 <p>The API is geared toward giving the user access to features of the Portable
 Document Format as they are described in the Adobe PDF Reference Manual, this
 bypasses needless complexities for simpler use cases.</p>
-<p>It is small: Source folder &lt; 200Kb.</p>
-<p>It includes cell and multi_cell primitives to draw fluid document like 
+<p>It is small:
+<div class="highlight"><pre><span></span><code>$ du -sh fpdf
+272K    fpdf
+
+$ scc fpdf
+───────────────────────────────────────────────────────────────────────────────
+Language                 Files     Lines   Blanks  Comments     Code Complexity
+───────────────────────────────────────────────────────────────────────────────
+Python                      14      8204      142       232     7830        192
+</code></pre></div></p>
+<p>It includes <code>cell</code> and <code>multi_cell</code> primitives to draw fluid document like
 invoices, listings and reports, and includes basic support for HTML rendering.</p>
 <blockquote>
 <p>Compared to other solutions, this library should be easier to use and adapt
@@ -1462,6 +1482,7 @@ for most common documents (no need to use a page layout engine, style
 sheets, templates, or stories...), with full control over the generated PDF
 document (including advanced features and extensions).</p>
 </blockquote>
+<p>Check also the list of features on the <a href="index.html">home page</a>.</p>
 <h2 id="what-does-the-code-look-like">What does the code look like?</h2>
 <p>Following is an example similar to the Reportlab one in the book of web2py. Note
 the simplified import and usage:
@@ -1515,31 +1536,14 @@ the simplified import and usage:
     <span class="k">return</span> <span class="n">data</span>
 </code></pre></div></p>
 <h2 id="does-this-library-have-any-framework-integration">Does this library have any framework integration?</h2>
-<p>Yes, if you use web2py, you can make simple HTML reports that can be viewed in a
-browser, or downloaded as PDF.</p>
-<p>Also, using web2py DAL, you can easily set up a templating engine for PDF 
-documents.</p>
+<p>Yes, if you use web2py, you can make simple HTML reports that can be viewed in a browser,
+or downloaded as PDF.</p>
+<p>Also, using web2py DAL, you can easily set up a templating engine for PDF  documents.</p>
 <p>Look at <a href="Web2Py.html">Web2Py</a> for examples.</p>
 <h2 id="what-is-the-development-status-of-this-library">What is the development status of this library?</h2>
-<p>This library was improved over the years since the initial port from PHP. Some 
-code is in early development stages (mainly UTF-8 support and some advanced 
-features). The good news is that PHP versions and examples are available from
-a long time ago, so migration and some bug-fixes are easy.</p>
-<p>Said that, a former version is working successfully and is commercially 
-supported since late 2008 for electronic invoice templates compliant with AFIP
-(Argentina IRS) normative, in several environments (Linux, Windows, etc.). It 
-was originally included in 
-<a href="http://code.google.com/p/pyafipws/wiki/ProjectSummary">PyRece</a>, with thousands 
-downloads to date.</p>
-<p>For further information see:</p>
-<ul>
-<li><a href="http://www.pyafipws.com.ar/">http://www.pyafipws.com.ar/</a></li>
-<li><a href="http://code.google.com/p/pyafipws/">http://code.google.com/p/pyafipws/</a></li>
-<li><a href="http://groups.google.com/group/pyafipws">http://groups.google.com/group/pyafipws</a></li>
-</ul>
-<p>In contrast, <em>write_html</em> support is not complete, so it must be considered in 
-alpha state. Further enhancements using web2py helpers and an XML parser will 
-enable parsing more complex HTML files.</p>
+<p>This library was improved over the years since the initial port from PHP.
+As of 2021, it is <strong>stable</strong> and actively maintained, with bug fixes and new features developped regularly.</p>
+<p>In contrast, <code>write_html</code> support is not complete, so it must be considered in beta state.</p>
 <h2 id="what-is-the-license-of-this-library-fpdf2">What is the license of this library (fpdf2)?</h2>
 <p>LGPL v3.0.</p>
 <p>Original FPDF uses a permissive license:
