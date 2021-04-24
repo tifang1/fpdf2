@@ -411,7 +411,9 @@ class HTML2FPDF(HTMLParser):
         if tag == &#34;center&#34;:
             self.align = &#34;Center&#34;
         if tag == &#34;toc&#34;:
-            self.pdf.insert_toc_placeholder(self.render_toc)
+            self.pdf.insert_toc_placeholder(
+                self.render_toc, pages=int(attrs.get(&#34;pages&#34;, 1))
+            )
 
     def handle_endtag(self, tag):
         # Closing tag
@@ -969,7 +971,9 @@ to new image URLs</dd>
         if tag == &#34;center&#34;:
             self.align = &#34;Center&#34;
         if tag == &#34;toc&#34;:
-            self.pdf.insert_toc_placeholder(self.render_toc)
+            self.pdf.insert_toc_placeholder(
+                self.render_toc, pages=int(attrs.get(&#34;pages&#34;, 1))
+            )
 
     def handle_endtag(self, tag):
         # Closing tag
@@ -1409,7 +1413,9 @@ to new image URLs</dd>
     if tag == &#34;center&#34;:
         self.align = &#34;Center&#34;
     if tag == &#34;toc&#34;:
-        self.pdf.insert_toc_placeholder(self.render_toc)</code></pre>
+        self.pdf.insert_toc_placeholder(
+            self.render_toc, pages=int(attrs.get(&#34;pages&#34;, 1))
+        )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.output_table_footer"><code class="name flex">

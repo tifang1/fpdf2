@@ -2019,10 +2019,11 @@ class FPDF:
         self.state = DocumentState.GENERATING_PAGE
         self.y = tocp.y
         tocp.render_function(self, self._outline)
-        expected_final_age = tocp.start_page + tocp.pages - 1
-        if self.page != expected_final_age:
-            error_msg = &#34;The rendering function passed to FPDF.insert_toc_placeholder triggered too many page breaks: &#34;
-            error_msg += f&#34;page {self.page} was reached while it was expected to span only {tocp.pages} pages&#34;
+        expected_final_page = tocp.start_page + tocp.pages - 1
+        if self.page != expected_final_page:
+            too = &#34;many&#34; if self.page &gt; expected_final_page else &#34;few&#34;
+            error_msg = f&#34;The rendering function passed to FPDF.insert_toc_placeholder triggered too {too} page breaks: &#34;
+            error_msg += f&#34;ToC ended on page {self.page} while it was expected to span exactly {tocp.pages} pages&#34;
             raise FPDFException(error_msg)
         self.state = prev_state
 
@@ -4892,10 +4893,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.state = DocumentState.GENERATING_PAGE
         self.y = tocp.y
         tocp.render_function(self, self._outline)
-        expected_final_age = tocp.start_page + tocp.pages - 1
-        if self.page != expected_final_age:
-            error_msg = &#34;The rendering function passed to FPDF.insert_toc_placeholder triggered too many page breaks: &#34;
-            error_msg += f&#34;page {self.page} was reached while it was expected to span only {tocp.pages} pages&#34;
+        expected_final_page = tocp.start_page + tocp.pages - 1
+        if self.page != expected_final_page:
+            too = &#34;many&#34; if self.page &gt; expected_final_page else &#34;few&#34;
+            error_msg = f&#34;The rendering function passed to FPDF.insert_toc_placeholder triggered too {too} page breaks: &#34;
+            error_msg += f&#34;ToC ended on page {self.page} while it was expected to span exactly {tocp.pages} pages&#34;
             raise FPDFException(error_msg)
         self.state = prev_state
 
