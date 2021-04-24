@@ -1387,6 +1387,7 @@ Note that a page break will always be triggered after inserting the table of con
 <h2 id="with-html">With HTML</h2>
 <p>When using <a href="HTML.html"><code>fpdf.HTMLMixin</code></a>, a document outline is automatically built.
 You can insert a table of content with the special <code>&lt;toc&gt;</code> tag.</p>
+<p>Custom styling of the table of contents can be achieved by overriding the <code>render_toc</code> method in a subclass.</p>
 <h2 id="code-samples">Code samples</h2>
 <p>The regression tests are a good place to find code samples.</p>
 <p>For example, the <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_outline.py"><code>test_simple_outline</code></a> test function generates the PDF document <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_simple_outline.pdf">test_simple_outline.pdf</a>.</p>

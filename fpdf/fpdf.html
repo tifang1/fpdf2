@@ -2831,6 +2831,7 @@ class FPDF:
             recorder.replay()
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
 
+    @check_page
     def insert_toc_placeholder(self, render_toc_function, pages=1):
         &#34;&#34;&#34;
         Configure Table Of Contents rendering at the end of the document generation,
@@ -5702,6 +5703,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             recorder.replay()
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
 
+    @check_page
     def insert_toc_placeholder(self, render_toc_function, pages=1):
         &#34;&#34;&#34;
         Configure Table Of Contents rendering at the end of the document generation,
@@ -6801,7 +6803,8 @@ will occur immediately after calling this method.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def insert_toc_placeholder(self, render_toc_function, pages=1):
+<pre><code class="python">@check_page
+def insert_toc_placeholder(self, render_toc_function, pages=1):
     &#34;&#34;&#34;
     Configure Table Of Contents rendering at the end of the document generation,
     and reserve some vertical space right now in order to insert it.
