@@ -361,7 +361,10 @@ class HTML2FPDF(HTMLParser):
         if tag == &#34;th&#34;:
             self.td = {k.lower(): v for k, v in attrs.items()}
             self.th = True
-            if &#34;width&#34; in self.td:
+            if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+                assert self.table_col_index == len(
+                    self.table_col_width
+                ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
                 self.table_col_width.append(self.td[&#34;width&#34;])
         if tag == &#34;thead&#34;:
             self.thead = {}
@@ -921,7 +924,10 @@ to new image URLs</dd>
         if tag == &#34;th&#34;:
             self.td = {k.lower(): v for k, v in attrs.items()}
             self.th = True
-            if &#34;width&#34; in self.td:
+            if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+                assert self.table_col_index == len(
+                    self.table_col_width
+                ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
                 self.table_col_width.append(self.td[&#34;width&#34;])
         if tag == &#34;thead&#34;:
             self.thead = {}
@@ -1363,7 +1369,10 @@ to new image URLs</dd>
     if tag == &#34;th&#34;:
         self.td = {k.lower(): v for k, v in attrs.items()}
         self.th = True
-        if &#34;width&#34; in self.td:
+        if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+            assert self.table_col_index == len(
+                self.table_col_width
+            ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
             self.table_col_width.append(self.td[&#34;width&#34;])
     if tag == &#34;thead&#34;:
         self.thead = {}
