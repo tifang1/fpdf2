@@ -1738,6 +1738,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             )
         if isinstance(name, str):
             img = None
+        elif isinstance(name, Image.Image):
+            name, img = hashlib.md5(name.tobytes()).hexdigest(), name
         elif isinstance(name, io.BytesIO):
             name, img = hashlib.md5(name.getvalue()).hexdigest(), name
         else:
@@ -3854,6 +3856,8 @@ def image(
         )
     if isinstance(name, str):
         img = None
+    elif isinstance(name, Image.Image):
+        name, img = hashlib.md5(name.tobytes()).hexdigest(), name
     elif isinstance(name, io.BytesIO):
         name, img = hashlib.md5(name.getvalue()).hexdigest(), name
     else:
