@@ -491,7 +491,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         else:
             raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)
 
-    def alias_nb_pages(self, alias):
+    def alias_nb_pages(self, alias=&#34;{nb}&#34;):
         &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
         self.str_alias_nb_pages = alias
 
@@ -3228,7 +3228,7 @@ def unifontsubset(self):
 </details>
 </dd>
 <dt id="fpdf.FPDF.alias_nb_pages"><code class="name flex">
-<span>def <span class="ident">alias_nb_pages</span></span>(<span>self, alias)</span>
+<span>def <span class="ident">alias_nb_pages</span></span>(<span>self, alias='{nb}')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Define an alias for total number of pages</p></div>
@@ -3236,7 +3236,7 @@ def unifontsubset(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def alias_nb_pages(self, alias):
+<pre><code class="python">def alias_nb_pages(self, alias=&#34;{nb}&#34;):
     &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
     self.str_alias_nb_pages = alias</code></pre>
 </details>
