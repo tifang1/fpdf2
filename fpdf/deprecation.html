@@ -42,7 +42,7 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
             )
             return None
         # pylint: disable=no-member
-        return super().__getattr__(self, name)
+        return super().__getattr__(name)
 
     def __setattr__(self, name, value):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
@@ -54,7 +54,7 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
                 stacklevel=2,
             )
             return
-        super().__setattr__(self, name, value)</code></pre>
+        super().__setattr__(name, value)</code></pre>
 </details>
 </section>
 <section>
@@ -89,7 +89,7 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
             )
             return None
         # pylint: disable=no-member
-        return super().__getattr__(self, name)
+        return super().__getattr__(name)
 
     def __setattr__(self, name, value):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
@@ -101,7 +101,7 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
                 stacklevel=2,
             )
             return
-        super().__setattr__(self, name, value)</code></pre>
+        super().__setattr__(name, value)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
