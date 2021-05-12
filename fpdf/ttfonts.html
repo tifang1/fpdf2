@@ -655,9 +655,8 @@ class TTFontFile:
             cmap.append(1)  # idDelta of last Segment
             # idRangeOffset(s)
             for subrange in range_:
-                cmap.append(
-                    0
-                )  # idRangeOffset[segCount]   Offset in bytes to glyph indexArray, or 0
+                # idRangeOffset[segCount]   Offset in bytes to glyph indexArray, or 0
+                cmap.append(0)
 
             cmap.append(0)  # idRangeOffset of last Segment
             for subrange, glidx in range_:
@@ -920,7 +919,13 @@ class TTFontFile:
         return hm
 
     def getLOCA(self, indexToLocFormat, numGlyphs):
-        start = self.seek_table(&#34;loca&#34;)
+        try:
+            start = self.seek_table(&#34;loca&#34;)
+        except KeyError:
+            # pylint: disable=raise-missing-from
+            raise RuntimeError(
+                f&#34;Unknown location table format, index={indexToLocFormat}&#34;
+            )
         self.glyphPos = []
         if indexToLocFormat == 0:
             data = self.get_chunk(start, (numGlyphs * 2) + 2)
@@ -933,7 +938,9 @@ class TTFontFile:
             for n in range(numGlyphs):
                 self.glyphPos.append(arr[n])  # n+1 !?
         else:
-            raise RuntimeError(f&#34;Unknown location table format {indexToLocFormat}&#34;)
+            raise RuntimeError(
+                f&#34;Unknown location table format, index={indexToLocFormat}&#34;
+            )
 
     # CMAP Format 4
     def getCMAP4(self, unicode_cmap_offset, glyphToChar, charToGlyph):
@@ -1686,9 +1693,8 @@ class TTFontFile:
             cmap.append(1)  # idDelta of last Segment
             # idRangeOffset(s)
             for subrange in range_:
-                cmap.append(
-                    0
-                )  # idRangeOffset[segCount]   Offset in bytes to glyph indexArray, or 0
+                # idRangeOffset[segCount]   Offset in bytes to glyph indexArray, or 0
+                cmap.append(0)
 
             cmap.append(0)  # idRangeOffset of last Segment
             for subrange, glidx in range_:
@@ -1951,7 +1957,13 @@ class TTFontFile:
         return hm
 
     def getLOCA(self, indexToLocFormat, numGlyphs):
-        start = self.seek_table(&#34;loca&#34;)
+        try:
+            start = self.seek_table(&#34;loca&#34;)
+        except KeyError:
+            # pylint: disable=raise-missing-from
+            raise RuntimeError(
+                f&#34;Unknown location table format, index={indexToLocFormat}&#34;
+            )
         self.glyphPos = []
         if indexToLocFormat == 0:
             data = self.get_chunk(start, (numGlyphs * 2) + 2)
@@ -1964,7 +1976,9 @@ class TTFontFile:
             for n in range(numGlyphs):
                 self.glyphPos.append(arr[n])  # n+1 !?
         else:
-            raise RuntimeError(f&#34;Unknown location table format {indexToLocFormat}&#34;)
+            raise RuntimeError(
+                f&#34;Unknown location table format, index={indexToLocFormat}&#34;
+            )
 
     # CMAP Format 4
     def getCMAP4(self, unicode_cmap_offset, glyphToChar, charToGlyph):
@@ -2665,7 +2679,13 @@ def splice(stream, offset, value):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def getLOCA(self, indexToLocFormat, numGlyphs):
-    start = self.seek_table(&#34;loca&#34;)
+    try:
+        start = self.seek_table(&#34;loca&#34;)
+    except KeyError:
+        # pylint: disable=raise-missing-from
+        raise RuntimeError(
+            f&#34;Unknown location table format, index={indexToLocFormat}&#34;
+        )
     self.glyphPos = []
     if indexToLocFormat == 0:
         data = self.get_chunk(start, (numGlyphs * 2) + 2)
@@ -2678,7 +2698,9 @@ def splice(stream, offset, value):
         for n in range(numGlyphs):
             self.glyphPos.append(arr[n])  # n+1 !?
     else:
-        raise RuntimeError(f&#34;Unknown location table format {indexToLocFormat}&#34;)</code></pre>
+        raise RuntimeError(
+            f&#34;Unknown location table format, index={indexToLocFormat}&#34;
+        )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.ttfonts.TTFontFile.getMetrics"><code class="name flex">
@@ -2999,9 +3021,8 @@ def splice(stream, offset, value):
         cmap.append(1)  # idDelta of last Segment
         # idRangeOffset(s)
         for subrange in range_:
-            cmap.append(
-                0
-            )  # idRangeOffset[segCount]   Offset in bytes to glyph indexArray, or 0
+            # idRangeOffset[segCount]   Offset in bytes to glyph indexArray, or 0
+            cmap.append(0)
 
         cmap.append(0)  # idRangeOffset of last Segment
         for subrange, glidx in range_:
