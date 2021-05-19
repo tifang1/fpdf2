@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/reference/add_page.html">
       
       <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.4">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
     
     
       
@@ -74,11 +74,6 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
-      
-        
-        <a href="#add_page" class="md-skip">
-          Skip to content
-        </a>
       
     </div>
     <div data-md-component="announce">
@@ -611,64 +606,9 @@
       
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          add_page
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="add_page.html" class="md-nav__link md-nav__link--active">
         add_page
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#add_page" class="md-nav__link">
-    add_page
-  </a>
-  
-    <nav class="md-nav" aria-label="add_page">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    Description
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    See also
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -1329,63 +1269,6 @@
               </div>
             
             
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#add_page" class="md-nav__link">
-    add_page
-  </a>
-  
-    <nav class="md-nav" aria-label="add_page">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    Description
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    See also
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -1398,59 +1281,11 @@
                 
                   <h1>add_page</h1>
                 
-                <h2 id="add_page">add_page</h2>
-<div class="highlight"><pre><span></span><code><span class="n">fpdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">orientation</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nb">format</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">same</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
-</code></pre></div>
-<h3 id="description">Description</h3>
-<p>Adds a new page to the document. If a page is already present, the 
-<a href="footer.html">footer</a> method is called first to output the footer. Then the page 
-is added, the current position set to the top-left corner according to the left
-and top margins, and <a href="header.html">header</a> is called to display the header.</p>
-<p>The font which was set before calling is automatically restored. There is no 
-need to call <a href="set_font.html">set_font</a> again if you want to continue with the same 
-font. Colors and the line width are also preserved.</p>
-<p>The origin of the coordinate system is at the top-left corner and increasing 
-ordinates go downwards.</p>
-<h3 id="parameters">Parameters</h3>
-<p>orientation:</p>
-<blockquote>
-<p>Page orientation. Possible values are (case insensitive):</p>
-<blockquote>
-<ul>
-<li>P or Portrait</li>
-<li>L or Landscape</li>
-</ul>
-</blockquote>
-<p>The default value is the one passed to the constructor.</p>
-</blockquote>
-<p>format:</p>
-<blockquote>
-<p>The format used for pages. It can be either one of the following values (case
-insensitive):</p>
-<blockquote>
-<ul>
-<li>A3</li>
-<li>A4</li>
-<li>A5</li>
-<li>Letter</li>
-<li>Legal</li>
-</ul>
-</blockquote>
-<p>or a tuple containing the width and the height (expressed in the
-given unit). In portrait orientation, the tuple should be in the order
-(<em>width</em>, <em>height</em>), but in landscape orientation, the order should be
-(<em>height</em>, <em>width</em>). In either case, the first tuple element is usually less
-than the second.</p>
-<p>The default value is the one passed to the constructor.</p>
-</blockquote>
-<p>same:</p>
-<blockquote>
-<p>True if page must be same as previous. In this case other parameters are
-ignored.</p>
-</blockquote>
-<h3 id="see-also">See also</h3>
-<p><a href="FPDF.html">FPDF</a>, <a href="header.html">header</a>, <a href="footer.html">footer</a>, 
-<a href="set_margins.html">set_margins</a>.</p>
+                <p>cf. https://pyfpdf.github.io/fpdf2/fpdf/#fpdf.FPDF.add_page</p>
+<script>
+// Migrating Markdown doc to docstrings - cf. https://github.com/PyFPDF/fpdf2/issues/31
+window.location = 'https://pyfpdf.github.io/fpdf2/fpdf/#fpdf.FPDF.add_page'
+</script>
                 
               
               
@@ -1519,10 +1354,10 @@ ignored.</p>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.4fa0e4ee.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.1d3bfcf1.min.js"></script>
+      <script src="../assets/javascripts/bundle.a1609d9a.min.js"></script>
       
     
   </body>

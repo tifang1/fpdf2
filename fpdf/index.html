@@ -182,13 +182,13 @@ structural information about a document’s content …</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
-<dd>"portrait" ("P") or "landscape" ("L").
-Default to "portrait".</dd>
+<dd>"portrait" (can be abbreviated "P")
+or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
 <dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
 <dd>"pt", "mm", "cm" or "in". Default to "mm".</dd>
 <dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
-<dd>"a3", "a4", "a5", "letter" or "legal".
-Default to "a4".</dd>
+<dd>"a3", "a4", "a5", "letter", "legal" or a tuple
+(width, height). Default to "a4".</dd>
 <dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
 <dd>directory where pickle files
 for TTF font files are kept.
@@ -206,11 +206,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
     ):
         &#34;&#34;&#34;
         Args:
-            orientation (str): &#34;portrait&#34; (&#34;P&#34;) or &#34;landscape&#34; (&#34;L&#34;).
-                Default to &#34;portrait&#34;.
+            orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
+                or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
             unit (str): &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;. Default to &#34;mm&#34;.
-            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34; or &#34;legal&#34;.
-                Default to &#34;a4&#34;.
+            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
+                (width, height). Default to &#34;a4&#34;.
             font_cache_dir (Path or str): directory where pickle files
                 for TTF font files are kept.
                 The default is `True`, meaning the current folder.
@@ -292,24 +292,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
         else:
             raise FPDFException(f&#34;Incorrect unit: {unit}&#34;)
 
-        # Page format
         self.dw_pt, self.dh_pt = get_page_format(format, self.k)
-
-        # Page orientation
-        orientation = orientation.lower()
-        if orientation in (&#34;p&#34;, &#34;portrait&#34;):
-            self.def_orientation = &#34;P&#34;
-            self.w_pt = self.dw_pt
-            self.h_pt = self.dh_pt
-        elif orientation in (&#34;l&#34;, &#34;landscape&#34;):
-            self.def_orientation = &#34;L&#34;
-            self.w_pt = self.dh_pt
-            self.h_pt = self.dw_pt
-        else:
-            raise FPDFException(f&#34;Incorrect orientation: {orientation}&#34;)
-        self.cur_orientation = self.def_orientation
-        self.w = self.w_pt / self.k
-        self.h = self.h_pt / self.k
+        self._set_orientation(orientation, self.dw_pt, self.dh_pt)
+        self.def_orientation = self.cur_orientation
         self.font_size = self.font_size_pt / self.k
 
         # Page spacing
@@ -417,6 +402,21 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.b_margin = margin
         self.page_break_trigger = self.h - margin
 
+    def _set_orientation(self, orientation, page_width_pt, page_height_pt):
+        orientation = orientation.lower()
+        if orientation in (&#34;p&#34;, &#34;portrait&#34;):
+            self.cur_orientation = &#34;P&#34;
+            self.w_pt = page_width_pt
+            self.h_pt = page_height_pt
+        elif orientation in (&#34;l&#34;, &#34;landscape&#34;):
+            self.cur_orientation = &#34;L&#34;
+            self.w_pt = page_height_pt
+            self.h_pt = page_width_pt
+        else:
+            raise FPDFException(f&#34;Incorrect orientation: {orientation}&#34;)
+        self.w = self.w_pt / self.k
+        self.h = self.h_pt / self.k
+
     def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
         &#34;&#34;&#34;
         Set display mode in viewer
@@ -515,7 +515,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._enddoc()  # close document
 
     def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False):
-        &#34;&#34;&#34;Start a new page, if same page format will be same as previous&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Adds a new page to the document.
+        If a page is already present, the `footer()` method is called first.
+        Then the page  is added, the current position is set to the top-left corner,
+        with respect to the left and top margins, and the `header()` method is called.
+
+        Args:
+            orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
+                or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
+            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
+                (width, height). Default to &#34;a4&#34;.
+            same (bool): indicates to use the same page format as the previous page.
+                Default to False.
+        &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
             raise FPDFException(
                 &#34;A page cannot be added on a closed document, after calling output()&#34;
@@ -2603,29 +2616,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.y = self.t_margin
         self.font_family = &#34;&#34;
         self.font_stretching = 100
-        if not same:
-            # Page format
-            if format:
-                # Change page format
-                fw_pt, fh_pt = get_page_format(format, self.k)
-            else:
-                # Set to default format
-                fw_pt = self.dw_pt
-                fh_pt = self.dh_pt
-            # Page orientation
-            orientation = (
-                orientation[0].upper() if orientation else self.def_orientation
+        if same:
+            if orientation or format:
+                raise ValueError(
+                    f&#34;Inconsistent parameters: same={same} but orientation={orientation} format={format}&#34;
+                )
+        else:
+            # Set page format if provided, else use default value:
+            page_width_pt, page_height_pt = (
+                get_page_format(format, self.k) if format else (self.dw_pt, self.dh_pt)
             )
-            if orientation == &#34;P&#34;:
-                self.w_pt = fw_pt
-                self.h_pt = fh_pt
-            else:
-                self.w_pt = fh_pt
-                self.h_pt = fw_pt
-            self.w = self.w_pt / self.k
-            self.h = self.h_pt / self.k
+            self._set_orientation(
+                orientation or self.def_orientation, page_width_pt, page_height_pt
+            )
             self.page_break_trigger = self.h - self.b_margin
-            self.cur_orientation = orientation
         self.pages[self.page][&#34;w_pt&#34;] = self.w_pt
         self.pages[self.page][&#34;h_pt&#34;] = self.h_pt
 
@@ -3156,13 +3160,42 @@ def unifontsubset(self):
 <span>def <span class="ident">add_page</span></span>(<span>self, orientation='', format='', same=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Start a new page, if same page format will be same as previous</p></div>
+<div class="desc"><p>Adds a new page to the document.
+If a page is already present, the <code>footer()</code> method is called first.
+Then the page
+is added, the current position is set to the top-left corner,
+with respect to the left and top margins, and the <code>header()</code> method is called.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
+<dd>"portrait" (can be abbreviated "P")
+or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
+<dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
+<dd>"a3", "a4", "a5", "letter", "legal" or a tuple
+(width, height). Default to "a4".</dd>
+<dt><strong><code>same</code></strong> :&ensp;<code>bool</code></dt>
+<dd>indicates to use the same page format as the previous page.
+Default to False.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False):
-    &#34;&#34;&#34;Start a new page, if same page format will be same as previous&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Adds a new page to the document.
+    If a page is already present, the `footer()` method is called first.
+    Then the page  is added, the current position is set to the top-left corner,
+    with respect to the left and top margins, and the `header()` method is called.
+
+    Args:
+        orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
+            or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
+        format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
+            (width, height). Default to &#34;a4&#34;.
+        same (bool): indicates to use the same page format as the previous page.
+            Default to False.
+    &#34;&#34;&#34;
     if self.state == DocumentState.CLOSED:
         raise FPDFException(
             &#34;A page cannot be added on a closed document, after calling output()&#34;
