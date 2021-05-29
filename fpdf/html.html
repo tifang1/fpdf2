@@ -128,7 +128,7 @@ class HTML2FPDF(HTMLParser):
             pass
         elif self.align:
             LOGGER.debug(&#34;align &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
-            self.pdf.cell(
+            self.pdf.multi_cell(
                 0,
                 self.h,
                 data,
@@ -691,7 +691,7 @@ to new image URLs</dd>
             pass
         elif self.align:
             LOGGER.debug(&#34;align &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
-            self.pdf.cell(
+            self.pdf.multi_cell(
                 0,
                 self.h,
                 data,
@@ -1158,7 +1158,7 @@ to new image URLs</dd>
         pass
     elif self.align:
         LOGGER.debug(&#34;align &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
-        self.pdf.cell(
+        self.pdf.multi_cell(
             0,
             self.h,
             data,
