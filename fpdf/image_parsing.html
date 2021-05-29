@@ -35,6 +35,9 @@ from PIL import Image
 from .errors import FPDFException
 
 
+SUPPORTED_IMAGE_FILTERS = (&#34;AUTO&#34;, &#34;FlateDecode&#34;, &#34;DCTDecode&#34;, &#34;JPXDecode&#34;)
+
+
 def load_resource(filename, reason=&#34;image&#34;):
     &#34;&#34;&#34;Load external file&#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
@@ -51,30 +54,39 @@ def load_resource(filename, reason=&#34;image&#34;):
     raise FPDFException(f&#39;Unknown resource loading reason &#34;{reason}&#34;&#39;)
 
 
-def get_img_info(img):
+def get_img_info(img, image_filter=&#34;AUTO&#34;):
     &#34;&#34;&#34;
     Args:
         img: `BytesIO` or `PIL.Image.Image` instance
+        image_filter (str): one of the SUPPORTED_IMAGE_FILTERS
     &#34;&#34;&#34;
     if not isinstance(img, Image.Image):
         img = Image.open(img)
-    if img.mode not in [&#34;L&#34;, &#34;LA&#34;, &#34;RGBA&#34;]:
+    if image_filter == &#34;AUTO&#34;:
+        # Very simple logic for now:
+        image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
+    if img.mode not in [&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;]:
         img = img.convert(&#34;RGBA&#34;)
     w, h = img.size
     info = {}
     if img.mode == &#34;L&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
-        info[&#34;data&#34;] = to_zdata(img)
+        info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;LA&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
         alpha_channel = slice(1, None, 2)
-        info[&#34;data&#34;] = to_zdata(img, remove_slice=alpha_channel)
-        info[&#34;smask&#34;] = to_zdata(img, select_slice=alpha_channel)
+        info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
+        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+            info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
+    elif img.mode == &#34;RGB&#34;:
+        dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
     else:  # RGBA image
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
         alpha_channel = slice(3, None, 4)
-        info[&#34;data&#34;] = to_zdata(img, remove_slice=alpha_channel)
-        info[&#34;smask&#34;] = to_zdata(img, select_slice=alpha_channel)
+        info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
+        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+            info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
 
     dp = f&#34;/Predictor 15 /Colors {dpn} /BitsPerComponent {bpc} /Columns {w}&#34;
 
@@ -84,7 +96,7 @@ def get_img_info(img):
             &#34;h&#34;: h,
             &#34;cs&#34;: colspace,
             &#34;bpc&#34;: bpc,
-            &#34;f&#34;: &#34;FlateDecode&#34;,
+            &#34;f&#34;: image_filter,
             &#34;dp&#34;: dp,
             &#34;pal&#34;: &#34;&#34;,
             &#34;trns&#34;: &#34;&#34;,
@@ -94,7 +106,25 @@ def get_img_info(img):
     return info
 
 
-def to_zdata(img, remove_slice=None, select_slice=None):
+def _to_data(img, image_filter, **kwargs):
+    if image_filter == &#34;FlateDecode&#34;:
+        return _to_zdata(img, **kwargs)
+    if img.mode == &#34;LA&#34;:
+        img = img.convert(&#34;L&#34;)
+    if img.mode == &#34;RGBA&#34;:
+        img = img.convert(&#34;RGB&#34;)
+    if image_filter == &#34;DCTDecode&#34;:
+        compressed_bytes = BytesIO()
+        img.save(compressed_bytes, format=&#34;JPEG&#34;)
+        return compressed_bytes.getvalue()
+    if image_filter == &#34;JPXDecode&#34;:
+        compressed_bytes = BytesIO()
+        img.save(compressed_bytes, format=&#34;JPEG2000&#34;)
+        return compressed_bytes.getvalue()
+    raise FPDFException(f&#39;Unsupported image filter: &#34;{image_filter}&#34;&#39;)
+
+
+def _to_zdata(img, remove_slice=None, select_slice=None):
     data = bytearray(img.tobytes())
     if remove_slice:
         del data[remove_slice]
@@ -118,42 +148,53 @@ def to_zdata(img, remove_slice=None, select_slice=None):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="fpdf.image_parsing.get_img_info"><code class="name flex">
-<span>def <span class="ident">get_img_info</span></span>(<span>img)</span>
+<span>def <span class="ident">get_img_info</span></span>(<span>img, image_filter='AUTO')</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>img</code></strong></dt>
 <dd><code>BytesIO</code> or <code>PIL.Image.Image</code> instance</dd>
+<dt><strong><code>image_filter</code></strong> :&ensp;<code>str</code></dt>
+<dd>one of the SUPPORTED_IMAGE_FILTERS</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_img_info(img):
+<pre><code class="python">def get_img_info(img, image_filter=&#34;AUTO&#34;):
     &#34;&#34;&#34;
     Args:
         img: `BytesIO` or `PIL.Image.Image` instance
+        image_filter (str): one of the SUPPORTED_IMAGE_FILTERS
     &#34;&#34;&#34;
     if not isinstance(img, Image.Image):
         img = Image.open(img)
-    if img.mode not in [&#34;L&#34;, &#34;LA&#34;, &#34;RGBA&#34;]:
+    if image_filter == &#34;AUTO&#34;:
+        # Very simple logic for now:
+        image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
+    if img.mode not in [&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;]:
         img = img.convert(&#34;RGBA&#34;)
     w, h = img.size
     info = {}
     if img.mode == &#34;L&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
-        info[&#34;data&#34;] = to_zdata(img)
+        info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;LA&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
         alpha_channel = slice(1, None, 2)
-        info[&#34;data&#34;] = to_zdata(img, remove_slice=alpha_channel)
-        info[&#34;smask&#34;] = to_zdata(img, select_slice=alpha_channel)
+        info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
+        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+            info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
+    elif img.mode == &#34;RGB&#34;:
+        dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
     else:  # RGBA image
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
         alpha_channel = slice(3, None, 4)
-        info[&#34;data&#34;] = to_zdata(img, remove_slice=alpha_channel)
-        info[&#34;smask&#34;] = to_zdata(img, select_slice=alpha_channel)
+        info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
+        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+            info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
 
     dp = f&#34;/Predictor 15 /Colors {dpn} /BitsPerComponent {bpc} /Columns {w}&#34;
 
@@ -163,7 +204,7 @@ def to_zdata(img, remove_slice=None, select_slice=None):
             &#34;h&#34;: h,
             &#34;cs&#34;: colspace,
             &#34;bpc&#34;: bpc,
-            &#34;f&#34;: &#34;FlateDecode&#34;,
+            &#34;f&#34;: image_filter,
             &#34;dp&#34;: dp,
             &#34;pal&#34;: &#34;&#34;,
             &#34;trns&#34;: &#34;&#34;,
@@ -198,31 +239,6 @@ def to_zdata(img, remove_slice=None, select_slice=None):
     raise FPDFException(f&#39;Unknown resource loading reason &#34;{reason}&#34;&#39;)</code></pre>
 </details>
 </dd>
-<dt id="fpdf.image_parsing.to_zdata"><code class="name flex">
-<span>def <span class="ident">to_zdata</span></span>(<span>img, remove_slice=None, select_slice=None)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def to_zdata(img, remove_slice=None, select_slice=None):
-    data = bytearray(img.tobytes())
-    if remove_slice:
-        del data[remove_slice]
-    if select_slice:
-        data = data[select_slice]
-    # Left-padding every row with a single zero:
-    channels_count = len(data) // (img.size[0] * img.size[1])
-    loop_incr = img.size[0] * channels_count + 1
-    i = 0
-    while i &lt; len(data):
-        data[i:i] = b&#34;\0&#34;
-        i += loop_incr
-    return zlib.compress(data)</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -243,7 +259,6 @@ def to_zdata(img, remove_slice=None, select_slice=None):
 <ul class="">
 <li><code><a title="fpdf.image_parsing.get_img_info" href="#fpdf.image_parsing.get_img_info">get_img_info</a></code></li>
 <li><code><a title="fpdf.image_parsing.load_resource" href="#fpdf.image_parsing.load_resource">load_resource</a></code></li>
-<li><code><a title="fpdf.image_parsing.to_zdata" href="#fpdf.image_parsing.to_zdata">to_zdata</a></code></li>
 </ul>
 </li>
 </ul>

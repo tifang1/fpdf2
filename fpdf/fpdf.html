@@ -69,7 +69,7 @@ from PIL import Image
 
 from .errors import FPDFException, FPDFPageFormatException
 from .fonts import fpdf_charwidths
-from .image_parsing import get_img_info, load_resource
+from .image_parsing import get_img_info, load_resource, SUPPORTED_IMAGE_FILTERS
 from .outline import serialize_outline, OutlineSection
 from .recorder import FPDFRecorder
 from .structure_tree import MarkedContent, StructureTreeBuilder
@@ -260,6 +260,7 @@ class FPDF:
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
         self.xmp_metadata = None
+        self.image_filter = &#34;AUTO&#34;
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -452,7 +453,12 @@ class FPDF:
             raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
 
     def set_compression(self, compress):
-        &#34;&#34;&#34;Set page compression&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Set page compression using the zlib/deflate method (FlateDecode)
+
+        Args:
+            compress (bool): enable page compression or not
+        &#34;&#34;&#34;
         self.compress = compress
 
     def set_title(self, title):
@@ -505,6 +511,18 @@ class FPDF:
             self.core_fonts_encoding = value
         else:
             raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)
+
+    def set_image_filter(self, image_filter):
+        &#34;&#34;&#34;
+        Args:
+            image_filter (str): name of a support image filter or &#34;AUTO&#34;,
+                meaning to use the best image filter given the images provided.
+        &#34;&#34;&#34;
+        if image_filter not in SUPPORTED_IMAGE_FILTERS:
+            raise ValueError(
+                f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
+            )
+        self.image_filter = image_filter
 
     def alias_nb_pages(self, alias=&#34;{nb}&#34;):
         &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
@@ -1047,6 +1065,10 @@ class FPDF:
         self.font_size_pt = size
         self.font_size = size / self.k
         if self.page &gt; 0:
+            if not self.current_font:
+                raise FPDFException(
+                    &#34;Cannot set font size: a font must be selected first&#34;
+                )
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
     def set_stretching(self, factor):
@@ -1773,7 +1795,7 @@ class FPDF:
         else:
             name, img = str(name), name
         if name not in self.images:
-            info = get_img_info(img or load_resource(name))
+            info = get_img_info(img or load_resource(name), self.image_filter)
             info[&#34;i&#34;] = len(self.images) + 1
             self.images[name] = info
         else:
@@ -3140,6 +3162,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
         self.xmp_metadata = None
+        self.image_filter = &#34;AUTO&#34;
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -3332,7 +3355,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
 
     def set_compression(self, compress):
-        &#34;&#34;&#34;Set page compression&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Set page compression using the zlib/deflate method (FlateDecode)
+
+        Args:
+            compress (bool): enable page compression or not
+        &#34;&#34;&#34;
         self.compress = compress
 
     def set_title(self, title):
@@ -3385,6 +3413,18 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self.core_fonts_encoding = value
         else:
             raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)
+
+    def set_image_filter(self, image_filter):
+        &#34;&#34;&#34;
+        Args:
+            image_filter (str): name of a support image filter or &#34;AUTO&#34;,
+                meaning to use the best image filter given the images provided.
+        &#34;&#34;&#34;
+        if image_filter not in SUPPORTED_IMAGE_FILTERS:
+            raise ValueError(
+                f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
+            )
+        self.image_filter = image_filter
 
     def alias_nb_pages(self, alias=&#34;{nb}&#34;):
         &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
@@ -3927,6 +3967,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.font_size_pt = size
         self.font_size = size / self.k
         if self.page &gt; 0:
+            if not self.current_font:
+                raise FPDFException(
+                    &#34;Cannot set font size: a font must be selected first&#34;
+                )
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
     def set_stretching(self, factor):
@@ -4653,7 +4697,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         else:
             name, img = str(name), name
         if name not in self.images:
-            info = get_img_info(img or load_resource(name))
+            info = get_img_info(img or load_resource(name), self.image_filter)
             info[&#34;i&#34;] = len(self.images) + 1
             self.images[name] = info
         else:
@@ -6791,7 +6835,7 @@ def image(
     else:
         name, img = str(name), name
     if name not in self.images:
-        info = get_img_info(img or load_resource(name))
+        info = get_img_info(img or load_resource(name), self.image_filter)
         info[&#34;i&#34;] = len(self.images) + 1
         self.images[name] = info
     else:
@@ -7757,13 +7801,23 @@ in the unit specified to FPDF constructor</dd>
 <span>def <span class="ident">set_compression</span></span>(<span>self, compress)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set page compression</p></div>
+<div class="desc"><p>Set page compression using the zlib/deflate method (FlateDecode)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>compress</code></strong> :&ensp;<code>bool</code></dt>
+<dd>enable page compression or not</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_compression(self, compress):
-    &#34;&#34;&#34;Set page compression&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Set page compression using the zlib/deflate method (FlateDecode)
+
+    Args:
+        compress (bool): enable page compression or not
+    &#34;&#34;&#34;
     self.compress = compress</code></pre>
 </details>
 </dd>
@@ -8029,7 +8083,38 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     self.font_size_pt = size
     self.font_size = size / self.k
     if self.page &gt; 0:
+        if not self.current_font:
+            raise FPDFException(
+                &#34;Cannot set font size: a font must be selected first&#34;
+            )
         self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.FPDF.set_image_filter"><code class="name flex">
+<span>def <span class="ident">set_image_filter</span></span>(<span>self, image_filter)</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>image_filter</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of a support image filter or "AUTO",
+meaning to use the best image filter given the images provided.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_image_filter(self, image_filter):
+    &#34;&#34;&#34;
+    Args:
+        image_filter (str): name of a support image filter or &#34;AUTO&#34;,
+            meaning to use the best image filter given the images provided.
+    &#34;&#34;&#34;
+    if image_filter not in SUPPORTED_IMAGE_FILTERS:
+        raise ValueError(
+            f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
+        )
+    self.image_filter = image_filter</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_keywords"><code class="name flex">
@@ -8819,6 +8904,7 @@ def write(self, h, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.set_fill_color" href="#fpdf.fpdf.FPDF.set_fill_color">set_fill_color</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_font" href="#fpdf.fpdf.FPDF.set_font">set_font</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_font_size" href="#fpdf.fpdf.FPDF.set_font_size">set_font_size</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.set_image_filter" href="#fpdf.fpdf.FPDF.set_image_filter">set_image_filter</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_keywords" href="#fpdf.fpdf.FPDF.set_keywords">set_keywords</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_lang" href="#fpdf.fpdf.FPDF.set_lang">set_lang</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_left_margin" href="#fpdf.fpdf.FPDF.set_left_margin">set_left_margin</a></code></li>
