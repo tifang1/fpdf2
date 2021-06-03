@@ -140,7 +140,7 @@ class HTML2FPDF(HTMLParser):
         else:
             data = data.replace(&#34;\n&#34;, &#34; &#34;)
             if self.href:
-                self.put_link(self.href, data)
+                self.put_link(data)
             else:
                 if self.heading_level:
                     self.pdf.start_section(data, self.heading_level - 1)
@@ -517,11 +517,11 @@ class HTML2FPDF(HTMLParser):
         else:
             self.pdf.set_text_color(r, g, b)
 
-    def put_link(self, url, txt):
+    def put_link(self, txt):
         # Put a hyperlink
         self.set_text_color(0, 0, 255)
         self.set_style(&#34;u&#34;, True)
-        self.pdf.write(self.h, txt, url)
+        self.pdf.write(self.h, txt, self.href)
         self.set_style(&#34;u&#34;, False)
         self.set_text_color()
 
@@ -703,7 +703,7 @@ to new image URLs</dd>
         else:
             data = data.replace(&#34;\n&#34;, &#34; &#34;)
             if self.href:
-                self.put_link(self.href, data)
+                self.put_link(data)
             else:
                 if self.heading_level:
                     self.pdf.start_section(data, self.heading_level - 1)
@@ -1080,11 +1080,11 @@ to new image URLs</dd>
         else:
             self.pdf.set_text_color(r, g, b)
 
-    def put_link(self, url, txt):
+    def put_link(self, txt):
         # Put a hyperlink
         self.set_text_color(0, 0, 255)
         self.set_style(&#34;u&#34;, True)
-        self.pdf.write(self.h, txt, url)
+        self.pdf.write(self.h, txt, self.href)
         self.set_style(&#34;u&#34;, False)
         self.set_text_color()
 
@@ -1170,7 +1170,7 @@ to new image URLs</dd>
     else:
         data = data.replace(&#34;\n&#34;, &#34; &#34;)
         if self.href:
-            self.put_link(self.href, data)
+            self.put_link(data)
         else:
             if self.heading_level:
                 self.pdf.start_section(data, self.heading_level - 1)
@@ -1491,7 +1491,7 @@ to new image URLs</dd>
 </details>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.put_link"><code class="name flex">
-<span>def <span class="ident">put_link</span></span>(<span>self, url, txt)</span>
+<span>def <span class="ident">put_link</span></span>(<span>self, txt)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1499,11 +1499,11 @@ to new image URLs</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def put_link(self, url, txt):
+<pre><code class="python">def put_link(self, txt):
     # Put a hyperlink
     self.set_text_color(0, 0, 255)
     self.set_style(&#34;u&#34;, True)
-    self.pdf.write(self.h, txt, url)
+    self.pdf.write(self.h, txt, self.href)
     self.set_style(&#34;u&#34;, False)
     self.set_text_color()</code></pre>
 </details>
