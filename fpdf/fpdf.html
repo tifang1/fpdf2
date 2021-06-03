@@ -1417,7 +1417,7 @@ class FPDF:
 
     def _perform_page_break_if_need_be(self, h):
         if (
-            self.y + h &gt; self.page_break_trigger
+            self.y + h &gt;= self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
         ):
@@ -2875,7 +2875,7 @@ class FPDF:
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
-        if prev_y + y_scroll &gt; self.page_break_trigger:
+        if prev_y + y_scroll &gt;= self.page_break_trigger:
             LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
             recorder.rewind()
             # pylint: disable=protected-access
@@ -4340,7 +4340,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def _perform_page_break_if_need_be(self, h):
         if (
-            self.y + h &gt; self.page_break_trigger
+            self.y + h &gt;= self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
         ):
@@ -5798,7 +5798,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
-        if prev_y + y_scroll &gt; self.page_break_trigger:
+        if prev_y + y_scroll &gt;= self.page_break_trigger:
             LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
             recorder.rewind()
             # pylint: disable=protected-access
@@ -8749,7 +8749,7 @@ def unbreakable(self):
     LOGGER.debug(&#34;Starting unbreakable block&#34;)
     yield recorder
     y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
-    if prev_y + y_scroll &gt; self.page_break_trigger:
+    if prev_y + y_scroll &gt;= self.page_break_trigger:
         LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
         recorder.rewind()
         # pylint: disable=protected-access
