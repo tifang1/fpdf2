@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/TextStyling.html">
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.6">
+      <meta name="generator" content="mkdocs-1.2, mkdocs-material-7.1.7">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.875de78c.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.ca7ac06f.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.f1a3b89f.min.css">
@@ -87,7 +87,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="fpdf2" class="md-header__button md-logo" aria-label="fpdf2" data-md-component="logo">
+    <a href="index.html" title="fpdf2" class="md-header__button md-logo" aria-label="fpdf2" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -180,7 +180,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="fpdf2" class="md-nav__button md-logo" aria-label="fpdf2" data-md-component="logo">
+    <a href="index.html" title="fpdf2" class="md-nav__button md-logo" aria-label="fpdf2" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -440,6 +440,13 @@
         <li class="md-nav__item">
   <a href="#write_html" class="md-nav__link">
     write_html
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#markdowntrue" class="md-nav__link">
+    markdown=True
   </a>
   
 </li>
@@ -1343,6 +1350,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#markdowntrue" class="md-nav__link">
+    markdown=True
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1390,6 +1404,17 @@ must be registered using <code>add_font</code> (with <code>style="B"</code> and 
 <span class="s2">                  &lt;B&gt;&lt;I&gt;&lt;U&gt;all at once!&lt;/U&gt;&lt;/I&gt;&lt;/B&gt;&quot;&quot;&quot;</span>
 <span class="p">)</span>
 </code></pre></div>
+<h2 id="markdowntrue">markdown=True</h2>
+<p>An optional <code>markdown=True</code> parameter can be passed to the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.cell"><code>cell</code></a> method
+in order to enable basic Markdown-like styling: <code>**bold**, __italics__, --underlined--</code></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;**Lorem** __Ipsum__ --dolor--&quot;</span><span class="p">,</span> <span class="n">markdown</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;markdown-styled.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
                 
               
               
@@ -1408,7 +1433,8 @@ must be registered using <code>add_font</code> (with <code>style="B"</code> and 
   
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
-        <a href="DocumentOutlineAndTableOfContents.html" class="md-footer__link md-footer__link--prev" rel="prev">
+        
+        <a href="DocumentOutlineAndTableOfContents.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Document outline & table of contents" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1423,7 +1449,8 @@ must be registered using <code>add_font</code> (with <code>style="B"</code> and 
         </a>
       
       
-        <a href="Shapes.html" class="md-footer__link md-footer__link--next" rel="next">
+        
+        <a href="Shapes.html" class="md-footer__link md-footer__link--next" aria-label="Next: Shapes" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
@@ -1458,10 +1485,10 @@ must be registered using <code>add_font</code> (with <code>style="B"</code> and 
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.b0710199.min.js", "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.34eae1b6.min.js"></script>
+      <script src="assets/javascripts/bundle.76f349be.min.js"></script>
       
     
   </body>
