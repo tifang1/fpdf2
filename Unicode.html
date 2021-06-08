@@ -413,6 +413,21 @@
   
   
     <li class="md-nav__item">
+      <a href="Annotations.html" class="md-nav__link">
+        Annotations
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
       <a href="Shapes.html" class="md-nav__link">
         Shapes
       </a>
@@ -590,14 +605,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_19" type="checkbox" id="__nav_19" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_20" type="checkbox" id="__nav_20" >
       
-      <label class="md-nav__link" for="__nav_19">
+      <label class="md-nav__link" for="__nav_20">
         ReferenceManual
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="ReferenceManual" data-md-level="1">
-        <label class="md-nav__title" for="__nav_19">
+        <label class="md-nav__title" for="__nav_20">
           <span class="md-nav__icon md-icon"></span>
           ReferenceManual
         </label>
@@ -1443,8 +1458,8 @@ install the fonts in the <code>font</code> directory first.</p>
 <span class="c1"># Add a DejaVu Unicode font (uses UTF-8)</span>
 <span class="c1"># Supports more than 200 languages. For a coverage status see:</span>
 <span class="c1"># http://dejavu.svn.sourceforge.net/viewvc/dejavu/trunk/dejavu-fonts/langcover.txt</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;DejaVuSansCondensed.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;DejaVuSansCondensed.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 
 <span class="n">text</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">English: Hello World</span>
@@ -1465,15 +1480,15 @@ install the fonts in the <code>font</code> directory first.</p>
 <span class="c1"># Supports: Bengali, Devanagari, Gujarati, </span>
 <span class="c1">#           Gurmukhi (including the variants for Punjabi) </span>
 <span class="c1">#           Kannada, Malayalam, Oriya, Tamil, Telugu, Tibetan</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;gargi.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;gargi.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Hindi: नमस्ते दुनिया&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
 <span class="c1"># Add a AR PL New Sung Unicode font (uses UTF-8)</span>
 <span class="c1"># The Open Source Chinese Font (also supports other east Asian languages)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;fireflysung.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;fireflysung.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Chinese: 你好世界</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Japanese: こんにちは世界</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
@@ -1481,19 +1496,19 @@ install the fonts in the <code>font</code> directory first.</p>
 <span class="c1"># Add a Alee Unicode font (uses UTF-8)</span>
 <span class="c1"># General purpose Hangul truetype fonts that contain Korean syllable </span>
 <span class="c1"># and Latin9 (iso8859-15) characters.</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Eunjin.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Eunjin.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Korean: 안녕하세요&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
 <span class="c1"># Add a Fonts-TLWG (formerly ThaiFonts-Scalable) (uses UTF-8)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;Waree.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Waree.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Thai: สวัสดีชาวโลก&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
 <span class="c1"># Select a standard font (uses windows-1252)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;This is standard built-in font&#39;</span><span class="p">)</span>
 

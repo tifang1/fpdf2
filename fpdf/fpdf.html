@@ -67,6 +67,7 @@ from typing import Callable, NamedTuple, Optional, Union
 
 from PIL import Image
 
+from .actions import Action
 from .errors import FPDFException, FPDFPageFormatException
 from .fonts import fpdf_charwidths
 from .image_parsing import get_img_info, load_resource, SUPPORTED_IMAGE_FILTERS
@@ -85,7 +86,7 @@ from .syntax import (
     create_list_string as pdf_l,
     create_stream as pdf_stream,
     iobj_ref as pdf_ref,
-    InternalLink,
+    DestinationXYZ,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -132,6 +133,7 @@ class Annotation(NamedTuple):
     contents: str = None
     link: Union[str, int] = None
     alt_text: Optional[str] = None
+    action: Optional[Action] = None
 
 
 class TitleStyle(NamedTuple):
@@ -246,7 +248,7 @@ class FPDF:
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
         self.annots = defaultdict(list)  # map page numbers to arrays of Annotations
-        self.links = {}  # array of InternalLink
+        self.links = {}  # array of Destination
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
         self.current_font = {}  # current font
@@ -1088,17 +1090,25 @@ class FPDF:
     def add_link(self):
         &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
         n = len(self.links) + 1
-        self.links[n] = InternalLink()
+        self.links[n] = DestinationXYZ(page=1)
         return n
 
-    def set_link(self, link, y=0, page=-1):
-        &#34;&#34;&#34;Set destination of internal link&#34;&#34;&#34;
-        if page == -1:
-            page_object_id = self._current_page_object_id()
-        else:
-            page_object_id = 2 * page + 1
-        self.links[link] = InternalLink(page_object_id, y)
+    def set_link(self, link, y=0, page=-1, zoom=&#34;null&#34;):
+        &#34;&#34;&#34;
+        Defines the page and position a link points to.
 
+        Args:
+            link (int): a link identifier returned by `add_link`.
+            y (int): optional ordinate of target position.
+                The default value is 0 (top of page).
+            page (int): optional number of target page.
+                -1 indicates the current page, which is the default value.
+            zoom (int): optional new zoom level after following the link.
+                Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
+        &#34;&#34;&#34;
+        self.links[link] = DestinationXYZ(self.page if page == -1 else page, y, zoom)
+
+    @check_page
     def link(self, x, y, w, h, link, alt_text=None):
         &#34;&#34;&#34;
         Puts a link annotation on a rectangular area of the page.
@@ -1126,7 +1136,8 @@ class FPDF:
             )
         )
 
-    def text_annotation(self, x, y, w, h, text):
+    @check_page
+    def text_annotation(self, x, y, text):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
 
@@ -1142,9 +1153,22 @@ class FPDF:
                 &#34;Text&#34;,
                 x * self.k,
                 self.h_pt - y * self.k,
+                self.k,
+                self.k,
+                contents=text,
+            )
+        )
+
+    @check_page
+    def add_action(self, action, x, y, w, h):
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Action&#34;,
+                x * self.k,
+                self.h_pt - y * self.k,
                 w * self.k,
                 h * self.k,
-                contents=text,
+                action=action,
             )
         )
 
@@ -1712,13 +1736,11 @@ class FPDF:
 
                 else:
                     if align == &#34;J&#34;:
-                        print(f&#34;wmax={wmax} ls={ls} ns={ns}&#34;)
                         self.ws = (
                             (wmax - ls) / 1000 * self.font_size / (ns - 1)
                             if ns &gt; 1
                             else 0
                         )
-                        print(self.ws, f&#34;{self.ws * self.k:.3f} Tw&#34;)
                         self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
 
                     if max_line_height and h &gt; max_line_height:
@@ -2108,16 +2130,16 @@ class FPDF:
 
                     # start the annotation entry
                     annots += (
-                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type} &#34;
-                        f&#34;/Rect [{rect}] /Border [0 0 0] &#34;
+                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type}&#34;
+                        f&#34; /Rect [{rect}] /Border [0 0 0]&#34;
                         # Flag &#34;Print&#34; (bit position 3) specifies to print
                         # the annotation when the page is printed.
                         # cf. https://docs.verapdf.org/validation/pdfa-part1/#rule-653-2
-                        f&#34;/F 4&#34;
+                        f&#34; /F 4&#34;
                     )
 
                     if annot.contents:
-                        annots += f&#34;/Contents {enclose_in_parens(annot.contents)}&#34;
+                        annots += f&#34; /Contents {enclose_in_parens(annot.contents)}&#34;
 
                     if annot.alt_text is not None:
                         # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
@@ -2127,18 +2149,21 @@ class FPDF:
                             self.n, struct_type=&#34;/Link&#34;, alt_text=annot.alt_text
                         )
 
+                    if annot.action:
+                        annots += f&#34; /A &lt;&lt;{annot.action.dict_as_string()}&gt;&gt;&#34;
+
                     if annot.link:
                         if isinstance(annot.link, str):
                             annots += (
-                                f&#34;/A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
+                                f&#34; /A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
                             )
                         else:  # Dest type ending of annotation entry
                             assert annot.link in self.links, (
                                 f&#34;Page {n} has a link with an invalid index: &#34;
                                 f&#34;{annot.link} (doc #links={len(self.links)})&#34;
                             )
-                            link = self.links[annot.link]
-                            annots += f&#34;/Dest {link.dest(self)}&#34;
+                            dest = self.links[annot.link]
+                            annots += f&#34; /Dest {dest.as_str(self)}&#34;
                     annots += &#34;&gt;&gt;&#34;
                 # End links list
                 self._out(f&#34;/Annots [{annots}]&#34;)
@@ -3088,16 +3113,14 @@ class FPDF:
                 raise ValueError(
                     f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
                 )
-        internal_link = InternalLink(self._current_page_object_id(), self.y)
+        dest = DestinationXYZ(self.page, self.y)
         struct_elem = None
         if self.section_title_styles:
             with self._marked_sequence(title=name) as marked_content:
                 struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
                 with self._apply_style(self.section_title_styles[level]):
                     self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
-        self._outline.append(
-            OutlineSection(name, level, self.page, internal_link, struct_elem)
-        )
+        self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))
 
     @contextmanager
     def _apply_style(self, title_style):
@@ -3288,7 +3311,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
         self.annots = defaultdict(list)  # map page numbers to arrays of Annotations
-        self.links = {}  # array of InternalLink
+        self.links = {}  # array of Destination
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
         self.current_font = {}  # current font
@@ -4130,17 +4153,25 @@ The default is <code>True</code>, meaning the current folder.</dd>
     def add_link(self):
         &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
         n = len(self.links) + 1
-        self.links[n] = InternalLink()
+        self.links[n] = DestinationXYZ(page=1)
         return n
 
-    def set_link(self, link, y=0, page=-1):
-        &#34;&#34;&#34;Set destination of internal link&#34;&#34;&#34;
-        if page == -1:
-            page_object_id = self._current_page_object_id()
-        else:
-            page_object_id = 2 * page + 1
-        self.links[link] = InternalLink(page_object_id, y)
+    def set_link(self, link, y=0, page=-1, zoom=&#34;null&#34;):
+        &#34;&#34;&#34;
+        Defines the page and position a link points to.
 
+        Args:
+            link (int): a link identifier returned by `add_link`.
+            y (int): optional ordinate of target position.
+                The default value is 0 (top of page).
+            page (int): optional number of target page.
+                -1 indicates the current page, which is the default value.
+            zoom (int): optional new zoom level after following the link.
+                Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
+        &#34;&#34;&#34;
+        self.links[link] = DestinationXYZ(self.page if page == -1 else page, y, zoom)
+
+    @check_page
     def link(self, x, y, w, h, link, alt_text=None):
         &#34;&#34;&#34;
         Puts a link annotation on a rectangular area of the page.
@@ -4168,7 +4199,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             )
         )
 
-    def text_annotation(self, x, y, w, h, text):
+    @check_page
+    def text_annotation(self, x, y, text):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
 
@@ -4184,9 +4216,22 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 &#34;Text&#34;,
                 x * self.k,
                 self.h_pt - y * self.k,
+                self.k,
+                self.k,
+                contents=text,
+            )
+        )
+
+    @check_page
+    def add_action(self, action, x, y, w, h):
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Action&#34;,
+                x * self.k,
+                self.h_pt - y * self.k,
                 w * self.k,
                 h * self.k,
-                contents=text,
+                action=action,
             )
         )
 
@@ -4754,13 +4799,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
                 else:
                     if align == &#34;J&#34;:
-                        print(f&#34;wmax={wmax} ls={ls} ns={ns}&#34;)
                         self.ws = (
                             (wmax - ls) / 1000 * self.font_size / (ns - 1)
                             if ns &gt; 1
                             else 0
                         )
-                        print(self.ws, f&#34;{self.ws * self.k:.3f} Tw&#34;)
                         self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
 
                     if max_line_height and h &gt; max_line_height:
@@ -5150,16 +5193,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
                     # start the annotation entry
                     annots += (
-                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type} &#34;
-                        f&#34;/Rect [{rect}] /Border [0 0 0] &#34;
+                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type}&#34;
+                        f&#34; /Rect [{rect}] /Border [0 0 0]&#34;
                         # Flag &#34;Print&#34; (bit position 3) specifies to print
                         # the annotation when the page is printed.
                         # cf. https://docs.verapdf.org/validation/pdfa-part1/#rule-653-2
-                        f&#34;/F 4&#34;
+                        f&#34; /F 4&#34;
                     )
 
                     if annot.contents:
-                        annots += f&#34;/Contents {enclose_in_parens(annot.contents)}&#34;
+                        annots += f&#34; /Contents {enclose_in_parens(annot.contents)}&#34;
 
                     if annot.alt_text is not None:
                         # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
@@ -5169,18 +5212,21 @@ The default is <code>True</code>, meaning the current folder.</dd>
                             self.n, struct_type=&#34;/Link&#34;, alt_text=annot.alt_text
                         )
 
+                    if annot.action:
+                        annots += f&#34; /A &lt;&lt;{annot.action.dict_as_string()}&gt;&gt;&#34;
+
                     if annot.link:
                         if isinstance(annot.link, str):
                             annots += (
-                                f&#34;/A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
+                                f&#34; /A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
                             )
                         else:  # Dest type ending of annotation entry
                             assert annot.link in self.links, (
                                 f&#34;Page {n} has a link with an invalid index: &#34;
                                 f&#34;{annot.link} (doc #links={len(self.links)})&#34;
                             )
-                            link = self.links[annot.link]
-                            annots += f&#34;/Dest {link.dest(self)}&#34;
+                            dest = self.links[annot.link]
+                            annots += f&#34; /Dest {dest.as_str(self)}&#34;
                     annots += &#34;&gt;&gt;&#34;
                 # End links list
                 self._out(f&#34;/Annots [{annots}]&#34;)
@@ -6130,16 +6176,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 raise ValueError(
                     f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
                 )
-        internal_link = InternalLink(self._current_page_object_id(), self.y)
+        dest = DestinationXYZ(self.page, self.y)
         struct_elem = None
         if self.section_title_styles:
             with self._marked_sequence(title=name) as marked_content:
                 struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
                 with self._apply_style(self.section_title_styles[level]):
                     self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
-        self._outline.append(
-            OutlineSection(name, level, self.page, internal_link, struct_elem)
-        )
+        self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))
 
     @contextmanager
     def _apply_style(self, title_style):
@@ -6241,6 +6285,29 @@ def unifontsubset(self):
 </dl>
 <h3>Methods</h3>
 <dl>
+<dt id="fpdf.fpdf.FPDF.add_action"><code class="name flex">
+<span>def <span class="ident">add_action</span></span>(<span>self, action, x, y, w, h)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def add_action(self, action, x, y, w, h):
+    self.annots[self.page].append(
+        Annotation(
+            &#34;Action&#34;,
+            x * self.k,
+            self.h_pt - y * self.k,
+            w * self.k,
+            h * self.k,
+            action=action,
+        )
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.add_font"><code class="name flex">
 <span>def <span class="ident">add_font</span></span>(<span>self, family, style='', fname=None, uni=False)</span>
 </code></dt>
@@ -6386,7 +6453,7 @@ def unifontsubset(self):
 <pre><code class="python">def add_link(self):
     &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
     n = len(self.links) + 1
-    self.links[n] = InternalLink()
+    self.links[n] = DestinationXYZ(page=1)
     return n</code></pre>
 </details>
 </dd>
@@ -7408,7 +7475,8 @@ but this method can be useful for instance to define a clickable area inside an 
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def link(self, x, y, w, h, link, alt_text=None):
+<pre><code class="python">@check_page
+def link(self, x, y, w, h, link, alt_text=None):
     &#34;&#34;&#34;
     Puts a link annotation on a rectangular area of the page.
     Text or image links are generally put via [cell](#fpdf.FPDF.cell),
@@ -7681,13 +7749,11 @@ def multi_cell(
 
             else:
                 if align == &#34;J&#34;:
-                    print(f&#34;wmax={wmax} ls={ls} ns={ns}&#34;)
                     self.ws = (
                         (wmax - ls) / 1000 * self.font_size / (ns - 1)
                         if ns &gt; 1
                         else 0
                     )
-                    print(self.ws, f&#34;{self.ws * self.k:.3f} Tw&#34;)
                     self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
 
                 if max_line_height and h &gt; max_line_height:
@@ -8553,21 +8619,42 @@ Also sets the current FPDF.x on the page to this minimum horizontal position.</p
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_link"><code class="name flex">
-<span>def <span class="ident">set_link</span></span>(<span>self, link, y=0, page=-1)</span>
+<span>def <span class="ident">set_link</span></span>(<span>self, link, y=0, page=-1, zoom='null')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set destination of internal link</p></div>
+<div class="desc"><p>Defines the page and position a link points to.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>link</code></strong> :&ensp;<code>int</code></dt>
+<dd>a link identifier returned by <code>add_link</code>.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>optional ordinate of target position.
+The default value is 0 (top of page).</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code></dt>
+<dd>optional number of target page.
+-1 indicates the current page, which is the default value.</dd>
+<dt><strong><code>zoom</code></strong> :&ensp;<code>int</code></dt>
+<dd>optional new zoom level after following the link.
+Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_link(self, link, y=0, page=-1):
-    &#34;&#34;&#34;Set destination of internal link&#34;&#34;&#34;
-    if page == -1:
-        page_object_id = self._current_page_object_id()
-    else:
-        page_object_id = 2 * page + 1
-    self.links[link] = InternalLink(page_object_id, y)</code></pre>
+<pre><code class="python">def set_link(self, link, y=0, page=-1, zoom=&#34;null&#34;):
+    &#34;&#34;&#34;
+    Defines the page and position a link points to.
+
+    Args:
+        link (int): a link identifier returned by `add_link`.
+        y (int): optional ordinate of target position.
+            The default value is 0 (top of page).
+        page (int): optional number of target page.
+            -1 indicates the current page, which is the default value.
+        zoom (int): optional new zoom level after following the link.
+            Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
+    &#34;&#34;&#34;
+    self.links[link] = DestinationXYZ(self.page if page == -1 else page, y, zoom)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_margin"><code class="name flex">
@@ -8923,16 +9010,14 @@ def start_section(self, name, level=0):
             raise ValueError(
                 f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
             )
-    internal_link = InternalLink(self._current_page_object_id(), self.y)
+    dest = DestinationXYZ(self.page, self.y)
     struct_elem = None
     if self.section_title_styles:
         with self._marked_sequence(title=name) as marked_content:
             struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
             with self._apply_style(self.section_title_styles[level]):
                 self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
-    self._outline.append(
-        OutlineSection(name, level, self.page, internal_link, struct_elem)
-    )</code></pre>
+    self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.text"><code class="name flex">
@@ -8965,7 +9050,7 @@ def text(self, x, y, txt=&#34;&#34;):
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.text_annotation"><code class="name flex">
-<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, w, h, text)</span>
+<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a text annotation on a rectangular area of the page.</p>
@@ -8986,7 +9071,8 @@ def text(self, x, y, txt=&#34;&#34;):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def text_annotation(self, x, y, w, h, text):
+<pre><code class="python">@check_page
+def text_annotation(self, x, y, text):
     &#34;&#34;&#34;
     Puts a text annotation on a rectangular area of the page.
 
@@ -9002,8 +9088,8 @@ def text(self, x, y, txt=&#34;&#34;):
             &#34;Text&#34;,
             x * self.k,
             self.h_pt - y * self.k,
-            w * self.k,
-            h * self.k,
+            self.k,
+            self.k,
             contents=text,
         )
     )</code></pre>
@@ -9239,6 +9325,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER">MARKDOWN_UNDERLINE_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.accept_page_break" href="#fpdf.fpdf.FPDF.accept_page_break">accept_page_break</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.add_action" href="#fpdf.fpdf.FPDF.add_action">add_action</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_font" href="#fpdf.fpdf.FPDF.add_font">add_font</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_link" href="#fpdf.fpdf.FPDF.add_link">add_link</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_page" href="#fpdf.fpdf.FPDF.add_page">add_page</a></code></li>

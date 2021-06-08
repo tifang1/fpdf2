@@ -148,7 +148,7 @@ that string.
 As of this writing, I am not sure how length is actually calculated, so this
 remains something to be looked into.
 &#34;&#34;&#34;
-from typing import NamedTuple
+from abc import ABC
 
 
 def clear_empty_fields(d):
@@ -294,16 +294,25 @@ class PDFArray(list):
         return f&#34;[{serialized_elems}]&#34;
 
 
-class InternalLink(NamedTuple):
-    page_obj_id: int = 0
-    y: int = 0
+# cf. section 8.2.1 &#34;Destinations&#34; of the 2006 PDF spec 1.7:
+class Destination(ABC):
+    def as_str(self, pdf=None):
+        raise NotImplementedError
 
-    def dest(self, pdf=None):
-        # cf. section 8.2.1 &#34;Destinations&#34; of the 2006 PDF spec 1.7:
+
+class DestinationXYZ(Destination):
+    def __init__(self, page, y=0, zoom=&#34;null&#34;, page_as_obj_id=True):
+        self.page = page
+        self.y = y
+        self.zoom = zoom
+        self.page_as_obj_id = page_as_obj_id
+
+    def as_str(self, pdf=None):
         left = 0
         top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
-        zoom = &#34;null&#34;
-        return f&#34;[{self.page_obj_id} 0 R /XYZ {left} {top:.2f} {zoom}]&#34;</code></pre>
+        # The page object ID is predictable given that _putpages is invoked first in _enddoc:
+        page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
+        return f&#34;[{page} /XYZ {left} {top:.2f} {self.zoom}]&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -431,46 +440,32 @@ class InternalLink(NamedTuple):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="fpdf.syntax.InternalLink"><code class="flex name class">
-<span>class <span class="ident">InternalLink</span></span>
-<span>(</span><span>page_obj_id: int = 0, y: int = 0)</span>
+<dt id="fpdf.syntax.Destination"><code class="flex name class">
+<span>class <span class="ident">Destination</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>InternalLink(page_obj_id, y)</p></div>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class InternalLink(NamedTuple):
-    page_obj_id: int = 0
-    y: int = 0
-
-    def dest(self, pdf=None):
-        # cf. section 8.2.1 &#34;Destinations&#34; of the 2006 PDF spec 1.7:
-        left = 0
-        top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
-        zoom = &#34;null&#34;
-        return f&#34;[{self.page_obj_id} 0 R /XYZ {left} {top:.2f} {zoom}]&#34;</code></pre>
+<pre><code class="python">class Destination(ABC):
+    def as_str(self, pdf=None):
+        raise NotImplementedError</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>builtins.tuple</li>
+<li>abc.ABC</li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="fpdf.syntax.InternalLink.page_obj_id"><code class="name">var <span class="ident">page_obj_id</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 0</p></div>
-</dd>
-<dt id="fpdf.syntax.InternalLink.y"><code class="name">var <span class="ident">y</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 1</p></div>
-</dd>
-</dl>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fpdf.syntax.DestinationXYZ" href="#fpdf.syntax.DestinationXYZ">DestinationXYZ</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
-<dt id="fpdf.syntax.InternalLink.dest"><code class="name flex">
-<span>def <span class="ident">dest</span></span>(<span>self, pdf=None)</span>
+<dt id="fpdf.syntax.Destination.as_str"><code class="name flex">
+<span>def <span class="ident">as_str</span></span>(<span>self, pdf=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -478,12 +473,59 @@ class InternalLink(NamedTuple):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dest(self, pdf=None):
-    # cf. section 8.2.1 &#34;Destinations&#34; of the 2006 PDF spec 1.7:
+<pre><code class="python">def as_str(self, pdf=None):
+    raise NotImplementedError</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fpdf.syntax.DestinationXYZ"><code class="flex name class">
+<span>class <span class="ident">DestinationXYZ</span></span>
+<span>(</span><span>page, y=0, zoom='null', page_as_obj_id=True)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DestinationXYZ(Destination):
+    def __init__(self, page, y=0, zoom=&#34;null&#34;, page_as_obj_id=True):
+        self.page = page
+        self.y = y
+        self.zoom = zoom
+        self.page_as_obj_id = page_as_obj_id
+
+    def as_str(self, pdf=None):
+        left = 0
+        top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
+        # The page object ID is predictable given that _putpages is invoked first in _enddoc:
+        page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
+        return f&#34;[{page} /XYZ {left} {top:.2f} {self.zoom}]&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.syntax.Destination" href="#fpdf.syntax.Destination">Destination</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.syntax.DestinationXYZ.as_str"><code class="name flex">
+<span>def <span class="ident">as_str</span></span>(<span>self, pdf=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def as_str(self, pdf=None):
     left = 0
     top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
-    zoom = &#34;null&#34;
-    return f&#34;[{self.page_obj_id} 0 R /XYZ {left} {top:.2f} {zoom}]&#34;</code></pre>
+    # The page object ID is predictable given that _putpages is invoked first in _enddoc:
+    page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
+    return f&#34;[{page} /XYZ {left} {top:.2f} {self.zoom}]&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -766,11 +808,15 @@ errors defaults to 'strict'.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="fpdf.syntax.InternalLink" href="#fpdf.syntax.InternalLink">InternalLink</a></code></h4>
+<h4><code><a title="fpdf.syntax.Destination" href="#fpdf.syntax.Destination">Destination</a></code></h4>
 <ul class="">
-<li><code><a title="fpdf.syntax.InternalLink.dest" href="#fpdf.syntax.InternalLink.dest">dest</a></code></li>
-<li><code><a title="fpdf.syntax.InternalLink.page_obj_id" href="#fpdf.syntax.InternalLink.page_obj_id">page_obj_id</a></code></li>
-<li><code><a title="fpdf.syntax.InternalLink.y" href="#fpdf.syntax.InternalLink.y">y</a></code></li>
+<li><code><a title="fpdf.syntax.Destination.as_str" href="#fpdf.syntax.Destination.as_str">as_str</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.syntax.DestinationXYZ" href="#fpdf.syntax.DestinationXYZ">DestinationXYZ</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.syntax.DestinationXYZ.as_str" href="#fpdf.syntax.DestinationXYZ.as_str">as_str</a></code></li>
 </ul>
 </li>
 <li>

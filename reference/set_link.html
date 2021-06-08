@@ -75,11 +75,6 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
-        
-        <a href="#set_link" class="md-skip">
-          Skip to content
-        </a>
-      
     </div>
     <div data-md-component="announce">
       
@@ -413,6 +408,21 @@
   
   
     <li class="md-nav__item">
+      <a href="../Annotations.html" class="md-nav__link">
+        Annotations
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Shapes.html" class="md-nav__link">
         Shapes
       </a>
@@ -538,14 +548,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_19" type="checkbox" id="__nav_19" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_20" type="checkbox" id="__nav_20" checked>
       
-      <label class="md-nav__link" for="__nav_19">
+      <label class="md-nav__link" for="__nav_20">
         ReferenceManual
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="ReferenceManual" data-md-level="1">
-        <label class="md-nav__title" for="__nav_19">
+        <label class="md-nav__title" for="__nav_20">
           <span class="md-nav__icon md-icon"></span>
           ReferenceManual
         </label>
@@ -1067,64 +1077,9 @@
       
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          set_link
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="set_link.html" class="md-nav__link md-nav__link--active">
         set_link
       </a>
-      
-        
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#set_link" class="md-nav__link">
-    set_link
-  </a>
-  
-    <nav class="md-nav" aria-label="set_link">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    Description
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    See also
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -1329,63 +1284,6 @@
               </div>
             
             
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#set_link" class="md-nav__link">
-    set_link
-  </a>
-  
-    <nav class="md-nav" aria-label="set_link">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#description" class="md-nav__link">
-    Description
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#parameters" class="md-nav__link">
-    Parameters
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#see-also" class="md-nav__link">
-    See also
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
           
           <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
@@ -1398,26 +1296,11 @@
                 
                   <h1>set_link</h1>
                 
-                <h2 id="set_link">set_link</h2>
-<div class="highlight"><pre><span></span><code><span class="n">fpdf</span><span class="o">.</span><span class="n">set_link</span><span class="p">(</span><span class="n">link</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">page</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</code></pre></div>
-<h3 id="description">Description</h3>
-<p>Defines the page and position a link points to.</p>
-<h3 id="parameters">Parameters</h3>
-<p>link:</p>
-<blockquote>
-<p>The link identifier returned by <a href="add_link.html">add_link</a>.</p>
-</blockquote>
-<p>y:</p>
-<blockquote>
-<p>Ordinate of target position; -1 indicates the current position. The default value is 0 (top of page).</p>
-</blockquote>
-<p>page:</p>
-<blockquote>
-<p>Number of target page; -1 indicates the current page, which is the default value.</p>
-</blockquote>
-<h3 id="see-also">See also</h3>
-<p><a href="add_link.html">add_link</a>.</p>
+                <p>cf. https://pyfpdf.github.io/fpdf2/fpdf/#fpdf.FPDF.set_link</p>
+<script>
+// Migrating Markdown doc to docstrings - cf. https://github.com/PyFPDF/fpdf2/issues/31
+window.location = 'https://pyfpdf.github.io/fpdf2/fpdf/#fpdf.FPDF.set_link'
+</script>
                 
               
               
