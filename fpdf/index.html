@@ -6249,6 +6249,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
             &#34;I&#34;: self.image,
             &#34;B&#34;: self.rect,
             &#34;BC&#34;: self.barcode,
+            &#34;C39&#34;: self.code39,
             &#34;W&#34;: self.write,
         }
         self.texts = {}
@@ -6500,6 +6501,19 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
         if font == &#34;interleaved 2of5 nt&#34;:
             pdf.interleaved2of5(text, x1, y1, w=size, h=y2 - y1)
 
+    @staticmethod
+    def code39(
+        pdf,
+        text,
+        x,
+        y,
+        *_,
+        w=1.5,
+        h=5,
+        **__,
+    ):
+        pdf.code39(text, x, y, w, h)
+
     # Added by Derek Schwalenberg Schwalenberg1013@gmail.com to allow (url) links in
     # templates (using write method) 2014-02-22
     @staticmethod
@@ -6578,6 +6592,29 @@ def barcode(
     font = font.lower().strip()
     if font == &#34;interleaved 2of5 nt&#34;:
         pdf.interleaved2of5(text, x1, y1, w=size, h=y2 - y1)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.Template.code39"><code class="name flex">
+<span>def <span class="ident">code39</span></span>(<span>pdf, text, x, y, *_, w=1.5, h=5, **__)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def code39(
+    pdf,
+    text,
+    x,
+    y,
+    *_,
+    w=1.5,
+    h=5,
+    **__,
+):
+    pdf.code39(text, x, y, w, h)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.Template.image"><code class="name flex">
@@ -7135,6 +7172,7 @@ def write(
 <ul class="two-column">
 <li><code><a title="fpdf.Template.add_page" href="#fpdf.Template.add_page">add_page</a></code></li>
 <li><code><a title="fpdf.Template.barcode" href="#fpdf.Template.barcode">barcode</a></code></li>
+<li><code><a title="fpdf.Template.code39" href="#fpdf.Template.code39">code39</a></code></li>
 <li><code><a title="fpdf.Template.image" href="#fpdf.Template.image">image</a></code></li>
 <li><code><a title="fpdf.Template.line" href="#fpdf.Template.line">line</a></code></li>
 <li><code><a title="fpdf.Template.load_elements" href="#fpdf.Template.load_elements">load_elements</a></code></li>
