@@ -254,6 +254,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.font_cache_dir = font_cache_dir
         self.xmp_metadata = None
         self.image_filter = &#34;AUTO&#34;
+        self.page_duration = 0  # The pages display duration, cf. add_page()
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -540,7 +541,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._endpage()  # close page
         self._enddoc()  # close document
 
-    def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False):
+    def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0):
         &#34;&#34;&#34;
         Adds a new page to the document.
         If a page is already present, the `footer()` method is called first.
@@ -554,6 +555,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 (width, height). Default to &#34;a4&#34;.
             same (bool): indicates to use the same page format as the previous page.
                 Default to False.
+            duration (float): the page’s display duration, i.e. the maximum length of time,
+                in seconds, that the page is displayed in presentation mode,
+                before the viewer application automatically advances to the next page.
+                Can be configured globally through the `page_duration` FPDF property.
+                As of june 2021, this configuration entry is onored by Adobe Acrobat reader,
+                but ignored by Sumatra PDF reader.
         &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
             raise FPDFException(
@@ -578,7 +585,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._endpage()
 
         # Start new page
-        self._beginpage(orientation, format, same)
+        self._beginpage(orientation, format, same, duration or self.page_duration)
         self._out(&#34;2 J&#34;)  # Set line cap style to square
         self.line_width = lw  # Set line width
         self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -2100,8 +2107,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._newobj()
             self._out(&#34;&lt;&lt;/Type /Page&#34;)
             self._out(&#34;/Parent 1 0 R&#34;)
-            w_pt = self.pages[n][&#34;w_pt&#34;]
-            h_pt = self.pages[n][&#34;h_pt&#34;]
+            page = self.pages[n]
+            if page[&#34;duration&#34;]:
+                self._out(f&#34;/Dur {page[&#39;duration&#39;]}&#34;)
+            w_pt, h_pt = page[&#34;w_pt&#34;], page[&#34;h_pt&#34;]
             if w_pt != dw_pt or h_pt != dh_pt:
                 self._out(f&#34;/MediaBox [0 0 {w_pt:.2f} {h_pt:.2f}]&#34;)
             self._out(&#34;/Resources 2 0 R&#34;)
@@ -2164,7 +2173,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._out(&#34;endobj&#34;)
 
             # Page content
-            content = self.pages[n][&#34;content&#34;]
+            content = page[&#34;content&#34;]
             p = zlib.compress(content) if self.compress else content
             self._newobj()
             self._out(f&#34;&lt;&lt;{filter}/Length {len(p)}&gt;&gt;&#34;)
@@ -2187,16 +2196,18 @@ The default is <code>True</code>, meaning the current folder.</dd>
         alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
         encoded_nb = str(nb).encode(&#34;UTF-16BE&#34;)
         for n in range(1, nb + 1):
-            new_content = self.pages[n][&#34;content&#34;].replace(alias, encoded_nb)
-            substituted |= self.pages[n][&#34;content&#34;] != new_content
-            self.pages[n][&#34;content&#34;] = new_content
+            page = self.pages[n]
+            new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
+            substituted |= page[&#34;content&#34;] != new_content
+            page[&#34;content&#34;] = new_content
         # Now repeat for no pages in non-subset fonts
         alias = self.str_alias_nb_pages.encode(&#34;latin-1&#34;)
         encoded_nb = str(nb).encode(&#34;latin-1&#34;)
         for n in range(1, nb + 1):
-            new_content = self.pages[n][&#34;content&#34;].replace(alias, encoded_nb)
-            substituted |= self.pages[n][&#34;content&#34;] != new_content
-            self.pages[n][&#34;content&#34;] = new_content
+            page = self.pages[n]
+            new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
+            substituted |= page[&#34;content&#34;] != new_content
+            page[&#34;content&#34;] = new_content
         if substituted:
             LOGGER.info(
                 &#34;Substitution of &#39;%s&#39; was performed in the document&#34;,
@@ -2798,9 +2809,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(&#34;%%EOF&#34;)
         self.state = DocumentState.CLOSED
 
-    def _beginpage(self, orientation, format, same):
+    def _beginpage(self, orientation, format, same, page_duration):
         self.page += 1
-        self.pages[self.page] = {&#34;content&#34;: bytearray()}
+        self.pages[self.page] = {&#34;content&#34;: bytearray(), &#34;duration&#34;: page_duration}
         self.state = DocumentState.GENERATING_PAGE
         self.x = self.l_margin
         self.y = self.t_margin
@@ -3383,7 +3394,7 @@ def add_action(self, action, x, y, w, h):
 </details>
 </dd>
 <dt id="fpdf.FPDF.add_page"><code class="name flex">
-<span>def <span class="ident">add_page</span></span>(<span>self, orientation='', format='', same=False)</span>
+<span>def <span class="ident">add_page</span></span>(<span>self, orientation='', format='', same=False, duration=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds a new page to the document.
@@ -3402,12 +3413,19 @@ or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
 <dt><strong><code>same</code></strong> :&ensp;<code>bool</code></dt>
 <dd>indicates to use the same page format as the previous page.
 Default to False.</dd>
+<dt><strong><code>duration</code></strong> :&ensp;<code>float</code></dt>
+<dd>the page’s display duration, i.e. the maximum length of time,
+in seconds, that the page is displayed in presentation mode,
+before the viewer application automatically advances to the next page.
+Can be configured globally through the <code>page_duration</code> FPDF property.
+As of june 2021, this configuration entry is onored by Adobe Acrobat reader,
+but ignored by Sumatra PDF reader.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False):
+<pre><code class="python">def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0):
     &#34;&#34;&#34;
     Adds a new page to the document.
     If a page is already present, the `footer()` method is called first.
@@ -3421,6 +3439,12 @@ Default to False.</dd>
             (width, height). Default to &#34;a4&#34;.
         same (bool): indicates to use the same page format as the previous page.
             Default to False.
+        duration (float): the page’s display duration, i.e. the maximum length of time,
+            in seconds, that the page is displayed in presentation mode,
+            before the viewer application automatically advances to the next page.
+            Can be configured globally through the `page_duration` FPDF property.
+            As of june 2021, this configuration entry is onored by Adobe Acrobat reader,
+            but ignored by Sumatra PDF reader.
     &#34;&#34;&#34;
     if self.state == DocumentState.CLOSED:
         raise FPDFException(
@@ -3445,7 +3469,7 @@ Default to False.</dd>
         self._endpage()
 
     # Start new page
-    self._beginpage(orientation, format, same)
+    self._beginpage(orientation, format, same, duration or self.page_duration)
     self._out(&#34;2 J&#34;)  # Set line cap style to square
     self.line_width = lw  # Set line width
     self._out(f&#34;{lw * self.k:.2f} w&#34;)
