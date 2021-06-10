@@ -139,6 +139,10 @@ structural information about a document’s content …</p>
 <dd>
 <div class="desc"><p>PDF Template Helper for FPDF.py</p></div>
 </dd>
+<dt><code class="name"><a title="fpdf.transitions" href="transitions.html">fpdf.transitions</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="fpdf.ttfonts" href="ttfonts.html">fpdf.ttfonts</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -254,7 +258,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.font_cache_dir = font_cache_dir
         self.xmp_metadata = None
         self.image_filter = &#34;AUTO&#34;
-        self.page_duration = 0  # The pages display duration, cf. add_page()
+        self.page_duration = 0  # optional pages display duration, cf. add_page()
+        self.page_transition = None  # optional pages transition, cf. add_page()
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -541,7 +546,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._endpage()  # close page
         self._enddoc()  # close document
 
-    def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0):
+    def add_page(
+        self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0, transition=None
+    ):
         &#34;&#34;&#34;
         Adds a new page to the document.
         If a page is already present, the `footer()` method is called first.
@@ -555,12 +562,15 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 (width, height). Default to &#34;a4&#34;.
             same (bool): indicates to use the same page format as the previous page.
                 Default to False.
-            duration (float): the page’s display duration, i.e. the maximum length of time,
+            duration (float): optional page’s display duration, i.e. the maximum length of time,
                 in seconds, that the page is displayed in presentation mode,
                 before the viewer application automatically advances to the next page.
                 Can be configured globally through the `page_duration` FPDF property.
-                As of june 2021, this configuration entry is onored by Adobe Acrobat reader,
-                but ignored by Sumatra PDF reader.
+                As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
+            transition (Transition child class): optional visual transition to use when moving
+                from another page to the given page during a presentation.
+                Can be configured globally through the `page_transition` FPDF property.
+                As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
         &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
             raise FPDFException(
@@ -585,7 +595,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._endpage()
 
         # Start new page
-        self._beginpage(orientation, format, same, duration or self.page_duration)
+        self._beginpage(
+            orientation,
+            format,
+            same,
+            duration or self.page_duration,
+            transition or self.page_transition,
+        )
         self._out(&#34;2 J&#34;)  # Set line cap style to square
         self.line_width = lw  # Set line width
         self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -2110,6 +2126,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             page = self.pages[n]
             if page[&#34;duration&#34;]:
                 self._out(f&#34;/Dur {page[&#39;duration&#39;]}&#34;)
+            if page[&#34;transition&#34;]:
+                self._out(f&#34;/Trans {page[&#39;transition&#39;].dict_as_string()}&#34;)
             w_pt, h_pt = page[&#34;w_pt&#34;], page[&#34;h_pt&#34;]
             if w_pt != dw_pt or h_pt != dh_pt:
                 self._out(f&#34;/MediaBox [0 0 {w_pt:.2f} {h_pt:.2f}]&#34;)
@@ -2809,9 +2827,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(&#34;%%EOF&#34;)
         self.state = DocumentState.CLOSED
 
-    def _beginpage(self, orientation, format, same, page_duration):
+    def _beginpage(self, orientation, format, same, duration, transition):
         self.page += 1
-        self.pages[self.page] = {&#34;content&#34;: bytearray(), &#34;duration&#34;: page_duration}
+        page = {&#34;content&#34;: bytearray(), &#34;duration&#34;: duration, &#34;transition&#34;: transition}
+        self.pages[self.page] = page
         self.state = DocumentState.GENERATING_PAGE
         self.x = self.l_margin
         self.y = self.t_margin
@@ -2831,8 +2850,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 orientation or self.def_orientation, page_width_pt, page_height_pt
             )
             self.page_break_trigger = self.h - self.b_margin
-        self.pages[self.page][&#34;w_pt&#34;] = self.w_pt
-        self.pages[self.page][&#34;h_pt&#34;] = self.h_pt
+        page[&#34;w_pt&#34;], page[&#34;h_pt&#34;] = self.w_pt, self.h_pt
 
     def _endpage(self):
         # End of page contents
@@ -3394,7 +3412,7 @@ def add_action(self, action, x, y, w, h):
 </details>
 </dd>
 <dt id="fpdf.FPDF.add_page"><code class="name flex">
-<span>def <span class="ident">add_page</span></span>(<span>self, orientation='', format='', same=False, duration=0)</span>
+<span>def <span class="ident">add_page</span></span>(<span>self, orientation='', format='', same=False, duration=0, transition=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds a new page to the document.
@@ -3414,18 +3432,24 @@ or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
 <dd>indicates to use the same page format as the previous page.
 Default to False.</dd>
 <dt><strong><code>duration</code></strong> :&ensp;<code>float</code></dt>
-<dd>the page’s display duration, i.e. the maximum length of time,
+<dd>optional page’s display duration, i.e. the maximum length of time,
 in seconds, that the page is displayed in presentation mode,
 before the viewer application automatically advances to the next page.
 Can be configured globally through the <code>page_duration</code> FPDF property.
-As of june 2021, this configuration entry is onored by Adobe Acrobat reader,
-but ignored by Sumatra PDF reader.</dd>
+As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.</dd>
+<dt><strong><code>transition</code></strong> :&ensp;<code>Transition child class</code></dt>
+<dd>optional visual transition to use when moving
+from another page to the given page during a presentation.
+Can be configured globally through the <code>page_transition</code> FPDF property.
+As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_page(self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0):
+<pre><code class="python">def add_page(
+    self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0, transition=None
+):
     &#34;&#34;&#34;
     Adds a new page to the document.
     If a page is already present, the `footer()` method is called first.
@@ -3439,12 +3463,15 @@ but ignored by Sumatra PDF reader.</dd>
             (width, height). Default to &#34;a4&#34;.
         same (bool): indicates to use the same page format as the previous page.
             Default to False.
-        duration (float): the page’s display duration, i.e. the maximum length of time,
+        duration (float): optional page’s display duration, i.e. the maximum length of time,
             in seconds, that the page is displayed in presentation mode,
             before the viewer application automatically advances to the next page.
             Can be configured globally through the `page_duration` FPDF property.
-            As of june 2021, this configuration entry is onored by Adobe Acrobat reader,
-            but ignored by Sumatra PDF reader.
+            As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
+        transition (Transition child class): optional visual transition to use when moving
+            from another page to the given page during a presentation.
+            Can be configured globally through the `page_transition` FPDF property.
+            As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
     &#34;&#34;&#34;
     if self.state == DocumentState.CLOSED:
         raise FPDFException(
@@ -3469,7 +3496,13 @@ but ignored by Sumatra PDF reader.</dd>
         self._endpage()
 
     # Start new page
-    self._beginpage(orientation, format, same, duration or self.page_duration)
+    self._beginpage(
+        orientation,
+        format,
+        same,
+        duration or self.page_duration,
+        transition or self.page_transition,
+    )
     self._out(&#34;2 J&#34;)  # Set line cap style to square
     self.line_width = lw  # Set line width
     self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -7092,6 +7125,7 @@ def write(
 <li><code><a title="fpdf.structure_tree" href="structure_tree.html">fpdf.structure_tree</a></code></li>
 <li><code><a title="fpdf.syntax" href="syntax.html">fpdf.syntax</a></code></li>
 <li><code><a title="fpdf.template" href="template.html">fpdf.template</a></code></li>
+<li><code><a title="fpdf.transitions" href="transitions.html">fpdf.transitions</a></code></li>
 <li><code><a title="fpdf.ttfonts" href="ttfonts.html">fpdf.ttfonts</a></code></li>
 <li><code><a title="fpdf.util" href="util.html">fpdf.util</a></code></li>
 </ul>
