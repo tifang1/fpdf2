@@ -1392,7 +1392,7 @@
                 
                 <h1 id="presentations">Presentations</h1>
 <p><strong>Presentation mode</strong> can usually be enabled with the <code>CTRL + L</code> shortcut.</p>
-<p>As of june 2021, the features described bellow are onored by Adobe Acrobat reader,
+<p>As of june 2021, the features described below are onored by Adobe Acrobat reader,
 but ignored by Sumatra PDF reader.</p>
 <h2 id="page-display-duration">Page display duration</h2>
 <p>Pages can be associated with a "display duration"
@@ -1415,6 +1415,7 @@ until when the viewer application automatically advances to the next page:</p>
 <p>Pages can be associated with visual transitions to use when moving
 from another page to the given page during a presentation:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">fpdf.transitions</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
