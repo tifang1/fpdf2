@@ -70,7 +70,7 @@ from PIL import Image
 from .actions import Action
 from .errors import FPDFException, FPDFPageFormatException
 from .fonts import fpdf_charwidths
-from .image_parsing import get_img_info, load_resource, SUPPORTED_IMAGE_FILTERS
+from .image_parsing import get_img_info, load_image, SUPPORTED_IMAGE_FILTERS
 from .outline import serialize_outline, OutlineSection
 from .recorder import FPDFRecorder
 from .structure_tree import MarkedContent, StructureTreeBuilder
@@ -93,9 +93,8 @@ LOGGER = logging.getLogger(__name__)
 HERE = Path(__file__).resolve().parent
 
 # Global variables
-FPDF_VERSION = &#34;2.3.5&#34;
+FPDF_VERSION = &#34;2.4.0&#34;
 FPDF_FONT_DIR = HERE / &#34;font&#34;
-SYSTEM_TTFONTS = None
 
 PAGE_FORMATS = {
     &#34;a3&#34;: (841.89, 1190.55),
@@ -110,7 +109,6 @@ LAYOUT_NAMES = {
     &#34;two&#34;: &#34;/TwoColumnLeft&#34;,
 }
 ZOOM_CONFIGS = {  # cf. section 8.2.1 &#34;Destinations&#34; of the 2006 PDF spec 1.7:
-    &#34;default&#34;: (&#34;/Fit&#34;,),  # TODO FIXME
     &#34;fullpage&#34;: (&#34;/Fit&#34;,),
     &#34;fullwidth&#34;: (&#34;/FitH&#34;, &#34;null&#34;),
     &#34;real&#34;: (&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, &#34;1&#34;),
@@ -226,11 +224,14 @@ class FPDF:
     ):
         &#34;&#34;&#34;
         Args:
-            orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
+            orientation (str): possible values are &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
                 or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
-            unit (str): &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;. Default to &#34;mm&#34;.
-            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
-                (width, height). Default to &#34;a4&#34;.
+            unit (str): possible values are &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;.
+                A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
+                This is a very common unit in typography; font sizes are expressed in this unit.
+                Default to &#34;mm&#34;.
+            format (str): possible values are &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
+                (width, height) expressed in the given unit. Default to &#34;a4&#34;.
             font_cache_dir (Path or str): directory where pickle files
                 for TTF font files are kept.
                 The default is `True`, meaning the current folder.
@@ -442,34 +443,55 @@ class FPDF:
 
     def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
         &#34;&#34;&#34;
-        Set display mode in viewer
+        Defines the way the document is to be displayed by the viewer.
+
+        It allows to set tje zoom level: pages can be displayed entirely on screen,
+        occupy the full width of the window, use the real size,
+        be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).
+
+        The page layout can also be specified: single page at a time, continuous display, two columns or viewer default.
 
         Args:
-            zoom: either &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;, &#39;default&#39;,
-                or a number, interpreted as a percentage.
-            layout (str): either &#34;single&#34;, &#34;continuous&#34; or &#34;two&#34;.
+            zoom: either &#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;,
+                or a number indicating the zooming factor to use, interpreted as a percentage.
+                The zoom level set by default is &#34;default&#34;.
+            layout (str): either &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
+                meaning to use the viewer default mode.
+                The layout set by default is &#34;default&#34;,
+                and this method default value is &#34;continuous&#34;.
         &#34;&#34;&#34;
         if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
             self.zoom_mode = zoom
-        else:
+        elif zoom != &#34;default&#34;:
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
         if layout in LAYOUT_NAMES:
             self.layout_mode = layout
-        else:
+        elif layout != &#34;default&#34;:
             raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
 
     def set_compression(self, compress):
         &#34;&#34;&#34;
-        Set page compression using the zlib/deflate method (FlateDecode)
+        Activates or deactivates page compression.
+
+        When activated, the internal representation of each page is compressed
+        using the zlib/deflate method (FlateDecode), which leads to a compression ratio
+        of about 2 for the resulting document.
+
+        Page compression is enabled by default.
 
         Args:
-            compress (bool): enable page compression or not
+            compress (bool): indicates if compression should be enabled
         &#34;&#34;&#34;
         self.compress = compress
 
     def set_title(self, title):
-        &#34;&#34;&#34;Title of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the title of the document.
+
+        Args:
+            title (str): the title
+        &#34;&#34;&#34;
         self.title = title
 
     def set_lang(self, lang):
@@ -478,23 +500,47 @@ class FPDF:
         except where overridden by language specifications for structure elements or marked content.
         A language identifier can either be the empty text string, to indicate that the language is unknown,
         or a Language-Tag as defined in RFC 3066, &#34;Tags for the Identification of Languages&#34;.
+
+        Args:
+            lang (str): the document main language
         &#34;&#34;&#34;
         self.lang = lang
 
     def set_subject(self, subject):
-        &#34;&#34;&#34;Subject of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the subject of the document.
+
+        Args:
+            subject (str): the document main subject
+        &#34;&#34;&#34;
         self.subject = subject
 
     def set_author(self, author):
-        &#34;&#34;&#34;Author of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the author of the document.
+
+        Args:
+            author(str): the name of the author
+        &#34;&#34;&#34;
         self.author = author
 
     def set_keywords(self, keywords):
-        &#34;&#34;&#34;Keywords of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Associate keywords with the document
+
+        Args:
+            keywords (str): a space-separated list of words
+        &#34;&#34;&#34;
         self.keywords = keywords
 
     def set_creator(self, creator):
-        &#34;&#34;&#34;Creator of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the creator of the document.
+        This is typically the name of the application that generates the PDF.
+
+        Args:
+            creator (str): name of the PDF creator
+        &#34;&#34;&#34;
         self.creator = creator
 
     def set_producer(self, producer):
@@ -513,11 +559,24 @@ class FPDF:
         self.xmp_metadata = xmp_metadata
 
     def set_doc_option(self, opt, value):
-        &#34;&#34;&#34;Set document option&#34;&#34;&#34;
-        if opt == &#34;core_fonts_encoding&#34;:
-            self.core_fonts_encoding = value
-        else:
+        &#34;&#34;&#34;
+        Defines a document option.
+
+        Args:
+            opt (str): name of the option to set
+            value (str) option value
+
+        .. deprecated:: 2.4.0
+            Simply set the `core_fonts_encoding` property as a replacement.
+        &#34;&#34;&#34;
+        warnings.warn(
+            &#34;set_doc_option() is deprecated. &#34;
+            &#34;Simply set the `core_fonts_encoding` property as a replacement.&#34;,
+            PendingDeprecationWarning,
+        )
+        if opt != &#34;core_fonts_encoding&#34;:
             raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)
+        self.core_fonts_encoding = value
 
     def set_image_filter(self, image_filter):
         &#34;&#34;&#34;
@@ -532,15 +591,48 @@ class FPDF:
         self.image_filter = image_filter
 
     def alias_nb_pages(self, alias=&#34;{nb}&#34;):
-        &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines an alias for the total number of pages.
+        It will be substituted as the document is closed.
+
+        This is useful to insert the number of pages of the document
+        at a time when this number is not known by the program.
+
+        This substitution can be disabled for performances reasons, by caling `alias_nb_pages(None)`.
+
+        Args:
+            alias (str): the alias. Defaults to &#34;{nb}&#34;.
+
+        Notes
+        -----
+
+        When using this feature with the `cell` / `multicell` methods,
+        or the `underline` attribute of `FPDF` class,
+        the width of the text rendered will take into account the alias length,
+        not the length of the &#34;actual number of pages&#34; string,
+        which can causes slight positioning differences.
+        &#34;&#34;&#34;
         self.str_alias_nb_pages = alias
 
     def open(self):
-        &#34;&#34;&#34;Begin document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Starts the generation of the PDF document.
+        It is not necessary to call it explicitly because `add_page()` does it automatically.
+
+        Notes
+        -----
+
+        This method does not add any page.
+        &#34;&#34;&#34;
         self.state = DocumentState.READY
 
     def close(self):
-        &#34;&#34;&#34;Terminate document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Terminates the PDF document.
+
+        It is not necessary to call this method explicitly because `output()` does it automatically.
+        If the document contains no page, `add_page()` is called to prevent from generating an invalid document.
+        &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
             return
         if self.page == 0:
@@ -650,17 +742,41 @@ class FPDF:
         # END Page header
 
     def header(self):
-        &#34;&#34;&#34;Header to be implemented in your own inherited class&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Header to be implemented in your own inherited class
+
+        This is automatically called by `add_page()`
+        and should not be called directly by the user application.
+        The default implementation performs nothing: you have to override this method
+        in a subclass to implement your own rendering logic.
+        &#34;&#34;&#34;
 
     def footer(self):
-        &#34;&#34;&#34;Footer to be implemented in your own inherited class&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Footer to be implemented in your own inherited class.
+
+        This is automatically called by `add_page()` and `close()`
+        and should not be called directly by the user application.
+        The default implementation performs nothing: you have to override this method
+        in a subclass to implement your own rendering logic.
+        &#34;&#34;&#34;
 
     def page_no(self):
-        &#34;&#34;&#34;Get current page number&#34;&#34;&#34;
+        &#34;&#34;&#34;Get the current page number&#34;&#34;&#34;
         return self.page
 
     def set_draw_color(self, r, g=-1, b=-1):
-        &#34;&#34;&#34;Set color for all stroking operations&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the color used for all stroking operations (lines, rectangles and cell borders).
+        It can be expressed in RGB components or grey scale.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            r (int): if `g` and `b` are given, this indicates the red component.
+                Else, this indicates the grey level. The value must be between 0 and 255.
+            g (int): green component (between 0 and 255)
+            b (int): blue component (between 0 and 255)
+        &#34;&#34;&#34;
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.draw_color = f&#34;{r / 255:.3f} G&#34;
         else:
@@ -669,7 +785,17 @@ class FPDF:
             self._out(self.draw_color)
 
     def set_fill_color(self, r, g=-1, b=-1):
-        &#34;&#34;&#34;Set color for all filling operations&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the color used for all filling operations (filled rectangles and cell backgrounds).
+        It can be expressed in RGB components or grey scale.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            r (int): if `g` and `b` are given, this indicates the red component.
+                Else, this indicates the grey level. The value must be between 0 and 255.
+            g (int): green component (between 0 and 255)
+            b (int): blue component (between 0 and 255)
+        &#34;&#34;&#34;
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.fill_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -678,14 +804,32 @@ class FPDF:
             self._out(self.fill_color)
 
     def set_text_color(self, r, g=-1, b=-1):
-        &#34;&#34;&#34;Set color for text&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the color used for text.
+        It can be expressed in RGB components or grey scale.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            r (int): if `g` and `b` are given, this indicates the red component.
+                Else, this indicates the grey level. The value must be between 0 and 255.
+            g (int): green component (between 0 and 255)
+            b (int): blue component (between 0 and 255)
+        &#34;&#34;&#34;
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.text_color = f&#34;{r / 255:.3f} g&#34;
         else:
             self.text_color = f&#34;{r / 255:.3f} {g / 255:.3f} {b / 255:.3f} rg&#34;
 
     def get_string_width(self, s, normalized=False, markdown=False):
-        &#34;&#34;&#34;Get width of a string in the current font&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Returns the length of a string in user unit. A font must be selected.
+        The value is calculated with stretching and spacing.
+
+        Args:
+            s (str): the string whose length is to be computed.
+            normalized (bool): whether normalization needs to be performed on the input string.
+            markdown (bool): indicates if basic markdown support is enabled
+        &#34;&#34;&#34;
         # normalized is parameter for internal use
         s = s if normalized else self.normalize_text(s)
         w = 0
@@ -709,7 +853,14 @@ class FPDF:
         return w * self.font_size / 1000
 
     def set_line_width(self, width):
-        &#34;&#34;&#34;Set line width&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the line width of all stroking operations (lines, rectangles and cell borders).
+        By default, the value equals 0.2 mm.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            width (int): the width in user unit
+        &#34;&#34;&#34;
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
@@ -870,7 +1021,32 @@ class FPDF:
         )
 
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
-        &#34;&#34;&#34;Add a TrueType or Type1 font&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Imports a TrueType, OpenType or Type1 font and makes it available
+        for later calls to the `set_font()` method.
+
+        **Warning:** for Type1 and legacy fonts it is necessary to generate a font definition file first with the `MakeFont` utility.
+        This feature is currently deprecated in favour of TrueType Unicode font support
+        (whose fonts are automatically processed with the included `ttfonts.py` module).
+
+        You will find more information on the &#34;Unicode&#34; documentation page.
+
+        Args:
+            family (str): font family. Used as a reference for `set_font()`
+            style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
+            fname (str): font file name. You can specify a relative or full path.
+                If the file is not found, it will be searched in `FPDF_FONT_DIR`.
+            uni (bool): if set to `True`, enable TrueType font subset embedding.
+                Text will then be treated as `utf8` by default.
+                Calling this method with uni=False is discouraged as legacy font support is complex and deprecated.
+
+        Notes
+        -----
+
+        Due to the fact that font processing can occupy large amount of time, some data is cached.
+        Cache files are created in the current folder by default.
+        This can be controlled with the `font_cache_dir` paramater of the `FPDF` constructor.
+        &#34;&#34;&#34;
         if not fname:
             fname = family.replace(&#34; &#34;, &#34;&#34;) + f&#34;{style.lower()}.pkl&#34;
         style = &#34;&#34;.join(sorted(style.upper()))
@@ -885,7 +1061,7 @@ class FPDF:
             warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
             return
         if uni:
-            for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
+            for parent in (&#34;.&#34;, FPDF_FONT_DIR):
                 if not parent:
                     continue
                 if (Path(parent) / fname).exists():
@@ -1086,7 +1262,12 @@ class FPDF:
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
     def set_font_size(self, size):
-        &#34;&#34;&#34;Set font size in points&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Configure the font size in points
+
+        Args:
+            size (int): font size in points
+        &#34;&#34;&#34;
         if self.font_size_pt == size:
             return
         self.font_size_pt = size
@@ -1098,16 +1279,28 @@ class FPDF:
                 )
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
-    def set_stretching(self, factor):
-        &#34;&#34;&#34;Set from stretch factor percents (default: 100.0)&#34;&#34;&#34;
-        if self.font_stretching == factor:
+    def set_stretching(self, stretching):
+        &#34;&#34;&#34;
+        Sets horizontal font stretching.
+        By default, no stretching is set (which is equivalent to a value of 100).
+
+        Args:
+            stretching (int): horizontal stretching (scaling) in percents.
+        &#34;&#34;&#34;
+        if self.font_stretching == stretching:
             return
-        self.font_stretching = factor
+        self.font_stretching = stretching
         if self.page &gt; 0:
             self._out(f&#34;BT {self.font_stretching:.2f} Tz ET&#34;)
 
     def add_link(self):
-        &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Creates a new internal link and returns its identifier.
+        An internal link is a clickable area which directs to another place within the document.
+
+        The identifier can then be passed to the `cell()`, `write()`, `image()` or `link()` methods.
+        The destination must be defined using `set_link()`.
+        &#34;&#34;&#34;
         n = len(self.links) + 1
         self.links[n] = DestinationXYZ(page=1)
         return n
@@ -1180,6 +1373,16 @@ class FPDF:
 
     @check_page
     def add_action(self, action, x, y, w, h):
+        &#34;&#34;&#34;
+        Puts an Action annotation on a rectangular area of the page.
+
+        Args:
+            action (fpdf.actions.Action): the action to add
+            x (int): horizontal position (from the left) to the left side of the link rectangle
+            y (int): vertical position (from the top) to the bottom side of the link rectangle
+            w (int): width of the link rectangle
+            h (int): width of the link rectangle
+        &#34;&#34;&#34;
         self.annots[self.page].append(
             Annotation(
                 &#34;Action&#34;,
@@ -1193,7 +1396,16 @@ class FPDF:
 
     @check_page
     def text(self, x, y, txt=&#34;&#34;):
-        &#34;&#34;&#34;Output a string&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Prints a character string. The origin is on the left of the first character,
+        on the baseline. This method allows placing a string precisely on the page,
+        but it is usually easier to use the `cell()`, `multi_cell() or `write()` methods.
+
+        Args:
+            x (int): abscissa of the origin
+            y (int): ordinate of the origin
+            txt (str): string to print
+        &#34;&#34;&#34;
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
         txt = self.normalize_text(txt)
@@ -1277,7 +1489,13 @@ class FPDF:
 
     @property
     def accept_page_break(self):
-        &#34;&#34;&#34;Accept automatic page break or not&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Whenever a page break condition is met, this method is called,
+        and the break is issued or not depending on the returned value.
+
+        The default implementation returns a value according to the mode selected by `set_auto_page_break()`.
+        This method is called automatically and should not be called directly by the application.
+        &#34;&#34;&#34;
         return self.auto_page_break
 
     @check_page
@@ -1976,7 +2194,7 @@ class FPDF:
         else:
             name, img = str(name), name
         if name not in self.images:
-            info = get_img_info(img or load_resource(name), self.image_filter)
+            info = get_img_info(img or load_image(name), self.image_filter)
             info[&#34;i&#34;] = len(self.images) + 1
             self.images[name] = info
         else:
@@ -2054,24 +2272,43 @@ class FPDF:
         self.y += self.lasth if h is None else h
 
     def get_x(self):
-        &#34;&#34;&#34;Get x position&#34;&#34;&#34;
+        &#34;&#34;&#34;Returns the abscissa of the current position.&#34;&#34;&#34;
         return self.x
 
     def set_x(self, x):
-        &#34;&#34;&#34;Set x position&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the abscissa of the current position.
+        If the value provided is negative, it is relative to the right of the page.
+
+        Args:
+            x (int): the new current abscissa
+        &#34;&#34;&#34;
         self.x = x if x &gt;= 0 else self.w + x
 
     def get_y(self):
-        &#34;&#34;&#34;Get y position&#34;&#34;&#34;
+        &#34;&#34;&#34;Returns the ordinate of the current position.&#34;&#34;&#34;
         return self.y
 
     def set_y(self, y):
-        &#34;&#34;&#34;Set y position and reset x&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Moves the current abscissa back to the left margin and sets the ordinate.
+        If the value provided is negative, it is relative to the bottom of the page.
+
+        Args:
+            y (int): the new current ordinate
+        &#34;&#34;&#34;
         self.x = self.l_margin
         self.y = y if y &gt;= 0 else self.h + y
 
     def set_xy(self, x, y):
-        &#34;&#34;&#34;Set x and y positions&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the abscissa and ordinate of the current position.
+        If the values provided are negative, they are relative respectively to the right and bottom of the page.
+
+        Args:
+            x (int): the new current abscissa
+            y (int): the new current ordinate
+        &#34;&#34;&#34;
         self.set_y(y)
         self.set_x(x)
 
@@ -3036,7 +3273,10 @@ class FPDF:
         Ensures that all rendering performed in this context appear on a single page
         by performing page break beforehand if need be.
 
-        Note that using this method means to duplicate the FPDF `bytearray` buffer:
+        Notes
+        -----
+
+        Using this method means to duplicate the FPDF `bytearray` buffer:
         when generating large PDFs, doubling memory usage may be troublesome.
         &#34;&#34;&#34;
         prev_page, prev_y = self.page, self.y
@@ -3287,13 +3527,16 @@ case insensitive key (the name of the new format) and 2-tuple value of
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
-<dd>"portrait" (can be abbreviated "P")
+<dd>possible values are "portrait" (can be abbreviated "P")
 or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
 <dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
-<dd>"pt", "mm", "cm" or "in". Default to "mm".</dd>
+<dd>possible values are "pt", "mm", "cm" or "in".
+A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
+This is a very common unit in typography; font sizes are expressed in this unit.
+Default to "mm".</dd>
 <dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
-<dd>"a3", "a4", "a5", "letter", "legal" or a tuple
-(width, height). Default to "a4".</dd>
+<dd>possible values are "a3", "a4", "a5", "letter", "legal" or a tuple
+(width, height) expressed in the given unit. Default to "a4".</dd>
 <dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
 <dd>directory where pickle files
 for TTF font files are kept.
@@ -3314,11 +3557,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
     ):
         &#34;&#34;&#34;
         Args:
-            orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
+            orientation (str): possible values are &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
                 or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
-            unit (str): &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;. Default to &#34;mm&#34;.
-            format (str): &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
-                (width, height). Default to &#34;a4&#34;.
+            unit (str): possible values are &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;.
+                A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
+                This is a very common unit in typography; font sizes are expressed in this unit.
+                Default to &#34;mm&#34;.
+            format (str): possible values are &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
+                (width, height) expressed in the given unit. Default to &#34;a4&#34;.
             font_cache_dir (Path or str): directory where pickle files
                 for TTF font files are kept.
                 The default is `True`, meaning the current folder.
@@ -3530,34 +3776,55 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
         &#34;&#34;&#34;
-        Set display mode in viewer
+        Defines the way the document is to be displayed by the viewer.
+
+        It allows to set tje zoom level: pages can be displayed entirely on screen,
+        occupy the full width of the window, use the real size,
+        be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).
+
+        The page layout can also be specified: single page at a time, continuous display, two columns or viewer default.
 
         Args:
-            zoom: either &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;, &#39;default&#39;,
-                or a number, interpreted as a percentage.
-            layout (str): either &#34;single&#34;, &#34;continuous&#34; or &#34;two&#34;.
+            zoom: either &#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;,
+                or a number indicating the zooming factor to use, interpreted as a percentage.
+                The zoom level set by default is &#34;default&#34;.
+            layout (str): either &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
+                meaning to use the viewer default mode.
+                The layout set by default is &#34;default&#34;,
+                and this method default value is &#34;continuous&#34;.
         &#34;&#34;&#34;
         if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
             self.zoom_mode = zoom
-        else:
+        elif zoom != &#34;default&#34;:
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
         if layout in LAYOUT_NAMES:
             self.layout_mode = layout
-        else:
+        elif layout != &#34;default&#34;:
             raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
 
     def set_compression(self, compress):
         &#34;&#34;&#34;
-        Set page compression using the zlib/deflate method (FlateDecode)
+        Activates or deactivates page compression.
+
+        When activated, the internal representation of each page is compressed
+        using the zlib/deflate method (FlateDecode), which leads to a compression ratio
+        of about 2 for the resulting document.
+
+        Page compression is enabled by default.
 
         Args:
-            compress (bool): enable page compression or not
+            compress (bool): indicates if compression should be enabled
         &#34;&#34;&#34;
         self.compress = compress
 
     def set_title(self, title):
-        &#34;&#34;&#34;Title of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the title of the document.
+
+        Args:
+            title (str): the title
+        &#34;&#34;&#34;
         self.title = title
 
     def set_lang(self, lang):
@@ -3566,23 +3833,47 @@ The default is <code>True</code>, meaning the current folder.</dd>
         except where overridden by language specifications for structure elements or marked content.
         A language identifier can either be the empty text string, to indicate that the language is unknown,
         or a Language-Tag as defined in RFC 3066, &#34;Tags for the Identification of Languages&#34;.
+
+        Args:
+            lang (str): the document main language
         &#34;&#34;&#34;
         self.lang = lang
 
     def set_subject(self, subject):
-        &#34;&#34;&#34;Subject of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the subject of the document.
+
+        Args:
+            subject (str): the document main subject
+        &#34;&#34;&#34;
         self.subject = subject
 
     def set_author(self, author):
-        &#34;&#34;&#34;Author of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the author of the document.
+
+        Args:
+            author(str): the name of the author
+        &#34;&#34;&#34;
         self.author = author
 
     def set_keywords(self, keywords):
-        &#34;&#34;&#34;Keywords of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Associate keywords with the document
+
+        Args:
+            keywords (str): a space-separated list of words
+        &#34;&#34;&#34;
         self.keywords = keywords
 
     def set_creator(self, creator):
-        &#34;&#34;&#34;Creator of document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the creator of the document.
+        This is typically the name of the application that generates the PDF.
+
+        Args:
+            creator (str): name of the PDF creator
+        &#34;&#34;&#34;
         self.creator = creator
 
     def set_producer(self, producer):
@@ -3601,11 +3892,24 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.xmp_metadata = xmp_metadata
 
     def set_doc_option(self, opt, value):
-        &#34;&#34;&#34;Set document option&#34;&#34;&#34;
-        if opt == &#34;core_fonts_encoding&#34;:
-            self.core_fonts_encoding = value
-        else:
+        &#34;&#34;&#34;
+        Defines a document option.
+
+        Args:
+            opt (str): name of the option to set
+            value (str) option value
+
+        .. deprecated:: 2.4.0
+            Simply set the `core_fonts_encoding` property as a replacement.
+        &#34;&#34;&#34;
+        warnings.warn(
+            &#34;set_doc_option() is deprecated. &#34;
+            &#34;Simply set the `core_fonts_encoding` property as a replacement.&#34;,
+            PendingDeprecationWarning,
+        )
+        if opt != &#34;core_fonts_encoding&#34;:
             raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)
+        self.core_fonts_encoding = value
 
     def set_image_filter(self, image_filter):
         &#34;&#34;&#34;
@@ -3620,15 +3924,48 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.image_filter = image_filter
 
     def alias_nb_pages(self, alias=&#34;{nb}&#34;):
-        &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines an alias for the total number of pages.
+        It will be substituted as the document is closed.
+
+        This is useful to insert the number of pages of the document
+        at a time when this number is not known by the program.
+
+        This substitution can be disabled for performances reasons, by caling `alias_nb_pages(None)`.
+
+        Args:
+            alias (str): the alias. Defaults to &#34;{nb}&#34;.
+
+        Notes
+        -----
+
+        When using this feature with the `cell` / `multicell` methods,
+        or the `underline` attribute of `FPDF` class,
+        the width of the text rendered will take into account the alias length,
+        not the length of the &#34;actual number of pages&#34; string,
+        which can causes slight positioning differences.
+        &#34;&#34;&#34;
         self.str_alias_nb_pages = alias
 
     def open(self):
-        &#34;&#34;&#34;Begin document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Starts the generation of the PDF document.
+        It is not necessary to call it explicitly because `add_page()` does it automatically.
+
+        Notes
+        -----
+
+        This method does not add any page.
+        &#34;&#34;&#34;
         self.state = DocumentState.READY
 
     def close(self):
-        &#34;&#34;&#34;Terminate document&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Terminates the PDF document.
+
+        It is not necessary to call this method explicitly because `output()` does it automatically.
+        If the document contains no page, `add_page()` is called to prevent from generating an invalid document.
+        &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
             return
         if self.page == 0:
@@ -3738,17 +4075,41 @@ The default is <code>True</code>, meaning the current folder.</dd>
         # END Page header
 
     def header(self):
-        &#34;&#34;&#34;Header to be implemented in your own inherited class&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Header to be implemented in your own inherited class
+
+        This is automatically called by `add_page()`
+        and should not be called directly by the user application.
+        The default implementation performs nothing: you have to override this method
+        in a subclass to implement your own rendering logic.
+        &#34;&#34;&#34;
 
     def footer(self):
-        &#34;&#34;&#34;Footer to be implemented in your own inherited class&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Footer to be implemented in your own inherited class.
+
+        This is automatically called by `add_page()` and `close()`
+        and should not be called directly by the user application.
+        The default implementation performs nothing: you have to override this method
+        in a subclass to implement your own rendering logic.
+        &#34;&#34;&#34;
 
     def page_no(self):
-        &#34;&#34;&#34;Get current page number&#34;&#34;&#34;
+        &#34;&#34;&#34;Get the current page number&#34;&#34;&#34;
         return self.page
 
     def set_draw_color(self, r, g=-1, b=-1):
-        &#34;&#34;&#34;Set color for all stroking operations&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the color used for all stroking operations (lines, rectangles and cell borders).
+        It can be expressed in RGB components or grey scale.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            r (int): if `g` and `b` are given, this indicates the red component.
+                Else, this indicates the grey level. The value must be between 0 and 255.
+            g (int): green component (between 0 and 255)
+            b (int): blue component (between 0 and 255)
+        &#34;&#34;&#34;
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.draw_color = f&#34;{r / 255:.3f} G&#34;
         else:
@@ -3757,7 +4118,17 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._out(self.draw_color)
 
     def set_fill_color(self, r, g=-1, b=-1):
-        &#34;&#34;&#34;Set color for all filling operations&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the color used for all filling operations (filled rectangles and cell backgrounds).
+        It can be expressed in RGB components or grey scale.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            r (int): if `g` and `b` are given, this indicates the red component.
+                Else, this indicates the grey level. The value must be between 0 and 255.
+            g (int): green component (between 0 and 255)
+            b (int): blue component (between 0 and 255)
+        &#34;&#34;&#34;
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.fill_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -3766,14 +4137,32 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._out(self.fill_color)
 
     def set_text_color(self, r, g=-1, b=-1):
-        &#34;&#34;&#34;Set color for text&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the color used for text.
+        It can be expressed in RGB components or grey scale.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            r (int): if `g` and `b` are given, this indicates the red component.
+                Else, this indicates the grey level. The value must be between 0 and 255.
+            g (int): green component (between 0 and 255)
+            b (int): blue component (between 0 and 255)
+        &#34;&#34;&#34;
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.text_color = f&#34;{r / 255:.3f} g&#34;
         else:
             self.text_color = f&#34;{r / 255:.3f} {g / 255:.3f} {b / 255:.3f} rg&#34;
 
     def get_string_width(self, s, normalized=False, markdown=False):
-        &#34;&#34;&#34;Get width of a string in the current font&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Returns the length of a string in user unit. A font must be selected.
+        The value is calculated with stretching and spacing.
+
+        Args:
+            s (str): the string whose length is to be computed.
+            normalized (bool): whether normalization needs to be performed on the input string.
+            markdown (bool): indicates if basic markdown support is enabled
+        &#34;&#34;&#34;
         # normalized is parameter for internal use
         s = s if normalized else self.normalize_text(s)
         w = 0
@@ -3797,7 +4186,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
         return w * self.font_size / 1000
 
     def set_line_width(self, width):
-        &#34;&#34;&#34;Set line width&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the line width of all stroking operations (lines, rectangles and cell borders).
+        By default, the value equals 0.2 mm.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            width (int): the width in user unit
+        &#34;&#34;&#34;
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
@@ -3958,7 +4354,32 @@ The default is <code>True</code>, meaning the current folder.</dd>
         )
 
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
-        &#34;&#34;&#34;Add a TrueType or Type1 font&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Imports a TrueType, OpenType or Type1 font and makes it available
+        for later calls to the `set_font()` method.
+
+        **Warning:** for Type1 and legacy fonts it is necessary to generate a font definition file first with the `MakeFont` utility.
+        This feature is currently deprecated in favour of TrueType Unicode font support
+        (whose fonts are automatically processed with the included `ttfonts.py` module).
+
+        You will find more information on the &#34;Unicode&#34; documentation page.
+
+        Args:
+            family (str): font family. Used as a reference for `set_font()`
+            style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
+            fname (str): font file name. You can specify a relative or full path.
+                If the file is not found, it will be searched in `FPDF_FONT_DIR`.
+            uni (bool): if set to `True`, enable TrueType font subset embedding.
+                Text will then be treated as `utf8` by default.
+                Calling this method with uni=False is discouraged as legacy font support is complex and deprecated.
+
+        Notes
+        -----
+
+        Due to the fact that font processing can occupy large amount of time, some data is cached.
+        Cache files are created in the current folder by default.
+        This can be controlled with the `font_cache_dir` paramater of the `FPDF` constructor.
+        &#34;&#34;&#34;
         if not fname:
             fname = family.replace(&#34; &#34;, &#34;&#34;) + f&#34;{style.lower()}.pkl&#34;
         style = &#34;&#34;.join(sorted(style.upper()))
@@ -3973,7 +4394,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
             return
         if uni:
-            for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
+            for parent in (&#34;.&#34;, FPDF_FONT_DIR):
                 if not parent:
                     continue
                 if (Path(parent) / fname).exists():
@@ -4174,7 +4595,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
     def set_font_size(self, size):
-        &#34;&#34;&#34;Set font size in points&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Configure the font size in points
+
+        Args:
+            size (int): font size in points
+        &#34;&#34;&#34;
         if self.font_size_pt == size:
             return
         self.font_size_pt = size
@@ -4186,16 +4612,28 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 )
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
-    def set_stretching(self, factor):
-        &#34;&#34;&#34;Set from stretch factor percents (default: 100.0)&#34;&#34;&#34;
-        if self.font_stretching == factor:
+    def set_stretching(self, stretching):
+        &#34;&#34;&#34;
+        Sets horizontal font stretching.
+        By default, no stretching is set (which is equivalent to a value of 100).
+
+        Args:
+            stretching (int): horizontal stretching (scaling) in percents.
+        &#34;&#34;&#34;
+        if self.font_stretching == stretching:
             return
-        self.font_stretching = factor
+        self.font_stretching = stretching
         if self.page &gt; 0:
             self._out(f&#34;BT {self.font_stretching:.2f} Tz ET&#34;)
 
     def add_link(self):
-        &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Creates a new internal link and returns its identifier.
+        An internal link is a clickable area which directs to another place within the document.
+
+        The identifier can then be passed to the `cell()`, `write()`, `image()` or `link()` methods.
+        The destination must be defined using `set_link()`.
+        &#34;&#34;&#34;
         n = len(self.links) + 1
         self.links[n] = DestinationXYZ(page=1)
         return n
@@ -4268,6 +4706,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     @check_page
     def add_action(self, action, x, y, w, h):
+        &#34;&#34;&#34;
+        Puts an Action annotation on a rectangular area of the page.
+
+        Args:
+            action (fpdf.actions.Action): the action to add
+            x (int): horizontal position (from the left) to the left side of the link rectangle
+            y (int): vertical position (from the top) to the bottom side of the link rectangle
+            w (int): width of the link rectangle
+            h (int): width of the link rectangle
+        &#34;&#34;&#34;
         self.annots[self.page].append(
             Annotation(
                 &#34;Action&#34;,
@@ -4281,7 +4729,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     @check_page
     def text(self, x, y, txt=&#34;&#34;):
-        &#34;&#34;&#34;Output a string&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Prints a character string. The origin is on the left of the first character,
+        on the baseline. This method allows placing a string precisely on the page,
+        but it is usually easier to use the `cell()`, `multi_cell() or `write()` methods.
+
+        Args:
+            x (int): abscissa of the origin
+            y (int): ordinate of the origin
+            txt (str): string to print
+        &#34;&#34;&#34;
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
         txt = self.normalize_text(txt)
@@ -4365,7 +4822,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     @property
     def accept_page_break(self):
-        &#34;&#34;&#34;Accept automatic page break or not&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Whenever a page break condition is met, this method is called,
+        and the break is issued or not depending on the returned value.
+
+        The default implementation returns a value according to the mode selected by `set_auto_page_break()`.
+        This method is called automatically and should not be called directly by the application.
+        &#34;&#34;&#34;
         return self.auto_page_break
 
     @check_page
@@ -5064,7 +5527,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         else:
             name, img = str(name), name
         if name not in self.images:
-            info = get_img_info(img or load_resource(name), self.image_filter)
+            info = get_img_info(img or load_image(name), self.image_filter)
             info[&#34;i&#34;] = len(self.images) + 1
             self.images[name] = info
         else:
@@ -5142,24 +5605,43 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.y += self.lasth if h is None else h
 
     def get_x(self):
-        &#34;&#34;&#34;Get x position&#34;&#34;&#34;
+        &#34;&#34;&#34;Returns the abscissa of the current position.&#34;&#34;&#34;
         return self.x
 
     def set_x(self, x):
-        &#34;&#34;&#34;Set x position&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the abscissa of the current position.
+        If the value provided is negative, it is relative to the right of the page.
+
+        Args:
+            x (int): the new current abscissa
+        &#34;&#34;&#34;
         self.x = x if x &gt;= 0 else self.w + x
 
     def get_y(self):
-        &#34;&#34;&#34;Get y position&#34;&#34;&#34;
+        &#34;&#34;&#34;Returns the ordinate of the current position.&#34;&#34;&#34;
         return self.y
 
     def set_y(self, y):
-        &#34;&#34;&#34;Set y position and reset x&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Moves the current abscissa back to the left margin and sets the ordinate.
+        If the value provided is negative, it is relative to the bottom of the page.
+
+        Args:
+            y (int): the new current ordinate
+        &#34;&#34;&#34;
         self.x = self.l_margin
         self.y = y if y &gt;= 0 else self.h + y
 
     def set_xy(self, x, y):
-        &#34;&#34;&#34;Set x and y positions&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Defines the abscissa and ordinate of the current position.
+        If the values provided are negative, they are relative respectively to the right and bottom of the page.
+
+        Args:
+            x (int): the new current abscissa
+            y (int): the new current ordinate
+        &#34;&#34;&#34;
         self.set_y(y)
         self.set_x(x)
 
@@ -6124,7 +6606,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Ensures that all rendering performed in this context appear on a single page
         by performing page break beforehand if need be.
 
-        Note that using this method means to duplicate the FPDF `bytearray` buffer:
+        Notes
+        -----
+
+        Using this method means to duplicate the FPDF `bytearray` buffer:
         when generating large PDFs, doubling memory usage may be troublesome.
         &#34;&#34;&#34;
         prev_page, prev_y = self.page, self.y
@@ -6279,14 +6764,23 @@ The default is <code>True</code>, meaning the current folder.</dd>
 <dl>
 <dt id="fpdf.fpdf.FPDF.accept_page_break"><code class="name">var <span class="ident">accept_page_break</span></code></dt>
 <dd>
-<div class="desc"><p>Accept automatic page break or not</p></div>
+<div class="desc"><p>Whenever a page break condition is met, this method is called,
+and the break is issued or not depending on the returned value.</p>
+<p>The default implementation returns a value according to the mode selected by <code>set_auto_page_break()</code>.
+This method is called automatically and should not be called directly by the application.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def accept_page_break(self):
-    &#34;&#34;&#34;Accept automatic page break or not&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Whenever a page break condition is met, this method is called,
+    and the break is issued or not depending on the returned value.
+
+    The default implementation returns a value according to the mode selected by `set_auto_page_break()`.
+    This method is called automatically and should not be called directly by the application.
+    &#34;&#34;&#34;
     return self.auto_page_break</code></pre>
 </details>
 </dd>
@@ -6339,13 +6833,36 @@ def unifontsubset(self):
 <span>def <span class="ident">add_action</span></span>(<span>self, action, x, y, w, h)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Puts an Action annotation on a rectangular area of the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>action</code></strong> :&ensp;<code><a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a></code></dt>
+<dd>the action to add</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>horizontal position (from the left) to the left side of the link rectangle</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>vertical position (from the top) to the bottom side of the link rectangle</dd>
+<dt><strong><code>w</code></strong> :&ensp;<code>int</code></dt>
+<dd>width of the link rectangle</dd>
+<dt><strong><code>h</code></strong> :&ensp;<code>int</code></dt>
+<dd>width of the link rectangle</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
 def add_action(self, action, x, y, w, h):
+    &#34;&#34;&#34;
+    Puts an Action annotation on a rectangular area of the page.
+
+    Args:
+        action (fpdf.actions.Action): the action to add
+        x (int): horizontal position (from the left) to the left side of the link rectangle
+        y (int): vertical position (from the top) to the bottom side of the link rectangle
+        w (int): width of the link rectangle
+        h (int): width of the link rectangle
+    &#34;&#34;&#34;
     self.annots[self.page].append(
         Annotation(
             &#34;Action&#34;,
@@ -6362,13 +6879,61 @@ def add_action(self, action, x, y, w, h):
 <span>def <span class="ident">add_font</span></span>(<span>self, family, style='', fname=None, uni=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Add a TrueType or Type1 font</p></div>
+<div class="desc"><p>Imports a TrueType, OpenType or Type1 font and makes it available
+for later calls to the <code>set_font()</code> method.</p>
+<p><strong>Warning:</strong> for Type1 and legacy fonts it is necessary to generate a font definition file first with the <code>MakeFont</code> utility.
+This feature is currently deprecated in favour of TrueType Unicode font support
+(whose fonts are automatically processed with the included <code>ttfonts.py</code> module).</p>
+<p>You will find more information on the "Unicode" documentation page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>family</code></strong> :&ensp;<code>str</code></dt>
+<dd>font family. Used as a reference for <code>set_font()</code></dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
+<dd>font style. "B" for bold, "I" for italic.</dd>
+<dt><strong><code>fname</code></strong> :&ensp;<code>str</code></dt>
+<dd>font file name. You can specify a relative or full path.
+If the file is not found, it will be searched in <code>FPDF_FONT_DIR</code>.</dd>
+<dt><strong><code>uni</code></strong> :&ensp;<code>bool</code></dt>
+<dd>if set to <code>True</code>, enable TrueType font subset embedding.
+Text will then be treated as <code>utf8</code> by default.
+Calling this method with uni=False is discouraged as legacy font support is complex and deprecated.</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>Due to the fact that font processing can occupy large amount of time, some data is cached.
+Cache files are created in the current folder by default.
+This can be controlled with the <code>font_cache_dir</code> paramater of the <code><a title="fpdf.fpdf.FPDF" href="#fpdf.fpdf.FPDF">FPDF</a></code> constructor.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
-    &#34;&#34;&#34;Add a TrueType or Type1 font&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Imports a TrueType, OpenType or Type1 font and makes it available
+    for later calls to the `set_font()` method.
+
+    **Warning:** for Type1 and legacy fonts it is necessary to generate a font definition file first with the `MakeFont` utility.
+    This feature is currently deprecated in favour of TrueType Unicode font support
+    (whose fonts are automatically processed with the included `ttfonts.py` module).
+
+    You will find more information on the &#34;Unicode&#34; documentation page.
+
+    Args:
+        family (str): font family. Used as a reference for `set_font()`
+        style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
+        fname (str): font file name. You can specify a relative or full path.
+            If the file is not found, it will be searched in `FPDF_FONT_DIR`.
+        uni (bool): if set to `True`, enable TrueType font subset embedding.
+            Text will then be treated as `utf8` by default.
+            Calling this method with uni=False is discouraged as legacy font support is complex and deprecated.
+
+    Notes
+    -----
+
+    Due to the fact that font processing can occupy large amount of time, some data is cached.
+    Cache files are created in the current folder by default.
+    This can be controlled with the `font_cache_dir` paramater of the `FPDF` constructor.
+    &#34;&#34;&#34;
     if not fname:
         fname = family.replace(&#34; &#34;, &#34;&#34;) + f&#34;{style.lower()}.pkl&#34;
     style = &#34;&#34;.join(sorted(style.upper()))
@@ -6383,7 +6948,7 @@ def add_action(self, action, x, y, w, h):
         warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
         return
     if uni:
-        for parent in (&#34;.&#34;, FPDF_FONT_DIR, SYSTEM_TTFONTS):
+        for parent in (&#34;.&#34;, FPDF_FONT_DIR):
             if not parent:
                 continue
             if (Path(parent) / fname).exists():
@@ -6495,13 +7060,22 @@ def add_action(self, action, x, y, w, h):
 <span>def <span class="ident">add_link</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Create a new internal link</p></div>
+<div class="desc"><p>Creates a new internal link and returns its identifier.
+An internal link is a clickable area which directs to another place within the document.</p>
+<p>The identifier can then be passed to the <code>cell()</code>, <code>write()</code>, <code>image()</code> or <code>link()</code> methods.
+The destination must be defined using <code>set_link()</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_link(self):
-    &#34;&#34;&#34;Create a new internal link&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Creates a new internal link and returns its identifier.
+    An internal link is a clickable area which directs to another place within the document.
+
+    The identifier can then be passed to the `cell()`, `write()`, `image()` or `link()` methods.
+    The destination must be defined using `set_link()`.
+    &#34;&#34;&#34;
     n = len(self.links) + 1
     self.links[n] = DestinationXYZ(page=1)
     return n</code></pre>
@@ -6643,13 +7217,48 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 <span>def <span class="ident">alias_nb_pages</span></span>(<span>self, alias='{nb}')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Define an alias for total number of pages</p></div>
+<div class="desc"><p>Defines an alias for the total number of pages.
+It will be substituted as the document is closed.</p>
+<p>This is useful to insert the number of pages of the document
+at a time when this number is not known by the program.</p>
+<p>This substitution can be disabled for performances reasons, by caling <code>alias_nb_pages(None)</code>.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>alias</code></strong> :&ensp;<code>str</code></dt>
+<dd>the alias. Defaults to "{nb}".</dd>
+</dl>
+<h2 id="notes">Notes</h2>
+<p>When using this feature with the <code>cell</code> / <code>multicell</code> methods,
+or the <code>underline</code> attribute of <code><a title="fpdf.fpdf.FPDF" href="#fpdf.fpdf.FPDF">FPDF</a></code> class,
+the width of the text rendered will take into account the alias length,
+not the length of the "actual number of pages" string,
+which can causes slight positioning differences.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def alias_nb_pages(self, alias=&#34;{nb}&#34;):
-    &#34;&#34;&#34;Define an alias for total number of pages&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines an alias for the total number of pages.
+    It will be substituted as the document is closed.
+
+    This is useful to insert the number of pages of the document
+    at a time when this number is not known by the program.
+
+    This substitution can be disabled for performances reasons, by caling `alias_nb_pages(None)`.
+
+    Args:
+        alias (str): the alias. Defaults to &#34;{nb}&#34;.
+
+    Notes
+    -----
+
+    When using this feature with the `cell` / `multicell` methods,
+    or the `underline` attribute of `FPDF` class,
+    the width of the text rendered will take into account the alias length,
+    not the length of the &#34;actual number of pages&#34; string,
+    which can causes slight positioning differences.
+    &#34;&#34;&#34;
     self.str_alias_nb_pages = alias</code></pre>
 </details>
 </dd>
@@ -6918,13 +7527,20 @@ def cell(
 <span>def <span class="ident">close</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Terminate document</p></div>
+<div class="desc"><p>Terminates the PDF document.</p>
+<p>It is not necessary to call this method explicitly because <code>output()</code> does it automatically.
+If the document contains no page, <code>add_page()</code> is called to prevent from generating an invalid document.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def close(self):
-    &#34;&#34;&#34;Terminate document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Terminates the PDF document.
+
+    It is not necessary to call this method explicitly because `output()` does it automatically.
+    If the document contains no page, `add_page()` is called to prevent from generating an invalid document.
+    &#34;&#34;&#34;
     if self.state == DocumentState.CLOSED:
         return
     if self.page == 0:
@@ -7139,26 +7755,55 @@ def ellipse(self, x, y, w, h, style=None):
 <span>def <span class="ident">footer</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Footer to be implemented in your own inherited class</p></div>
+<div class="desc"><p>Footer to be implemented in your own inherited class.</p>
+<p>This is automatically called by <code>add_page()</code> and <code>close()</code>
+and should not be called directly by the user application.
+The default implementation performs nothing: you have to override this method
+in a subclass to implement your own rendering logic.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def footer(self):
-    &#34;&#34;&#34;Footer to be implemented in your own inherited class&#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    Footer to be implemented in your own inherited class.
+
+    This is automatically called by `add_page()` and `close()`
+    and should not be called directly by the user application.
+    The default implementation performs nothing: you have to override this method
+    in a subclass to implement your own rendering logic.
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.get_string_width"><code class="name flex">
 <span>def <span class="ident">get_string_width</span></span>(<span>self, s, normalized=False, markdown=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get width of a string in the current font</p></div>
+<div class="desc"><p>Returns the length of a string in user unit. A font must be selected.
+The value is calculated with stretching and spacing.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>s</code></strong> :&ensp;<code>str</code></dt>
+<dd>the string whose length is to be computed.</dd>
+<dt><strong><code>normalized</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether normalization needs to be performed on the input string.</dd>
+<dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
+<dd>indicates if basic markdown support is enabled</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_string_width(self, s, normalized=False, markdown=False):
-    &#34;&#34;&#34;Get width of a string in the current font&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Returns the length of a string in user unit. A font must be selected.
+    The value is calculated with stretching and spacing.
+
+    Args:
+        s (str): the string whose length is to be computed.
+        normalized (bool): whether normalization needs to be performed on the input string.
+        markdown (bool): indicates if basic markdown support is enabled
+    &#34;&#34;&#34;
     # normalized is parameter for internal use
     s = s if normalized else self.normalize_text(s)
     w = 0
@@ -7186,13 +7831,13 @@ def ellipse(self, x, y, w, h, style=None):
 <span>def <span class="ident">get_x</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get x position</p></div>
+<div class="desc"><p>Returns the abscissa of the current position.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_x(self):
-    &#34;&#34;&#34;Get x position&#34;&#34;&#34;
+    &#34;&#34;&#34;Returns the abscissa of the current position.&#34;&#34;&#34;
     return self.x</code></pre>
 </details>
 </dd>
@@ -7200,13 +7845,13 @@ def ellipse(self, x, y, w, h, style=None):
 <span>def <span class="ident">get_y</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get y position</p></div>
+<div class="desc"><p>Returns the ordinate of the current position.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_y(self):
-    &#34;&#34;&#34;Get y position&#34;&#34;&#34;
+    &#34;&#34;&#34;Returns the ordinate of the current position.&#34;&#34;&#34;
     return self.y</code></pre>
 </details>
 </dd>
@@ -7214,13 +7859,24 @@ def ellipse(self, x, y, w, h, style=None):
 <span>def <span class="ident">header</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Header to be implemented in your own inherited class</p></div>
+<div class="desc"><p>Header to be implemented in your own inherited class</p>
+<p>This is automatically called by <code>add_page()</code>
+and should not be called directly by the user application.
+The default implementation performs nothing: you have to override this method
+in a subclass to implement your own rendering logic.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def header(self):
-    &#34;&#34;&#34;Header to be implemented in your own inherited class&#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+    Header to be implemented in your own inherited class
+
+    This is automatically called by `add_page()`
+    and should not be called directly by the user application.
+    The default implementation performs nothing: you have to override this method
+    in a subclass to implement your own rendering logic.
+    &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.image"><code class="name flex">
@@ -7332,7 +7988,7 @@ def image(
     else:
         name, img = str(name), name
     if name not in self.images:
-        info = get_img_info(img or load_resource(name), self.image_filter)
+        info = get_img_info(img or load_image(name), self.image_filter)
         info[&#34;i&#34;] = len(self.images) + 1
         self.images[name] = info
     else:
@@ -7927,13 +8583,24 @@ def multi_cell(
 <span>def <span class="ident">open</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Begin document</p></div>
+<div class="desc"><p>Starts the generation of the PDF document.
+It is not necessary to call it explicitly because <code>add_page()</code> does it automatically.</p>
+<h2 id="notes">Notes</h2>
+<p>This method does not add any page.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def open(self):
-    &#34;&#34;&#34;Begin document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Starts the generation of the PDF document.
+    It is not necessary to call it explicitly because `add_page()` does it automatically.
+
+    Notes
+    -----
+
+    This method does not add any page.
+    &#34;&#34;&#34;
     self.state = DocumentState.READY</code></pre>
 </details>
 </dd>
@@ -7991,13 +8658,13 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
 <span>def <span class="ident">page_no</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get current page number</p></div>
+<div class="desc"><p>Get the current page number</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def page_no(self):
-    &#34;&#34;&#34;Get current page number&#34;&#34;&#34;
+    &#34;&#34;&#34;Get the current page number&#34;&#34;&#34;
     return self.page</code></pre>
 </details>
 </dd>
@@ -8253,13 +8920,20 @@ def rotation(self, angle, x=None, y=None):
 <span>def <span class="ident">set_author</span></span>(<span>self, author)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Author of document</p></div>
+<div class="desc"><p>Defines the author of the document.</p>
+<h2 id="args">Args</h2>
+<p>author(str): the name of the author</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_author(self, author):
-    &#34;&#34;&#34;Author of document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the author of the document.
+
+    Args:
+        author(str): the name of the author
+    &#34;&#34;&#34;
     self.author = author</code></pre>
 </details>
 </dd>
@@ -8300,11 +8974,15 @@ in the unit specified to FPDF constructor</dd>
 <span>def <span class="ident">set_compression</span></span>(<span>self, compress)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set page compression using the zlib/deflate method (FlateDecode)</p>
+<div class="desc"><p>Activates or deactivates page compression.</p>
+<p>When activated, the internal representation of each page is compressed
+using the zlib/deflate method (FlateDecode), which leads to a compression ratio
+of about 2 for the resulting document.</p>
+<p>Page compression is enabled by default.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>compress</code></strong> :&ensp;<code>bool</code></dt>
-<dd>enable page compression or not</dd>
+<dd>indicates if compression should be enabled</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -8312,10 +8990,16 @@ in the unit specified to FPDF constructor</dd>
 </summary>
 <pre><code class="python">def set_compression(self, compress):
     &#34;&#34;&#34;
-    Set page compression using the zlib/deflate method (FlateDecode)
+    Activates or deactivates page compression.
+
+    When activated, the internal representation of each page is compressed
+    using the zlib/deflate method (FlateDecode), which leads to a compression ratio
+    of about 2 for the resulting document.
+
+    Page compression is enabled by default.
 
     Args:
-        compress (bool): enable page compression or not
+        compress (bool): indicates if compression should be enabled
     &#34;&#34;&#34;
     self.compress = compress</code></pre>
 </details>
@@ -8338,13 +9022,25 @@ in the unit specified to FPDF constructor</dd>
 <span>def <span class="ident">set_creator</span></span>(<span>self, creator)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Creator of document</p></div>
+<div class="desc"><p>Defines the creator of the document.
+This is typically the name of the application that generates the PDF.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>creator</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of the PDF creator</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_creator(self, creator):
-    &#34;&#34;&#34;Creator of document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the creator of the document.
+    This is typically the name of the application that generates the PDF.
+
+    Args:
+        creator (str): name of the PDF creator
+    &#34;&#34;&#34;
     self.creator = creator</code></pre>
 </details>
 </dd>
@@ -8352,14 +9048,22 @@ in the unit specified to FPDF constructor</dd>
 <span>def <span class="ident">set_display_mode</span></span>(<span>self, zoom, layout='continuous')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set display mode in viewer</p>
+<div class="desc"><p>Defines the way the document is to be displayed by the viewer.</p>
+<p>It allows to set tje zoom level: pages can be displayed entirely on screen,
+occupy the full width of the window, use the real size,
+be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).</p>
+<p>The page layout can also be specified: single page at a time, continuous display, two columns or viewer default.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>zoom</code></strong></dt>
-<dd>either 'fullpage', 'fullwidth', 'real', 'default',
-or a number, interpreted as a percentage.</dd>
+<dd>either "fullpage", "fullwidth", "real", "default",
+or a number indicating the zooming factor to use, interpreted as a percentage.
+The zoom level set by default is "default".</dd>
 <dt><strong><code>layout</code></strong> :&ensp;<code>str</code></dt>
-<dd>either "single", "continuous" or "two".</dd>
+<dd>either "single", "continuous", "two" or "default",
+meaning to use the viewer default mode.
+The layout set by default is "default",
+and this method default value is "continuous".</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -8367,21 +9071,31 @@ or a number, interpreted as a percentage.</dd>
 </summary>
 <pre><code class="python">def set_display_mode(self, zoom, layout=&#34;continuous&#34;):
     &#34;&#34;&#34;
-    Set display mode in viewer
+    Defines the way the document is to be displayed by the viewer.
+
+    It allows to set tje zoom level: pages can be displayed entirely on screen,
+    occupy the full width of the window, use the real size,
+    be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).
+
+    The page layout can also be specified: single page at a time, continuous display, two columns or viewer default.
 
     Args:
-        zoom: either &#39;fullpage&#39;, &#39;fullwidth&#39;, &#39;real&#39;, &#39;default&#39;,
-            or a number, interpreted as a percentage.
-        layout (str): either &#34;single&#34;, &#34;continuous&#34; or &#34;two&#34;.
+        zoom: either &#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;,
+            or a number indicating the zooming factor to use, interpreted as a percentage.
+            The zoom level set by default is &#34;default&#34;.
+        layout (str): either &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
+            meaning to use the viewer default mode.
+            The layout set by default is &#34;default&#34;,
+            and this method default value is &#34;continuous&#34;.
     &#34;&#34;&#34;
     if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
         self.zoom_mode = zoom
-    else:
+    elif zoom != &#34;default&#34;:
         raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
     if layout in LAYOUT_NAMES:
         self.layout_mode = layout
-    else:
+    elif layout != &#34;default&#34;:
         raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)</code></pre>
 </details>
 </dd>
@@ -8389,30 +9103,75 @@ or a number, interpreted as a percentage.</dd>
 <span>def <span class="ident">set_doc_option</span></span>(<span>self, opt, value)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set document option</p></div>
+<div class="desc"><p>Defines a document option.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>opt</code></strong> :&ensp;<code>str</code></dt>
+<dd>name of the option to set</dd>
+</dl>
+<p>value (str) option value</p>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;2.4.0</p>
+<p>Simply set the <code>core_fonts_encoding</code> property as a replacement.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_doc_option(self, opt, value):
-    &#34;&#34;&#34;Set document option&#34;&#34;&#34;
-    if opt == &#34;core_fonts_encoding&#34;:
-        self.core_fonts_encoding = value
-    else:
-        raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)</code></pre>
+    &#34;&#34;&#34;
+    Defines a document option.
+
+    Args:
+        opt (str): name of the option to set
+        value (str) option value
+
+    .. deprecated:: 2.4.0
+        Simply set the `core_fonts_encoding` property as a replacement.
+    &#34;&#34;&#34;
+    warnings.warn(
+        &#34;set_doc_option() is deprecated. &#34;
+        &#34;Simply set the `core_fonts_encoding` property as a replacement.&#34;,
+        PendingDeprecationWarning,
+    )
+    if opt != &#34;core_fonts_encoding&#34;:
+        raise FPDFException(f&#39;Unknown document option &#34;{opt}&#34;&#39;)
+    self.core_fonts_encoding = value</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_draw_color"><code class="name flex">
 <span>def <span class="ident">set_draw_color</span></span>(<span>self, r, g=-1, b=-1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set color for all stroking operations</p></div>
+<div class="desc"><p>Defines the color used for all stroking operations (lines, rectangles and cell borders).
+It can be expressed in RGB components or grey scale.
+The method can be called before the first page is created and the value is retained from page to page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>r</code></strong> :&ensp;<code>int</code></dt>
+<dd>if <code>g</code> and <code>b</code> are given, this indicates the red component.
+Else, this indicates the grey level. The value must be between 0 and 255.</dd>
+<dt><strong><code>g</code></strong> :&ensp;<code>int</code></dt>
+<dd>green component (between 0 and 255)</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>int</code></dt>
+<dd>blue component (between 0 and 255)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_draw_color(self, r, g=-1, b=-1):
-    &#34;&#34;&#34;Set color for all stroking operations&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the color used for all stroking operations (lines, rectangles and cell borders).
+    It can be expressed in RGB components or grey scale.
+    The method can be called before the first page is created and the value is retained from page to page.
+
+    Args:
+        r (int): if `g` and `b` are given, this indicates the red component.
+            Else, this indicates the grey level. The value must be between 0 and 255.
+        g (int): green component (between 0 and 255)
+        b (int): blue component (between 0 and 255)
+    &#34;&#34;&#34;
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.draw_color = f&#34;{r / 255:.3f} G&#34;
     else:
@@ -8425,13 +9184,35 @@ or a number, interpreted as a percentage.</dd>
 <span>def <span class="ident">set_fill_color</span></span>(<span>self, r, g=-1, b=-1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set color for all filling operations</p></div>
+<div class="desc"><p>Defines the color used for all filling operations (filled rectangles and cell backgrounds).
+It can be expressed in RGB components or grey scale.
+The method can be called before the first page is created and the value is retained from page to page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>r</code></strong> :&ensp;<code>int</code></dt>
+<dd>if <code>g</code> and <code>b</code> are given, this indicates the red component.
+Else, this indicates the grey level. The value must be between 0 and 255.</dd>
+<dt><strong><code>g</code></strong> :&ensp;<code>int</code></dt>
+<dd>green component (between 0 and 255)</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>int</code></dt>
+<dd>blue component (between 0 and 255)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_fill_color(self, r, g=-1, b=-1):
-    &#34;&#34;&#34;Set color for all filling operations&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the color used for all filling operations (filled rectangles and cell backgrounds).
+    It can be expressed in RGB components or grey scale.
+    The method can be called before the first page is created and the value is retained from page to page.
+
+    Args:
+        r (int): if `g` and `b` are given, this indicates the red component.
+            Else, this indicates the grey level. The value must be between 0 and 255.
+        g (int): green component (between 0 and 255)
+        b (int): blue component (between 0 and 255)
+    &#34;&#34;&#34;
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.fill_color = f&#34;{r / 255:.3f} g&#34;
     else:
@@ -8570,13 +9351,23 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
 <span>def <span class="ident">set_font_size</span></span>(<span>self, size)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set font size in points</p></div>
+<div class="desc"><p>Configure the font size in points</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>size</code></strong> :&ensp;<code>int</code></dt>
+<dd>font size in points</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_font_size(self, size):
-    &#34;&#34;&#34;Set font size in points&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Configure the font size in points
+
+    Args:
+        size (int): font size in points
+    &#34;&#34;&#34;
     if self.font_size_pt == size:
         return
     self.font_size_pt = size
@@ -8620,13 +9411,23 @@ meaning to use the best image filter given the images provided.</dd>
 <span>def <span class="ident">set_keywords</span></span>(<span>self, keywords)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Keywords of document</p></div>
+<div class="desc"><p>Associate keywords with the document</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>keywords</code></strong> :&ensp;<code>str</code></dt>
+<dd>a space-separated list of words</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_keywords(self, keywords):
-    &#34;&#34;&#34;Keywords of document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Associate keywords with the document
+
+    Args:
+        keywords (str): a space-separated list of words
+    &#34;&#34;&#34;
     self.keywords = keywords</code></pre>
 </details>
 </dd>
@@ -8637,7 +9438,12 @@ meaning to use the best image filter given the images provided.</dd>
 <div class="desc"><p>A language identifier specifying the natural language for all text in the document
 except where overridden by language specifications for structure elements or marked content.
 A language identifier can either be the empty text string, to indicate that the language is unknown,
-or a Language-Tag as defined in RFC 3066, "Tags for the Identification of Languages".</p></div>
+or a Language-Tag as defined in RFC 3066, "Tags for the Identification of Languages".</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>lang</code></strong> :&ensp;<code>str</code></dt>
+<dd>the document main language</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -8648,6 +9454,9 @@ or a Language-Tag as defined in RFC 3066, "Tags for the Identification of Langua
     except where overridden by language specifications for structure elements or marked content.
     A language identifier can either be the empty text string, to indicate that the language is unknown,
     or a Language-Tag as defined in RFC 3066, &#34;Tags for the Identification of Languages&#34;.
+
+    Args:
+        lang (str): the document main language
     &#34;&#34;&#34;
     self.lang = lang</code></pre>
 </details>
@@ -8684,13 +9493,27 @@ Also sets the current FPDF.x on the page to this minimum horizontal position.</p
 <span>def <span class="ident">set_line_width</span></span>(<span>self, width)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set line width</p></div>
+<div class="desc"><p>Defines the line width of all stroking operations (lines, rectangles and cell borders).
+By default, the value equals 0.2 mm.
+The method can be called before the first page is created and the value is retained from page to page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>width</code></strong> :&ensp;<code>int</code></dt>
+<dd>the width in user unit</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_line_width(self, width):
-    &#34;&#34;&#34;Set line width&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the line width of all stroking operations (lines, rectangles and cell borders).
+    By default, the value equals 0.2 mm.
+    The method can be called before the first page is created and the value is retained from page to page.
+
+    Args:
+        width (int): the width in user unit
+    &#34;&#34;&#34;
     self.line_width = width
     if self.page &gt; 0:
         self._out(f&#34;{width * self.k:.2f} w&#34;)</code></pre>
@@ -8905,19 +9728,31 @@ After calling this method, calls to <code>start_section</code> will render secti
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_stretching"><code class="name flex">
-<span>def <span class="ident">set_stretching</span></span>(<span>self, factor)</span>
+<span>def <span class="ident">set_stretching</span></span>(<span>self, stretching)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set from stretch factor percents (default: 100.0)</p></div>
+<div class="desc"><p>Sets horizontal font stretching.
+By default, no stretching is set (which is equivalent to a value of 100).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>stretching</code></strong> :&ensp;<code>int</code></dt>
+<dd>horizontal stretching (scaling) in percents.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_stretching(self, factor):
-    &#34;&#34;&#34;Set from stretch factor percents (default: 100.0)&#34;&#34;&#34;
-    if self.font_stretching == factor:
+<pre><code class="python">def set_stretching(self, stretching):
+    &#34;&#34;&#34;
+    Sets horizontal font stretching.
+    By default, no stretching is set (which is equivalent to a value of 100).
+
+    Args:
+        stretching (int): horizontal stretching (scaling) in percents.
+    &#34;&#34;&#34;
+    if self.font_stretching == stretching:
         return
-    self.font_stretching = factor
+    self.font_stretching = stretching
     if self.page &gt; 0:
         self._out(f&#34;BT {self.font_stretching:.2f} Tz ET&#34;)</code></pre>
 </details>
@@ -8926,13 +9761,23 @@ After calling this method, calls to <code>start_section</code> will render secti
 <span>def <span class="ident">set_subject</span></span>(<span>self, subject)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Subject of document</p></div>
+<div class="desc"><p>Defines the subject of the document.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>subject</code></strong> :&ensp;<code>str</code></dt>
+<dd>the document main subject</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_subject(self, subject):
-    &#34;&#34;&#34;Subject of document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the subject of the document.
+
+    Args:
+        subject (str): the document main subject
+    &#34;&#34;&#34;
     self.subject = subject</code></pre>
 </details>
 </dd>
@@ -8940,13 +9785,35 @@ After calling this method, calls to <code>start_section</code> will render secti
 <span>def <span class="ident">set_text_color</span></span>(<span>self, r, g=-1, b=-1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set color for text</p></div>
+<div class="desc"><p>Defines the color used for text.
+It can be expressed in RGB components or grey scale.
+The method can be called before the first page is created and the value is retained from page to page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>r</code></strong> :&ensp;<code>int</code></dt>
+<dd>if <code>g</code> and <code>b</code> are given, this indicates the red component.
+Else, this indicates the grey level. The value must be between 0 and 255.</dd>
+<dt><strong><code>g</code></strong> :&ensp;<code>int</code></dt>
+<dd>green component (between 0 and 255)</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>int</code></dt>
+<dd>blue component (between 0 and 255)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_text_color(self, r, g=-1, b=-1):
-    &#34;&#34;&#34;Set color for text&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the color used for text.
+    It can be expressed in RGB components or grey scale.
+    The method can be called before the first page is created and the value is retained from page to page.
+
+    Args:
+        r (int): if `g` and `b` are given, this indicates the red component.
+            Else, this indicates the grey level. The value must be between 0 and 255.
+        g (int): green component (between 0 and 255)
+        b (int): blue component (between 0 and 255)
+    &#34;&#34;&#34;
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.text_color = f&#34;{r / 255:.3f} g&#34;
     else:
@@ -8957,13 +9824,23 @@ After calling this method, calls to <code>start_section</code> will render secti
 <span>def <span class="ident">set_title</span></span>(<span>self, title)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Title of document</p></div>
+<div class="desc"><p>Defines the title of the document.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>the title</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_title(self, title):
-    &#34;&#34;&#34;Title of document&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the title of the document.
+
+    Args:
+        title (str): the title
+    &#34;&#34;&#34;
     self.title = title</code></pre>
 </details>
 </dd>
@@ -8995,13 +9872,25 @@ After calling this method, calls to <code>start_section</code> will render secti
 <span>def <span class="ident">set_x</span></span>(<span>self, x)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set x position</p></div>
+<div class="desc"><p>Defines the abscissa of the current position.
+If the value provided is negative, it is relative to the right of the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>the new current abscissa</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_x(self, x):
-    &#34;&#34;&#34;Set x position&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the abscissa of the current position.
+    If the value provided is negative, it is relative to the right of the page.
+
+    Args:
+        x (int): the new current abscissa
+    &#34;&#34;&#34;
     self.x = x if x &gt;= 0 else self.w + x</code></pre>
 </details>
 </dd>
@@ -9026,13 +9915,28 @@ After calling this method, calls to <code>start_section</code> will render secti
 <span>def <span class="ident">set_xy</span></span>(<span>self, x, y)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set x and y positions</p></div>
+<div class="desc"><p>Defines the abscissa and ordinate of the current position.
+If the values provided are negative, they are relative respectively to the right and bottom of the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>the new current abscissa</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>the new current ordinate</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_xy(self, x, y):
-    &#34;&#34;&#34;Set x and y positions&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Defines the abscissa and ordinate of the current position.
+    If the values provided are negative, they are relative respectively to the right and bottom of the page.
+
+    Args:
+        x (int): the new current abscissa
+        y (int): the new current ordinate
+    &#34;&#34;&#34;
     self.set_y(y)
     self.set_x(x)</code></pre>
 </details>
@@ -9041,13 +9945,25 @@ After calling this method, calls to <code>start_section</code> will render secti
 <span>def <span class="ident">set_y</span></span>(<span>self, y)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Set y position and reset x</p></div>
+<div class="desc"><p>Moves the current abscissa back to the left margin and sets the ordinate.
+If the value provided is negative, it is relative to the bottom of the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>the new current ordinate</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def set_y(self, y):
-    &#34;&#34;&#34;Set y position and reset x&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Moves the current abscissa back to the left margin and sets the ordinate.
+    If the value provided is negative, it is relative to the bottom of the page.
+
+    Args:
+        y (int): the new current ordinate
+    &#34;&#34;&#34;
     self.x = self.l_margin
     self.y = y if y &gt;= 0 else self.h + y</code></pre>
 </details>
@@ -9102,14 +10018,34 @@ def start_section(self, name, level=0):
 <span>def <span class="ident">text</span></span>(<span>self, x, y, txt='')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Output a string</p></div>
+<div class="desc"><p>Prints a character string. The origin is on the left of the first character,
+on the baseline. This method allows placing a string precisely on the page,
+but it is usually easier to use the <code>cell()</code>, <code>multi_cell() or </code>write()` methods.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>abscissa of the origin</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>ordinate of the origin</dd>
+<dt><strong><code>txt</code></strong> :&ensp;<code>str</code></dt>
+<dd>string to print</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
 def text(self, x, y, txt=&#34;&#34;):
-    &#34;&#34;&#34;Output a string&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Prints a character string. The origin is on the left of the first character,
+    on the baseline. This method allows placing a string precisely on the page,
+    but it is usually easier to use the `cell()`, `multi_cell() or `write()` methods.
+
+    Args:
+        x (int): abscissa of the origin
+        y (int): ordinate of the origin
+        txt (str): string to print
+    &#34;&#34;&#34;
     if not self.font_family:
         raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
     txt = self.normalize_text(txt)
@@ -9179,7 +10115,8 @@ def text_annotation(self, x, y, text):
 <dd>
 <div class="desc"><p>Ensures that all rendering performed in this context appear on a single page
 by performing page break beforehand if need be.</p>
-<p>Note that using this method means to duplicate the FPDF <code>bytearray</code> buffer:
+<h2 id="notes">Notes</h2>
+<p>Using this method means to duplicate the FPDF <code>bytearray</code> buffer:
 when generating large PDFs, doubling memory usage may be troublesome.</p></div>
 <details class="source">
 <summary>
@@ -9191,7 +10128,10 @@ def unbreakable(self):
     Ensures that all rendering performed in this context appear on a single page
     by performing page break beforehand if need be.
 
-    Note that using this method means to duplicate the FPDF `bytearray` buffer:
+    Notes
+    -----
+
+    Using this method means to duplicate the FPDF `bytearray` buffer:
     when generating large PDFs, doubling memory usage may be troublesome.
     &#34;&#34;&#34;
     prev_page, prev_y = self.page, self.y

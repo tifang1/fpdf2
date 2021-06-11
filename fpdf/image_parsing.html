@@ -38,20 +38,21 @@ from .errors import FPDFException
 SUPPORTED_IMAGE_FILTERS = (&#34;AUTO&#34;, &#34;FlateDecode&#34;, &#34;DCTDecode&#34;, &#34;JPXDecode&#34;)
 
 
-def load_resource(filename, reason=&#34;image&#34;):
-    &#34;&#34;&#34;Load external file&#34;&#34;&#34;
+def load_image(filename):
+    &#34;&#34;&#34;
+    This method is used to load external resources, such as images.
+    It is automatically called when resource added to document by `FPDF.image()`.
+    &#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
     if isinstance(filename, BytesIO):
         return filename
     # by default loading from network is allowed for all images
-    if reason == &#34;image&#34;:
-        if filename.startswith((&#34;http://&#34;, &#34;https://&#34;)):
-            f = BytesIO(urlopen(filename).read())
-        else:
-            with open(filename, &#34;rb&#34;) as fl:
-                f = BytesIO(fl.read())
-        return f
-    raise FPDFException(f&#39;Unknown resource loading reason &#34;{reason}&#34;&#39;)
+    if filename.startswith((&#34;http://&#34;, &#34;https://&#34;)):
+        f = BytesIO(urlopen(filename).read())
+    else:
+        with open(filename, &#34;rb&#34;) as fl:
+            f = BytesIO(fl.read())
+    return f
 
 
 def get_img_info(img, image_filter=&#34;AUTO&#34;):
@@ -214,29 +215,31 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
     return info</code></pre>
 </details>
 </dd>
-<dt id="fpdf.image_parsing.load_resource"><code class="name flex">
-<span>def <span class="ident">load_resource</span></span>(<span>filename, reason='image')</span>
+<dt id="fpdf.image_parsing.load_image"><code class="name flex">
+<span>def <span class="ident">load_image</span></span>(<span>filename)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load external file</p></div>
+<div class="desc"><p>This method is used to load external resources, such as images.
+It is automatically called when resource added to document by <code>FPDF.image()</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def load_resource(filename, reason=&#34;image&#34;):
-    &#34;&#34;&#34;Load external file&#34;&#34;&#34;
+<pre><code class="python">def load_image(filename):
+    &#34;&#34;&#34;
+    This method is used to load external resources, such as images.
+    It is automatically called when resource added to document by `FPDF.image()`.
+    &#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
     if isinstance(filename, BytesIO):
         return filename
     # by default loading from network is allowed for all images
-    if reason == &#34;image&#34;:
-        if filename.startswith((&#34;http://&#34;, &#34;https://&#34;)):
-            f = BytesIO(urlopen(filename).read())
-        else:
-            with open(filename, &#34;rb&#34;) as fl:
-                f = BytesIO(fl.read())
-        return f
-    raise FPDFException(f&#39;Unknown resource loading reason &#34;{reason}&#34;&#39;)</code></pre>
+    if filename.startswith((&#34;http://&#34;, &#34;https://&#34;)):
+        f = BytesIO(urlopen(filename).read())
+    else:
+        with open(filename, &#34;rb&#34;) as fl:
+            f = BytesIO(fl.read())
+    return f</code></pre>
 </details>
 </dd>
 </dl>
@@ -258,7 +261,7 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="fpdf.image_parsing.get_img_info" href="#fpdf.image_parsing.get_img_info">get_img_info</a></code></li>
-<li><code><a title="fpdf.image_parsing.load_resource" href="#fpdf.image_parsing.load_resource">load_resource</a></code></li>
+<li><code><a title="fpdf.image_parsing.load_image" href="#fpdf.image_parsing.load_image">load_image</a></code></li>
 </ul>
 </li>
 </ul>
