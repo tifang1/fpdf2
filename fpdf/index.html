@@ -1652,7 +1652,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                         txt_frag_escaped = escape_parens(
                             txt_frag.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
                         )
-                        for char in txt_frag_escaped:
+                        for char in txt_frag:
                             self.current_font[&#34;subset&#34;].append(ord(char))
                     else:
                         txt_frag_escaped = escape_parens(txt_frag)
@@ -4140,7 +4140,7 @@ def cell(
                     txt_frag_escaped = escape_parens(
                         txt_frag.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
                     )
-                    for char in txt_frag_escaped:
+                    for char in txt_frag:
                         self.current_font[&#34;subset&#34;].append(ord(char))
                 else:
                     txt_frag_escaped = escape_parens(txt_frag)
