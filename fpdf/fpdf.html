@@ -1780,27 +1780,31 @@ class FPDF:
 
     def _perform_page_break_if_need_be(self, h):
         if (
-            self.y + h &gt;= self.page_break_trigger
+            self.y + h &gt; self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
         ):
             LOGGER.debug(
-                &#34;Page break on page %d at y=%d for element of height %d&#34;,
+                &#34;Page break on page %d at y=%d for element of height %d &gt; %d&#34;,
                 self.page,
                 self.y,
                 h,
+                self.page_break_trigger,
             )
-            x, ws = self.x, self.ws
-            if ws &gt; 0:
-                self.ws = 0
-                self._out(&#34;0 Tw&#34;)
-            self.add_page(same=True)
-            self.x = x  # restore x but not y after drawing header
-            if ws &gt; 0:
-                self.ws = ws
-                self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
+            self._perform_page_break()
             return True
         return False
+
+    def _perform_page_break(self):
+        x, ws = self.x, self.ws
+        if ws &gt; 0:
+            self.ws = 0
+            self._out(&#34;0 Tw&#34;)
+        self.add_page(same=True)
+        self.x = x  # restore x but not y after drawing header
+        if ws &gt; 0:
+            self.ws = ws
+            self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
 
     @check_page
     def multi_cell(
@@ -3284,12 +3288,12 @@ class FPDF:
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
-        if prev_y + y_scroll &gt;= self.page_break_trigger:
+        if prev_y + y_scroll &gt; self.page_break_trigger or recorder.page &gt; prev_page:
             LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
             recorder.rewind()
             # pylint: disable=protected-access
             # Performing this call through .pdf so that it does not get recorded &amp; replayed:
-            assert recorder.pdf._perform_page_break_if_need_be(y_scroll)
+            recorder.pdf._perform_page_break()
             recorder.replay()
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
 
@@ -5113,27 +5117,31 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def _perform_page_break_if_need_be(self, h):
         if (
-            self.y + h &gt;= self.page_break_trigger
+            self.y + h &gt; self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
         ):
             LOGGER.debug(
-                &#34;Page break on page %d at y=%d for element of height %d&#34;,
+                &#34;Page break on page %d at y=%d for element of height %d &gt; %d&#34;,
                 self.page,
                 self.y,
                 h,
+                self.page_break_trigger,
             )
-            x, ws = self.x, self.ws
-            if ws &gt; 0:
-                self.ws = 0
-                self._out(&#34;0 Tw&#34;)
-            self.add_page(same=True)
-            self.x = x  # restore x but not y after drawing header
-            if ws &gt; 0:
-                self.ws = ws
-                self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
+            self._perform_page_break()
             return True
         return False
+
+    def _perform_page_break(self):
+        x, ws = self.x, self.ws
+        if ws &gt; 0:
+            self.ws = 0
+            self._out(&#34;0 Tw&#34;)
+        self.add_page(same=True)
+        self.x = x  # restore x but not y after drawing header
+        if ws &gt; 0:
+            self.ws = ws
+            self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
 
     @check_page
     def multi_cell(
@@ -6617,12 +6625,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
-        if prev_y + y_scroll &gt;= self.page_break_trigger:
+        if prev_y + y_scroll &gt; self.page_break_trigger or recorder.page &gt; prev_page:
             LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
             recorder.rewind()
             # pylint: disable=protected-access
             # Performing this call through .pdf so that it does not get recorded &amp; replayed:
-            assert recorder.pdf._perform_page_break_if_need_be(y_scroll)
+            recorder.pdf._perform_page_break()
             recorder.replay()
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
 
@@ -10139,12 +10147,12 @@ def unbreakable(self):
     LOGGER.debug(&#34;Starting unbreakable block&#34;)
     yield recorder
     y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
-    if prev_y + y_scroll &gt;= self.page_break_trigger:
+    if prev_y + y_scroll &gt; self.page_break_trigger or recorder.page &gt; prev_page:
         LOGGER.debug(&#34;Performing page jump due to unbreakable height&#34;)
         recorder.rewind()
         # pylint: disable=protected-access
         # Performing this call through .pdf so that it does not get recorded &amp; replayed:
-        assert recorder.pdf._perform_page_break_if_need_be(y_scroll)
+        recorder.pdf._perform_page_break()
         recorder.replay()
     LOGGER.debug(&#34;Ending unbreakable block&#34;)</code></pre>
 </details>
