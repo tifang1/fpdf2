@@ -42,6 +42,157 @@ from html.parser import HTMLParser
 LOGGER = logging.getLogger(__name__)
 BULLET_WIN1252 = &#34;\x95&#34;  # BULLET character in Windows-1252 encoding
 
+COLOR_DICT = {
+    &#34;black&#34;: &#34;#000000&#34;,
+    &#34;navy&#34;: &#34;#000080&#34;,
+    &#34;darkblue&#34;: &#34;#00008b&#34;,
+    &#34;mediumblue&#34;: &#34;#0000cd&#34;,
+    &#34;blue&#34;: &#34;#0000ff&#34;,
+    &#34;darkgreen&#34;: &#34;#006400&#34;,
+    &#34;green&#34;: &#34;#008000&#34;,
+    &#34;teal&#34;: &#34;#008080&#34;,
+    &#34;darkcyan&#34;: &#34;#008b8b&#34;,
+    &#34;deepskyblue&#34;: &#34;#00bfff&#34;,
+    &#34;darkturquoise&#34;: &#34;#00ced1&#34;,
+    &#34;mediumspringgreen&#34;: &#34;#00fa9a&#34;,
+    &#34;lime&#34;: &#34;#00ff00&#34;,
+    &#34;springgreen&#34;: &#34;#00ff7f&#34;,
+    &#34;aqua&#34;: &#34;#00ffff&#34;,
+    &#34;cyan&#34;: &#34;#00ffff&#34;,
+    &#34;midnightblue&#34;: &#34;#191970&#34;,
+    &#34;dodgerblue&#34;: &#34;#1e90ff&#34;,
+    &#34;lightseagreen&#34;: &#34;#20b2aa&#34;,
+    &#34;forestgreen&#34;: &#34;#228b22&#34;,
+    &#34;seagreen&#34;: &#34;#2e8b57&#34;,
+    &#34;darkslategray&#34;: &#34;#2f4f4f&#34;,
+    &#34;darkslategrey&#34;: &#34;#2f4f4f&#34;,
+    &#34;limegreen&#34;: &#34;#32cd32&#34;,
+    &#34;mediumseagreen&#34;: &#34;#3cb371&#34;,
+    &#34;turquoise&#34;: &#34;#40e0d0&#34;,
+    &#34;royalblue&#34;: &#34;#4169e1&#34;,
+    &#34;steelblue&#34;: &#34;#4682b4&#34;,
+    &#34;darkslateblue&#34;: &#34;#483d8b&#34;,
+    &#34;mediumturquoise&#34;: &#34;#48d1cc&#34;,
+    &#34;indigo&#34;: &#34;#4b0082&#34;,
+    &#34;darkolivegreen&#34;: &#34;#556b2f&#34;,
+    &#34;cadetblue&#34;: &#34;#5f9ea0&#34;,
+    &#34;cornflowerblue&#34;: &#34;#6495ed&#34;,
+    &#34;rebeccapurple&#34;: &#34;#663399&#34;,
+    &#34;mediumaquamarine&#34;: &#34;#66cdaa&#34;,
+    &#34;dimgray&#34;: &#34;#696969&#34;,
+    &#34;dimgrey&#34;: &#34;#696969&#34;,
+    &#34;slateblue&#34;: &#34;#6a5acd&#34;,
+    &#34;olivedrab&#34;: &#34;#6b8e23&#34;,
+    &#34;slategray&#34;: &#34;#708090&#34;,
+    &#34;slategrey&#34;: &#34;#708090&#34;,
+    &#34;lightslategray&#34;: &#34;#778899&#34;,
+    &#34;lightslategrey&#34;: &#34;#778899&#34;,
+    &#34;mediumslateblue&#34;: &#34;#7b68ee&#34;,
+    &#34;lawngreen&#34;: &#34;#7cfc00&#34;,
+    &#34;chartreuse&#34;: &#34;#7fff00&#34;,
+    &#34;aquamarine&#34;: &#34;#7fffd4&#34;,
+    &#34;maroon&#34;: &#34;#800000&#34;,
+    &#34;purple&#34;: &#34;#800080&#34;,
+    &#34;olive&#34;: &#34;#808000&#34;,
+    &#34;gray&#34;: &#34;#808080&#34;,
+    &#34;grey&#34;: &#34;#808080&#34;,
+    &#34;skyblue&#34;: &#34;#87ceeb&#34;,
+    &#34;lightskyblue&#34;: &#34;#87cefa&#34;,
+    &#34;blueviolet&#34;: &#34;#8a2be2&#34;,
+    &#34;darkred&#34;: &#34;#8b0000&#34;,
+    &#34;darkmagenta&#34;: &#34;#8b008b&#34;,
+    &#34;saddlebrown&#34;: &#34;#8b4513&#34;,
+    &#34;darkseagreen&#34;: &#34;#8fbc8f&#34;,
+    &#34;lightgreen&#34;: &#34;#90ee90&#34;,
+    &#34;mediumpurple&#34;: &#34;#9370db&#34;,
+    &#34;darkviolet&#34;: &#34;#9400d3&#34;,
+    &#34;palegreen&#34;: &#34;#98fb98&#34;,
+    &#34;darkorchid&#34;: &#34;#9932cc&#34;,
+    &#34;yellowgreen&#34;: &#34;#9acd32&#34;,
+    &#34;sienna&#34;: &#34;#a0522d&#34;,
+    &#34;brown&#34;: &#34;#a52a2a&#34;,
+    &#34;darkgray&#34;: &#34;#a9a9a9&#34;,
+    &#34;darkgrey&#34;: &#34;#a9a9a9&#34;,
+    &#34;lightblue&#34;: &#34;#add8e6&#34;,
+    &#34;greenyellow&#34;: &#34;#adff2f&#34;,
+    &#34;paleturquoise&#34;: &#34;#afeeee&#34;,
+    &#34;lightsteelblue&#34;: &#34;#b0c4de&#34;,
+    &#34;powderblue&#34;: &#34;#b0e0e6&#34;,
+    &#34;firebrick&#34;: &#34;#b22222&#34;,
+    &#34;darkgoldenrod&#34;: &#34;#b8860b&#34;,
+    &#34;mediumorchid&#34;: &#34;#ba55d3&#34;,
+    &#34;rosybrown&#34;: &#34;#bc8f8f&#34;,
+    &#34;darkkhaki&#34;: &#34;#bdb76b&#34;,
+    &#34;silver&#34;: &#34;#c0c0c0&#34;,
+    &#34;mediumvioletred&#34;: &#34;#c71585&#34;,
+    &#34;indianred&#34;: &#34;#cd5c5c&#34;,
+    &#34;peru&#34;: &#34;#cd853f&#34;,
+    &#34;chocolate&#34;: &#34;#d2691e&#34;,
+    &#34;tan&#34;: &#34;#d2b48c&#34;,
+    &#34;lightgray&#34;: &#34;#d3d3d3&#34;,
+    &#34;lightgrey&#34;: &#34;#d3d3d3&#34;,
+    &#34;thistle&#34;: &#34;#d8bfd8&#34;,
+    &#34;orchid&#34;: &#34;#da70d6&#34;,
+    &#34;goldenrod&#34;: &#34;#daa520&#34;,
+    &#34;palevioletred&#34;: &#34;#db7093&#34;,
+    &#34;crimson&#34;: &#34;#dc143c&#34;,
+    &#34;gainsboro&#34;: &#34;#dcdcdc&#34;,
+    &#34;plum&#34;: &#34;#dda0dd&#34;,
+    &#34;burlywood&#34;: &#34;#deb887&#34;,
+    &#34;lightcyan&#34;: &#34;#e0ffff&#34;,
+    &#34;lavender&#34;: &#34;#e6e6fa&#34;,
+    &#34;darksalmon&#34;: &#34;#e9967a&#34;,
+    &#34;violet&#34;: &#34;#ee82ee&#34;,
+    &#34;palegoldenrod&#34;: &#34;#eee8aa&#34;,
+    &#34;lightcoral&#34;: &#34;#f08080&#34;,
+    &#34;khaki&#34;: &#34;#f0e68c&#34;,
+    &#34;aliceblue&#34;: &#34;#f0f8ff&#34;,
+    &#34;honeydew&#34;: &#34;#f0fff0&#34;,
+    &#34;azure&#34;: &#34;#f0ffff&#34;,
+    &#34;sandybrown&#34;: &#34;#f4a460&#34;,
+    &#34;wheat&#34;: &#34;#f5deb3&#34;,
+    &#34;beige&#34;: &#34;#f5f5dc&#34;,
+    &#34;whitesmoke&#34;: &#34;#f5f5f5&#34;,
+    &#34;mintcream&#34;: &#34;#f5fffa&#34;,
+    &#34;ghostwhite&#34;: &#34;#f8f8ff&#34;,
+    &#34;salmon&#34;: &#34;#fa8072&#34;,
+    &#34;antiquewhite&#34;: &#34;#faebd7&#34;,
+    &#34;linen&#34;: &#34;#faf0e6&#34;,
+    &#34;lightgoldenrodyellow&#34;: &#34;#fafad2&#34;,
+    &#34;oldlace&#34;: &#34;#fdf5e6&#34;,
+    &#34;red&#34;: &#34;#ff0000&#34;,
+    &#34;fuchsia&#34;: &#34;#ff00ff&#34;,
+    &#34;magenta&#34;: &#34;#ff00ff&#34;,
+    &#34;deeppink&#34;: &#34;#ff1493&#34;,
+    &#34;orangered&#34;: &#34;#ff4500&#34;,
+    &#34;tomato&#34;: &#34;#ff6347&#34;,
+    &#34;hotpink&#34;: &#34;#ff69b4&#34;,
+    &#34;coral&#34;: &#34;#ff7f50&#34;,
+    &#34;darkorange&#34;: &#34;#ff8c00&#34;,
+    &#34;lightsalmon&#34;: &#34;#ffa07a&#34;,
+    &#34;orange&#34;: &#34;#ffa500&#34;,
+    &#34;lightpink&#34;: &#34;#ffb6c1&#34;,
+    &#34;pink&#34;: &#34;#ffc0cb&#34;,
+    &#34;gold&#34;: &#34;#ffd700&#34;,
+    &#34;peachpuff&#34;: &#34;#ffdab9&#34;,
+    &#34;navajowhite&#34;: &#34;#ffdead&#34;,
+    &#34;moccasin&#34;: &#34;#ffe4b5&#34;,
+    &#34;bisque&#34;: &#34;#ffe4c4&#34;,
+    &#34;mistyrose&#34;: &#34;#ffe4e1&#34;,
+    &#34;blanchedalmond&#34;: &#34;#ffebcd&#34;,
+    &#34;papayawhip&#34;: &#34;#ffefd5&#34;,
+    &#34;lavenderblush&#34;: &#34;#fff0f5&#34;,
+    &#34;seashell&#34;: &#34;#fff5ee&#34;,
+    &#34;cornsilk&#34;: &#34;#fff8dc&#34;,
+    &#34;lemonchiffon&#34;: &#34;#fffacd&#34;,
+    &#34;floralwhite&#34;: &#34;#fffaf0&#34;,
+    &#34;snow&#34;: &#34;#fffafa&#34;,
+    &#34;yellow&#34;: &#34;#ffff00&#34;,
+    &#34;lightyellow&#34;: &#34;#ffffe0&#34;,
+    &#34;ivory&#34;: &#34;#fffff0&#34;,
+    &#34;white&#34;: &#34;#ffffff&#34;,
+}
+
 
 def px2mm(px):
     return int(px) * 25.4 / 72
@@ -50,9 +201,19 @@ def px2mm(px):
 def hex2dec(color=&#34;#000000&#34;):
     if not color:
         return None
-    r = int(color[1:3], 16)
-    g = int(color[3:5], 16)
-    b = int(color[5:7], 16)
+
+    # Checks if color is a name and gets the hex value
+    hexcolor = COLOR_DICT.get(color.lower(), color)
+
+    if len(hexcolor) == 4:
+        r = int(hexcolor[1] * 2, 16)
+        g = int(hexcolor[2] * 2, 16)
+        b = int(hexcolor[3] * 2, 16)
+        return r, g, b
+
+    r = int(hexcolor[1:3], 16)
+    g = int(hexcolor[3:5], 16)
+    b = int(hexcolor[5:7], 16)
     return r, g, b
 
 
@@ -570,9 +731,19 @@ class HTMLMixin:
 <pre><code class="python">def hex2dec(color=&#34;#000000&#34;):
     if not color:
         return None
-    r = int(color[1:3], 16)
-    g = int(color[3:5], 16)
-    b = int(color[5:7], 16)
+
+    # Checks if color is a name and gets the hex value
+    hexcolor = COLOR_DICT.get(color.lower(), color)
+
+    if len(hexcolor) == 4:
+        r = int(hexcolor[1] * 2, 16)
+        g = int(hexcolor[2] * 2, 16)
+        b = int(hexcolor[3] * 2, 16)
+        return r, g, b
+
+    r = int(hexcolor[1:3], 16)
+    g = int(hexcolor[3:5], 16)
+    b = int(hexcolor[5:7], 16)
     return r, g, b</code></pre>
 </details>
 </dd>
