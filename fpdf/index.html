@@ -194,6 +194,7 @@ Default to "mm".</dd>
 <dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
 <dd>directory where pickle files
 for TTF font files are kept.
+<code>None</code> disables font chaching.
 The default is <code>True</code>, meaning the current folder.</dd>
 </dl></div>
 <details class="source">
@@ -221,6 +222,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 (width, height) expressed in the given unit. Default to &#34;a4&#34;.
             font_cache_dir (Path or str): directory where pickle files
                 for TTF font files are kept.
+                `None` disables font chaching.
                 The default is `True`, meaning the current folder.
         &#34;&#34;&#34;
         # Initialization of properties
@@ -1057,10 +1059,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
             else:
                 raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
 
-            cache_dir = (
-                Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
-            )
-            unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
+            if self.font_cache_dir is None:
+                cache_dir = unifilename = None
+            else:
+                cache_dir = (
+                    Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+                )
+                unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
             # include numbers in the subset! (if alias present)
             sbarr = list(range(57 if self.str_alias_nb_pages else 32))
@@ -2726,7 +2731,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 self.mtd(font)
 
     def _putTTfontwidths(self, font, maxUni):
-        cw127fname = Path(font[&#34;unifilename&#34;]).with_suffix(&#34;.cw127.pkl&#34;)
+        if font[&#34;unifilename&#34;] is None:
+            cw127fname = None
+        else:
+            cw127fname = Path(font[&#34;unifilename&#34;]).with_suffix(&#34;.cw127.pkl&#34;)
         font_dict = load_cache(cw127fname)
         if font_dict:
             rangeid = font_dict[&#34;rangeid&#34;]
@@ -3615,10 +3623,13 @@ This can be controlled with the <code>font_cache_dir</code> paramater of the <co
         else:
             raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
 
-        cache_dir = (
-            Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
-        )
-        unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
+        if self.font_cache_dir is None:
+            cache_dir = unifilename = None
+        else:
+            cache_dir = (
+                Path() if self.font_cache_dir is True else Path(self.font_cache_dir)
+            )
+            unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
         # include numbers in the subset! (if alias present)
         sbarr = list(range(57 if self.str_alias_nb_pages else 32))
