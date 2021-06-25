@@ -1787,12 +1787,24 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 in_underline,
             )
 
-    def _perform_page_break_if_need_be(self, h):
-        if (
-            self.y + h &gt; self.page_break_trigger
+    def will_page_break(self, height):
+        &#34;&#34;&#34;
+        Let you know if adding an element will trigger a page break,
+        based on its height and the current ordinate (`y` position).
+
+        Args:
+            height (float): height of the section that would be added, e.g. a cell
+
+        Returns: a boolean indicating if a page break would occur
+        &#34;&#34;&#34;
+        return (
+            self.y + height &gt; self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
-        ):
+        )
+
+    def _perform_page_break_if_need_be(self, h):
+        if self.will_page_break(h):
             LOGGER.debug(
                 &#34;Page break on page %d at y=%d for element of height %d &gt; %d&#34;,
                 self.page,
@@ -1863,7 +1875,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
         with multiline text in cells.
 
-        Returns: a boolean indicating if page break was triggered.
+        Returns: a boolean indicating if page break was triggered,
+            or if `split_only == True`: `txt` splitted into lines in an array
         &#34;&#34;&#34;
         page_break_triggered = False
         if split_only:
@@ -5034,7 +5047,8 @@ the background painted.</p>
     Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
     with multiline text in cells.
 
-    Returns: a boolean indicating if page break was triggered.
+    Returns: a boolean indicating if page break was triggered,
+        or if `split_only == True`: &lt;code&gt;txt&lt;/code&gt; splitted into lines in an array
 </code></pre></div>
 <details class="source">
 <summary>
@@ -5088,7 +5102,8 @@ def multi_cell(
     Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
     with multiline text in cells.
 
-    Returns: a boolean indicating if page break was triggered.
+    Returns: a boolean indicating if page break was triggered,
+        or if `split_only == True`: `txt` splitted into lines in an array
     &#34;&#34;&#34;
     page_break_triggered = False
     if split_only:
@@ -6877,6 +6892,39 @@ def unbreakable(self):
     LOGGER.debug(&#34;Ending unbreakable block&#34;)</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.will_page_break"><code class="name flex">
+<span>def <span class="ident">will_page_break</span></span>(<span>self, height)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Let you know if adding an element will trigger a page break,
+based on its height and the current ordinate (<code>y</code> position).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>height</code></strong> :&ensp;<code>float</code></dt>
+<dd>height of the section that would be added, e.g. a cell</dd>
+</dl>
+<p>Returns: a boolean indicating if a page break would occur</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def will_page_break(self, height):
+    &#34;&#34;&#34;
+    Let you know if adding an element will trigger a page break,
+    based on its height and the current ordinate (`y` position).
+
+    Args:
+        height (float): height of the section that would be added, e.g. a cell
+
+    Returns: a boolean indicating if a page break would occur
+    &#34;&#34;&#34;
+    return (
+        self.y + height &gt; self.page_break_trigger
+        and not self.in_footer
+        and self.accept_page_break
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.write"><code class="name flex">
 <span>def <span class="ident">write</span></span>(<span>self, h=None, txt='', link='')</span>
 </code></dt>
@@ -7980,6 +8028,7 @@ def write(
 <li><code><a title="fpdf.FPDF.text_annotation" href="#fpdf.FPDF.text_annotation">text_annotation</a></code></li>
 <li><code><a title="fpdf.FPDF.unbreakable" href="#fpdf.FPDF.unbreakable">unbreakable</a></code></li>
 <li><code><a title="fpdf.FPDF.unifontsubset" href="#fpdf.FPDF.unifontsubset">unifontsubset</a></code></li>
+<li><code><a title="fpdf.FPDF.will_page_break" href="#fpdf.FPDF.will_page_break">will_page_break</a></code></li>
 <li><code><a title="fpdf.FPDF.write" href="#fpdf.FPDF.write">write</a></code></li>
 </ul>
 </li>
