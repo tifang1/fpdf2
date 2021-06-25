@@ -1021,6 +1021,23 @@ class FPDF:
             )
         )
 
+    @check_page
+    def circle(self, x, y, r, style=None):
+        &#34;&#34;&#34;
+        Outputs a circle.
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (int): Abscissa of upper-left bounging box.
+            y (int): Ordinate of upper-left bounging box.
+            r (int): Radius of the circle.
+            style (int): Style of rendering. Possible values are:
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+        &#34;&#34;&#34;
+        self.ellipse(x, y, r, r, style)
+
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
         &#34;&#34;&#34;
         Imports a TrueType, OpenType or Type1 font and makes it available
@@ -4366,6 +4383,23 @@ The default is <code>True</code>, meaning the current folder.</dd>
             )
         )
 
+    @check_page
+    def circle(self, x, y, r, style=None):
+        &#34;&#34;&#34;
+        Outputs a circle.
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (int): Abscissa of upper-left bounging box.
+            y (int): Ordinate of upper-left bounging box.
+            r (int): Radius of the circle.
+            style (int): Style of rendering. Possible values are:
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+        &#34;&#34;&#34;
+        self.ellipse(x, y, r, r, style)
+
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
         &#34;&#34;&#34;
         Imports a TrueType, OpenType or Type1 font and makes it available
@@ -7549,6 +7583,48 @@ def cell(
     return page_break_triggered</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.circle"><code class="name flex">
+<span>def <span class="ident">circle</span></span>(<span>self, x, y, r, style=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs a circle.
+It can be drawn (border only), filled (with no border) or both.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Abscissa of upper-left bounging box.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Ordinate of upper-left bounging box.</dd>
+<dt><strong><code>r</code></strong> :&ensp;<code>int</code></dt>
+<dd>Radius of the circle.</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>int</code></dt>
+<dd>Style of rendering. Possible values are:
+* <code>D</code> or None: draw border. This is the default value.
+* <code>F</code>: fill
+* <code>DF</code> or <code>FD</code>: draw and fill</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def circle(self, x, y, r, style=None):
+    &#34;&#34;&#34;
+    Outputs a circle.
+    It can be drawn (border only), filled (with no border) or both.
+
+    Args:
+        x (int): Abscissa of upper-left bounging box.
+        y (int): Ordinate of upper-left bounging box.
+        r (int): Radius of the circle.
+        style (int): Style of rendering. Possible values are:
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
+    &#34;&#34;&#34;
+    self.ellipse(x, y, r, r, style)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.close"><code class="name flex">
 <span>def <span class="ident">close</span></span>(<span>self)</span>
 </code></dt>
@@ -10375,6 +10451,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.add_page" href="#fpdf.fpdf.FPDF.add_page">add_page</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.alias_nb_pages" href="#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.cell" href="#fpdf.fpdf.FPDF.cell">cell</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.circle" href="#fpdf.fpdf.FPDF.circle">circle</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.close" href="#fpdf.fpdf.FPDF.close">close</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.code39" href="#fpdf.fpdf.FPDF.code39">code39</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.dashed_line" href="#fpdf.fpdf.FPDF.dashed_line">dashed_line</a></code></li>
