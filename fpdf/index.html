@@ -1314,7 +1314,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.links[n] = DestinationXYZ(page=1)
         return n
 
-    def set_link(self, link, y=0, page=-1, zoom=&#34;null&#34;):
+    def set_link(self, link, y=0, x=0, page=-1, zoom=&#34;null&#34;):
         &#34;&#34;&#34;
         Defines the page and position a link points to.
 
@@ -1322,12 +1322,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
             link (int): a link identifier returned by `add_link`.
             y (int): optional ordinate of target position.
                 The default value is 0 (top of page).
+            x (int): optional abscissa of target position.
+                The default value is 0 (top of page).
             page (int): optional number of target page.
                 -1 indicates the current page, which is the default value.
             zoom (int): optional new zoom level after following the link.
                 Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
         &#34;&#34;&#34;
-        self.links[link] = DestinationXYZ(self.page if page == -1 else page, y, zoom)
+        self.links[link] = DestinationXYZ(
+            self.page if page == -1 else page, x=x, y=y, zoom=zoom
+        )
 
     @check_page
     def link(self, x, y, w, h, link, alt_text=None):
@@ -3407,7 +3411,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 raise ValueError(
                     f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
                 )
-        dest = DestinationXYZ(self.page, self.y)
+        dest = DestinationXYZ(self.page, y=self.y)
         struct_elem = None
         if self.section_title_styles:
             with self._marked_sequence(title=name) as marked_content:
@@ -6263,7 +6267,7 @@ The method can be called before the first page is created and the value is retai
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_link"><code class="name flex">
-<span>def <span class="ident">set_link</span></span>(<span>self, link, y=0, page=-1, zoom='null')</span>
+<span>def <span class="ident">set_link</span></span>(<span>self, link, y=0, x=0, page=-1, zoom='null')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the page and position a link points to.</p>
@@ -6273,6 +6277,9 @@ The method can be called before the first page is created and the value is retai
 <dd>a link identifier returned by <code>add_link</code>.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
 <dd>optional ordinate of target position.
+The default value is 0 (top of page).</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>optional abscissa of target position.
 The default value is 0 (top of page).</dd>
 <dt><strong><code>page</code></strong> :&ensp;<code>int</code></dt>
 <dd>optional number of target page.
@@ -6285,7 +6292,7 @@ Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.</
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_link(self, link, y=0, page=-1, zoom=&#34;null&#34;):
+<pre><code class="python">def set_link(self, link, y=0, x=0, page=-1, zoom=&#34;null&#34;):
     &#34;&#34;&#34;
     Defines the page and position a link points to.
 
@@ -6293,12 +6300,16 @@ Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.</
         link (int): a link identifier returned by `add_link`.
         y (int): optional ordinate of target position.
             The default value is 0 (top of page).
+        x (int): optional abscissa of target position.
+            The default value is 0 (top of page).
         page (int): optional number of target page.
             -1 indicates the current page, which is the default value.
         zoom (int): optional new zoom level after following the link.
             Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
     &#34;&#34;&#34;
-    self.links[link] = DestinationXYZ(self.page if page == -1 else page, y, zoom)</code></pre>
+    self.links[link] = DestinationXYZ(
+        self.page if page == -1 else page, x=x, y=y, zoom=zoom
+    )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_margin"><code class="name flex">
@@ -6747,7 +6758,7 @@ def start_section(self, name, level=0):
             raise ValueError(
                 f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
             )
-    dest = DestinationXYZ(self.page, self.y)
+    dest = DestinationXYZ(self.page, y=self.y)
     struct_elem = None
     if self.section_title_styles:
         with self._marked_sequence(title=name) as marked_content:

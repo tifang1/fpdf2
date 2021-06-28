@@ -301,18 +301,23 @@ class Destination(ABC):
 
 
 class DestinationXYZ(Destination):
-    def __init__(self, page, y=0, zoom=&#34;null&#34;, page_as_obj_id=True):
+    def __init__(self, page, x=0, y=0, zoom=&#34;null&#34;, page_as_obj_id=True):
         self.page = page
+        self.x = x
         self.y = y
         self.zoom = zoom
         self.page_as_obj_id = page_as_obj_id
 
     def as_str(self, pdf=None):
-        left = 0
+        left = self.x * pdf.k if pdf else self.x
+        if isinstance(left, float):
+            left = round(left, 2)
         top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
+        if isinstance(top, float):
+            top = round(top, 2)
         # The page object ID is predictable given that _putpages is invoked first in _enddoc:
         page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
-        return f&#34;[{page} /XYZ {left} {top:.2f} {self.zoom}]&#34;</code></pre>
+        return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -481,7 +486,7 @@ inheritance.</p></div>
 </dd>
 <dt id="fpdf.syntax.DestinationXYZ"><code class="flex name class">
 <span>class <span class="ident">DestinationXYZ</span></span>
-<span>(</span><span>page, y=0, zoom='null', page_as_obj_id=True)</span>
+<span>(</span><span>page, x=0, y=0, zoom='null', page_as_obj_id=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
@@ -491,18 +496,23 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DestinationXYZ(Destination):
-    def __init__(self, page, y=0, zoom=&#34;null&#34;, page_as_obj_id=True):
+    def __init__(self, page, x=0, y=0, zoom=&#34;null&#34;, page_as_obj_id=True):
         self.page = page
+        self.x = x
         self.y = y
         self.zoom = zoom
         self.page_as_obj_id = page_as_obj_id
 
     def as_str(self, pdf=None):
-        left = 0
+        left = self.x * pdf.k if pdf else self.x
+        if isinstance(left, float):
+            left = round(left, 2)
         top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
+        if isinstance(top, float):
+            top = round(top, 2)
         # The page object ID is predictable given that _putpages is invoked first in _enddoc:
         page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
-        return f&#34;[{page} /XYZ {left} {top:.2f} {self.zoom}]&#34;</code></pre>
+        return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -521,11 +531,15 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def as_str(self, pdf=None):
-    left = 0
+    left = self.x * pdf.k if pdf else self.x
+    if isinstance(left, float):
+        left = round(left, 2)
     top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
+    if isinstance(top, float):
+        top = round(top, 2)
     # The page object ID is predictable given that _putpages is invoked first in _enddoc:
     page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
-    return f&#34;[{page} /XYZ {left} {top:.2f} {self.zoom}]&#34;</code></pre>
+    return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 </dd>
 </dl>
