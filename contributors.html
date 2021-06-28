@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+	<title>Map of PyFPDF/fpdf2 contributors</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <style>
+    h1 { text-align: center; font-family: Courier; }
+    #contributors-map { height: 35rem; max-width: 64rem; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<h1>Contributors of the <a href="">https://github.com/PyFPDF/fpdf2</a> project</h1>
+<div id="contributors-map"></div>
+<script>
+    const ACCESS_TOKEN = 'pk.eyJ1IjoibGNpbW9uIiwiYSI6ImNrcWYxYXN2YjE5azMyd25tajE4NTk4cWMifQ.ur-iSyNaDXYhc7XDfziEYg';
+
+    const contributors = [
+    {
+        name: 'Lucas-C',
+        location: 'Angers & Nantes, France',
+        pulls: 60,
+        issues: 21,
+    },
+    {
+        name: 'viraj-shah18',
+        location: 'Mumbai, India',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'korniichuk',
+        location: 'Poland',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'WalidGharianiEAGLE',
+        location: 'Germany',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'mjbeam64',
+        location: 'USA',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'Gabbalo',
+        location: 'Bonn, Germany',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'mark-steadman',
+        location: 'London',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'ralhei',
+        location: 'Germany',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'Kewings',
+        location: 'Shanghai',
+        pulls: 0,
+        issues: 5,
+    },
+    {
+        name: 'pandrey2003',
+        location: 'Kyiv, Ukraine',
+        pulls: 0,
+        issues: 2,
+    },
+    {
+        name: 'Stan-C421',
+        location: 'Valencia, Spain',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'mrkaragoz',
+        location: 'Türkiye',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'raspberrypython',
+        location: 'Leeds, UK',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'ivanleoncz',
+        location: 'ROM',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'yohanboniface',
+        location: 'France',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'uovodikiwi',
+        location: 'Brussels',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'Xtrem532',
+        location: 'Germany',
+        pulls: 0,
+        issues: 2,
+    },
+    {
+        name: 'eumiro',
+        location: 'Karlsruhe, Germany',
+        pulls: 13,
+        issues: 2,
+    },
+    {
+        name: 'fbernhart',
+        location: 'Germany',
+        pulls: 4,
+        issues: 0,
+    },
+    {
+        name: 'slightlynybbled',
+        location: 'Virginia',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'jugmac00',
+        location: 'Bavaria',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'devansh-07',
+        location: 'Jabalpur, M.P., India',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'Spenhouet',
+        location: 'Tübingen, Germany',
+        pulls: 0,
+        issues: 2,
+    },
+    {
+        name: 'Aurnytoraink',
+        location: 'France',
+        pulls: 0,
+        issues: 1,
+    },
+    {
+        name: 'MildlyOffensive',
+        location: 'Vancouver, WA',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'cgfrost',
+        location: 'England',
+        pulls: 2,
+        issues: 0,
+    },
+    {
+        name: 'thepacketgeek',
+        location: 'San Francisco Bay Area',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'sergeyfitts',
+        location: 'Saint Petersburg',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'abishek',
+        location: 'Singapore',
+        pulls: 1,
+        issues: 0,
+    },
+    {
+        name: 'wayne530',
+        location: 'San Francisco, CA',
+        pulls: 1,
+        issues: 0,
+    },];
+
+	const cMap = L.map('contributors-map').setView([0, 0], 2);
+
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+        maxZoom: 18,
+        id: 'mapbox/streets-v11',
+        tileSize: 512,
+        zoomOffset: -1,
+        accessToken: ACCESS_TOKEN,
+	}).addTo(cMap);
+
+    const geocoder = L.Control.Geocoder.nominatim();
+    function placeNextContributor() {
+        const contributor = contributors[0];
+        geocoder.geocode(contributor.location, (results) => {
+            const topResult = results[0];
+            console.log(`geocoding ${contributor.name} topResult: ${JSON.stringify(topResult, null, 2)}`);
+            if (topResult) {
+                let popupHtml = `<b>${contributor.name}</b><br>${contributor.location}<br>`;
+                if (contributor.issues) {
+                    popupHtml += `Opened ${contributor.issues} issue`;
+                    if (contributor.issues > 1) popupHtml += 's';
+                }
+                if (contributor.pulls) {
+                    popupHtml += contributor.issues ? ' and s' : 'S';
+                    popupHtml += `ubmitted ${contributor.pulls} PR`;
+                    if (contributor.pulls > 1) popupHtml += 's';
+                }
+                L.marker(topResult.center).bindPopup(popupHtml).addTo(cMap);
+            }
+            contributors.shift();
+            if (contributors.length > 0) {
+                placeNextContributor();
+            }
+        });
+    }
+    placeNextContributor();
+</script>
+</body></html>
