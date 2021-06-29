@@ -7188,7 +7188,6 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
             raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
         if not self.pg_no:
             raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
-        value = &#34;&#34; if value is None else str(value)
         self.texts[self.pg_no][name.lower()] = value
 
     # setitem shortcut (may be further extended)
@@ -7820,7 +7819,6 @@ def write(
         raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
     if not self.pg_no:
         raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
-    value = &#34;&#34; if value is None else str(value)
     self.texts[self.pg_no][name.lower()] = value</code></pre>
 </details>
 </dd>
