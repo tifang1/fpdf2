@@ -2525,13 +2525,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
     def _putfonts(self):
         nf = self.n
-        for diff in self.diffs:
+        for diff in self.diffs.values():
             # Encodings
             self._newobj()
             self._out(
                 &#34;&lt;&lt;/Type /Encoding /BaseEncoding /WinAnsiEncoding &#34;
                 + &#34;/Differences [&#34;
-                + self.diffs[diff]
+                + diff
                 + &#34;]&gt;&gt;&#34;
             )
             self._out(&#34;endobj&#34;)
@@ -2540,7 +2540,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             if &#34;type&#34; in info and info[&#34;type&#34;] != &#34;TTF&#34;:
                 # Font file embedding
                 self._newobj()
-                self.font_files[name][&#34;n&#34;] = self.n
+                info[&#34;n&#34;] = self.n
                 font = (FPDF_FONT_DIR / name).read_bytes()
                 compressed = substr(name, -2) == &#34;.z&#34;
                 if not compressed and &#34;length2&#34; in info:
