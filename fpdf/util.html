@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import locale
+from typing import Union, Iterable
 
 
 def substr(s, start, length=-1):
@@ -69,6 +70,56 @@ def b(s):
     raise ValueError(f&#34;Invalid input: {s}&#34;)
 
 
+def get_scale_factor(unit: Union[str, float, int]) -&gt; float:
+    &#34;&#34;&#34;
+    Get how many pts are in a unit. (k)
+
+    Args:
+        unit (str, float, int): Any of &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34;, &#34;in&#34;, or a number.
+    Returns:
+        float: The number of points in that unit (assuming 72dpi)
+    Raises:
+        ValueError
+    &#34;&#34;&#34;
+    if isinstance(unit, (int, float)):
+        return float(unit)
+
+    if unit == &#34;pt&#34;:
+        return 1
+    if unit == &#34;mm&#34;:
+        return 72 / 25.4
+    if unit == &#34;cm&#34;:
+        return 72 / 2.54
+    if unit == &#34;in&#34;:
+        return 72.0
+    raise ValueError(f&#34;Incorrect unit: {unit}&#34;)
+
+
+def convert_unit(
+    to_convert: Union[float, int, Iterable[Union[float, int, Iterable]]],
+    old_unit: Union[str, float, int],
+    new_unit: Union[str, float, int],
+) -&gt; Union[float, tuple]:
+    &#34;&#34;&#34;
+     Convert a number or sequence of numbers from one unit to another.
+
+     If either unit is a number it will be treated as the number of points per unit.  So 72 would mean 1 inch.
+
+     Args:
+        to_convert (float, int, Iterable): The number / list of numbers, or points, to convert
+        old_unit (str, float, int): A unit accepted by fpdf.FPDF or a number
+        new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number
+    Returns:
+        (float, tuple): to_convert converted from old_unit to new_unit or a tuple of the same
+    &#34;&#34;&#34;
+    unit_conversion_factor = get_scale_factor(new_unit) / get_scale_factor(old_unit)
+    if isinstance(to_convert, Iterable):
+        return tuple(
+            map(lambda i: convert_unit(i, 1, unit_conversion_factor), to_convert)
+        )
+    return to_convert / unit_conversion_factor
+
+
 def dochecks():
     # Check for locale-related bug
     # if (1.1==1):
@@ -104,6 +155,48 @@ dochecks()</code></pre>
     if isinstance(s, int):
         return bytes([s])  # http://bugs.python.org/issue4588
     raise ValueError(f&#34;Invalid input: {s}&#34;)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.util.convert_unit"><code class="name flex">
+<span>def <span class="ident">convert_unit</span></span>(<span>to_convert: Union[float, int, Iterable[Union[float, int, Iterable]]], old_unit: Union[str, float, int], new_unit: Union[str, float, int]) ‑> Union[float, tuple]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert a number or sequence of numbers from one unit to another.</p>
+<p>If either unit is a number it will be treated as the number of points per unit.
+So 72 would mean 1 inch.</p>
+<p>Args:
+to_convert (float, int, Iterable): The number / list of numbers, or points, to convert
+old_unit (str, float, int): A unit accepted by fpdf.FPDF or a number
+new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
+<h2 id="returns">Returns</h2>
+<p>(float, tuple): to_convert converted from old_unit to new_unit or a tuple of the same</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def convert_unit(
+    to_convert: Union[float, int, Iterable[Union[float, int, Iterable]]],
+    old_unit: Union[str, float, int],
+    new_unit: Union[str, float, int],
+) -&gt; Union[float, tuple]:
+    &#34;&#34;&#34;
+     Convert a number or sequence of numbers from one unit to another.
+
+     If either unit is a number it will be treated as the number of points per unit.  So 72 would mean 1 inch.
+
+     Args:
+        to_convert (float, int, Iterable): The number / list of numbers, or points, to convert
+        old_unit (str, float, int): A unit accepted by fpdf.FPDF or a number
+        new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number
+    Returns:
+        (float, tuple): to_convert converted from old_unit to new_unit or a tuple of the same
+    &#34;&#34;&#34;
+    unit_conversion_factor = get_scale_factor(new_unit) / get_scale_factor(old_unit)
+    if isinstance(to_convert, Iterable):
+        return tuple(
+            map(lambda i: convert_unit(i, 1, unit_conversion_factor), to_convert)
+        )
+    return to_convert / unit_conversion_factor</code></pre>
 </details>
 </dd>
 <dt id="fpdf.util.dochecks"><code class="name flex">
@@ -167,6 +260,52 @@ dochecks()</code></pre>
     )</code></pre>
 </details>
 </dd>
+<dt id="fpdf.util.get_scale_factor"><code class="name flex">
+<span>def <span class="ident">get_scale_factor</span></span>(<span>unit: Union[str, float, int]) ‑> float</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Get how many pts are in a unit. (k)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>unit</code></strong> :&ensp;<code>str, float, int</code></dt>
+<dd>Any of "pt", "mm", "cm", "in", or a number.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The number of points in that unit (assuming 72dpi)</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>ValueError</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_scale_factor(unit: Union[str, float, int]) -&gt; float:
+    &#34;&#34;&#34;
+    Get how many pts are in a unit. (k)
+
+    Args:
+        unit (str, float, int): Any of &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34;, &#34;in&#34;, or a number.
+    Returns:
+        float: The number of points in that unit (assuming 72dpi)
+    Raises:
+        ValueError
+    &#34;&#34;&#34;
+    if isinstance(unit, (int, float)):
+        return float(unit)
+
+    if unit == &#34;pt&#34;:
+        return 1
+    if unit == &#34;mm&#34;:
+        return 72 / 25.4
+    if unit == &#34;cm&#34;:
+        return 72 / 2.54
+    if unit == &#34;in&#34;:
+        return 72.0
+    raise ValueError(f&#34;Incorrect unit: {unit}&#34;)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.util.substr"><code class="name flex">
 <span>def <span class="ident">substr</span></span>(<span>s, start, length=-1)</span>
 </code></dt>
@@ -199,11 +338,13 @@ dochecks()</code></pre>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="fpdf.util.b" href="#fpdf.util.b">b</a></code></li>
+<li><code><a title="fpdf.util.convert_unit" href="#fpdf.util.convert_unit">convert_unit</a></code></li>
 <li><code><a title="fpdf.util.dochecks" href="#fpdf.util.dochecks">dochecks</a></code></li>
 <li><code><a title="fpdf.util.enclose_in_parens" href="#fpdf.util.enclose_in_parens">enclose_in_parens</a></code></li>
 <li><code><a title="fpdf.util.escape_parens" href="#fpdf.util.escape_parens">escape_parens</a></code></li>
+<li><code><a title="fpdf.util.get_scale_factor" href="#fpdf.util.get_scale_factor">get_scale_factor</a></code></li>
 <li><code><a title="fpdf.util.substr" href="#fpdf.util.substr">substr</a></code></li>
 </ul>
 </li>

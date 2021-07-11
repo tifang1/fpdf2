@@ -79,6 +79,7 @@ from .util import (
     enclose_in_parens,
     escape_parens,
     substr,
+    get_scale_factor,
 )
 from .deprecation import WarnOnDeprecatedModuleAttributes
 from .syntax import (
@@ -226,9 +227,10 @@ class FPDF:
         Args:
             orientation (str): possible values are &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
                 or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
-            unit (str): possible values are &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;.
+            unit (str, int, float): possible values are &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34;, &#34;in&#34;, or a number.
                 A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
                 This is a very common unit in typography; font sizes are expressed in this unit.
+                If given a number, then it will be treated as the number of points per unit.  (eg. 72 = 1 in)
                 Default to &#34;mm&#34;.
             format (str): possible values are &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
                 (width, height) expressed in the given unit. Default to &#34;a4&#34;.
@@ -306,16 +308,7 @@ class FPDF:
             &#34;timesnewroman&#34;: &#34;times&#34;,
         }
         # Scale factor
-        if unit == &#34;pt&#34;:
-            self.k = 1
-        elif unit == &#34;mm&#34;:
-            self.k = 72 / 25.4
-        elif unit == &#34;cm&#34;:
-            self.k = 72 / 2.54
-        elif unit == &#34;in&#34;:
-            self.k = 72.0
-        else:
-            raise FPDFException(f&#34;Incorrect unit: {unit}&#34;)
+        self.k = get_scale_factor(unit)
 
         self.dw_pt, self.dh_pt = get_page_format(format, self.k)
         self._set_orientation(orientation, self.dw_pt, self.dh_pt)
@@ -3574,10 +3567,12 @@ case insensitive key (the name of the new format) and 2-tuple value of
 <dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
 <dd>possible values are "portrait" (can be abbreviated "P")
 or "landscape" (can be abbreviated "L"). Default to "portrait".</dd>
-<dt><strong><code>unit</code></strong> :&ensp;<code>str</code></dt>
-<dd>possible values are "pt", "mm", "cm" or "in".
+<dt><strong><code>unit</code></strong> :&ensp;<code>str, int, float</code></dt>
+<dd>possible values are "pt", "mm", "cm", "in", or a number.
 A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
 This is a very common unit in typography; font sizes are expressed in this unit.
+If given a number, then it will be treated as the number of points per unit.
+(eg. 72 = 1 in)
 Default to "mm".</dd>
 <dt><strong><code>format</code></strong> :&ensp;<code>str</code></dt>
 <dd>possible values are "a3", "a4", "a5", "letter", "legal" or a tuple
@@ -3605,9 +3600,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             orientation (str): possible values are &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
                 or &#34;landscape&#34; (can be abbreviated &#34;L&#34;). Default to &#34;portrait&#34;.
-            unit (str): possible values are &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34; or &#34;in&#34;.
+            unit (str, int, float): possible values are &#34;pt&#34;, &#34;mm&#34;, &#34;cm&#34;, &#34;in&#34;, or a number.
                 A point equals 1/72 of an inch, that is to say about 0.35 mm (an inch being 2.54 cm).
                 This is a very common unit in typography; font sizes are expressed in this unit.
+                If given a number, then it will be treated as the number of points per unit.  (eg. 72 = 1 in)
                 Default to &#34;mm&#34;.
             format (str): possible values are &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
                 (width, height) expressed in the given unit. Default to &#34;a4&#34;.
@@ -3685,16 +3681,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             &#34;timesnewroman&#34;: &#34;times&#34;,
         }
         # Scale factor
-        if unit == &#34;pt&#34;:
-            self.k = 1
-        elif unit == &#34;mm&#34;:
-            self.k = 72 / 25.4
-        elif unit == &#34;cm&#34;:
-            self.k = 72 / 2.54
-        elif unit == &#34;in&#34;:
-            self.k = 72.0
-        else:
-            raise FPDFException(f&#34;Incorrect unit: {unit}&#34;)
+        self.k = get_scale_factor(unit)
 
         self.dw_pt, self.dh_pt = get_page_format(format, self.k)
         self._set_orientation(orientation, self.dw_pt, self.dh_pt)
