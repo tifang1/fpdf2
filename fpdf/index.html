@@ -1464,7 +1464,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
     @contextmanager
     def rotation(self, angle, x=None, y=None):
         &#34;&#34;&#34;
-        This method allows to perform a rotation around a given center.
+        This method allows to perform a rotation around a given center. It must be used as a context-manager using `with`.
 
         The rotation affects all elements which are printed inside the indented context
         (with the exception of clickable areas).
@@ -5603,7 +5603,7 @@ def rotate(self, angle, x=None, y=None):
 <span>def <span class="ident">rotation</span></span>(<span>self, angle, x=None, y=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This method allows to perform a rotation around a given center.</p>
+<div class="desc"><p>This method allows to perform a rotation around a given center. It must be used as a context-manager using <code>with</code>.</p>
 <p>The rotation affects all elements which are printed inside the indented context
 (with the exception of clickable areas).</p>
 <h2 id="args">Args</h2>
@@ -5626,7 +5626,7 @@ affected, nor the automatic page break mechanism.</p></div>
 @contextmanager
 def rotation(self, angle, x=None, y=None):
     &#34;&#34;&#34;
-    This method allows to perform a rotation around a given center.
+    This method allows to perform a rotation around a given center. It must be used as a context-manager using `with`.
 
     The rotation affects all elements which are printed inside the indented context
     (with the exception of clickable areas).
