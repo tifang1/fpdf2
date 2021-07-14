@@ -1079,7 +1079,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
             # include numbers in the subset! (if alias present)
-            sbarr = list(range(57 if self.str_alias_nb_pages else 32))
+            # ensure that alias is mapped 1-by-1 additionally (must be replaceable)
+            sbarr = &#34;\x00 &#34;
+            if self.str_alias_nb_pages:
+                sbarr += &#34;0123456789&#34;
+                sbarr += self.str_alias_nb_pages
 
             font_dict = load_cache(unifilename)
             if font_dict is None:
@@ -1108,7 +1112,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     &#34;ut&#34;: round(ttf.underlineThickness),
                     &#34;ttffile&#34;: ttffilename,
                     &#34;fontkey&#34;: fontkey,
-                    &#34;subset&#34;: sbarr,
+                    &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
                     &#34;unifilename&#34;: unifilename,
                     &#34;originalsize&#34;: os.stat(ttffilename).st_size,
                     &#34;cw&#34;: ttf.charWidths,
@@ -1131,7 +1135,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 &#34;cw&#34;: font_dict[&#34;cw&#34;],
                 &#34;ttffile&#34;: font_dict[&#34;ttffile&#34;],
                 &#34;fontkey&#34;: fontkey,
-                &#34;subset&#34;: sbarr,
+                &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
                 &#34;unifilename&#34;: unifilename,
             }
             self.font_files[fontkey] = {
@@ -1417,9 +1421,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
         txt = self.normalize_text(txt)
         if self.unifontsubset:
-            txt2 = escape_parens(txt).encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+            txt_mapped = &#34;&#34;
             for char in txt:
-                self.current_font[&#34;subset&#34;].append(ord(char))
+                uni = ord(char)
+                # Instead of adding the actual character to the stream it&#39;s code is
+                # mapped to a position in the font&#39;s subset
+                txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
+            txt2 = escape_parens(txt_mapped).encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
         else:
             txt2 = escape_parens(txt)
         s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
@@ -1646,9 +1654,17 @@ The default is <code>True</code>, meaning the current folder.</dd>
                         s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                     self.font_style = style
                     self.current_font = self.fonts[self.font_family + self.font_style]
+                    txt_frag_mapped = &#34;&#34;
                     for char in txt_frag:
-                        self.current_font[&#34;subset&#34;].append(ord(char))
-                    words = txt_frag.split(&#34; &#34;)
+                        uni = ord(char)
+                        txt_frag_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
+
+                    # Determine the position of space (&#34; &#34;) in the current subset and
+                    # split words whenever this mapping code is found
+                    words = txt_frag_mapped.split(
+                        chr(self.current_font[&#34;subset&#34;].pick(ord(&#34; &#34;)))
+                    )
+
                     s += &#34; [&#34;
                     for i, word in enumerate(words):
                         word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
@@ -1669,11 +1685,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     self.font_style = style
                     self.current_font = self.fonts[self.font_family + self.font_style]
                     if self.unifontsubset:
-                        txt_frag_escaped = escape_parens(
-                            txt_frag.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
-                        )
+                        txt_frag_mapped = &#34;&#34;
                         for char in txt_frag:
-                            self.current_font[&#34;subset&#34;].append(ord(char))
+                            uni = ord(char)
+                            txt_frag_mapped += chr(
+                                self.current_font[&#34;subset&#34;].pick(uni)
+                            )
+
+                        txt_frag_escaped = escape_parens(
+                            txt_frag_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+                        )
                     else:
                         txt_frag_escaped = escape_parens(txt_frag)
                     s += f&#34; ({txt_frag_escaped}) Tj&#34;
@@ -2628,7 +2649,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 self.fonts[font_name][&#34;n&#34;] = self.n + 1
                 ttf = TTFontFile()
                 fontname = f&#34;MPDFAA+{font[&#39;name&#39;]}&#34;
-                subset = font[&#34;subset&#34;]
+                subset = font[&#34;subset&#34;].dict()
                 del subset[0]
                 ttfontstream = ttf.makeSubset(font[&#34;ttffile&#34;], subset)
                 ttfontsize = len(ttfontstream)
@@ -2665,6 +2686,24 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 self._out(&#34;&gt;&gt;&#34;)
                 self._out(&#34;endobj&#34;)
 
+                # bfChar
+                # This table informs the PDF reader about the unicode
+                # character that each used 16-bit code belongs to. It
+                # allows searching the file and copying text from it.
+                bfChar = []
+                subset = font[&#34;subset&#34;].dict()
+                for code in subset:
+                    code_mapped = subset.get(code)
+                    if code &gt; 0xFFFF:
+                        # Calculate suggorate pair
+                        code_high = 0xD800 + (code &amp; 0xFFFF) // 0x400
+                        code_low = 0xDC00 + (code &amp; 0xFFFF) % 0x400
+                        bfChar.append(
+                            &#34;&lt;%04X&gt; &lt;%04X%04X&gt;\n&#34; % (code_mapped, code_high, code_low)
+                        )
+                    else:
+                        bfChar.append(&#34;&lt;%04X&gt; &lt;%04X&gt;\n&#34; % (code_mapped, code))
+
                 # ToUnicode
                 self._newobj()
                 toUni = (
@@ -2681,9 +2720,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     &#34;1 begincodespacerange\n&#34;
                     &#34;&lt;0000&gt; &lt;FFFF&gt;\n&#34;
                     &#34;endcodespacerange\n&#34;
-                    &#34;1 beginbfrange\n&#34;
-                    &#34;&lt;0000&gt; &lt;FFFF&gt; &lt;0000&gt;\n&#34;
-                    &#34;endbfrange\n&#34;
+                    f&#34;{len(bfChar)} beginbfchar\n&#34;
+                    f&#34;{&#39;&#39;.join(bfChar)}&#34;
+                    &#34;endbfchar\n&#34;
                     &#34;endcmap\n&#34;
                     &#34;CMapName currentdict /CMap defineresource pop\n&#34;
                     &#34;end\n&#34;
@@ -2783,7 +2822,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         cwlen = maxUni + 1
 
         # for each character
-        subset = set(font[&#34;subset&#34;])
+        subset = font[&#34;subset&#34;].dict()
         for cid in range(startcid, cwlen):
             if cid == 128 and font_dict:
                 try:
@@ -2802,7 +2841,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 width = 0
 
             if &#34;dw&#34; not in font or (font[&#34;dw&#34;] and width != font[&#34;dw&#34;]):
-                if cid == (prevcid + 1):
+                if not cid in subset:
+                    continue
+                cid_mapped = subset.get(cid)
+                if cid_mapped == (prevcid + 1):
                     if width == prevwidth:
                         if width == range_[rangeid][0]:
                             range_.setdefault(rangeid, []).append(width)
@@ -2816,16 +2858,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     else:
                         if interval:
                             # new range
-                            rangeid = cid
+                            rangeid = cid_mapped
                             range_[rangeid] = [width]
                         else:
                             range_[rangeid].append(width)
                         interval = False
                 else:
-                    rangeid = cid
+                    rangeid = cid_mapped
                     range_[rangeid] = [width]
                     interval = False
-                prevcid = cid
+                prevcid = cid_mapped
                 prevwidth = width
         prevk = -1
         nextk = -1
@@ -3660,7 +3702,11 @@ This can be controlled with the <code>font_cache_dir</code> paramater of the <co
             unifilename = cache_dir / f&#34;{ttffilename.stem}.pkl&#34;
 
         # include numbers in the subset! (if alias present)
-        sbarr = list(range(57 if self.str_alias_nb_pages else 32))
+        # ensure that alias is mapped 1-by-1 additionally (must be replaceable)
+        sbarr = &#34;\x00 &#34;
+        if self.str_alias_nb_pages:
+            sbarr += &#34;0123456789&#34;
+            sbarr += self.str_alias_nb_pages
 
         font_dict = load_cache(unifilename)
         if font_dict is None:
@@ -3689,7 +3735,7 @@ This can be controlled with the <code>font_cache_dir</code> paramater of the <co
                 &#34;ut&#34;: round(ttf.underlineThickness),
                 &#34;ttffile&#34;: ttffilename,
                 &#34;fontkey&#34;: fontkey,
-                &#34;subset&#34;: sbarr,
+                &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
                 &#34;unifilename&#34;: unifilename,
                 &#34;originalsize&#34;: os.stat(ttffilename).st_size,
                 &#34;cw&#34;: ttf.charWidths,
@@ -3712,7 +3758,7 @@ This can be controlled with the <code>font_cache_dir</code> paramater of the <co
             &#34;cw&#34;: font_dict[&#34;cw&#34;],
             &#34;ttffile&#34;: font_dict[&#34;ttffile&#34;],
             &#34;fontkey&#34;: fontkey,
-            &#34;subset&#34;: sbarr,
+            &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
             &#34;unifilename&#34;: unifilename,
         }
         self.font_files[fontkey] = {
@@ -4153,9 +4199,17 @@ def cell(
                     s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                 self.font_style = style
                 self.current_font = self.fonts[self.font_family + self.font_style]
+                txt_frag_mapped = &#34;&#34;
                 for char in txt_frag:
-                    self.current_font[&#34;subset&#34;].append(ord(char))
-                words = txt_frag.split(&#34; &#34;)
+                    uni = ord(char)
+                    txt_frag_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
+
+                # Determine the position of space (&#34; &#34;) in the current subset and
+                # split words whenever this mapping code is found
+                words = txt_frag_mapped.split(
+                    chr(self.current_font[&#34;subset&#34;].pick(ord(&#34; &#34;)))
+                )
+
                 s += &#34; [&#34;
                 for i, word in enumerate(words):
                     word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
@@ -4176,11 +4230,16 @@ def cell(
                 self.font_style = style
                 self.current_font = self.fonts[self.font_family + self.font_style]
                 if self.unifontsubset:
-                    txt_frag_escaped = escape_parens(
-                        txt_frag.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
-                    )
+                    txt_frag_mapped = &#34;&#34;
                     for char in txt_frag:
-                        self.current_font[&#34;subset&#34;].append(ord(char))
+                        uni = ord(char)
+                        txt_frag_mapped += chr(
+                            self.current_font[&#34;subset&#34;].pick(uni)
+                        )
+
+                    txt_frag_escaped = escape_parens(
+                        txt_frag_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+                    )
                 else:
                     txt_frag_escaped = escape_parens(txt_frag)
                 s += f&#34; ({txt_frag_escaped}) Tj&#34;
@@ -6798,9 +6857,13 @@ def text(self, x, y, txt=&#34;&#34;):
         raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
     txt = self.normalize_text(txt)
     if self.unifontsubset:
-        txt2 = escape_parens(txt).encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+        txt_mapped = &#34;&#34;
         for char in txt:
-            self.current_font[&#34;subset&#34;].append(ord(char))
+            uni = ord(char)
+            # Instead of adding the actual character to the stream it&#39;s code is
+            # mapped to a position in the font&#39;s subset
+            txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
+        txt2 = escape_parens(txt_mapped).encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
     else:
         txt2 = escape_parens(txt)
     s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;

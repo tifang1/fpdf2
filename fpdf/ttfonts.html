@@ -421,7 +421,11 @@ class TTFontFile:
                 if fmt == 4:
                     if not unicode_cmap_offset:
                         unicode_cmap_offset = cmap_offset + offset
-                    break
+                    # Don&#39;t break here since we might later get
+                    # unicode_cmap_offset12 which is needed for
+                    # characters =&gt; 0x10000 (CMAP12)
+                    #
+                    # break
 
             self.seek(save_pos)
 
@@ -498,7 +502,11 @@ class TTFontFile:
                     fmt = self.get_ushort(cmap_offset + offset)
                     if fmt == 4:
                         unicode_cmap_offset = cmap_offset + offset
-                        break
+                        # Don&#39;t break here since we might later get
+                        # unicode_cmap_offset12 which is needed for
+                        # characters =&gt; 0x10000 (CMAP12)
+                        #
+                        # break
 
                 self.seek(save_pos)
 
@@ -528,12 +536,18 @@ class TTFontFile:
             subsetglyphs = [(0, 0)]  # special &#34;sorted dict&#34;!
             subsetCharToGlyph = {}
             for code in subset:
+                target = subset[code] if isinstance(subset, dict) else code
+                if target &gt; 65535:
+                    raise Exception(
+                        &#34;Character U+%X must be remapped since it cannot be indexed in CMAP4 table&#34;
+                        % target
+                    )
                 if code in self.charToGlyph:
-                    if (self.charToGlyph[code], code) not in subsetglyphs:
+                    if (self.charToGlyph[code], target) not in subsetglyphs:
                         subsetglyphs.append(
-                            (self.charToGlyph[code], code)
+                            (self.charToGlyph[code], target)
                         )  # Old Glyph ID =&gt; Unicode
-                    subsetCharToGlyph[code] = self.charToGlyph[
+                    subsetCharToGlyph[target] = self.charToGlyph[
                         code
                     ]  # Unicode to old GlyphID
                 self.maxUni = max(self.maxUni, code)
@@ -1459,7 +1473,11 @@ class TTFontFile:
                 if fmt == 4:
                     if not unicode_cmap_offset:
                         unicode_cmap_offset = cmap_offset + offset
-                    break
+                    # Don&#39;t break here since we might later get
+                    # unicode_cmap_offset12 which is needed for
+                    # characters =&gt; 0x10000 (CMAP12)
+                    #
+                    # break
 
             self.seek(save_pos)
 
@@ -1536,7 +1554,11 @@ class TTFontFile:
                     fmt = self.get_ushort(cmap_offset + offset)
                     if fmt == 4:
                         unicode_cmap_offset = cmap_offset + offset
-                        break
+                        # Don&#39;t break here since we might later get
+                        # unicode_cmap_offset12 which is needed for
+                        # characters =&gt; 0x10000 (CMAP12)
+                        #
+                        # break
 
                 self.seek(save_pos)
 
@@ -1566,12 +1588,18 @@ class TTFontFile:
             subsetglyphs = [(0, 0)]  # special &#34;sorted dict&#34;!
             subsetCharToGlyph = {}
             for code in subset:
+                target = subset[code] if isinstance(subset, dict) else code
+                if target &gt; 65535:
+                    raise Exception(
+                        &#34;Character U+%X must be remapped since it cannot be indexed in CMAP4 table&#34;
+                        % target
+                    )
                 if code in self.charToGlyph:
-                    if (self.charToGlyph[code], code) not in subsetglyphs:
+                    if (self.charToGlyph[code], target) not in subsetglyphs:
                         subsetglyphs.append(
-                            (self.charToGlyph[code], code)
+                            (self.charToGlyph[code], target)
                         )  # Old Glyph ID =&gt; Unicode
-                    subsetCharToGlyph[code] = self.charToGlyph[
+                    subsetCharToGlyph[target] = self.charToGlyph[
                         code
                     ]  # Unicode to old GlyphID
                 self.maxUni = max(self.maxUni, code)
@@ -2409,7 +2437,11 @@ def splice(stream, offset, value):
             if fmt == 4:
                 if not unicode_cmap_offset:
                     unicode_cmap_offset = cmap_offset + offset
-                break
+                # Don&#39;t break here since we might later get
+                # unicode_cmap_offset12 which is needed for
+                # characters =&gt; 0x10000 (CMAP12)
+                #
+                # break
 
         self.seek(save_pos)
 
@@ -2864,7 +2896,11 @@ def splice(stream, offset, value):
                 fmt = self.get_ushort(cmap_offset + offset)
                 if fmt == 4:
                     unicode_cmap_offset = cmap_offset + offset
-                    break
+                    # Don&#39;t break here since we might later get
+                    # unicode_cmap_offset12 which is needed for
+                    # characters =&gt; 0x10000 (CMAP12)
+                    #
+                    # break
 
             self.seek(save_pos)
 
@@ -2894,12 +2930,18 @@ def splice(stream, offset, value):
         subsetglyphs = [(0, 0)]  # special &#34;sorted dict&#34;!
         subsetCharToGlyph = {}
         for code in subset:
+            target = subset[code] if isinstance(subset, dict) else code
+            if target &gt; 65535:
+                raise Exception(
+                    &#34;Character U+%X must be remapped since it cannot be indexed in CMAP4 table&#34;
+                    % target
+                )
             if code in self.charToGlyph:
-                if (self.charToGlyph[code], code) not in subsetglyphs:
+                if (self.charToGlyph[code], target) not in subsetglyphs:
                     subsetglyphs.append(
-                        (self.charToGlyph[code], code)
+                        (self.charToGlyph[code], target)
                     )  # Old Glyph ID =&gt; Unicode
-                subsetCharToGlyph[code] = self.charToGlyph[
+                subsetCharToGlyph[target] = self.charToGlyph[
                     code
                 ]  # Unicode to old GlyphID
             self.maxUni = max(self.maxUni, code)
