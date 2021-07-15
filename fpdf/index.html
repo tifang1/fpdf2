@@ -821,16 +821,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
             if markdown
             else ((s, self.font_style, bool(self.underline)),)
         ):
-            cw = self.fonts[self.font_family + style][&#34;cw&#34;]
+            font = self.fonts[self.font_family + style]
             if self.unifontsubset:
                 for char in s:
-                    char = ord(char)
-                    if len(cw) &gt; char:
-                        w += cw[char]
-                    else:
-                        w += self.current_font[&#34;desc&#34;].get(&#34;MissingWidth&#34;) or 500
+                    w += _char_width(font, ord(char))
             else:
-                w += sum(cw.get(char, 0) for char in txt_frag)
+                w += sum(_char_width(font, char) for char in txt_frag)
         if self.font_stretching != 100:
             w *= self.font_stretching / 100
         return w * self.font_size / 1000
@@ -1936,7 +1932,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 if &#34;R&#34; in border:
                     b2 += &#34;R&#34;
                 b = b2 + &#34;T&#34; if &#34;T&#34; in border else b2
-        character_widths = self.current_font[&#34;cw&#34;]
         text_cells = []
         sep = -1
         i = 0
@@ -1990,7 +1985,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             if self.unifontsubset:
                 l += self.get_string_width(c, True) / self.font_size * 1000
             else:
-                l += character_widths.get(c, 0)
+                l += _char_width(self.current_font, c)
 
             # Automatic line break
             if l &gt; wmax:
@@ -2117,7 +2112,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if h is None:
             h = self.font_size
         txt = self.normalize_text(txt)
-        cw = self.current_font[&#34;cw&#34;]
         w = self.w - self.r_margin - self.x
         wmax = (w - 2 * self.c_margin) * 1000 / self.font_size
         s = txt.replace(&#34;\r&#34;, &#34;&#34;)
@@ -2148,7 +2142,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             if self.unifontsubset:
                 l += self.get_string_width(c, True) / self.font_size * 1000
             else:
-                l += cw.get(c, 0)
+                l += _char_width(self.current_font, c)
             if l &gt; wmax:
                 # Automatic line break
                 if sep == -1:
@@ -2619,9 +2613,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
                 # Widths
                 self._newobj()
-                cw = font[&#34;cw&#34;]
                 self._out(
-                    &#34;[&#34; + &#34; &#34;.join(cw.get(chr(i), 0) for i in range(32, 256)) + &#34;]&#34;
+                    &#34;[&#34;
+                    + &#34; &#34;.join(_char_width(font, chr(i)) for i in range(32, 256))
+                    + &#34;]&#34;
                 )
                 self._out(&#34;endobj&#34;)
 
@@ -2835,18 +2830,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     if e.errno != errno.EACCES:
                         raise  # Not a permission error.
 
-            if cid &gt; 255 and (cid not in subset or cid &gt;= len(font[&#34;cw&#34;])):
-                continue
-            width = font[&#34;cw&#34;][cid]
-            if width == 0:
-                continue
-            if width == 65535:
-                width = 0
-
+            width = _char_width(font, cid)
             if &#34;dw&#34; not in font or (font[&#34;dw&#34;] and width != font[&#34;dw&#34;]):
-                if not cid in subset:
-                    continue
                 cid_mapped = subset.get(cid)
+                if cid_mapped is None:
+                    continue
                 if cid_mapped == (prevcid + 1):
                     if width == prevwidth:
                         if width == range_[rangeid][0]:
@@ -4613,16 +4601,12 @@ The value is calculated with stretching and spacing.</p>
         if markdown
         else ((s, self.font_style, bool(self.underline)),)
     ):
-        cw = self.fonts[self.font_family + style][&#34;cw&#34;]
+        font = self.fonts[self.font_family + style]
         if self.unifontsubset:
             for char in s:
-                char = ord(char)
-                if len(cw) &gt; char:
-                    w += cw[char]
-                else:
-                    w += self.current_font[&#34;desc&#34;].get(&#34;MissingWidth&#34;) or 500
+                w += _char_width(font, ord(char))
         else:
-            w += sum(cw.get(char, 0) for char in txt_frag)
+            w += sum(_char_width(font, char) for char in txt_frag)
     if self.font_stretching != 100:
         w *= self.font_stretching / 100
     return w * self.font_size / 1000</code></pre>
@@ -5201,7 +5185,6 @@ def multi_cell(
             if &#34;R&#34; in border:
                 b2 += &#34;R&#34;
             b = b2 + &#34;T&#34; if &#34;T&#34; in border else b2
-    character_widths = self.current_font[&#34;cw&#34;]
     text_cells = []
     sep = -1
     i = 0
@@ -5255,7 +5238,7 @@ def multi_cell(
         if self.unifontsubset:
             l += self.get_string_width(c, True) / self.font_size * 1000
         else:
-            l += character_widths.get(c, 0)
+            l += _char_width(self.current_font, c)
 
         # Automatic line break
         if l &gt; wmax:
@@ -7040,7 +7023,6 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
     if h is None:
         h = self.font_size
     txt = self.normalize_text(txt)
-    cw = self.current_font[&#34;cw&#34;]
     w = self.w - self.r_margin - self.x
     wmax = (w - 2 * self.c_margin) * 1000 / self.font_size
     s = txt.replace(&#34;\r&#34;, &#34;&#34;)
@@ -7071,7 +7053,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
         if self.unifontsubset:
             l += self.get_string_width(c, True) / self.font_size * 1000
         else:
-            l += cw.get(c, 0)
+            l += _char_width(self.current_font, c)
         if l &gt; wmax:
             # Automatic line break
             if sep == -1:
