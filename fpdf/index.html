@@ -1420,10 +1420,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             txt_mapped = &#34;&#34;
             for char in txt:
                 uni = ord(char)
-                # Instead of adding the actual character to the stream it&#39;s code is
+                # Instead of adding the actual character to the stream its code is
                 # mapped to a position in the font&#39;s subset
                 txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
-            txt2 = escape_parens(txt_mapped).encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+            txt2 = escape_parens(txt_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
         else:
             txt2 = escape_parens(txt)
         s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
@@ -2693,9 +2693,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 for code in subset:
                     code_mapped = subset.get(code)
                     if code &gt; 0xFFFF:
-                        # Calculate suggorate pair
-                        code_high = 0xD800 + (code &amp; 0xFFFF) // 0x400
-                        code_low = 0xDC00 + (code &amp; 0xFFFF) % 0x400
+                        # Calculate surrogate pair
+                        code_high = 0xD800 | (code - 0x10000) &gt;&gt; 10
+                        code_low = 0xDC00 | (code &amp; 0x3FF)
                         bfChar.append(
                             &#34;&lt;%04X&gt; &lt;%04X%04X&gt;\n&#34; % (code_mapped, code_high, code_low)
                         )
@@ -6852,10 +6852,10 @@ def text(self, x, y, txt=&#34;&#34;):
         txt_mapped = &#34;&#34;
         for char in txt:
             uni = ord(char)
-            # Instead of adding the actual character to the stream it&#39;s code is
+            # Instead of adding the actual character to the stream its code is
             # mapped to a position in the font&#39;s subset
             txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
-        txt2 = escape_parens(txt_mapped).encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+        txt2 = escape_parens(txt_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
     else:
         txt2 = escape_parens(txt)
     s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
