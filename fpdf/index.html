@@ -3253,6 +3253,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
     def code39(self, txt, x, y, w=1.5, h=5):
         &#34;&#34;&#34;Barcode 3of9&#34;&#34;&#34;
         dim = {&#34;w&#34;: w, &#34;n&#34;: w / 3}
+        if not txt.startswith(&#34;*&#34;) or not txt.endswith(&#34;*&#34;):
+            warnings.warn(
+                &#34;Code 39 input must start and end with a &#39;*&#39; character to be valid.&#34;
+                &#34; This method does not insert it automatically.&#34;
+            )
         chars = {
             &#34;0&#34;: &#34;nnnwwnwnn&#34;,
             &#34;1&#34;: &#34;wnnwnnnnw&#34;,
@@ -4357,6 +4362,11 @@ If the document contains no page, <code>add_page()</code> is called to prevent f
 def code39(self, txt, x, y, w=1.5, h=5):
     &#34;&#34;&#34;Barcode 3of9&#34;&#34;&#34;
     dim = {&#34;w&#34;: w, &#34;n&#34;: w / 3}
+    if not txt.startswith(&#34;*&#34;) or not txt.endswith(&#34;*&#34;):
+        warnings.warn(
+            &#34;Code 39 input must start and end with a &#39;*&#39; character to be valid.&#34;
+            &#34; This method does not insert it automatically.&#34;
+        )
     chars = {
         &#34;0&#34;: &#34;nnnwwnwnn&#34;,
         &#34;1&#34;: &#34;wnnwnnnnw&#34;,
