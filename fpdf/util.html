@@ -29,14 +29,15 @@
 <pre><code class="python">import locale
 from typing import Union, Iterable
 
-try_to_type_known_types = [
+_TRY_TO_TYPE_KNOWN_TYPES = (
     int,
     float,
-]
+)
 
 
 def try_to_type(value):
-    for known_type in try_to_type_known_types:
+    &#34;Try to convert a string into a number&#34;
+    for known_type in _TRY_TO_TYPE_KNOWN_TYPES:
         try:
             return known_type(value)
         except ValueError:
@@ -339,13 +340,14 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <span>def <span class="ident">try_to_type</span></span>(<span>value)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Try to convert a string into a number</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def try_to_type(value):
-    for known_type in try_to_type_known_types:
+    &#34;Try to convert a string into a number&#34;
+    for known_type in _TRY_TO_TYPE_KNOWN_TYPES:
         try:
             return known_type(value)
         except ValueError:
