@@ -29,6 +29,20 @@
 <pre><code class="python">import locale
 from typing import Union, Iterable
 
+try_to_type_known_types = [
+    int,
+    float,
+]
+
+
+def try_to_type(value):
+    for known_type in try_to_type_known_types:
+        try:
+            return known_type(value)
+        except ValueError:
+            pass
+    return value
+
 
 def substr(s, start, length=-1):
     if length &lt; 0:
@@ -321,6 +335,24 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
     return s[start : start + length]</code></pre>
 </details>
 </dd>
+<dt id="fpdf.util.try_to_type"><code class="name flex">
+<span>def <span class="ident">try_to_type</span></span>(<span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def try_to_type(value):
+    for known_type in try_to_type_known_types:
+        try:
+            return known_type(value)
+        except ValueError:
+            pass
+    return value</code></pre>
+</details>
+</dd>
 </dl>
 </section>
 <section>
@@ -346,6 +378,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <li><code><a title="fpdf.util.escape_parens" href="#fpdf.util.escape_parens">escape_parens</a></code></li>
 <li><code><a title="fpdf.util.get_scale_factor" href="#fpdf.util.get_scale_factor">get_scale_factor</a></code></li>
 <li><code><a title="fpdf.util.substr" href="#fpdf.util.substr">substr</a></code></li>
+<li><code><a title="fpdf.util.try_to_type" href="#fpdf.util.try_to_type">try_to_type</a></code></li>
 </ul>
 </li>
 </ul>

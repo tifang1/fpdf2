@@ -34,10 +34,12 @@ __copyright__ = &#34;Copyright (C) 2010 Mariano Reingart&#34;
 __license__ = &#34;LGPL 3.0&#34;
 
 import csv
+import locale
 import warnings
 
 from .errors import FPDFException
 from .fpdf import FPDF
+from .util import try_to_type
 
 
 def rgb(col):
@@ -93,7 +95,7 @@ class Template:
         self.elements = elements
         self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
 
-    def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;):
+    def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
         &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
         keys = (
             &#34;name&#34;,
@@ -116,13 +118,17 @@ class Template:
         )
         self.elements = []
         self.pg_no = 0
-        with open(infile) as f:
+        if encoding is None:
+            encoding = locale.getpreferredencoding()
+        with open(infile, encoding=encoding) as f:
             for row in csv.reader(f, delimiter=delimiter):
                 kargs = {}
                 for i, v in enumerate(row):
                     if not v.startswith(&#34;&#39;&#34;) and decimal_sep != &#34;.&#34;:
                         v = v.replace(decimal_sep, &#34;.&#34;)
-                    kargs[keys[i]] = v.strip()
+                    stripped_value = v.strip()
+                    typed_value = try_to_type(stripped_value)
+                    kargs[keys[i]] = typed_value
                 self.elements.append(kargs)
         self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
 
@@ -203,7 +209,9 @@ class Template:
             pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
             pdf.set_auto_page_break(False, margin=0)
 
-            for element in sorted(self.elements, key=lambda x: x[&#34;priority&#34;]):
+            sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
+
+            for element in sorted_elements:
                 element = element.copy()
                 element[&#34;text&#34;] = self.texts[pg].get(
                     element[&#34;name&#34;].lower(), element[&#34;text&#34;]
@@ -476,7 +484,7 @@ class Template:
         self.elements = elements
         self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
 
-    def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;):
+    def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
         &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
         keys = (
             &#34;name&#34;,
@@ -499,13 +507,17 @@ class Template:
         )
         self.elements = []
         self.pg_no = 0
-        with open(infile) as f:
+        if encoding is None:
+            encoding = locale.getpreferredencoding()
+        with open(infile, encoding=encoding) as f:
             for row in csv.reader(f, delimiter=delimiter):
                 kargs = {}
                 for i, v in enumerate(row):
                     if not v.startswith(&#34;&#39;&#34;) and decimal_sep != &#34;.&#34;:
                         v = v.replace(decimal_sep, &#34;.&#34;)
-                    kargs[keys[i]] = v.strip()
+                    stripped_value = v.strip()
+                    typed_value = try_to_type(stripped_value)
+                    kargs[keys[i]] = typed_value
                 self.elements.append(kargs)
         self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
 
@@ -586,7 +598,9 @@ class Template:
             pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
             pdf.set_auto_page_break(False, margin=0)
 
-            for element in sorted(self.elements, key=lambda x: x[&#34;priority&#34;]):
+            sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
+
+            for element in sorted_elements:
                 element = element.copy()
                 element[&#34;text&#34;] = self.texts[pg].get(
                     element[&#34;name&#34;].lower(), element[&#34;text&#34;]
@@ -1044,7 +1058,7 @@ def write(
 </details>
 </dd>
 <dt id="fpdf.template.Template.parse_csv"><code class="name flex">
-<span>def <span class="ident">parse_csv</span></span>(<span>self, infile, delimiter=',', decimal_sep='.')</span>
+<span>def <span class="ident">parse_csv</span></span>(<span>self, infile, delimiter=',', decimal_sep='.', encoding=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Parse template format csv file and create elements dict</p></div>
@@ -1052,7 +1066,7 @@ def write(
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;):
+<pre><code class="python">def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
     &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
     keys = (
         &#34;name&#34;,
@@ -1075,13 +1089,17 @@ def write(
     )
     self.elements = []
     self.pg_no = 0
-    with open(infile) as f:
+    if encoding is None:
+        encoding = locale.getpreferredencoding()
+    with open(infile, encoding=encoding) as f:
         for row in csv.reader(f, delimiter=delimiter):
             kargs = {}
             for i, v in enumerate(row):
                 if not v.startswith(&#34;&#39;&#34;) and decimal_sep != &#34;.&#34;:
                     v = v.replace(decimal_sep, &#34;.&#34;)
-                kargs[keys[i]] = v.strip()
+                stripped_value = v.strip()
+                typed_value = try_to_type(stripped_value)
+                kargs[keys[i]] = typed_value
             self.elements.append(kargs)
     self.keys = [v[&#34;name&#34;].lower() for v in self.elements]</code></pre>
 </details>
@@ -1120,7 +1138,9 @@ def write(
         pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
         pdf.set_auto_page_break(False, margin=0)
 
-        for element in sorted(self.elements, key=lambda x: x[&#34;priority&#34;]):
+        sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
+
+        for element in sorted_elements:
             element = element.copy()
             element[&#34;text&#34;] = self.texts[pg].get(
                 element[&#34;name&#34;].lower(), element[&#34;text&#34;]
