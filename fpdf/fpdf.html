@@ -1391,10 +1391,10 @@ class FPDF:
         but this method can be useful for instance to define a clickable area inside an image.
 
         Args:
-            x (int): horizontal position (from the left) to the left side of the link rectangle
-            y (int): vertical position (from the top) to the bottom side of the link rectangle
-            w (int): width of the link rectangle
-            h (int): width of the link rectangle
+            x (float): horizontal position (from the left) to the left side of the link rectangle
+            y (float): vertical position (from the top) to the bottom side of the link rectangle
+            w (float): width of the link rectangle
+            h (float): width of the link rectangle
             link: either an URL or a integer returned by `add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
         &#34;&#34;&#34;
@@ -4819,10 +4819,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         but this method can be useful for instance to define a clickable area inside an image.
 
         Args:
-            x (int): horizontal position (from the left) to the left side of the link rectangle
-            y (int): vertical position (from the top) to the bottom side of the link rectangle
-            w (int): width of the link rectangle
-            h (int): width of the link rectangle
+            x (float): horizontal position (from the left) to the left side of the link rectangle
+            y (float): vertical position (from the top) to the bottom side of the link rectangle
+            w (float): width of the link rectangle
+            h (float): width of the link rectangle
             link: either an URL or a integer returned by `add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
         &#34;&#34;&#34;
@@ -8476,13 +8476,13 @@ Text or image links are generally put via <a href="#fpdf.FPDF.cell">cell</a>,
 but this method can be useful for instance to define a clickable area inside an image.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
 <dd>horizontal position (from the left) to the left side of the link rectangle</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
 <dd>vertical position (from the top) to the bottom side of the link rectangle</dd>
-<dt><strong><code>w</code></strong> :&ensp;<code>int</code></dt>
+<dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
 <dd>width of the link rectangle</dd>
-<dt><strong><code>h</code></strong> :&ensp;<code>int</code></dt>
+<dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>width of the link rectangle</dd>
 <dt><strong><code>link</code></strong></dt>
 <dd>either an URL or a integer returned by <code>add_link</code>, defining an internal link to a page</dd>
@@ -8502,10 +8502,10 @@ def link(self, x, y, w, h, link, alt_text=None):
     but this method can be useful for instance to define a clickable area inside an image.
 
     Args:
-        x (int): horizontal position (from the left) to the left side of the link rectangle
-        y (int): vertical position (from the top) to the bottom side of the link rectangle
-        w (int): width of the link rectangle
-        h (int): width of the link rectangle
+        x (float): horizontal position (from the left) to the left side of the link rectangle
+        y (float): vertical position (from the top) to the bottom side of the link rectangle
+        w (float): width of the link rectangle
+        h (float): width of the link rectangle
         link: either an URL or a integer returned by `add_link`, defining an internal link to a page
         alt_text (str): optional textual description of the link, for accessibility purposes
     &#34;&#34;&#34;

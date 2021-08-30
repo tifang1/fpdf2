@@ -760,7 +760,9 @@
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">)}}}</span>
 </code></pre></div>
 <h1 id="samples-template-definitions">Samples Template Definitions</h1>
-<p>As stated in the <a href="Templates.html">Templates</a> page, there are 3 ways of putting your templates in place. As in that page there are samples for the manually hardcoded way and CSV document loading. Here we will only show a sample of the template engine.</p>
+<p>As stated in the <a href="Templates.html">Templates</a> page, there are 3 ways of putting your templates in place.
+As in that page there are samples for the manually hardcoded way and CSV document loading.
+Here we will only show a sample of the template engine.</p>
 <h1 id="sample-templating-engine">Sample Templating Engine</h1>
 <p>PyFPDF and web2py can be used to make PDF documents using templates like invoices, badges, certificates, etc.:</p>
 <p>Sample: <a href="http://pyfpdf.googlecode.com/files/invoice.pdf">invoice.pdf</a></p>
@@ -834,9 +836,9 @@ Where the first number indicates the template ID (important for the database sys
     <span class="n">elements</span> <span class="o">=</span> <span class="n">db</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">pdf_element</span><span class="o">.</span><span class="n">pdf_template_id</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">orderby</span><span class="o">=</span><span class="n">db</span><span class="o">.</span><span class="n">pdf_element</span><span class="o">.</span><span class="n">priority</span><span class="p">)</span>
 
     <span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;A4&quot;</span><span class="p">,</span>
-             <span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span><span class="p">,</span>
-             <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample Invoice&quot;</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s2">&quot;Sample Company&quot;</span><span class="p">,</span>
-             <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;Sample Customer&quot;</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="s2">&quot;Electronic TAX Invoice&quot;</span><span class="p">)</span>
+                 <span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span><span class="p">,</span>
+                 <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample Invoice&quot;</span><span class="p">,</span> <span class="n">author</span><span class="o">=</span><span class="s2">&quot;Sample Company&quot;</span><span class="p">,</span>
+                 <span class="n">subject</span><span class="o">=</span><span class="s2">&quot;Sample Customer&quot;</span><span class="p">,</span> <span class="n">keywords</span><span class="o">=</span><span class="s2">&quot;Electronic TAX Invoice&quot;</span><span class="p">)</span>
 
     <span class="c1"># create some random invoice line items and detail data</span>
     <span class="n">detail</span> <span class="o">=</span> <span class="s2">&quot;Lorem ipsum dolor sit amet, consectetur. &quot;</span> <span class="o">*</span> <span class="mi">5</span>
@@ -936,7 +938,8 @@ Where the first number indicates the template ID (important for the database sys
     <span class="n">response</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Content-Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;application/pdf&#39;</span>
     <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s1">&#39;invoice.pdf&#39;</span><span class="p">)</span>
 </code></pre></div></p>
-<p>Of course, this is a hardcoded example. You can use the database to store invoices or any other data; there is no rigid class hierachy to follow, just fill your template like a dict!</p>
+<p>Of course, this is a hardcoded example. You can use the database to store invoices or any other data;
+there is no rigid class hierachy to follow, just fill your template like a dict!</p>
                 
               
               
