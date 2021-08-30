@@ -46,6 +46,13 @@ def rgb(col):
     return (col // 65536), (col // 256 % 256), (col % 256)
 
 
+def rgb_as_str(col):
+    r, g, b = rgb(col)
+    if (r == 0 and g == 0 and b == 0) or g == -1:
+        return f&#34;{r / 255:.3f} g&#34;
+    return f&#34;{r / 255:.3f} {g / 255:.3f} {b / 255:.3f} rg&#34;
+
+
 class Template:
     # Disabling this check due to the &#34;format&#34; parameter below:
     # pylint: disable=redefined-builtin
@@ -241,16 +248,16 @@ class Template:
         underline=False,
         align=&#34;&#34;,
         foreground=0,
-        backgroud=65535,
+        background=0xFFFFFF,
         multiline=None,
         **__,
     ):
         if not text:
             return
-        if pdf.text_color != rgb(foreground):
+        if pdf.text_color != rgb_as_str(foreground):
             pdf.set_text_color(*rgb(foreground))
-        if pdf.fill_color != rgb(backgroud):
-            pdf.set_fill_color(*rgb(backgroud))
+        if pdf.fill_color != rgb_as_str(background):
+            pdf.set_fill_color(*rgb(background))
 
         font = font.strip().lower()
         if font == &#34;helvetica black&#34;:
@@ -275,24 +282,28 @@ class Template:
         pdf.set_xy(x1, y1)
         if multiline is None:
             # multiline==None: write without wrapping/trimming (default)
-            pdf.cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align)
+            pdf.cell(
+                w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align, fill=True
+            )
         elif multiline:
             # multiline==True: automatic word - warp
-            pdf.multi_cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, align=align)
+            pdf.multi_cell(
+                w=x2 - x1, h=y2 - y1, txt=text, border=0, align=align, fill=True
+            )
         else:
             # multiline==False: trim to fit exactly the space defined
             text = pdf.multi_cell(
                 w=x2 - x1, h=y2 - y1, txt=text, align=align, split_only=True
             )[0]
-            print(f&#34;trimming: *{text}*&#34;)
-            pdf.cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align)
+            pdf.cell(
+                w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align, fill=True
+            )
 
             # pdf.Text(x=x1,y=y1,txt=text)
 
     @staticmethod
     def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
-        if pdf.draw_color != rgb(foreground):
-            # print &#34;SetDrawColor&#34;, hex(foreground)
+        if pdf.draw_color.lower() != rgb_as_str(foreground):
             pdf.set_draw_color(*rgb(foreground))
         # print &#34;SetLineWidth&#34;, size
         pdf.set_line_width(size)
@@ -300,14 +311,14 @@ class Template:
 
     @staticmethod
     def rect(
-        pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, backgroud=65535, **__
+        pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=0xFFFFFF, **__
     ):
-        if pdf.draw_color != rgb(foreground):
+        if pdf.draw_color.lower() != rgb_as_str(foreground):
             pdf.set_draw_color(*rgb(foreground))
-        if pdf.fill_color != rgb(backgroud):
-            pdf.set_fill_color(*rgb(backgroud))
+        if pdf.fill_color != rgb_as_str(background):
+            pdf.set_fill_color(*rgb(background))
         pdf.set_line_width(size)
-        pdf.rect(x1, y1, x2 - x1, y2 - y1)
+        pdf.rect(x1, y1, x2 - x1, y2 - y1, style=&#34;FD&#34;)
 
     @staticmethod
     def image(pdf, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
@@ -329,7 +340,7 @@ class Template:
         **__,
     ):
         # pylint: disable=unused-argument
-        if pdf.draw_color != rgb(foreground):
+        if pdf.draw_color.lower() != rgb_as_str(foreground):
             pdf.set_draw_color(*rgb(foreground))
         font = font.lower().strip()
         if font == &#34;interleaved 2of5 nt&#34;:
@@ -370,7 +381,7 @@ class Template:
         **__,
     ):
         # pylint: disable=unused-argument
-        if pdf.text_color != rgb(foreground):
+        if pdf.text_color != rgb_as_str(foreground):
             pdf.set_text_color(*rgb(foreground))
         font = font.strip().lower()
         if font == &#34;helvetica black&#34;:
@@ -414,6 +425,22 @@ class Template:
 </summary>
 <pre><code class="python">def rgb(col):
     return (col // 65536), (col // 256 % 256), (col % 256)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.template.rgb_as_str"><code class="name flex">
+<span>def <span class="ident">rgb_as_str</span></span>(<span>col)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def rgb_as_str(col):
+    r, g, b = rgb(col)
+    if (r == 0 and g == 0 and b == 0) or g == -1:
+        return f&#34;{r / 255:.3f} g&#34;
+    return f&#34;{r / 255:.3f} {g / 255:.3f} {b / 255:.3f} rg&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -630,16 +657,16 @@ class Template:
         underline=False,
         align=&#34;&#34;,
         foreground=0,
-        backgroud=65535,
+        background=0xFFFFFF,
         multiline=None,
         **__,
     ):
         if not text:
             return
-        if pdf.text_color != rgb(foreground):
+        if pdf.text_color != rgb_as_str(foreground):
             pdf.set_text_color(*rgb(foreground))
-        if pdf.fill_color != rgb(backgroud):
-            pdf.set_fill_color(*rgb(backgroud))
+        if pdf.fill_color != rgb_as_str(background):
+            pdf.set_fill_color(*rgb(background))
 
         font = font.strip().lower()
         if font == &#34;helvetica black&#34;:
@@ -664,24 +691,28 @@ class Template:
         pdf.set_xy(x1, y1)
         if multiline is None:
             # multiline==None: write without wrapping/trimming (default)
-            pdf.cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align)
+            pdf.cell(
+                w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align, fill=True
+            )
         elif multiline:
             # multiline==True: automatic word - warp
-            pdf.multi_cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, align=align)
+            pdf.multi_cell(
+                w=x2 - x1, h=y2 - y1, txt=text, border=0, align=align, fill=True
+            )
         else:
             # multiline==False: trim to fit exactly the space defined
             text = pdf.multi_cell(
                 w=x2 - x1, h=y2 - y1, txt=text, align=align, split_only=True
             )[0]
-            print(f&#34;trimming: *{text}*&#34;)
-            pdf.cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align)
+            pdf.cell(
+                w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align, fill=True
+            )
 
             # pdf.Text(x=x1,y=y1,txt=text)
 
     @staticmethod
     def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
-        if pdf.draw_color != rgb(foreground):
-            # print &#34;SetDrawColor&#34;, hex(foreground)
+        if pdf.draw_color.lower() != rgb_as_str(foreground):
             pdf.set_draw_color(*rgb(foreground))
         # print &#34;SetLineWidth&#34;, size
         pdf.set_line_width(size)
@@ -689,14 +720,14 @@ class Template:
 
     @staticmethod
     def rect(
-        pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, backgroud=65535, **__
+        pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=0xFFFFFF, **__
     ):
-        if pdf.draw_color != rgb(foreground):
+        if pdf.draw_color.lower() != rgb_as_str(foreground):
             pdf.set_draw_color(*rgb(foreground))
-        if pdf.fill_color != rgb(backgroud):
-            pdf.set_fill_color(*rgb(backgroud))
+        if pdf.fill_color != rgb_as_str(background):
+            pdf.set_fill_color(*rgb(background))
         pdf.set_line_width(size)
-        pdf.rect(x1, y1, x2 - x1, y2 - y1)
+        pdf.rect(x1, y1, x2 - x1, y2 - y1, style=&#34;FD&#34;)
 
     @staticmethod
     def image(pdf, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
@@ -718,7 +749,7 @@ class Template:
         **__,
     ):
         # pylint: disable=unused-argument
-        if pdf.draw_color != rgb(foreground):
+        if pdf.draw_color.lower() != rgb_as_str(foreground):
             pdf.set_draw_color(*rgb(foreground))
         font = font.lower().strip()
         if font == &#34;interleaved 2of5 nt&#34;:
@@ -759,7 +790,7 @@ class Template:
         **__,
     ):
         # pylint: disable=unused-argument
-        if pdf.text_color != rgb(foreground):
+        if pdf.text_color != rgb_as_str(foreground):
             pdf.set_text_color(*rgb(foreground))
         font = font.strip().lower()
         if font == &#34;helvetica black&#34;:
@@ -810,7 +841,7 @@ def barcode(
     **__,
 ):
     # pylint: disable=unused-argument
-    if pdf.draw_color != rgb(foreground):
+    if pdf.draw_color.lower() != rgb_as_str(foreground):
         pdf.set_draw_color(*rgb(foreground))
     font = font.lower().strip()
     if font == &#34;interleaved 2of5 nt&#34;:
@@ -866,8 +897,7 @@ def image(pdf, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
 </summary>
 <pre><code class="python">@staticmethod
 def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
-    if pdf.draw_color != rgb(foreground):
-        # print &#34;SetDrawColor&#34;, hex(foreground)
+    if pdf.draw_color.lower() != rgb_as_str(foreground):
         pdf.set_draw_color(*rgb(foreground))
     # print &#34;SetLineWidth&#34;, size
     pdf.set_line_width(size)
@@ -875,7 +905,7 @@ def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
 </details>
 </dd>
 <dt id="fpdf.template.Template.rect"><code class="name flex">
-<span>def <span class="ident">rect</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, backgroud=65535, **__)</span>
+<span>def <span class="ident">rect</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=16777215, **__)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -885,18 +915,18 @@ def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
 </summary>
 <pre><code class="python">@staticmethod
 def rect(
-    pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, backgroud=65535, **__
+    pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=0xFFFFFF, **__
 ):
-    if pdf.draw_color != rgb(foreground):
+    if pdf.draw_color.lower() != rgb_as_str(foreground):
         pdf.set_draw_color(*rgb(foreground))
-    if pdf.fill_color != rgb(backgroud):
-        pdf.set_fill_color(*rgb(backgroud))
+    if pdf.fill_color != rgb_as_str(background):
+        pdf.set_fill_color(*rgb(background))
     pdf.set_line_width(size)
-    pdf.rect(x1, y1, x2 - x1, y2 - y1)</code></pre>
+    pdf.rect(x1, y1, x2 - x1, y2 - y1, style=&#34;FD&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.template.Template.text"><code class="name flex">
-<span>def <span class="ident">text</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, text='', font='helvetica', size=10, bold=False, italic=False, underline=False, align='', foreground=0, backgroud=65535, multiline=None, **__)</span>
+<span>def <span class="ident">text</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, text='', font='helvetica', size=10, bold=False, italic=False, underline=False, align='', foreground=0, background=16777215, multiline=None, **__)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -920,16 +950,16 @@ def text(
     underline=False,
     align=&#34;&#34;,
     foreground=0,
-    backgroud=65535,
+    background=0xFFFFFF,
     multiline=None,
     **__,
 ):
     if not text:
         return
-    if pdf.text_color != rgb(foreground):
+    if pdf.text_color != rgb_as_str(foreground):
         pdf.set_text_color(*rgb(foreground))
-    if pdf.fill_color != rgb(backgroud):
-        pdf.set_fill_color(*rgb(backgroud))
+    if pdf.fill_color != rgb_as_str(background):
+        pdf.set_fill_color(*rgb(background))
 
     font = font.strip().lower()
     if font == &#34;helvetica black&#34;:
@@ -954,17 +984,22 @@ def text(
     pdf.set_xy(x1, y1)
     if multiline is None:
         # multiline==None: write without wrapping/trimming (default)
-        pdf.cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align)
+        pdf.cell(
+            w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align, fill=True
+        )
     elif multiline:
         # multiline==True: automatic word - warp
-        pdf.multi_cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, align=align)
+        pdf.multi_cell(
+            w=x2 - x1, h=y2 - y1, txt=text, border=0, align=align, fill=True
+        )
     else:
         # multiline==False: trim to fit exactly the space defined
         text = pdf.multi_cell(
             w=x2 - x1, h=y2 - y1, txt=text, align=align, split_only=True
         )[0]
-        print(f&#34;trimming: *{text}*&#34;)
-        pdf.cell(w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align)
+        pdf.cell(
+            w=x2 - x1, h=y2 - y1, txt=text, border=0, ln=0, align=align, fill=True
+        )
 
         # pdf.Text(x=x1,y=y1,txt=text)</code></pre>
 </details>
@@ -998,7 +1033,7 @@ def write(
     **__,
 ):
     # pylint: disable=unused-argument
-    if pdf.text_color != rgb(foreground):
+    if pdf.text_color != rgb_as_str(foreground):
         pdf.set_text_color(*rgb(foreground))
     font = font.strip().lower()
     if font == &#34;helvetica black&#34;:
@@ -1230,6 +1265,7 @@ def write(
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="fpdf.template.rgb" href="#fpdf.template.rgb">rgb</a></code></li>
+<li><code><a title="fpdf.template.rgb_as_str" href="#fpdf.template.rgb_as_str">rgb_as_str</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
