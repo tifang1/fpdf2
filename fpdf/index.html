@@ -1864,6 +1864,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         link=&#34;&#34;,
         ln=0,
         max_line_height=None,
+        markdown=False,
     ):
         &#34;&#34;&#34;
         This method allows printing text with line breaks. They can be automatic (as
@@ -1895,6 +1896,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 of the next line ; `2`: below with the same horizontal offset ;
                 `3`: to the right with the same vertical offset. Default value: 0.
             max_line_height (int): optional maximum height of each sub-cell generated
+            markdown (bool): enable minimal markdown-like markup to render part
+                of text as bold / italics / underlined. Default to False.
 
         Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
         with multiline text in cells.
@@ -1970,6 +1973,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     align=align,
                     fill=fill,
                     link=link,
+                    markdown=markdown,
                 )
                 page_break_triggered = page_break_triggered or new_page
                 text_cells.append(substr(s, j, i - j))
@@ -2016,6 +2020,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                         align=align,
                         fill=fill,
                         link=link,
+                        markdown=markdown,
                     )
                     page_break_triggered = page_break_triggered or new_page
                     text_cells.append(substr(s, j, i - j))
@@ -2043,6 +2048,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                         align=align,
                         fill=fill,
                         link=link,
+                        markdown=markdown,
                     )
                     page_break_triggered = page_break_triggered or new_page
                     text_cells.append(substr(s, j, sep - j))
@@ -2074,6 +2080,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             align=align,
             fill=fill,
             link=link,
+            markdown=markdown,
         )
         if new_page:
             # When a page jump is performed and ln=3,
@@ -5078,7 +5085,7 @@ def ln(self, h=None):
 </details>
 </dd>
 <dt id="fpdf.FPDF.multi_cell"><code class="name flex">
-<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align='J', fill=False, split_only=False, link='', ln=0, max_line_height=None)</span>
+<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align='J', fill=False, split_only=False, link='', ln=0, max_line_height=None, markdown=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This method allows printing text with line breaks. They can be automatic (as
@@ -5109,6 +5116,8 @@ the background painted.</p>
             of the next line ; &lt;code&gt;2&lt;/code&gt;: below with the same horizontal offset ;
             &lt;code&gt;3&lt;/code&gt;: to the right with the same vertical offset. Default value: 0.
         max_line_height (int): optional maximum height of each sub-cell generated
+        markdown (bool): enable minimal markdown-like markup to render part
+            of text as bold / italics / underlined. Default to False.
 
     Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
     with multiline text in cells.
@@ -5133,6 +5142,7 @@ def multi_cell(
     link=&#34;&#34;,
     ln=0,
     max_line_height=None,
+    markdown=False,
 ):
     &#34;&#34;&#34;
     This method allows printing text with line breaks. They can be automatic (as
@@ -5164,6 +5174,8 @@ def multi_cell(
             of the next line ; `2`: below with the same horizontal offset ;
             `3`: to the right with the same vertical offset. Default value: 0.
         max_line_height (int): optional maximum height of each sub-cell generated
+        markdown (bool): enable minimal markdown-like markup to render part
+            of text as bold / italics / underlined. Default to False.
 
     Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
     with multiline text in cells.
@@ -5239,6 +5251,7 @@ def multi_cell(
                 align=align,
                 fill=fill,
                 link=link,
+                markdown=markdown,
             )
             page_break_triggered = page_break_triggered or new_page
             text_cells.append(substr(s, j, i - j))
@@ -5285,6 +5298,7 @@ def multi_cell(
                     align=align,
                     fill=fill,
                     link=link,
+                    markdown=markdown,
                 )
                 page_break_triggered = page_break_triggered or new_page
                 text_cells.append(substr(s, j, i - j))
@@ -5312,6 +5326,7 @@ def multi_cell(
                     align=align,
                     fill=fill,
                     link=link,
+                    markdown=markdown,
                 )
                 page_break_triggered = page_break_triggered or new_page
                 text_cells.append(substr(s, j, sep - j))
@@ -5343,6 +5358,7 @@ def multi_cell(
         align=align,
         fill=fill,
         link=link,
+        markdown=markdown,
     )
     if new_page:
         # When a page jump is performed and ln=3,
