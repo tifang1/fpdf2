@@ -539,8 +539,7 @@ class TTFontFile:
                 target = subset[code] if isinstance(subset, dict) else code
                 if target &gt; 65535:
                     raise Exception(
-                        &#34;Character U+%X must be remapped since it cannot be indexed in CMAP4 table&#34;
-                        % target
+                        f&#34;Character U+{target:X} must be remapped since it cannot be indexed in CMAP4 table&#34;
                     )
                 if code in self.charToGlyph:
                     if (self.charToGlyph[code], target) not in subsetglyphs:
@@ -1591,8 +1590,7 @@ class TTFontFile:
                 target = subset[code] if isinstance(subset, dict) else code
                 if target &gt; 65535:
                     raise Exception(
-                        &#34;Character U+%X must be remapped since it cannot be indexed in CMAP4 table&#34;
-                        % target
+                        f&#34;Character U+{target:X} must be remapped since it cannot be indexed in CMAP4 table&#34;
                     )
                 if code in self.charToGlyph:
                     if (self.charToGlyph[code], target) not in subsetglyphs:
@@ -2933,8 +2931,7 @@ def splice(stream, offset, value):
             target = subset[code] if isinstance(subset, dict) else code
             if target &gt; 65535:
                 raise Exception(
-                    &#34;Character U+%X must be remapped since it cannot be indexed in CMAP4 table&#34;
-                    % target
+                    f&#34;Character U+{target:X} must be remapped since it cannot be indexed in CMAP4 table&#34;
                 )
             if code in self.charToGlyph:
                 if (self.charToGlyph[code], target) not in subsetglyphs:

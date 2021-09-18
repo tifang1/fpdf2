@@ -2710,10 +2710,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
                         code_high = 0xD800 | (code - 0x10000) &gt;&gt; 10
                         code_low = 0xDC00 | (code &amp; 0x3FF)
                         bfChar.append(
-                            &#34;&lt;%04X&gt; &lt;%04X%04X&gt;\n&#34; % (code_mapped, code_high, code_low)
+                            f&#34;&lt;{code_mapped:04X}&gt; &lt;{code_high:04X}{code_low:04X}&gt;\n&#34;
                         )
                     else:
-                        bfChar.append(&#34;&lt;%04X&gt; &lt;%04X&gt;\n&#34; % (code_mapped, code))
+                        bfChar.append(f&#34;&lt;{code_mapped:04X}&gt; &lt;{code:04X}&gt;\n&#34;)
 
                 # ToUnicode
                 self._newobj()
