@@ -524,6 +524,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#datamatrix" class="md-nav__link">
+    DataMatrix
+  </a>
+  
+    <nav class="md-nav" aria-label="DataMatrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extend-fpdf-with-a-datamatrix-method" class="md-nav__link">
+    Extend FPDF with a datamatrix() method
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -705,6 +725,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#datamatrix" class="md-nav__link">
+    DataMatrix
+  </a>
+  
+    <nav class="md-nav" aria-label="DataMatrix">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#extend-fpdf-with-a-datamatrix-method" class="md-nav__link">
+    Extend FPDF with a datamatrix() method
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -767,6 +807,52 @@ using the <a href="https://github.com/lincolnloop/python-qrcode"><code>python-qr
 </code></pre></div>
 <p>Output preview:</p>
 <p><img alt="" src="qrcode.png" /></p>
+<h2 id="datamatrix">DataMatrix</h2>
+<p><code>fpdf2</code> can be combined with the <a href="https://github.com/mmulqueen/pyStrich"><code>pystrich</code></a> library to generate <a href="https://en.wikipedia.org/wiki/Data_Matrix">DataMatrix barcodes</a>:
+<code>pystrich</code> generates pilimages, which can then be inserted into the PDF file via the <code>FPDF.image()</code> method.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">pystrich.datamatrix</span> <span class="kn">import</span> <span class="n">DataMatrixEncoder</span><span class="p">,</span> <span class="n">DataMatrixRenderer</span>
+
+
+<span class="c1"># Define the properties of the barcode</span>
+<span class="n">positionX</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">positionY</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">width</span> <span class="o">=</span> <span class="mi">57</span>
+<span class="n">height</span> <span class="o">=</span> <span class="mi">57</span>
+<span class="n">cellsize</span> <span class="o">=</span> <span class="mi">5</span>
+
+<span class="c1"># Prepare the datamatrix renderer that will be used to generate the pilimage</span>
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">DataMatrixEncoder</span><span class="p">(</span><span class="s2">&quot;[Text to be converted to a datamatrix barcode]&quot;</span><span class="p">)</span>
+<span class="n">encoder</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
+<span class="n">encoder</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">height</span>
+<span class="n">renderer</span> <span class="o">=</span> <span class="n">DataMatrixRenderer</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">encoder</span><span class="o">.</span><span class="n">regions</span><span class="p">)</span>
+
+<span class="c1"># Generate a pilimage and move it into the memory stream</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">get_pilimage</span><span class="p">(</span><span class="n">cellsize</span><span class="p">)</span>
+
+<span class="c1"># Draw the barcode image into a PDF file</span>
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">positionX</span><span class="p">,</span> <span class="n">positionY</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="datamatrix.png" /></p>
+<h3 id="extend-fpdf-with-a-datamatrix-method">Extend FPDF with a datamatrix() method</h3>
+<p>The code above could be added to the FPDF class as an extension method in the following way.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">pystrich.datamatrix</span> <span class="kn">import</span> <span class="n">DataMatrixEncoder</span><span class="p">,</span> <span class="n">DataMatrixRenderer</span>
+
+
+<span class="k">def</span> <span class="nf">datamatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">57</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">57</span><span class="p">,</span> <span class="n">cellsize</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="s2">&quot;Convert text to a datamatrix barcode and put in on the page&quot;</span>
+    <span class="n">encoder</span> <span class="o">=</span> <span class="n">DataMatrixEncoder</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="n">encoder</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">w</span>
+    <span class="n">encoder</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">h</span>
+    <span class="n">renderer</span> <span class="o">=</span> <span class="n">DataMatrixRenderer</span><span class="p">(</span><span class="n">encoder</span><span class="o">.</span><span class="n">matrix</span><span class="p">,</span> <span class="n">encoder</span><span class="o">.</span><span class="n">regions</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">renderer</span><span class="o">.</span><span class="n">get_pilimage</span><span class="p">(</span><span class="n">cellsize</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+<span class="n">FPDF</span><span class="o">.</span><span class="n">datamatrix</span> <span class="o">=</span> <span class="n">datamatrix</span>
+</code></pre></div>
                 
               
               
