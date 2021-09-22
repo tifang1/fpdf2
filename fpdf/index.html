@@ -7233,26 +7233,44 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
         self.elements = elements
         self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
 
+    @staticmethod
+    def _parse_colorcode(s):
+        &#34;&#34;&#34;Allow hex and oct values for colors&#34;&#34;&#34;
+        s = s.strip()
+        if not s:
+            raise ValueError(&#34;Foreground and Background must be numeric&#34;)
+        if s[:2] in [&#34;0x&#34;, &#34;0X&#34;]:
+            return int(s, 16)
+        if s[0] == &#34;0&#34;:
+            return int(s, 8)
+        return int(s)
+
     def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
         &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
-        keys = (
-            &#34;name&#34;,
-            &#34;type&#34;,
-            &#34;x1&#34;,
-            &#34;y1&#34;,
-            &#34;x2&#34;,
-            &#34;y2&#34;,
-            &#34;font&#34;,
-            &#34;size&#34;,
-            &#34;bold&#34;,
-            &#34;italic&#34;,
-            &#34;underline&#34;,
-            &#34;foreground&#34;,
-            &#34;background&#34;,
-            &#34;align&#34;,
-            &#34;text&#34;,
-            &#34;priority&#34;,
-            &#34;multiline&#34;,
+
+        def varsep_float(s):
+            &#34;&#34;&#34;Convert to float with given decimal seperator&#34;&#34;&#34;
+            # glad to have nonlocal scoping...
+            return float(s.replace(decimal_sep, &#34;.&#34;))
+
+        handlers = (
+            (&#34;name&#34;, str.strip),
+            (&#34;type&#34;, str.strip),
+            (&#34;x1&#34;, varsep_float),
+            (&#34;y1&#34;, varsep_float),
+            (&#34;x2&#34;, varsep_float),
+            (&#34;y2&#34;, varsep_float),
+            (&#34;font&#34;, str.strip),
+            (&#34;size&#34;, varsep_float),
+            (&#34;bold&#34;, int),
+            (&#34;italic&#34;, int),
+            (&#34;underline&#34;, int),
+            (&#34;foreground&#34;, self._parse_colorcode),
+            (&#34;background&#34;, self._parse_colorcode),
+            (&#34;align&#34;, str.strip),
+            (&#34;text&#34;, str.strip),
+            (&#34;priority&#34;, int),
+            (&#34;multiline&#34;, int),
         )
         self.elements = []
         self.pg_no = 0
@@ -7262,11 +7280,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
             for row in csv.reader(f, delimiter=delimiter):
                 kargs = {}
                 for i, v in enumerate(row):
-                    if not v.startswith(&#34;&#39;&#34;) and decimal_sep != &#34;.&#34;:
-                        v = v.replace(decimal_sep, &#34;.&#34;)
-                    stripped_value = v.strip()
-                    typed_value = try_to_type(stripped_value)
-                    kargs[keys[i]] = typed_value
+                    kargs[handlers[i][0]] = handlers[i][1](v)
                 self.elements.append(kargs)
         self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
 
@@ -7782,24 +7796,30 @@ def write(
 </summary>
 <pre><code class="python">def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
     &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
-    keys = (
-        &#34;name&#34;,
-        &#34;type&#34;,
-        &#34;x1&#34;,
-        &#34;y1&#34;,
-        &#34;x2&#34;,
-        &#34;y2&#34;,
-        &#34;font&#34;,
-        &#34;size&#34;,
-        &#34;bold&#34;,
-        &#34;italic&#34;,
-        &#34;underline&#34;,
-        &#34;foreground&#34;,
-        &#34;background&#34;,
-        &#34;align&#34;,
-        &#34;text&#34;,
-        &#34;priority&#34;,
-        &#34;multiline&#34;,
+
+    def varsep_float(s):
+        &#34;&#34;&#34;Convert to float with given decimal seperator&#34;&#34;&#34;
+        # glad to have nonlocal scoping...
+        return float(s.replace(decimal_sep, &#34;.&#34;))
+
+    handlers = (
+        (&#34;name&#34;, str.strip),
+        (&#34;type&#34;, str.strip),
+        (&#34;x1&#34;, varsep_float),
+        (&#34;y1&#34;, varsep_float),
+        (&#34;x2&#34;, varsep_float),
+        (&#34;y2&#34;, varsep_float),
+        (&#34;font&#34;, str.strip),
+        (&#34;size&#34;, varsep_float),
+        (&#34;bold&#34;, int),
+        (&#34;italic&#34;, int),
+        (&#34;underline&#34;, int),
+        (&#34;foreground&#34;, self._parse_colorcode),
+        (&#34;background&#34;, self._parse_colorcode),
+        (&#34;align&#34;, str.strip),
+        (&#34;text&#34;, str.strip),
+        (&#34;priority&#34;, int),
+        (&#34;multiline&#34;, int),
     )
     self.elements = []
     self.pg_no = 0
@@ -7809,11 +7829,7 @@ def write(
         for row in csv.reader(f, delimiter=delimiter):
             kargs = {}
             for i, v in enumerate(row):
-                if not v.startswith(&#34;&#39;&#34;) and decimal_sep != &#34;.&#34;:
-                    v = v.replace(decimal_sep, &#34;.&#34;)
-                stripped_value = v.strip()
-                typed_value = try_to_type(stripped_value)
-                kargs[keys[i]] = typed_value
+                kargs[handlers[i][0]] = handlers[i][1](v)
             self.elements.append(kargs)
     self.keys = [v[&#34;name&#34;].lower() for v in self.elements]</code></pre>
 </details>
