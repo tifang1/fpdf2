@@ -310,6 +310,7 @@ class FPDF:
         self.image_filter = &#34;AUTO&#34;
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
+        self._rotating = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -708,6 +709,8 @@ class FPDF:
             raise FPDFException(
                 &#34;A page cannot be added on a closed document, after calling output()&#34;
             )
+        if self._rotating:
+            raise FPDFException(&#34;.add_page() should not be called inside .rotation()&#34;)
         if self.state == DocumentState.UNINITIALIZED:
             self.open()
         family = self.font_family
@@ -809,6 +812,10 @@ class FPDF:
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_draw_color() should not be called inside .rotation()&#34;
+            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.draw_color = f&#34;{r / 255:.3f} G&#34;
         else:
@@ -828,6 +835,10 @@ class FPDF:
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_fill_color() should not be called inside .rotation()&#34;
+            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.fill_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -847,6 +858,10 @@ class FPDF:
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_text_color() should not be called inside .rotation()&#34;
+            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.text_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -889,6 +904,10 @@ class FPDF:
         Args:
             width (int): the width in user unit
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_line_width() should not be called inside .rotation()&#34;
+            )
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
@@ -1261,6 +1280,8 @@ class FPDF:
             raise ValueError(
                 f&#34;Unknown style provided (only B/I/U letters are allowed): {style}&#34;
             )
+        if self._rotating:
+            raise FPDFException(&#34;.set_font() should not be called inside .rotation()&#34;)
         if &#34;U&#34; in style:
             self.underline = 1
             style = style.replace(&#34;U&#34;, &#34;&#34;)
@@ -1326,6 +1347,10 @@ class FPDF:
         Args:
             size (int): font size in points
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_font_size() should not be called inside .rotation()&#34;
+            )
         if self.font_size_pt == size:
             return
         self.font_size_pt = size
@@ -1345,6 +1370,10 @@ class FPDF:
         Args:
             stretching (int): horizontal stretching (scaling) in percents.
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_stretching() should not be called inside .rotation()&#34;
+            )
         if self.font_stretching == stretching:
             return
         self.font_stretching = stretching
@@ -1553,7 +1582,9 @@ class FPDF:
             f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
             f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
         )
+        self._rotating = True
         yield
+        self._rotating = False
         self._out(&#34;Q\n&#34;)
 
     @property
@@ -3745,6 +3776,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.image_filter = &#34;AUTO&#34;
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
+        self._rotating = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -4143,6 +4175,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise FPDFException(
                 &#34;A page cannot be added on a closed document, after calling output()&#34;
             )
+        if self._rotating:
+            raise FPDFException(&#34;.add_page() should not be called inside .rotation()&#34;)
         if self.state == DocumentState.UNINITIALIZED:
             self.open()
         family = self.font_family
@@ -4244,6 +4278,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_draw_color() should not be called inside .rotation()&#34;
+            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.draw_color = f&#34;{r / 255:.3f} G&#34;
         else:
@@ -4263,6 +4301,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_fill_color() should not be called inside .rotation()&#34;
+            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.fill_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -4282,6 +4324,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_text_color() should not be called inside .rotation()&#34;
+            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.text_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -4324,6 +4370,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             width (int): the width in user unit
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_line_width() should not be called inside .rotation()&#34;
+            )
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
@@ -4696,6 +4746,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise ValueError(
                 f&#34;Unknown style provided (only B/I/U letters are allowed): {style}&#34;
             )
+        if self._rotating:
+            raise FPDFException(&#34;.set_font() should not be called inside .rotation()&#34;)
         if &#34;U&#34; in style:
             self.underline = 1
             style = style.replace(&#34;U&#34;, &#34;&#34;)
@@ -4761,6 +4813,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             size (int): font size in points
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_font_size() should not be called inside .rotation()&#34;
+            )
         if self.font_size_pt == size:
             return
         self.font_size_pt = size
@@ -4780,6 +4836,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             stretching (int): horizontal stretching (scaling) in percents.
         &#34;&#34;&#34;
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_stretching() should not be called inside .rotation()&#34;
+            )
         if self.font_stretching == stretching:
             return
         self.font_stretching = stretching
@@ -4988,7 +5048,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
             f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
             f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
         )
+        self._rotating = True
         yield
+        self._rotating = False
         self._out(&#34;Q\n&#34;)
 
     @property
@@ -7389,6 +7451,8 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
         raise FPDFException(
             &#34;A page cannot be added on a closed document, after calling output()&#34;
         )
+    if self._rotating:
+        raise FPDFException(&#34;.add_page() should not be called inside .rotation()&#34;)
     if self.state == DocumentState.UNINITIALIZED:
         self.open()
     family = self.font_family
@@ -9226,7 +9290,9 @@ def rotation(self, angle, x=None, y=None):
         f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
         f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
     )
+    self._rotating = True
     yield
+    self._rotating = False
     self._out(&#34;Q\n&#34;)</code></pre>
 </details>
 </dd>
@@ -9486,6 +9552,10 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         g (int): green component (between 0 and 255)
         b (int): blue component (between 0 and 255)
     &#34;&#34;&#34;
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_draw_color() should not be called inside .rotation()&#34;
+        )
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.draw_color = f&#34;{r / 255:.3f} G&#34;
     else:
@@ -9527,6 +9597,10 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         g (int): green component (between 0 and 255)
         b (int): blue component (between 0 and 255)
     &#34;&#34;&#34;
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_fill_color() should not be called inside .rotation()&#34;
+        )
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.fill_color = f&#34;{r / 255:.3f} g&#34;
     else:
@@ -9602,6 +9676,8 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
         raise ValueError(
             f&#34;Unknown style provided (only B/I/U letters are allowed): {style}&#34;
         )
+    if self._rotating:
+        raise FPDFException(&#34;.set_font() should not be called inside .rotation()&#34;)
     if &#34;U&#34; in style:
         self.underline = 1
         style = style.replace(&#34;U&#34;, &#34;&#34;)
@@ -9682,6 +9758,10 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     Args:
         size (int): font size in points
     &#34;&#34;&#34;
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_font_size() should not be called inside .rotation()&#34;
+        )
     if self.font_size_pt == size:
         return
     self.font_size_pt = size
@@ -9828,6 +9908,10 @@ The method can be called before the first page is created and the value is retai
     Args:
         width (int): the width in user unit
     &#34;&#34;&#34;
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_line_width() should not be called inside .rotation()&#34;
+        )
     self.line_width = width
     if self.page &gt; 0:
         self._out(f&#34;{width * self.k:.2f} w&#34;)</code></pre>
@@ -10071,6 +10155,10 @@ By default, no stretching is set (which is equivalent to a value of 100).</p>
     Args:
         stretching (int): horizontal stretching (scaling) in percents.
     &#34;&#34;&#34;
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_stretching() should not be called inside .rotation()&#34;
+        )
     if self.font_stretching == stretching:
         return
     self.font_stretching = stretching
@@ -10135,6 +10223,10 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         g (int): green component (between 0 and 255)
         b (int): blue component (between 0 and 255)
     &#34;&#34;&#34;
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_text_color() should not be called inside .rotation()&#34;
+        )
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.text_color = f&#34;{r / 255:.3f} g&#34;
     else:
