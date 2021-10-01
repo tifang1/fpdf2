@@ -3505,11 +3505,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         if level &lt; 0:
             raise ValueError(&#39;&#34;level&#34; mut be equal or greater than zero&#39;)
-        if self._outline:
-            if level &gt; self._outline[-1].level + 1:
-                raise ValueError(
-                    f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
-                )
+        if self._outline and level &gt; self._outline[-1].level + 1:
+            raise ValueError(
+                f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
+            )
         dest = DestinationXYZ(self.page, y=self.y)
         struct_elem = None
         if self.section_title_styles:
@@ -6941,11 +6940,10 @@ def start_section(self, name, level=0):
     &#34;&#34;&#34;
     if level &lt; 0:
         raise ValueError(&#39;&#34;level&#34; mut be equal or greater than zero&#39;)
-    if self._outline:
-        if level &gt; self._outline[-1].level + 1:
-            raise ValueError(
-                f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
-            )
+    if self._outline and level &gt; self._outline[-1].level + 1:
+        raise ValueError(
+            f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
+        )
     dest = DestinationXYZ(self.page, y=self.y)
     struct_elem = None
     if self.section_title_styles:
@@ -7730,7 +7728,7 @@ to new image URLs</dd>
     def render_toc(self, pdf, outline):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
-        for section in outline[1:]:  # skipping top-level h1
+        for section in outline:
             link = pdf.add_link()
             pdf.set_link(link, page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
@@ -8160,7 +8158,7 @@ to new image URLs</dd>
 <pre><code class="python">def render_toc(self, pdf, outline):
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
     pdf.ln()
-    for section in outline[1:]:  # skipping top-level h1
+    for section in outline:
         link = pdf.add_link()
         pdf.set_link(link, page=section.page_number)
         text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;

@@ -692,7 +692,7 @@ class HTML2FPDF(HTMLParser):
     def render_toc(self, pdf, outline):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
-        for section in outline[1:]:  # skipping top-level h1
+        for section in outline:
             link = pdf.add_link()
             pdf.set_link(link, page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
@@ -1268,7 +1268,7 @@ to new image URLs</dd>
     def render_toc(self, pdf, outline):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
-        for section in outline[1:]:  # skipping top-level h1
+        for section in outline:
             link = pdf.add_link()
             pdf.set_link(link, page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
@@ -1698,7 +1698,7 @@ to new image URLs</dd>
 <pre><code class="python">def render_toc(self, pdf, outline):
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
     pdf.ln()
-    for section in outline[1:]:  # skipping top-level h1
+    for section in outline:
         link = pdf.add_link()
         pdf.set_link(link, page=section.page_number)
         text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
