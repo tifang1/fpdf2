@@ -36,7 +36,7 @@ from .fpdf import (
     FPDF_FONT_DIR as _FPDF_FONT_DIR,
     FPDF_VERSION as _FPDF_VERSION,
 )
-from .html import HTMLMixin
+from .html import HTMLMixin, HTML2FPDF
 from .template import Template
 from .deprecation import WarnOnDeprecatedModuleAttributes
 
@@ -69,6 +69,7 @@ __all__ = [
     &#34;Template&#34;,
     &#34;TitleStyle&#34;,
     &#34;HTMLMixin&#34;,
+    &#34;HTML2FPDF&#34;,
     # FPDF Constants
     &#34;FPDF_VERSION&#34;,
     &#34;FPDF_FONT_DIR&#34;,
@@ -7188,6 +7189,1017 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.HTML2FPDF"><code class="flex name class">
+<span>class <span class="ident">HTML2FPDF</span></span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=5, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, **_)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Render basic HTML to FPDF</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pdf</code></strong> :&ensp;<code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code></dt>
+<dd>an instance of <code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code></dd>
+<dt><strong><code>image_map</code></strong> :&ensp;<code>function</code></dt>
+<dd>an optional one-argument function that map <img> "src"
+to new image URLs</dd>
+<dt><strong><code>li_tag_indent</code></strong> :&ensp;<code>int</code></dt>
+<dd>numeric indentation of <li> elements</dd>
+<dt><strong><code>table_line_separators</code></strong> :&ensp;<code>bool</code></dt>
+<dd>enable horizontal line separators in <table></dd>
+<dt><strong><code>ul_bullet_char</code></strong> :&ensp;<code>str</code></dt>
+<dd>bullet character for <ul> elements</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HTML2FPDF(HTMLParser):
+    &#34;&#34;&#34;Render basic HTML to FPDF&#34;&#34;&#34;
+
+    def __init__(
+        self,
+        pdf,
+        image_map=None,
+        li_tag_indent=5,
+        table_line_separators=False,
+        ul_bullet_char=BULLET_WIN1252,
+        heading_sizes=None,
+        **_,
+    ):
+        &#34;&#34;&#34;
+        Args:
+            pdf (FPDF): an instance of `fpdf.FPDF`
+            image_map (function): an optional one-argument function that map &lt;img&gt; &#34;src&#34;
+                to new image URLs
+            li_tag_indent (int): numeric indentation of &lt;li&gt; elements
+            table_line_separators (bool): enable horizontal line separators in &lt;table&gt;
+            ul_bullet_char (str): bullet character for &lt;ul&gt; elements
+        &#34;&#34;&#34;
+        super().__init__()
+        self.pdf = pdf
+        self.image_map = image_map or (lambda src: src)
+        self.li_tag_indent = li_tag_indent
+        self.table_line_separators = table_line_separators
+        self.ul_bullet_char = ul_bullet_char
+        self.style = dict(b=False, i=False, u=False)
+        self.href = &#34;&#34;
+        self.align = &#34;&#34;
+        self.page_links = {}
+        self.font_stack = []
+        self.indent = 0
+        self.bullet = []
+        self.font_size = pdf.font_size_pt
+        self.set_font(pdf.font_family or &#34;times&#34;, size=self.font_size)
+        self.font_color = 0, 0, 0  # initialize font color, r,g,b format
+        self.table = None  # table attributes
+        self.table_col_width = None  # column (header) widths
+        self.table_col_index = None  # current column index
+        self.td = None  # inside a &lt;td&gt;, attributes dict
+        self.th = None  # inside a &lt;th&gt;, attributes dict
+        self.tr = None  # inside a &lt;tr&gt;, attributes dict
+        self.thead = None  # inside a &lt;thead&gt;, attributes dict
+        self.tfoot = None  # inside a &lt;tfoot&gt;, attributes dict
+        self.tr_index = None  # row index
+        self.theader = None  # table header cells
+        self.tfooter = None  # table footer cells
+        self.theader_out = self.tfooter_out = False
+        self.table_row_height = 0
+        self.heading_level = None
+        self.heading_sizes = dict(**DEFAULT_HEADING_SIZES)
+        if heading_sizes:
+            self.heading_sizes.update(heading_sizes)
+        self._only_imgs_in_td = False
+
+    def width2unit(self, length):
+        &#34;Handle conversion of % measures into the measurement unit used&#34;
+        if length[-1] == &#34;%&#34;:
+            total = self.pdf.w - self.pdf.r_margin - self.pdf.l_margin
+            if self.table[&#34;width&#34;][-1] == &#34;%&#34;:
+                total *= int(self.table[&#34;width&#34;][:-1]) / 100
+            return int(length[:-1]) * total / 100
+        return int(length)
+
+    def handle_data(self, data):
+        if self.td is not None:  # drawing a table?
+            self._insert_td(data)
+        elif self.table is not None:
+            # ignore anything else than td inside a table
+            pass
+        elif self.align:
+            LOGGER.debug(&#34;align &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
+            self.pdf.multi_cell(
+                0,
+                self.h,
+                data,
+                border=0,
+                ln=1,
+                align=self.align[0].upper(),
+                link=self.href,
+            )
+        else:
+            data = data.replace(&#34;\n&#34;, &#34; &#34;)
+            if self.href:
+                self.put_link(data)
+            else:
+                if self.heading_level:
+                    self.pdf.start_section(data, self.heading_level - 1)
+                LOGGER.debug(&#34;write &#39;%s&#39; h=%d&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;), self.h)
+                self.pdf.write(self.h, data)
+
+    def _insert_td(self, data=&#34;&#34;):
+        self._only_imgs_in_td = False
+        width = self._td_width()
+        height = int(self.td.get(&#34;height&#34;, 0)) // 4 or self.h * 1.30
+        if not self.table_row_height:
+            self.table_row_height = height
+        elif self.table_row_height &gt; height:
+            height = self.table_row_height
+        border = int(self.table.get(&#34;border&#34;, 0))
+        if self.th:
+            self.set_style(&#34;B&#34;, True)
+            border = border or &#34;B&#34;
+            align = self.td.get(&#34;align&#34;, &#34;C&#34;)[0].upper()
+        else:
+            align = self.td.get(&#34;align&#34;, &#34;L&#34;)[0].upper()
+            border = border and &#34;LR&#34;
+        bgcolor = color_as_decimal(self.td.get(&#34;bgcolor&#34;, self.tr.get(&#34;bgcolor&#34;, &#34;&#34;)))
+        # parsing table header/footer (drawn later):
+        if self.thead is not None:
+            self.theader.append(((width, height, data, border, 0, align), bgcolor))
+        if self.tfoot is not None:
+            self.tfooter.append(((width, height, data, border, 0, align), bgcolor))
+        # check if reached end of page, add table footer and header:
+        if self.tfooter:
+            height += self.tfooter[0][0][1]
+        if self.pdf.y + height &gt; self.pdf.page_break_trigger and not self.th:
+            self.output_table_footer()
+            self.pdf.add_page(same=True)
+            self.theader_out = self.tfooter_out = False
+        if self.tfoot is None and self.thead is None:
+            if not self.theader_out:
+                self.output_table_header()
+            self.box_shadow(width, height, bgcolor)
+            # self.pdf.x may have shifted due to &lt;img&gt; inside &lt;td&gt;:
+            self.pdf.set_x(self._td_x())
+            LOGGER.debug(
+                &#34;td cell x=%d width=%d height=%d border=%s align=%s &#39;%s&#39;&#34;,
+                self.pdf.x,
+                width,
+                height,
+                border,
+                align,
+                data.replace(&#34;\n&#34;, &#34;\\n&#34;),
+            )
+            self.pdf.cell(width, height, data, border=border, ln=0, align=align)
+
+    def _td_x(self):
+        &#34;Return the current table cell left side horizontal position&#34;
+        prev_cells_total_width = sum(
+            self.width2unit(width)
+            for width in self.table_col_width[: self.table_col_index]
+        )
+        return self.table_offset + prev_cells_total_width
+
+    def _td_width(self):
+        &#34;Return the current table cell width&#34;
+        # pylint: disable=raise-missing-from
+        if &#34;width&#34; in self.td:
+            column_widths = [self.td[&#34;width&#34;]]
+        elif &#34;colspan&#34; in self.td:
+            i = self.table_col_index
+            colspan = int(self.td[&#34;colspan&#34;])
+            column_widths = self.table_col_width[i : i + colspan]
+        else:
+            try:
+                column_widths = [self.table_col_width[self.table_col_index]]
+            except IndexError:
+                raise ValueError(
+                    f&#34;Width not specified for table column {self.table_col_index},&#34;
+                    &#34; unable to continue&#34;
+                )
+        return sum(self.width2unit(width) for width in column_widths)
+
+    def box_shadow(self, w, h, bgcolor):
+        LOGGER.debug(&#34;box_shadow w=%d h=%d bgcolor=%s&#34;, w, h, bgcolor)
+        if bgcolor:
+            fill_color = self.pdf.fill_color
+            self.pdf.set_fill_color(*bgcolor)
+            self.pdf.rect(self.pdf.x, self.pdf.y, w, h, &#34;F&#34;)
+            self.pdf.fill_color = fill_color
+
+    def output_table_header(self):
+        if self.theader:
+            b = self.style.get(&#34;b&#34;)
+            self.pdf.set_x(self.table_offset)
+            self.set_style(&#34;b&#34;, True)
+            for cell, bgcolor in self.theader:
+                self.box_shadow(cell[0], cell[1], bgcolor)
+                self.pdf.cell(*cell)  # includes the border
+            self.set_style(&#34;b&#34;, b)
+            self.pdf.ln(self.theader[0][0][1])
+            self.pdf.set_x(self.table_offset)
+            # self.pdf.set_x(prev_x)
+        self.theader_out = True
+
+    def output_table_footer(self):
+        if self.tfooter:
+            x = self.pdf.x
+            self.pdf.set_x(self.table_offset)
+            for cell, bgcolor in self.tfooter:
+                self.box_shadow(cell[0], cell[1], bgcolor)
+                self.pdf.cell(*cell)
+            self.pdf.ln(self.tfooter[0][0][1])
+            self.pdf.set_x(x)
+        if self.table.get(&#34;border&#34;):
+            self.output_table_sep()
+        self.tfooter_out = True
+
+    def output_table_sep(self):
+        x1 = self.pdf.x
+        y1 = self.pdf.y
+        width = sum(self.width2unit(length) for length in self.table_col_width)
+        self.pdf.line(x1, y1, x1 + width, y1)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+        if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
+            self.set_style(tag, True)
+        if tag == &#34;a&#34;:
+            self.href = attrs[&#34;href&#34;]
+        if tag == &#34;br&#34;:
+            self.pdf.ln(self.h)
+        if tag == &#34;p&#34;:
+            self.pdf.ln(self.h)
+            if attrs:
+                self.align = attrs.get(&#34;align&#34;)
+        if tag in self.heading_sizes:
+            self.font_stack.append((self.font_face, self.font_size, self.font_color))
+            self.heading_level = int(tag[1:])
+            hsize = self.heading_sizes[tag]
+            self.pdf.set_text_color(150, 0, 0)
+            self.set_font(size=hsize)
+            self.pdf.ln(self.h)
+            if attrs:
+                self.align = attrs.get(&#34;align&#34;)
+        if tag == &#34;hr&#34;:
+            self.pdf.add_page(same=True)
+        if tag == &#34;pre&#34;:
+            self.font_stack.append((self.font_face, self.font_size, self.font_color))
+            self.set_font(&#34;courier&#34;, 11)
+        if tag == &#34;blockquote&#34;:
+            self.pdf.set_text_color(100, 0, 45)
+            self.indent += 1
+            self.pdf.ln(3)
+        if tag == &#34;ul&#34;:
+            self.indent += 1
+            self.bullet.append(self.ul_bullet_char)
+        if tag == &#34;ol&#34;:
+            self.indent += 1
+            self.bullet.append(0)
+        if tag == &#34;li&#34;:
+            self.pdf.ln(self.h + 2)
+            self.pdf.set_text_color(190, 0, 0)
+            bullet = self.bullet[self.indent - 1]
+            if not isinstance(bullet, str):
+                bullet += 1
+                self.bullet[self.indent - 1] = bullet
+                bullet = f&#34;{bullet}. &#34;
+            self.pdf.write(self.h, f&#34;{&#39; &#39; * self.li_tag_indent * self.indent}{bullet} &#34;)
+            self.set_text_color(*self.font_color)
+        if tag == &#34;font&#34;:
+            # save previous font state:
+            self.font_stack.append((self.font_face, self.font_size, self.font_color))
+            if &#34;color&#34; in attrs:
+                color = color_as_decimal(attrs[&#34;color&#34;])
+                self.font_color = color
+            if &#34;face&#34; in attrs:
+                face = attrs.get(&#34;face&#34;).lower()
+                try:
+                    self.pdf.set_font(face)
+                    self.font_face = face
+                except RuntimeError:
+                    pass  # font not found, ignore
+            if &#34;size&#34; in attrs:
+                self.font_size = int(attrs.get(&#34;size&#34;))
+            self.set_font()
+            self.set_text_color(*self.font_color)
+        if tag == &#34;table&#34;:
+            self.table = {k.lower(): v for k, v in attrs.items()}
+            if &#34;width&#34; not in self.table:
+                self.table[&#34;width&#34;] = &#34;100%&#34;
+            if self.table[&#34;width&#34;][-1] == &#34;%&#34;:
+                w = self.pdf.w - self.pdf.r_margin - self.pdf.l_margin
+                w *= int(self.table[&#34;width&#34;][:-1]) / 100
+                self.table_offset = (self.pdf.w - w) / 2
+            self.table_col_width = []
+            self.theader_out = self.tfooter_out = False
+            self.theader = []
+            self.tfooter = []
+            self.thead = None
+            self.tfoot = None
+            self.pdf.ln()
+        if tag == &#34;tr&#34;:
+            self.tr_index = 0 if self.tr_index is None else (self.tr_index + 1)
+            self.tr = {k.lower(): v for k, v in attrs.items()}
+            self.table_col_index = 0
+            self.table_row_height = 0
+            self.pdf.set_x(self.table_offset)
+            # Adding an horizontal line separator between rows:
+            if self.table_line_separators and self.tr_index &gt; 0:
+                self.output_table_sep()
+        if tag == &#34;td&#34;:
+            self.td = {k.lower(): v for k, v in attrs.items()}
+            if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+                assert self.table_col_index == len(
+                    self.table_col_width
+                ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
+                self.table_col_width.append(self.td[&#34;width&#34;])
+            if attrs:
+                self.align = attrs.get(&#34;align&#34;)
+            self._only_imgs_in_td = False
+        if tag == &#34;th&#34;:
+            self.td = {k.lower(): v for k, v in attrs.items()}
+            self.th = True
+            if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+                assert self.table_col_index == len(
+                    self.table_col_width
+                ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
+                self.table_col_width.append(self.td[&#34;width&#34;])
+        if tag == &#34;thead&#34;:
+            self.thead = {}
+        if tag == &#34;tfoot&#34;:
+            self.tfoot = {}
+        if tag == &#34;img&#34; and &#34;src&#34; in attrs:
+            width = px2mm(attrs.get(&#34;width&#34;, 0))
+            height = px2mm(attrs.get(&#34;height&#34;, 0))
+            if self.pdf.y + height &gt; self.pdf.page_break_trigger:
+                self.pdf.add_page(same=True)
+            y = self.pdf.get_y()
+            if self.table_col_index is not None:
+                self._only_imgs_in_td = True
+                # &lt;img&gt; in a &lt;td&gt;: its width must not exceed the cell width:
+                td_width = self._td_width()
+                if not width or width &gt; td_width:
+                    if width:  # Preserving image aspect ratio:
+                        height *= td_width / width
+                    width = td_width
+                x = self._td_x()
+                if self.align and self.align[0].upper() == &#34;C&#34;:
+                    x += (td_width - width) / 2
+            else:
+                x = self.pdf.get_x()
+                if self.align and self.align[0].upper() == &#34;C&#34;:
+                    x = self.pdf.w / 2 - width / 2
+            LOGGER.debug(
+                &#39;image &#34;%s&#34; x=%d y=%d width=%d height=%d&#39;,
+                attrs[&#34;src&#34;],
+                x,
+                y,
+                width,
+                height,
+            )
+            self.pdf.image(
+                self.image_map(attrs[&#34;src&#34;]), x, y, width, height, link=self.href
+            )
+            self.pdf.set_x(x + width)
+            if self.table_col_index is not None:
+                # &lt;img&gt; in a &lt;td&gt;: we grow the cell height according to the image height:
+                if height &gt; self.table_row_height:
+                    self.table_row_height = height
+            else:
+                self.pdf.set_y(y + height)
+        if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
+            self.set_style(tag, True)
+        if tag == &#34;center&#34;:
+            self.align = &#34;Center&#34;
+        if tag == &#34;toc&#34;:
+            self.pdf.insert_toc_placeholder(
+                self.render_toc, pages=int(attrs.get(&#34;pages&#34;, 1))
+            )
+
+    def handle_endtag(self, tag):
+        # Closing tag
+        LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
+        if tag in self.heading_sizes:
+            self.heading_level = None
+            face, size, color = self.font_stack.pop()
+            self.set_font(face, size)
+            self.set_text_color(*color)
+            self.pdf.ln(self.h)
+            self.align = None
+        if tag == &#34;pre&#34;:
+            face, size, color = self.font_stack.pop()
+            self.set_font(face, size)
+            self.set_text_color(*color)
+        if tag == &#34;blockquote&#34;:
+            self.set_text_color(*self.font_color)
+            self.indent -= 1
+            self.pdf.ln(3)
+        if tag == &#34;strong&#34;:
+            tag = &#34;b&#34;
+        if tag == &#34;em&#34;:
+            tag = &#34;i&#34;
+        if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
+            self.set_style(tag, False)
+        if tag == &#34;a&#34;:
+            self.href = &#34;&#34;
+        if tag == &#34;p&#34;:
+            self.pdf.ln(self.h)
+            self.align = &#34;&#34;
+        if tag in (&#34;ul&#34;, &#34;ol&#34;):
+            self.indent -= 1
+            self.bullet.pop()
+        if tag == &#34;table&#34;:
+            if not self.tfooter_out:
+                self.output_table_footer()
+            self.table = None
+            self.th = False
+            self.theader = None
+            self.tfooter = None
+            self.pdf.ln(self.h)
+            self.tr_index = None
+        if tag == &#34;thead&#34;:
+            self.thead = None
+            self.tr_index = None
+        if tag == &#34;tfoot&#34;:
+            self.tfoot = None
+            self.tr_index = None
+        if tag == &#34;tbody&#34;:
+            self.tbody = None
+            self.tr_index = None
+        if tag == &#34;tr&#34;:
+            if self.tfoot is None:
+                self.pdf.ln(self.table_row_height)
+            self.table_col_index = None
+            self.tr = None
+        if tag in (&#34;td&#34;, &#34;th&#34;):
+            if self.th:
+                LOGGER.debug(&#34;revert style&#34;)
+                self.set_style(&#34;b&#34;, False)  # revert style
+            elif self._only_imgs_in_td:
+                self._insert_td()
+            self.table_col_index += int(self.td.get(&#34;colspan&#34;, &#34;1&#34;))
+            self.td = None
+            self.th = False
+        if tag == &#34;font&#34;:
+            # recover last font state
+            face, size, color = self.font_stack.pop()
+            self.font_color = color
+            self.set_font(face, size)
+            self.set_text_color(*self.font_color)
+        if tag == &#34;center&#34;:
+            self.align = None
+
+    def set_font(self, face=None, size=None):
+        if face:
+            self.font_face = face
+        if size:
+            self.font_size = size
+            self.h = size / 72 * 25.4
+            LOGGER.debug(&#34;H %s&#34;, self.h)
+        style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s)).upper()
+        if (self.font_face, style) != (self.pdf.font_family, self.pdf.font_style):
+            self.pdf.set_font(self.font_face, style, self.font_size)
+        if self.font_size != self.pdf.font_size:
+            self.pdf.set_font_size(self.font_size)
+
+    def set_style(self, tag=None, enable=False):
+        # Modify style and select corresponding font
+        if tag:
+            self.style[tag.lower()] = enable
+        style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
+        LOGGER.debug(&#34;SET_FONT_STYLE %s&#34;, style)
+        self.pdf.set_font(style=style)
+
+    def set_text_color(self, r=None, g=0, b=0):
+        self.pdf.set_text_color(r, g, b)
+
+    def put_link(self, txt):
+        # Put a hyperlink
+        self.set_text_color(0, 0, 255)
+        self.set_style(&#34;u&#34;, True)
+        self.pdf.write(self.h, txt, self.href)
+        self.set_style(&#34;u&#34;, False)
+        self.set_text_color(*self.font_color)
+
+    # pylint: disable=no-self-use
+    def render_toc(self, pdf, outline):
+        &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
+        pdf.ln()
+        for section in outline[1:]:  # skipping top-level h1
+            link = pdf.add_link()
+            pdf.set_link(link, page=section.page_number)
+            text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
+            text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
+            pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)
+
+    # Subclasses of _markupbase.ParserBase must implement this:
+    def error(self, message):
+        raise RuntimeError(message)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>html.parser.HTMLParser</li>
+<li>_markupbase.ParserBase</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.HTML2FPDF.box_shadow"><code class="name flex">
+<span>def <span class="ident">box_shadow</span></span>(<span>self, w, h, bgcolor)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def box_shadow(self, w, h, bgcolor):
+    LOGGER.debug(&#34;box_shadow w=%d h=%d bgcolor=%s&#34;, w, h, bgcolor)
+    if bgcolor:
+        fill_color = self.pdf.fill_color
+        self.pdf.set_fill_color(*bgcolor)
+        self.pdf.rect(self.pdf.x, self.pdf.y, w, h, &#34;F&#34;)
+        self.pdf.fill_color = fill_color</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.error"><code class="name flex">
+<span>def <span class="ident">error</span></span>(<span>self, message)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def error(self, message):
+    raise RuntimeError(message)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.handle_data"><code class="name flex">
+<span>def <span class="ident">handle_data</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_data(self, data):
+    if self.td is not None:  # drawing a table?
+        self._insert_td(data)
+    elif self.table is not None:
+        # ignore anything else than td inside a table
+        pass
+    elif self.align:
+        LOGGER.debug(&#34;align &#39;%s&#39;&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;))
+        self.pdf.multi_cell(
+            0,
+            self.h,
+            data,
+            border=0,
+            ln=1,
+            align=self.align[0].upper(),
+            link=self.href,
+        )
+    else:
+        data = data.replace(&#34;\n&#34;, &#34; &#34;)
+        if self.href:
+            self.put_link(data)
+        else:
+            if self.heading_level:
+                self.pdf.start_section(data, self.heading_level - 1)
+            LOGGER.debug(&#34;write &#39;%s&#39; h=%d&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;), self.h)
+            self.pdf.write(self.h, data)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.handle_endtag"><code class="name flex">
+<span>def <span class="ident">handle_endtag</span></span>(<span>self, tag)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_endtag(self, tag):
+    # Closing tag
+    LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
+    if tag in self.heading_sizes:
+        self.heading_level = None
+        face, size, color = self.font_stack.pop()
+        self.set_font(face, size)
+        self.set_text_color(*color)
+        self.pdf.ln(self.h)
+        self.align = None
+    if tag == &#34;pre&#34;:
+        face, size, color = self.font_stack.pop()
+        self.set_font(face, size)
+        self.set_text_color(*color)
+    if tag == &#34;blockquote&#34;:
+        self.set_text_color(*self.font_color)
+        self.indent -= 1
+        self.pdf.ln(3)
+    if tag == &#34;strong&#34;:
+        tag = &#34;b&#34;
+    if tag == &#34;em&#34;:
+        tag = &#34;i&#34;
+    if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
+        self.set_style(tag, False)
+    if tag == &#34;a&#34;:
+        self.href = &#34;&#34;
+    if tag == &#34;p&#34;:
+        self.pdf.ln(self.h)
+        self.align = &#34;&#34;
+    if tag in (&#34;ul&#34;, &#34;ol&#34;):
+        self.indent -= 1
+        self.bullet.pop()
+    if tag == &#34;table&#34;:
+        if not self.tfooter_out:
+            self.output_table_footer()
+        self.table = None
+        self.th = False
+        self.theader = None
+        self.tfooter = None
+        self.pdf.ln(self.h)
+        self.tr_index = None
+    if tag == &#34;thead&#34;:
+        self.thead = None
+        self.tr_index = None
+    if tag == &#34;tfoot&#34;:
+        self.tfoot = None
+        self.tr_index = None
+    if tag == &#34;tbody&#34;:
+        self.tbody = None
+        self.tr_index = None
+    if tag == &#34;tr&#34;:
+        if self.tfoot is None:
+            self.pdf.ln(self.table_row_height)
+        self.table_col_index = None
+        self.tr = None
+    if tag in (&#34;td&#34;, &#34;th&#34;):
+        if self.th:
+            LOGGER.debug(&#34;revert style&#34;)
+            self.set_style(&#34;b&#34;, False)  # revert style
+        elif self._only_imgs_in_td:
+            self._insert_td()
+        self.table_col_index += int(self.td.get(&#34;colspan&#34;, &#34;1&#34;))
+        self.td = None
+        self.th = False
+    if tag == &#34;font&#34;:
+        # recover last font state
+        face, size, color = self.font_stack.pop()
+        self.font_color = color
+        self.set_font(face, size)
+        self.set_text_color(*self.font_color)
+    if tag == &#34;center&#34;:
+        self.align = None</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.handle_starttag"><code class="name flex">
+<span>def <span class="ident">handle_starttag</span></span>(<span>self, tag, attrs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_starttag(self, tag, attrs):
+    attrs = dict(attrs)
+    LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+    if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
+        self.set_style(tag, True)
+    if tag == &#34;a&#34;:
+        self.href = attrs[&#34;href&#34;]
+    if tag == &#34;br&#34;:
+        self.pdf.ln(self.h)
+    if tag == &#34;p&#34;:
+        self.pdf.ln(self.h)
+        if attrs:
+            self.align = attrs.get(&#34;align&#34;)
+    if tag in self.heading_sizes:
+        self.font_stack.append((self.font_face, self.font_size, self.font_color))
+        self.heading_level = int(tag[1:])
+        hsize = self.heading_sizes[tag]
+        self.pdf.set_text_color(150, 0, 0)
+        self.set_font(size=hsize)
+        self.pdf.ln(self.h)
+        if attrs:
+            self.align = attrs.get(&#34;align&#34;)
+    if tag == &#34;hr&#34;:
+        self.pdf.add_page(same=True)
+    if tag == &#34;pre&#34;:
+        self.font_stack.append((self.font_face, self.font_size, self.font_color))
+        self.set_font(&#34;courier&#34;, 11)
+    if tag == &#34;blockquote&#34;:
+        self.pdf.set_text_color(100, 0, 45)
+        self.indent += 1
+        self.pdf.ln(3)
+    if tag == &#34;ul&#34;:
+        self.indent += 1
+        self.bullet.append(self.ul_bullet_char)
+    if tag == &#34;ol&#34;:
+        self.indent += 1
+        self.bullet.append(0)
+    if tag == &#34;li&#34;:
+        self.pdf.ln(self.h + 2)
+        self.pdf.set_text_color(190, 0, 0)
+        bullet = self.bullet[self.indent - 1]
+        if not isinstance(bullet, str):
+            bullet += 1
+            self.bullet[self.indent - 1] = bullet
+            bullet = f&#34;{bullet}. &#34;
+        self.pdf.write(self.h, f&#34;{&#39; &#39; * self.li_tag_indent * self.indent}{bullet} &#34;)
+        self.set_text_color(*self.font_color)
+    if tag == &#34;font&#34;:
+        # save previous font state:
+        self.font_stack.append((self.font_face, self.font_size, self.font_color))
+        if &#34;color&#34; in attrs:
+            color = color_as_decimal(attrs[&#34;color&#34;])
+            self.font_color = color
+        if &#34;face&#34; in attrs:
+            face = attrs.get(&#34;face&#34;).lower()
+            try:
+                self.pdf.set_font(face)
+                self.font_face = face
+            except RuntimeError:
+                pass  # font not found, ignore
+        if &#34;size&#34; in attrs:
+            self.font_size = int(attrs.get(&#34;size&#34;))
+        self.set_font()
+        self.set_text_color(*self.font_color)
+    if tag == &#34;table&#34;:
+        self.table = {k.lower(): v for k, v in attrs.items()}
+        if &#34;width&#34; not in self.table:
+            self.table[&#34;width&#34;] = &#34;100%&#34;
+        if self.table[&#34;width&#34;][-1] == &#34;%&#34;:
+            w = self.pdf.w - self.pdf.r_margin - self.pdf.l_margin
+            w *= int(self.table[&#34;width&#34;][:-1]) / 100
+            self.table_offset = (self.pdf.w - w) / 2
+        self.table_col_width = []
+        self.theader_out = self.tfooter_out = False
+        self.theader = []
+        self.tfooter = []
+        self.thead = None
+        self.tfoot = None
+        self.pdf.ln()
+    if tag == &#34;tr&#34;:
+        self.tr_index = 0 if self.tr_index is None else (self.tr_index + 1)
+        self.tr = {k.lower(): v for k, v in attrs.items()}
+        self.table_col_index = 0
+        self.table_row_height = 0
+        self.pdf.set_x(self.table_offset)
+        # Adding an horizontal line separator between rows:
+        if self.table_line_separators and self.tr_index &gt; 0:
+            self.output_table_sep()
+    if tag == &#34;td&#34;:
+        self.td = {k.lower(): v for k, v in attrs.items()}
+        if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+            assert self.table_col_index == len(
+                self.table_col_width
+            ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
+            self.table_col_width.append(self.td[&#34;width&#34;])
+        if attrs:
+            self.align = attrs.get(&#34;align&#34;)
+        self._only_imgs_in_td = False
+    if tag == &#34;th&#34;:
+        self.td = {k.lower(): v for k, v in attrs.items()}
+        self.th = True
+        if &#34;width&#34; in self.td and self.table_col_index &gt;= len(self.table_col_width):
+            assert self.table_col_index == len(
+                self.table_col_width
+            ), f&#34;table_col_index={self.table_col_index} #table_col_width={len(self.table_col_width)}&#34;
+            self.table_col_width.append(self.td[&#34;width&#34;])
+    if tag == &#34;thead&#34;:
+        self.thead = {}
+    if tag == &#34;tfoot&#34;:
+        self.tfoot = {}
+    if tag == &#34;img&#34; and &#34;src&#34; in attrs:
+        width = px2mm(attrs.get(&#34;width&#34;, 0))
+        height = px2mm(attrs.get(&#34;height&#34;, 0))
+        if self.pdf.y + height &gt; self.pdf.page_break_trigger:
+            self.pdf.add_page(same=True)
+        y = self.pdf.get_y()
+        if self.table_col_index is not None:
+            self._only_imgs_in_td = True
+            # &lt;img&gt; in a &lt;td&gt;: its width must not exceed the cell width:
+            td_width = self._td_width()
+            if not width or width &gt; td_width:
+                if width:  # Preserving image aspect ratio:
+                    height *= td_width / width
+                width = td_width
+            x = self._td_x()
+            if self.align and self.align[0].upper() == &#34;C&#34;:
+                x += (td_width - width) / 2
+        else:
+            x = self.pdf.get_x()
+            if self.align and self.align[0].upper() == &#34;C&#34;:
+                x = self.pdf.w / 2 - width / 2
+        LOGGER.debug(
+            &#39;image &#34;%s&#34; x=%d y=%d width=%d height=%d&#39;,
+            attrs[&#34;src&#34;],
+            x,
+            y,
+            width,
+            height,
+        )
+        self.pdf.image(
+            self.image_map(attrs[&#34;src&#34;]), x, y, width, height, link=self.href
+        )
+        self.pdf.set_x(x + width)
+        if self.table_col_index is not None:
+            # &lt;img&gt; in a &lt;td&gt;: we grow the cell height according to the image height:
+            if height &gt; self.table_row_height:
+                self.table_row_height = height
+        else:
+            self.pdf.set_y(y + height)
+    if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
+        self.set_style(tag, True)
+    if tag == &#34;center&#34;:
+        self.align = &#34;Center&#34;
+    if tag == &#34;toc&#34;:
+        self.pdf.insert_toc_placeholder(
+            self.render_toc, pages=int(attrs.get(&#34;pages&#34;, 1))
+        )</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.output_table_footer"><code class="name flex">
+<span>def <span class="ident">output_table_footer</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def output_table_footer(self):
+    if self.tfooter:
+        x = self.pdf.x
+        self.pdf.set_x(self.table_offset)
+        for cell, bgcolor in self.tfooter:
+            self.box_shadow(cell[0], cell[1], bgcolor)
+            self.pdf.cell(*cell)
+        self.pdf.ln(self.tfooter[0][0][1])
+        self.pdf.set_x(x)
+    if self.table.get(&#34;border&#34;):
+        self.output_table_sep()
+    self.tfooter_out = True</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.output_table_header"><code class="name flex">
+<span>def <span class="ident">output_table_header</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def output_table_header(self):
+    if self.theader:
+        b = self.style.get(&#34;b&#34;)
+        self.pdf.set_x(self.table_offset)
+        self.set_style(&#34;b&#34;, True)
+        for cell, bgcolor in self.theader:
+            self.box_shadow(cell[0], cell[1], bgcolor)
+            self.pdf.cell(*cell)  # includes the border
+        self.set_style(&#34;b&#34;, b)
+        self.pdf.ln(self.theader[0][0][1])
+        self.pdf.set_x(self.table_offset)
+        # self.pdf.set_x(prev_x)
+    self.theader_out = True</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.output_table_sep"><code class="name flex">
+<span>def <span class="ident">output_table_sep</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def output_table_sep(self):
+    x1 = self.pdf.x
+    y1 = self.pdf.y
+    width = sum(self.width2unit(length) for length in self.table_col_width)
+    self.pdf.line(x1, y1, x1 + width, y1)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.put_link"><code class="name flex">
+<span>def <span class="ident">put_link</span></span>(<span>self, txt)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def put_link(self, txt):
+    # Put a hyperlink
+    self.set_text_color(0, 0, 255)
+    self.set_style(&#34;u&#34;, True)
+    self.pdf.write(self.h, txt, self.href)
+    self.set_style(&#34;u&#34;, False)
+    self.set_text_color(*self.font_color)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.render_toc"><code class="name flex">
+<span>def <span class="ident">render_toc</span></span>(<span>self, pdf, outline)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method can be overriden by subclasses to customize the Table of Contents style.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def render_toc(self, pdf, outline):
+    &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
+    pdf.ln()
+    for section in outline[1:]:  # skipping top-level h1
+        link = pdf.add_link()
+        pdf.set_link(link, page=section.page_number)
+        text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
+        text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
+        pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.set_font"><code class="name flex">
+<span>def <span class="ident">set_font</span></span>(<span>self, face=None, size=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_font(self, face=None, size=None):
+    if face:
+        self.font_face = face
+    if size:
+        self.font_size = size
+        self.h = size / 72 * 25.4
+        LOGGER.debug(&#34;H %s&#34;, self.h)
+    style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s)).upper()
+    if (self.font_face, style) != (self.pdf.font_family, self.pdf.font_style):
+        self.pdf.set_font(self.font_face, style, self.font_size)
+    if self.font_size != self.pdf.font_size:
+        self.pdf.set_font_size(self.font_size)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.set_style"><code class="name flex">
+<span>def <span class="ident">set_style</span></span>(<span>self, tag=None, enable=False)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_style(self, tag=None, enable=False):
+    # Modify style and select corresponding font
+    if tag:
+        self.style[tag.lower()] = enable
+    style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s))
+    LOGGER.debug(&#34;SET_FONT_STYLE %s&#34;, style)
+    self.pdf.set_font(style=style)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.set_text_color"><code class="name flex">
+<span>def <span class="ident">set_text_color</span></span>(<span>self, r=None, g=0, b=0)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_text_color(self, r=None, g=0, b=0):
+    self.pdf.set_text_color(r, g, b)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.width2unit"><code class="name flex">
+<span>def <span class="ident">width2unit</span></span>(<span>self, length)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handle conversion of % measures into the measurement unit used</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def width2unit(self, length):
+    &#34;Handle conversion of % measures into the measurement unit used&#34;
+    if length[-1] == &#34;%&#34;:
+        total = self.pdf.w - self.pdf.r_margin - self.pdf.l_margin
+        if self.table[&#34;width&#34;][-1] == &#34;%&#34;:
+            total *= int(self.table[&#34;width&#34;][:-1]) / 100
+        return int(length[:-1]) * total / 100
+    return int(length)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.HTMLMixin"><code class="flex name class">
 <span>class <span class="ident">HTMLMixin</span></span>
 </code></dt>
@@ -7198,15 +8210,24 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HTMLMixin:
+    HTML2FPDF_CLASS = HTML2FPDF
+
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
         kwargs2 = vars(self)
         # Method arguments must override class &amp; instance attributes:
         kwargs2.update(kwargs)
-        h2p = HTML2FPDF(self, *args, **kwargs2)
+        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
         text = html.unescape(text)  # To deal with HTML entities
         h2p.feed(text)</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.HTMLMixin.HTML2FPDF_CLASS"><code class="name">var <span class="ident">HTML2FPDF_CLASS</span></code></dt>
+<dd>
+<div class="desc"><p>Render basic HTML to FPDF</p></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.HTMLMixin.write_html"><code class="name flex">
@@ -7223,7 +8244,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
     kwargs2 = vars(self)
     # Method arguments must override class &amp; instance attributes:
     kwargs2.update(kwargs)
-    h2p = HTML2FPDF(self, *args, **kwargs2)
+    h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
     text = html.unescape(text)  # To deal with HTML entities
     h2p.feed(text)</code></pre>
 </details>
@@ -8178,8 +9199,28 @@ def write(
 </ul>
 </li>
 <li>
+<h4><code><a title="fpdf.HTML2FPDF" href="#fpdf.HTML2FPDF">HTML2FPDF</a></code></h4>
+<ul class="two-column">
+<li><code><a title="fpdf.HTML2FPDF.box_shadow" href="#fpdf.HTML2FPDF.box_shadow">box_shadow</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.error" href="#fpdf.HTML2FPDF.error">error</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.handle_data" href="#fpdf.HTML2FPDF.handle_data">handle_data</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.handle_endtag" href="#fpdf.HTML2FPDF.handle_endtag">handle_endtag</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.handle_starttag" href="#fpdf.HTML2FPDF.handle_starttag">handle_starttag</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.output_table_footer" href="#fpdf.HTML2FPDF.output_table_footer">output_table_footer</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.output_table_header" href="#fpdf.HTML2FPDF.output_table_header">output_table_header</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.output_table_sep" href="#fpdf.HTML2FPDF.output_table_sep">output_table_sep</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.put_link" href="#fpdf.HTML2FPDF.put_link">put_link</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.render_toc" href="#fpdf.HTML2FPDF.render_toc">render_toc</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.set_font" href="#fpdf.HTML2FPDF.set_font">set_font</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.set_style" href="#fpdf.HTML2FPDF.set_style">set_style</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.set_text_color" href="#fpdf.HTML2FPDF.set_text_color">set_text_color</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.width2unit" href="#fpdf.HTML2FPDF.width2unit">width2unit</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="fpdf.HTMLMixin" href="#fpdf.HTMLMixin">HTMLMixin</a></code></h4>
 <ul class="">
+<li><code><a title="fpdf.HTMLMixin.HTML2FPDF_CLASS" href="#fpdf.HTMLMixin.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.HTMLMixin.write_html" href="#fpdf.HTMLMixin.write_html">write_html</a></code></li>
 </ul>
 </li>

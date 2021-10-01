@@ -736,7 +736,31 @@ Note that a page break will always be triggered after inserting the table of con
 <h2 id="with-html">With HTML</h2>
 <p>When using <a href="HTML.html"><code>fpdf.HTMLMixin</code></a>, a document outline is automatically built.
 You can insert a table of content with the special <code>&lt;toc&gt;</code> tag.</p>
-<p>Custom styling of the table of contents can be achieved by overriding the <code>render_toc</code> method in a subclass.</p>
+<p>Custom styling of the table of contents can be achieved by overriding the <code>render_toc</code> method
+in a subclass of <code>fpdf.html.HTML2FPDF</code>:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span><span class="p">,</span> <span class="n">HTMLMixin</span><span class="p">,</span> <span class="n">HTML2FPDF</span>
+
+<span class="k">class</span> <span class="nc">CustomHTML2FPDF</span><span class="p">(</span><span class="n">HTML2FPDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">render_toc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">outline</span><span class="p">):</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s1">&#39;Table of contents:&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">outline</span><span class="p">:</span>
+            <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;* </span><span class="si">{</span><span class="n">section</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> (page </span><span class="si">{</span><span class="n">section</span><span class="o">.</span><span class="n">page_number</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">,</span> <span class="n">HTMLMixin</span><span class="p">):</span>
+    <span class="n">HTML2FPDF_CLASS</span> <span class="o">=</span> <span class="n">CustomHTML2FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;&lt;toc&gt;&lt;/toc&gt;</span>
+<span class="s2">    &lt;h1&gt;Level 1&lt;/h1&gt;</span>
+<span class="s2">    &lt;h2&gt;Level 2&lt;/h2&gt;</span>
+<span class="s2">    &lt;h3&gt;Level 3&lt;/h3&gt;</span>
+<span class="s2">    &lt;h4&gt;Level 4&lt;/h4&gt;</span>
+<span class="s2">    &lt;h5&gt;Level 5&lt;/h5&gt;</span>
+<span class="s2">    &lt;h6&gt;Level 6&lt;/h6&gt;</span>
+<span class="s2">    &lt;p&gt;paragraph&lt;p&gt;&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;html_toc.pdf&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="code-samples">Code samples</h2>
 <p>The regression tests are a good place to find code samples.</p>
 <p>For example, the <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_outline.py"><code>test_simple_outline</code></a> test function generates the PDF document <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_simple_outline.pdf">test_simple_outline.pdf</a>.</p>

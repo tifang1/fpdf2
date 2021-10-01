@@ -41,7 +41,7 @@ from html.parser import HTMLParser
 
 LOGGER = logging.getLogger(__name__)
 BULLET_WIN1252 = &#34;\x95&#34;  # BULLET character in Windows-1252 encoding
-DEFAULT_HEADING_SIZES = dict(h1=2, h2=1.5, h3=1.17, h4=1, h5=0.83, h6=0.67)
+DEFAULT_HEADING_SIZES = dict(h1=24, h2=18, h3=14, h4=12, h5=10, h6=8)
 
 COLOR_DICT = {
     &#34;black&#34;: &#34;#000000&#34;,
@@ -442,9 +442,9 @@ class HTML2FPDF(HTMLParser):
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
             self.heading_level = int(tag[1:])
             hsize = self.heading_sizes[tag]
-            self.pdf.ln(5 * hsize)
             self.pdf.set_text_color(150, 0, 0)
-            self.set_font(size=12 * hsize)
+            self.set_font(size=hsize)
+            self.pdf.ln(self.h)
             if attrs:
                 self.align = attrs.get(&#34;align&#34;)
         if tag == &#34;hr&#34;:
@@ -705,12 +705,14 @@ class HTML2FPDF(HTMLParser):
 
 
 class HTMLMixin:
+    HTML2FPDF_CLASS = HTML2FPDF
+
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
         kwargs2 = vars(self)
         # Method arguments must override class &amp; instance attributes:
         kwargs2.update(kwargs)
-        h2p = HTML2FPDF(self, *args, **kwargs2)
+        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
         text = html.unescape(text)  # To deal with HTML entities
         h2p.feed(text)</code></pre>
 </details>
@@ -1016,9 +1018,9 @@ to new image URLs</dd>
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
             self.heading_level = int(tag[1:])
             hsize = self.heading_sizes[tag]
-            self.pdf.ln(5 * hsize)
             self.pdf.set_text_color(150, 0, 0)
-            self.set_font(size=12 * hsize)
+            self.set_font(size=hsize)
+            self.pdf.ln(self.h)
             if attrs:
                 self.align = attrs.get(&#34;align&#34;)
         if tag == &#34;hr&#34;:
@@ -1461,9 +1463,9 @@ to new image URLs</dd>
         self.font_stack.append((self.font_face, self.font_size, self.font_color))
         self.heading_level = int(tag[1:])
         hsize = self.heading_sizes[tag]
-        self.pdf.ln(5 * hsize)
         self.pdf.set_text_color(150, 0, 0)
-        self.set_font(size=12 * hsize)
+        self.set_font(size=hsize)
+        self.pdf.ln(self.h)
         if attrs:
             self.align = attrs.get(&#34;align&#34;)
     if tag == &#34;hr&#34;:
@@ -1789,15 +1791,24 @@ to new image URLs</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HTMLMixin:
+    HTML2FPDF_CLASS = HTML2FPDF
+
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
         kwargs2 = vars(self)
         # Method arguments must override class &amp; instance attributes:
         kwargs2.update(kwargs)
-        h2p = HTML2FPDF(self, *args, **kwargs2)
+        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
         text = html.unescape(text)  # To deal with HTML entities
         h2p.feed(text)</code></pre>
 </details>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.html.HTMLMixin.HTML2FPDF_CLASS"><code class="name">var <span class="ident">HTML2FPDF_CLASS</span></code></dt>
+<dd>
+<div class="desc"><p>Render basic HTML to FPDF</p></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.html.HTMLMixin.write_html"><code class="name flex">
@@ -1814,7 +1825,7 @@ to new image URLs</dd>
     kwargs2 = vars(self)
     # Method arguments must override class &amp; instance attributes:
     kwargs2.update(kwargs)
-    h2p = HTML2FPDF(self, *args, **kwargs2)
+    h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
     text = html.unescape(text)  # To deal with HTML entities
     h2p.feed(text)</code></pre>
 </details>
@@ -1865,6 +1876,7 @@ to new image URLs</dd>
 <li>
 <h4><code><a title="fpdf.html.HTMLMixin" href="#fpdf.html.HTMLMixin">HTMLMixin</a></code></h4>
 <ul class="">
+<li><code><a title="fpdf.html.HTMLMixin.HTML2FPDF_CLASS" href="#fpdf.html.HTMLMixin.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.html.HTMLMixin.write_html" href="#fpdf.html.HTMLMixin.write_html">write_html</a></code></li>
 </ul>
 </li>
