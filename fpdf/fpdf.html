@@ -311,6 +311,7 @@ class FPDF:
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
         self._rotating = False
+        self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -1722,23 +1723,24 @@ class FPDF:
             if self.fill_color != self.text_color:
                 s += f&#34;q {self.text_color} &#34;
 
+            prev_font_style, prev_underline = self.font_style, self.underline
+            s_width, underlines = 0, []
             s += (
                 f&#34;BT {(self.x + dx) * k:.2f} &#34;
                 f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2f} Td&#34;
             )
-
-            s_width, underlines = 0, []
-
             # If multibyte, Tw has no effect - do word spacing using an
             # adjustment before each space
             if self.ws and self.unifontsubset:
                 space = escape_parens(&#34; &#34;.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
                 s += &#34; 0 Tw&#34;
                 for txt_frag, style, underline in styled_txt_frags:
-                    if markdown and self.font_style != style:
-                        s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                    self.font_style = style
-                    self.current_font = self.fonts[self.font_family + self.font_style]
+                    if self.font_style != style:
+                        self.font_style = style
+                        self.current_font = self.fonts[
+                            self.font_family + self.font_style
+                        ]
+                        s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                     txt_frag_mapped = &#34;&#34;
                     for char in txt_frag:
                         uni = ord(char)
@@ -1765,10 +1767,12 @@ class FPDF:
                     s += &#34;] TJ&#34;
             else:
                 for txt_frag, style, underline in styled_txt_frags:
-                    if markdown and self.font_style != style:
-                        s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                    self.font_style = style
-                    self.current_font = self.fonts[self.font_family + self.font_style]
+                    if self.font_style != style:
+                        self.font_style = style
+                        self.current_font = self.fonts[
+                            self.font_family + self.font_style
+                        ]
+                        s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                     if self.unifontsubset:
                         txt_frag_mapped = &#34;&#34;
                         for char in txt_frag:
@@ -1788,6 +1792,13 @@ class FPDF:
                     self.underline = underline
                     s_width += self.get_string_width(txt_frag, True)
             s += &#34; ET&#34;
+            # Restoring font style &amp; underline mode after handling changes by Markdown annotations:
+            if not self._markdown_leak_end_style:
+                if self.font_style != prev_font_style:
+                    self.font_style = prev_font_style
+                    self.current_font = self.fonts[self.font_family + self.font_style]
+                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+                self.underline = prev_underline
 
             for start_x, txt_frag in underlines:
                 s += &#34; &#34; + self._do_underline(
@@ -2008,6 +2019,10 @@ class FPDF:
         if normalized_string_length &gt; 0 and s[-1] == &#34;\n&#34;:
             normalized_string_length -= 1
 
+        prev_font_style, prev_underline = self.font_style, self.underline
+        if markdown and not split_only:
+            self._markdown_leak_end_style = True
+
         b = 0
         if border:
             if border == 1:
@@ -2183,6 +2198,13 @@ class FPDF:
             self._out, self.add_page = _out, _add_page
             self.set_xy(*location)  # restore location
             return text_cells
+        if markdown:
+            if self.font_style != prev_font_style:
+                self.font_style = prev_font_style
+                self.current_font = self.fonts[self.font_family + self.font_style]
+                s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+            self.underline = prev_underline
+            self._markdown_leak_end_style = False
 
         return page_break_triggered
 
@@ -3777,6 +3799,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
         self._rotating = False
+        self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
         self.struct_builder = StructureTreeBuilder()
@@ -5188,23 +5211,24 @@ The default is <code>True</code>, meaning the current folder.</dd>
             if self.fill_color != self.text_color:
                 s += f&#34;q {self.text_color} &#34;
 
+            prev_font_style, prev_underline = self.font_style, self.underline
+            s_width, underlines = 0, []
             s += (
                 f&#34;BT {(self.x + dx) * k:.2f} &#34;
                 f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2f} Td&#34;
             )
-
-            s_width, underlines = 0, []
-
             # If multibyte, Tw has no effect - do word spacing using an
             # adjustment before each space
             if self.ws and self.unifontsubset:
                 space = escape_parens(&#34; &#34;.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
                 s += &#34; 0 Tw&#34;
                 for txt_frag, style, underline in styled_txt_frags:
-                    if markdown and self.font_style != style:
-                        s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                    self.font_style = style
-                    self.current_font = self.fonts[self.font_family + self.font_style]
+                    if self.font_style != style:
+                        self.font_style = style
+                        self.current_font = self.fonts[
+                            self.font_family + self.font_style
+                        ]
+                        s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                     txt_frag_mapped = &#34;&#34;
                     for char in txt_frag:
                         uni = ord(char)
@@ -5231,10 +5255,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     s += &#34;] TJ&#34;
             else:
                 for txt_frag, style, underline in styled_txt_frags:
-                    if markdown and self.font_style != style:
-                        s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                    self.font_style = style
-                    self.current_font = self.fonts[self.font_family + self.font_style]
+                    if self.font_style != style:
+                        self.font_style = style
+                        self.current_font = self.fonts[
+                            self.font_family + self.font_style
+                        ]
+                        s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                     if self.unifontsubset:
                         txt_frag_mapped = &#34;&#34;
                         for char in txt_frag:
@@ -5254,6 +5280,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     self.underline = underline
                     s_width += self.get_string_width(txt_frag, True)
             s += &#34; ET&#34;
+            # Restoring font style &amp; underline mode after handling changes by Markdown annotations:
+            if not self._markdown_leak_end_style:
+                if self.font_style != prev_font_style:
+                    self.font_style = prev_font_style
+                    self.current_font = self.fonts[self.font_family + self.font_style]
+                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+                self.underline = prev_underline
 
             for start_x, txt_frag in underlines:
                 s += &#34; &#34; + self._do_underline(
@@ -5474,6 +5507,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if normalized_string_length &gt; 0 and s[-1] == &#34;\n&#34;:
             normalized_string_length -= 1
 
+        prev_font_style, prev_underline = self.font_style, self.underline
+        if markdown and not split_only:
+            self._markdown_leak_end_style = True
+
         b = 0
         if border:
             if border == 1:
@@ -5649,6 +5686,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._out, self.add_page = _out, _add_page
             self.set_xy(*location)  # restore location
             return text_cells
+        if markdown:
+            if self.font_style != prev_font_style:
+                self.font_style = prev_font_style
+                self.current_font = self.fonts[self.font_family + self.font_style]
+                s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+            self.underline = prev_underline
+            self._markdown_leak_end_style = False
 
         return page_break_triggered
 
@@ -7745,23 +7789,24 @@ def cell(
         if self.fill_color != self.text_color:
             s += f&#34;q {self.text_color} &#34;
 
+        prev_font_style, prev_underline = self.font_style, self.underline
+        s_width, underlines = 0, []
         s += (
             f&#34;BT {(self.x + dx) * k:.2f} &#34;
             f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2f} Td&#34;
         )
-
-        s_width, underlines = 0, []
-
         # If multibyte, Tw has no effect - do word spacing using an
         # adjustment before each space
         if self.ws and self.unifontsubset:
             space = escape_parens(&#34; &#34;.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
             s += &#34; 0 Tw&#34;
             for txt_frag, style, underline in styled_txt_frags:
-                if markdown and self.font_style != style:
-                    s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                self.font_style = style
-                self.current_font = self.fonts[self.font_family + self.font_style]
+                if self.font_style != style:
+                    self.font_style = style
+                    self.current_font = self.fonts[
+                        self.font_family + self.font_style
+                    ]
+                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                 txt_frag_mapped = &#34;&#34;
                 for char in txt_frag:
                     uni = ord(char)
@@ -7788,10 +7833,12 @@ def cell(
                 s += &#34;] TJ&#34;
         else:
             for txt_frag, style, underline in styled_txt_frags:
-                if markdown and self.font_style != style:
-                    s += f&#34; /F{self.fonts[self.font_family + style][&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                self.font_style = style
-                self.current_font = self.fonts[self.font_family + self.font_style]
+                if self.font_style != style:
+                    self.font_style = style
+                    self.current_font = self.fonts[
+                        self.font_family + self.font_style
+                    ]
+                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
                 if self.unifontsubset:
                     txt_frag_mapped = &#34;&#34;
                     for char in txt_frag:
@@ -7811,6 +7858,13 @@ def cell(
                 self.underline = underline
                 s_width += self.get_string_width(txt_frag, True)
         s += &#34; ET&#34;
+        # Restoring font style &amp; underline mode after handling changes by Markdown annotations:
+        if not self._markdown_leak_end_style:
+            if self.font_style != prev_font_style:
+                self.font_style = prev_font_style
+                self.current_font = self.fonts[self.font_family + self.font_style]
+                s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+            self.underline = prev_underline
 
         for start_x, txt_frag in underlines:
             s += &#34; &#34; + self._do_underline(
@@ -8754,6 +8808,10 @@ def multi_cell(
     if normalized_string_length &gt; 0 and s[-1] == &#34;\n&#34;:
         normalized_string_length -= 1
 
+    prev_font_style, prev_underline = self.font_style, self.underline
+    if markdown and not split_only:
+        self._markdown_leak_end_style = True
+
     b = 0
     if border:
         if border == 1:
@@ -8929,6 +8987,13 @@ def multi_cell(
         self._out, self.add_page = _out, _add_page
         self.set_xy(*location)  # restore location
         return text_cells
+    if markdown:
+        if self.font_style != prev_font_style:
+            self.font_style = prev_font_style
+            self.current_font = self.fonts[self.font_family + self.font_style]
+            s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+        self.underline = prev_underline
+        self._markdown_leak_end_style = False
 
     return page_break_triggered</code></pre>
 </details>
