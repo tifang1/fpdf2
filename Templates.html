@@ -651,35 +651,214 @@
                 
                 
                 <h1 id="introduction">Introduction</h1>
-<p>Templates are predefined documents (like invoices, tax forms, etc.), where each element (text, lines, barcodes, etc.) has a fixed position (x1, y1, x2, y2), style (font, size, etc.) and a default text.</p>
-<p>This elements can act as placeholders, so the program can change the default text "filling" the document.</p>
-<p>Also, the elements can be defined in a CSV file or in a database, so the user can easily adapt the form to his printing needs.</p>
+<p>Templates are predefined documents (like invoices, tax forms, etc.), or parts of such documents, where each element (text, lines, barcodes, etc.) has a fixed position (x1, y1, x2, y2), style (font, size, etc.) and a default text.</p>
+<p>These elements can act as placeholders, so the program can change the default text "filling in" the document.</p>
+<p>Besides being defined in code, the elements can also be defined in a CSV file or in a database, so the user can easily adapt the form to his printing needs.</p>
 <p>A template is used like a dict, setting its items' values.</p>
+<h1 id="how-to-use-templates">How to use Templates</h1>
+<p>There are two approaches to using templates.</p>
+<h2 id="using-template">Using Template()</h2>
+<p>The traditional approach is to use the Template() class, This class accepts one template definition, and can apply it to each page of a document. The usage pattern here is:</p>
+<div class="highlight"><pre><span></span><code><span class="n">tmpl</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">)</span>
+<span class="c1"># first page and content</span>
+<span class="n">tmpl</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_01</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 01&quot;</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_02</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 02&quot;</span>
+<span class="o">...</span>
+
+<span class="c1"># second page and content</span>
+<span class="n">tmpl</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_01</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 11&quot;</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_02</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 12&quot;</span>
+<span class="o">...</span>
+
+<span class="c1"># possibly more pages</span>
+<span class="o">...</span>
+
+<span class="c1"># finalize document and write to file</span>
+<span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;example.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The Template() class will create and manage its own FPDF() instance, so you don't need to worry about how it all works together. It also allows to set the page format, title of the document, measuring unit, and other metadata for the PDF file.</p>
+<p>For the method signatures, see <a href="https://pyfpdf.github.io/fpdf2/fpdf/template.html#fpdf.template.Template">pyfpdf.github.io: class Template</a>.</p>
+<p>Setting text values for specific template items is done by treating the class as a dict, with the name of the item as the key:</p>
+<div class="highlight"><pre><span></span><code><span class="n">Template</span><span class="p">[</span><span class="s2">&quot;company_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Sample Company&quot;</span>
+</code></pre></div>
+<h2 id="using-flextemplate">Using FlexTemplate()</h2>
+<p>When more flexibility is desired, then the FlexTemplate() class comes into play.
+In this case, you first need to create your own FPDF() instance. You can then pass this to the constructor of one or several FlexTemplate() instances, and have each of them load a template definition. For any page of the document, you can set text values on a template, and then render it on that page. After rendering, the template will be reset to its default values.</p>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="c1"># One template for the first page</span>
+<span class="n">fp_tmpl</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">fp_elements</span><span class="p">)</span>
+<span class="n">fp_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_01&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 01&quot;</span>
+<span class="n">fp_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_02&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 02&quot;</span>
+<span class="o">...</span>
+<span class="n">fp_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add template items to first page</span>
+
+<span class="c1"># add some more non-template content to the first page</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">polyline</span><span class="p">(</span><span class="n">point_list</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polygon</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># second page</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="c1"># header for the second page</span>
+<span class="n">h_tmpl</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">h_elements</span><span class="p">)</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2A&quot;</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HB&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2B&quot;</span>
+<span class="o">...</span>
+<span class="n">h_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add header items to second page</span>
+
+<span class="c1"># footer for the second page</span>
+<span class="n">f_tmpl</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">f_elements</span><span class="p">)</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FC&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2C&quot;</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FD&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2D&quot;</span>
+<span class="o">...</span>
+<span class="n">f_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add footer items to second page</span>
+
+<span class="c1"># other content on the second page</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">dashed_line</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">dash_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">space_length</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+
+<span class="c1"># third page</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="c1"># header for the third page, just reuse the same template instance after render()</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3A&quot;</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HB&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3B&quot;</span>
+<span class="o">...</span>
+<span class="n">h_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add header items to third page</span>
+
+<span class="c1"># footer for the third page</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FC&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3C&quot;</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FD&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3D&quot;</span>
+<span class="o">...</span>
+<span class="n">f_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add footer items to third page</span>
+
+<span class="c1"># other content on the third page</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">rect</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<span class="c1"># possibly more pages</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">next_page</span><span class="p">()</span>
+<span class="o">...</span>
+<span class="o">...</span>
+
+<span class="c1"># finally write everything to a file</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;example.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Evidently, this can end up quite a bit more involved, but there are hardly any limits on how you can combine templated and non-templated content on each page. Just think of the different templates as of building blocks, like configurable rubber stamps, which you can apply in any combination on any page you like.</p>
+<p>Of course, you can just as well use a set of full-page templates, possibly differentiating between cover page, table of contents, normal content pages, and an index page, or something along those lines. </p>
+<p>And here's how you can use a template several times on one page (and by extension, several times on several pages). When rendering with an <code>offsetx</code> and/or <code>offsety</code> argument, the contents of the template will end up in a different place on the page. A <code>rotate</code> argument will change its orientation, rotated around the origin of the template. The pivot of the rotation is the offset location. And finally, a <code>scale</code> argument allows you to insert the template larger or smaller than it was defined.</p>
+<div class="highlight"><pre><span></span><code><span class="n">elements</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;d1&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;d2&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">52</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">57</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;Label&quot;</span><span class="p">,},</span>
+<span class="p">]</span>
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">templ</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 50 / 50 mm&quot;</span>
+<span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 50 / 120 mm&quot;</span>
+<span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 120 / 50 mm, Scale: 0.5&quot;</span>
+<span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 120 / 120 mm, Rotate: 30°, Scale=0.5&quot;</span>
+<span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;example.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>For the method signatures, see <a href="https://pyfpdf.github.io/fpdf2/fpdf/template.html#fpdf.template.FlexTemplate">pyfpdf.github.io: class FlexTemplate</a>.</p>
+<p>The dict syntax for setting text values is the same as above:</p>
+<div class="highlight"><pre><span></span><code><span class="n">FlexTemplate</span><span class="p">[</span><span class="s2">&quot;company_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Sample Company&quot;</span>
+</code></pre></div>
 <h1 id="details-template-definition">Details - Template definition</h1>
-<p>A template is composed of a header and a list of elements.</p>
-<p>The header contains the page format, title of the document and other metadata.</p>
-<p>Elements have the following properties (columns in a CSV, fields in a database):</p>
+<p>A template definition consists of a number of elements, which have the following properties (columns in a CSV, items in a dict, fields in a database).
+Dimensions (except font size, which always uses points) are given in user defined units (default: mm). Those are the units that can be specified when creating a <code>Template()</code> or a <code>FPDF()</code> instance.</p>
 <ul>
-<li>name: placeholder identification</li>
-<li>type: 'T': texts, 'L': lines, 'I': images, 'B': boxes, 'BC': barcodes</li>
-<li>x1, y1, x2, y2: top-left, bottom-right coordinates (in mm)</li>
-<li>font: e.g. "helvetica"</li>
-<li>size: text size in points, e.g. 10</li>
-<li>bold, italic, underline: text style (non-empty to enable)</li>
-<li>foreground, background: text and fill colors, e.g. 0xFFFFFF</li>
-<li>align: text alignment, 'L': left, 'R': right, 'C': center</li>
-<li>text: default string, can be replaced at runtime</li>
-<li>priority: Z-order</li>
-<li>multiline: None for single line (default), True to for multicells (multiple lines), False trims to exactly fit the space defined</li>
+<li><strong>name</strong>: placeholder identification (unique text string)<ul>
+<li><em>mandatory</em></li>
 </ul>
+</li>
+<li><strong>type</strong>:<ul>
+<li>'<strong>T</strong>': Text - places one or several lines of text on the page</li>
+<li>'<strong>L</strong>': Line - draws a line from x1/y1 to x2/y2</li>
+<li>'<strong>I</strong>': Image - positions and scales an image into the bounding box</li>
+<li>'<strong>B</strong>': Box - draws a rectangle around the bounding box</li>
+<li>'<strong>BC</strong>': Barcode - inserts an "Interleaved 2 of 5" type barcode</li>
+<li>'<strong>C39</strong>': Code 39 - inserts a "Code 39" type barcode<ul>
+<li>Incompatible change: The first implementation of this type used the non-standard template keys "x", "y", "w", and "h", which are no longer valid.</li>
+</ul>
+</li>
+<li>'<strong>W</strong>': "Write" - uses the <code>FPDF.write()</code> method to add text to the page</li>
+<li><em>mandatory</em></li>
+</ul>
+</li>
+<li><strong>x1, y1, x2, y2</strong>: top-left, bottom-right coordinates, defining a bounding box in most cases<ul>
+<li>for multiline text, this is the bounding box for just the first line, not the complete box</li>
+<li>for the barcodes types, the height of the barcode is <code>y2 - y1</code>, x2 is ignored.</li>
+<li><em>mandatory</em> ("x2" <em>optional</em> for the barcode types)</li>
+</ul>
+</li>
+<li><strong>font</strong>: the name of a font type for the text types<ul>
+<li><em>optional</em></li>
+<li>default: "helvetica"</li>
+</ul>
+</li>
+<li><strong>size</strong>: the size property of the element (float value)<ul>
+<li>for text, the font size (in points!)</li>
+<li>for line and rect, the line width</li>
+<li>for the barcode types, the width of one bar </li>
+<li><em>optional</em></li>
+<li>default: 10 for text, 2 for 'BC', 1.5 for 'C39'</li>
+</ul>
+</li>
+<li><strong>bold, italic, underline</strong>: text style properties<ul>
+<li>in elements dict, enabled with True or equivalent value</li>
+<li>in csv, only int values, 0 as false, non-0 as true</li>
+<li><em>optional</em></li>
+<li>default: false</li>
+</ul>
+</li>
+<li><strong>foreground, background</strong>: text and fill colors (int value, commonly given in hex as 0xRRGGBB)<ul>
+<li><em>optional</em></li>
+<li>default: 0x000000/0xFFFFFF</li>
+</ul>
+</li>
+<li><strong>align</strong>: text alignment, '<strong>L</strong>': left, '<strong>R</strong>': right, '<strong>C</strong>': center<ul>
+<li><em>optional</em></li>
+<li>default: 'L'</li>
+</ul>
+</li>
+<li><strong>text</strong>: default string, can be replaced at runtime<ul>
+<li>displayed text for 'T' and 'W'</li>
+<li>data to encode for barcode types</li>
+<li><em>optional</em> (if missing for text/write, the element is ignored)</li>
+<li>default: empty</li>
+</ul>
+</li>
+<li><strong>priority</strong>: Z-order (int value)<ul>
+<li><em>optional</em></li>
+<li>default: 0</li>
+</ul>
+</li>
+<li><strong>multiline</strong>: configure text wrapping<ul>
+<li>in dicts, None for single line, True for multicells (multiple lines), False trims to exactly fit the space defined</li>
+<li>in csv, 0 for single line, &gt;0 for multiple lines, &lt;0 for exact fit</li>
+<li><em>optional</em></li>
+<li>default: single line</li>
+</ul>
+</li>
+<li><strong>rotation</strong>: rotate the element in degrees around the top left corner x1/y1 (float)<ul>
+<li><em>optional</em></li>
+<li>default: 0.0 - no rotation</li>
+</ul>
+</li>
+</ul>
+<p>Fields that are not relevant to a specific element type will be ignored there, but if not left empty, they must still adhere to the specified data type (in dicts, string fields may be None).</p>
 <h1 id="how-to-create-a-template">How to create a template</h1>
 <p>A template can be created in 3 ways:</p>
 <ul>
-<li>By defining everything manually in a hardcoded way</li>
+<li>By defining everything manually in a hardcoded way as a Python dictionary</li>
 <li>By using a template definition in a CSV document and parsing the CSV with Template.parse_dict()</li>
 <li>By defining the template in a database (this applies to [Web2Py] (Web2Py.md) integration)</li>
 </ul>
-<p>Note the following, the definition of a template will contain the elements. The header will be given during instantiation (except for the database method).</p>
 <h1 id="example-hardcoded">Example - Hardcoded</h1>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">Template</span>
 
@@ -694,7 +873,7 @@
     <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;BC&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">246.5</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">140.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">254.0</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;Interleaved 2of5 NT&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;200000000001000159053338016581200810081&#39;</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
 <span class="p">]</span>
 
-<span class="c1">#here we instantiate the template and define the HEADER</span>
+<span class="c1">#here we instantiate the template</span>
 <span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;A4&quot;</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">,</span>
              <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample Invoice&quot;</span><span class="p">)</span>
 <span class="n">f</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
@@ -711,15 +890,18 @@
 <h1 id="example-elements-defined-in-csv-file">Example - Elements defined in CSV file</h1>
 <p>You define your elements in a CSV file "mycsvfile.csv"
 that will look like:
-<div class="highlight"><pre><span></span><code>line0;L;20.0;12.0;190.0;12.0;times;0.5;0;0;0;0;16777215;C;;0;0
-line1;L;20.0;36.0;190.0;36.0;times;0.5;0;0;0;0;16777215;C;;0;0
-name0;T;21.0;14.0;104.0;25.0;times;16.0;0;0;0;0;16777215;L;name;2;0
-title0;T;21.0;26.0;104.0;30.0;times;10.0;0;0;0;0;16777215;L;title;2;0
-multiline;T;21.0;50.0;28.0;54.0;times;10.5;0;0;0;0;16777215;L;multi line;0;1
-numeric_text;T;21.0;80.0;100.0;84.0;times;10.5;0;0;0;0;16777215;R;007;0;0
+<div class="highlight"><pre><span></span><code>line0;L;20.0;12.0;190.0;12.0;times;0.5;0;0;0;0;16777215;C;;0;0;0.0
+line1;L;20.0;36.0;190.0;36.0;times;0.5;0;0;0;0;16777215;C;;0;0;0.0
+name0;T;21.0;14.0;104.0;25.0;times;16.0;0;0;0;0;16777215;L;name;2;0;0.0
+title0;T;21.0;26.0;104.0;30.0;times;10.0;0;0;0;0;16777215;L;title;2;0;0.0
+multiline;T;21.0;50.0;28.0;54.0;times;10.5;0;0;0;0;0xffff00;L;multi line;0;1;0.0
+numeric_text;T;21.0;80.0;100.0;84.0;times;10.5;0;0;0;0;;R;007;0;0;0.0
+empty_fields;T;21.0;100.0;100.0;104.0
+rotated;T;21.0;80.0;100.0;84.0;times;10.5;0;0;0;0;;R;ROTATED;0;0;30.0
 </code></pre></div></p>
 <p>Remember that each line represents an element and each field represents one of the properties of the element in the following order:
-('name','type','x1','y1','x2','y2','font','size','bold','italic','underline','foreground','background','align','text','priority', 'multiline')</p>
+('name','type','x1','y1','x2','y2','font','size','bold','italic','underline','foreground','background','align','text','priority', 'multiline', 'rotate')
+As noted above, most fields may be left empty, so a line is valid with only 6 items. The "empty_fields" line of the example demonstrates all that can be left away. In addition, for the barcode types "x2" may be empty.</p>
 <p>Then you can use the file like this:</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">test_template</span><span class="p">():</span>
     <span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;A4&quot;</span><span class="p">,</span>

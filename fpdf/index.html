@@ -132,7 +132,7 @@ structural information about a document’s content …</p>
 </dd>
 <dt><code class="name"><a title="fpdf.template" href="template.html">fpdf.template</a></code></dt>
 <dd>
-<div class="desc"><p>PDF Template Helper for FPDF.py</p></div>
+<div class="desc"><p>PDF Template Helpers for fpdf.py</p></div>
 </dd>
 <dt><code class="name"><a title="fpdf.transitions" href="transitions.html">fpdf.transitions</a></code></dt>
 <dd>
@@ -3281,8 +3281,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             &#34;A&#34;: &#34;nn&#34;,
             &#34;Z&#34;: &#34;wn&#34;,
         }
-
-        self.set_fill_color(0)
+        # The caller should do this, or we can&#39;t rotate the thing.
+        # self.set_fill_color(0)
         code = txt
         # add leading zero if code-length is odd
         if len(code) % 2 != 0:
@@ -3371,7 +3371,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
             &#34;+&#34;: &#34;nwnnnwnwn&#34;,
             &#34;%&#34;: &#34;nnnwnwnwn&#34;,
         }
-        self.set_fill_color(0)
+        # The caller should do this, or we can&#39;t rotate the thing.
+        # self.set_fill_color(0)
         for c in txt.upper():
             if c not in chars:
                 raise RuntimeError(f&#39;Invalid char &#34;{c}&#34; for Code39&#39;)
@@ -4497,7 +4498,8 @@ def code39(self, txt, x, y, w=1.5, h=5):
         &#34;+&#34;: &#34;nwnnnwnwn&#34;,
         &#34;%&#34;: &#34;nnnwnwnwn&#34;,
     }
-    self.set_fill_color(0)
+    # The caller should do this, or we can&#39;t rotate the thing.
+    # self.set_fill_color(0)
     for c in txt.upper():
         if c not in chars:
             raise RuntimeError(f&#39;Invalid char &#34;{c}&#34; for Code39&#39;)
@@ -4988,8 +4990,8 @@ def interleaved2of5(self, txt, x, y, w=1, h=10):
         &#34;A&#34;: &#34;nn&#34;,
         &#34;Z&#34;: &#34;wn&#34;,
     }
-
-    self.set_fill_color(0)
+    # The caller should do this, or we can&#39;t rotate the thing.
+    # self.set_fill_color(0)
     code = txt
     # add leading zero if code-length is odd
     if len(code) % 2 != 0:
@@ -8297,18 +8299,41 @@ to new image URLs</dd>
 <span>(</span><span>infile=None, elements=None, format='A4', orientation='portrait', unit='mm', title='', author='', subject='', creator='', keywords='')</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>infile</code></strong> :&ensp;<code>str</code></dt>
-<dd>[<strong>DEPRECATED</strong>] unused, will be removed in a later version</dd>
-</dl></div>
+<div class="desc"><p>A simple templating class.</p>
+<p>Allows to apply a single template definition to all pages of a document.</p>
+<h2 id="arguments">Arguments</h2>
+<p>infile (str):
+[<strong>DEPRECATED</strong>] unused, will be removed in a later version</p>
+<p>elements (list of dicts):
+A template definition in a list of dicts.
+If you omit this, then you need to call either load_elements()
+or parse_csv() before doing anything else.</p>
+<p>format (str):
+The page format of the document (eg. "A4" or "letter").</p>
+<p>orientation (str):
+The orientation of the document.
+Possible values are "portrait"/"P" or "landscape"/"L"</p>
+<p>unit (str):
+The units used in the template definition.
+One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
+<p>title (str): The title of the document.</p>
+<p>author (str): The author of the document.</p>
+<p>subject (str): The subject matter of the document.</p>
+<p>creator (str): The creator of the document.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Template:
+<pre><code class="python">class Template(FlexTemplate):
+    &#34;&#34;&#34;
+    A simple templating class.
+
+    Allows to apply a single template definition to all pages of a document.
+    &#34;&#34;&#34;
+
     # Disabling this check due to the &#34;format&#34; parameter below:
     # pylint: disable=redefined-builtin
+    # pylint: disable=unused-argument
     def __init__(
         self,
         infile=None,
@@ -8323,743 +8348,164 @@ to new image URLs</dd>
         keywords=&#34;&#34;,
     ):
         &#34;&#34;&#34;
-        Args:
-            infile (str): [**DEPRECATED**] unused, will be removed in a later version
+        Arguments:
+
+            infile (str):
+                [**DEPRECATED**] unused, will be removed in a later version
+
+            elements (list of dicts):
+                A template definition in a list of dicts.
+                If you omit this, then you need to call either load_elements()
+                or parse_csv() before doing anything else.
+
+            format (str):
+                The page format of the document (eg. &#34;A4&#34; or &#34;letter&#34;).
+
+            orientation (str):
+                The orientation of the document.
+                Possible values are &#34;portrait&#34;/&#34;P&#34; or &#34;landscape&#34;/&#34;L&#34;
+
+            unit (str):
+                The units used in the template definition.
+                One of &#34;mm&#34;, &#34;cm&#34;, &#34;in&#34;, &#34;pt&#34;, or a number for points per unit.
+
+            title (str): The title of the document.
+
+            author (str): The author of the document.
+
+            subject (str): The subject matter of the document.
+
+            creator (str): The creator of the document.
         &#34;&#34;&#34;
         if infile:
             warnings.warn(
                 &#39;&#34;infile&#34; is unused and will soon be deprecated&#39;,
                 PendingDeprecationWarning,
             )
-        if elements:
-            self.load_elements(elements)
-        self.handlers = {
-            &#34;T&#34;: self.text,
-            &#34;L&#34;: self.line,
-            &#34;I&#34;: self.image,
-            &#34;B&#34;: self.rect,
-            &#34;BC&#34;: self.barcode,
-            &#34;C39&#34;: self.code39,
-            &#34;W&#34;: self.write,
-        }
-        self.texts = {}
-        pdf = self.pdf = FPDF(format=format, orientation=orientation, unit=unit)
+        for arg in (
+            &#34;format&#34;,
+            &#34;orientation&#34;,
+            &#34;unit&#34;,
+            &#34;title&#34;,
+            &#34;author&#34;,
+            &#34;subject&#34;,
+            &#34;creator&#34;,
+            &#34;keywords&#34;,
+        ):
+            if not isinstance(locals()[arg], str):
+                raise TypeError(f&#39;Argument &#34;{arg}&#34; must be of type str.&#39;)
+        pdf = FPDF(format=format, orientation=orientation, unit=unit)
         pdf.set_title(title)
         pdf.set_author(author)
         pdf.set_creator(creator)
         pdf.set_subject(subject)
         pdf.set_keywords(keywords)
-
-    def load_elements(self, elements):
-        &#34;&#34;&#34;Initialize the internal element structures&#34;&#34;&#34;
-        self.pg_no = 0
-        self.elements = elements
-        self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
-
-    @staticmethod
-    def _parse_colorcode(s):
-        &#34;&#34;&#34;Allow hex and oct values for colors&#34;&#34;&#34;
-        s = s.strip()
-        if not s:
-            raise ValueError(&#34;Foreground and Background must be numeric&#34;)
-        if s[:2] in [&#34;0x&#34;, &#34;0X&#34;]:
-            return int(s, 16)
-        if s[0] == &#34;0&#34;:
-            return int(s, 8)
-        return int(s)
-
-    def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
-        &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
-
-        def varsep_float(s):
-            &#34;&#34;&#34;Convert to float with given decimal seperator&#34;&#34;&#34;
-            # glad to have nonlocal scoping...
-            return float(s.replace(decimal_sep, &#34;.&#34;))
-
-        handlers = (
-            (&#34;name&#34;, str.strip),
-            (&#34;type&#34;, str.strip),
-            (&#34;x1&#34;, varsep_float),
-            (&#34;y1&#34;, varsep_float),
-            (&#34;x2&#34;, varsep_float),
-            (&#34;y2&#34;, varsep_float),
-            (&#34;font&#34;, str.strip),
-            (&#34;size&#34;, varsep_float),
-            (&#34;bold&#34;, int),
-            (&#34;italic&#34;, int),
-            (&#34;underline&#34;, int),
-            (&#34;foreground&#34;, self._parse_colorcode),
-            (&#34;background&#34;, self._parse_colorcode),
-            (&#34;align&#34;, str.strip),
-            (&#34;text&#34;, str.strip),
-            (&#34;priority&#34;, int),
-            (&#34;multiline&#34;, int),
-        )
-        self.elements = []
-        self.pg_no = 0
-        if encoding is None:
-            encoding = locale.getpreferredencoding()
-        with open(infile, encoding=encoding) as f:
-            for row in csv.reader(f, delimiter=delimiter):
-                kargs = {}
-                for i, v in enumerate(row):
-                    kargs[handlers[i][0]] = handlers[i][1](v)
-                self.elements.append(kargs)
-        self.keys = [v[&#34;name&#34;].lower() for v in self.elements]
+        super().__init__(pdf=pdf, elements=elements)
 
     def add_page(self):
-        self.pg_no += 1
-        self.texts[self.pg_no] = {}
+        &#34;&#34;&#34;Finish the current page, and proceed to the next one.&#34;&#34;&#34;
+        if self.pdf.page:
+            self.render()
+        self.pdf.add_page()
 
-    def __setitem__(self, name, value):
-        if name.lower() not in self.keys:
-            raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
-        if not self.pg_no:
-            raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
-        self.texts[self.pg_no][name.lower()] = value
-
-    # setitem shortcut (may be further extended)
-    set = __setitem__
-
-    def __contains__(self, name):
-        return name.lower() in self.keys
-
-    def __getitem__(self, name):
-        if not self.pg_no:
-            raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
-        if name not in self.keys:
-            return None
-        key = name.lower()
-        if key in self.texts[self.pg_no]:
-            # text for this page:
-            return self.texts[self.pg_no][key]
-        # find first element for default text:
-        return next(
-            (x[&#34;text&#34;] for x in self.elements if x[&#34;name&#34;].lower() == key), None
-        )
-
-    def split_multicell(self, text, element_name):
-        &#34;&#34;&#34;Divide (\n) a string using a given element width&#34;&#34;&#34;
-        element = next(
-            element
-            for element in self.elements
-            if element[&#34;name&#34;].lower() == element_name.lower()
-        )
-        style = &#34;&#34;
-        if element[&#34;bold&#34;]:
-            style += &#34;B&#34;
-        if element[&#34;italic&#34;]:
-            style += &#34;I&#34;
-        if element[&#34;underline&#34;]:
-            style += &#34;U&#34;
-        self.pdf.set_font(element[&#34;font&#34;], style, element[&#34;size&#34;])
-        return self.pdf.multi_cell(
-            w=element[&#34;x2&#34;] - element[&#34;x1&#34;],
-            h=element[&#34;y2&#34;] - element[&#34;y1&#34;],
-            txt=str(text),
-            align=element[&#34;align&#34;],
-            split_only=True,
-        )
-
+    # pylint: disable=arguments-differ
     def render(self, outfile=None, dest=None):
         &#34;&#34;&#34;
-        Args:
-            outfile (str): optional output PDF file path. If ommited, the
-                `.pdf.output(...)` method can be manuallyy called afterwise.
-            dest (str): [**DEPRECATED**] unused, will be removed in a later version
+        Finish the document and process all pending data.
+
+        Arguments:
+
+            outfile (str):
+                If given, the PDF file will be written to this file name.
+                Alternatively, the `.pdf.output()` method can be manually called.
+
+            dest (str):
+                [**DEPRECATED**] unused, will be removed in a later version.
         &#34;&#34;&#34;
         if dest:
             warnings.warn(
                 &#39;&#34;dest&#34; is unused and will soon be deprecated&#39;,
                 PendingDeprecationWarning,
             )
-        pdf = self.pdf
-        for pg in range(1, self.pg_no + 1):
-            pdf.add_page()
-            pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
-            pdf.set_auto_page_break(False, margin=0)
-
-            sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
-
-            for element in sorted_elements:
-                element = element.copy()
-                element[&#34;text&#34;] = self.texts[pg].get(
-                    element[&#34;name&#34;].lower(), element[&#34;text&#34;]
-                )
-                handler_name = element[&#34;type&#34;].upper()
-                if &#34;rotate&#34; in element:
-                    with pdf.rotation(element[&#34;rotate&#34;], element[&#34;x1&#34;], element[&#34;y1&#34;]):
-                        self.handlers[handler_name](pdf, **element)
-                else:
-                    self.handlers[handler_name](pdf, **element)
+        self.pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
+        self.pdf.set_auto_page_break(False, margin=0)
+        super().render()
         if outfile:
-            pdf.output(outfile)
-
-    @staticmethod
-    def text(
-        pdf,
-        *_,
-        x1=0,
-        y1=0,
-        x2=0,
-        y2=0,
-        text=&#34;&#34;,
-        font=&#34;helvetica&#34;,
-        size=10,
-        bold=False,
-        italic=False,
-        underline=False,
-        align=&#34;&#34;,
-        foreground=0,
-        background=0xFFFFFF,
-        multiline=None,
-        **__,
-    ):
-        if not text:
-            return
-        if pdf.text_color != rgb_as_str(foreground):
-            pdf.set_text_color(*rgb(foreground))
-        if pdf.fill_color != rgb_as_str(background):
-            pdf.set_fill_color(*rgb(background))
-
-        font = font.strip().lower()
-        style = &#34;&#34;
-        for tag in &#34;B&#34;, &#34;I&#34;, &#34;U&#34;:
-            if text.startswith(f&#34;&lt;{tag}&gt;&#34;) and text.endswith(f&#34;&lt;/{tag}&gt;&#34;):
-                text = text[3:-4]
-                style += tag
-        if bold:
-            style += &#34;B&#34;
-        if italic:
-            style += &#34;I&#34;
-        if underline:
-            style += &#34;U&#34;
-        pdf.set_font(font, style, size)
-        pdf.set_xy(x1, y1)
-        width, height = x2 - x1, y2 - y1
-        if multiline is None:  # write without wrapping/trimming (default)
-            pdf.cell(
-                w=width, h=height, txt=text, border=0, ln=0, align=align, fill=True
-            )
-        elif multiline:  # automatic word - warp
-            pdf.multi_cell(
-                w=width, h=height, txt=text, border=0, align=align, fill=True
-            )
-        else:  # trim to fit exactly the space defined
-            text = pdf.multi_cell(
-                w=width, h=height, txt=text, align=align, split_only=True
-            )[0]
-            pdf.cell(
-                w=width, h=height, txt=text, border=0, ln=0, align=align, fill=True
-            )
-
-    @staticmethod
-    def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
-        if pdf.draw_color.lower() != rgb_as_str(foreground):
-            pdf.set_draw_color(*rgb(foreground))
-        # print &#34;SetLineWidth&#34;, size
-        pdf.set_line_width(size)
-        pdf.line(x1, y1, x2, y2)
-
-    @staticmethod
-    def rect(
-        pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=0xFFFFFF, **__
-    ):
-        if pdf.draw_color.lower() != rgb_as_str(foreground):
-            pdf.set_draw_color(*rgb(foreground))
-        if pdf.fill_color != rgb_as_str(background):
-            pdf.set_fill_color(*rgb(background))
-        pdf.set_line_width(size)
-        pdf.rect(x1, y1, x2 - x1, y2 - y1, style=&#34;FD&#34;)
-
-    @staticmethod
-    def image(pdf, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
-        if text:
-            pdf.image(text, x1, y1, w=x2 - x1, h=y2 - y1, link=&#34;&#34;)
-
-    @staticmethod
-    def barcode(
-        pdf,
-        *_,
-        x1=0,
-        y1=0,
-        x2=0,
-        y2=0,
-        text=&#34;&#34;,
-        font=&#34;helvetica&#34;,
-        size=1,
-        foreground=0,
-        **__,
-    ):
-        # pylint: disable=unused-argument
-        if pdf.draw_color.lower() != rgb_as_str(foreground):
-            pdf.set_draw_color(*rgb(foreground))
-        font = font.lower().strip()
-        if font == &#34;interleaved 2of5 nt&#34;:
-            pdf.interleaved2of5(text, x1, y1, w=size, h=y2 - y1)
-
-    @staticmethod
-    def code39(
-        pdf,
-        text,
-        x,
-        y,
-        *_,
-        w=1.5,
-        h=5,
-        **__,
-    ):
-        pdf.code39(text, x, y, w, h)
-
-    # Added by Derek Schwalenberg Schwalenberg1013@gmail.com to allow (url) links in
-    # templates (using write method) 2014-02-22
-    @staticmethod
-    def write(
-        pdf,
-        *_,
-        x1=0,
-        y1=0,
-        x2=0,
-        y2=0,
-        text=&#34;&#34;,
-        font=&#34;helvetica&#34;,
-        size=10,
-        bold=False,
-        italic=False,
-        underline=False,
-        link=&#34;&#34;,
-        foreground=0,
-        **__,
-    ):
-        # pylint: disable=unused-argument
-        if pdf.text_color != rgb_as_str(foreground):
-            pdf.set_text_color(*rgb(foreground))
-        font = font.strip().lower()
-        style = &#34;&#34;
-        for tag in &#34;B&#34;, &#34;I&#34;, &#34;U&#34;:
-            if text.startswith(f&#34;&lt;{tag}&gt;&#34;) and text.endswith(f&#34;&lt;/{tag}&gt;&#34;):
-                text = text[3:-4]
-                style += tag
-        if bold:
-            style += &#34;B&#34;
-        if italic:
-            style += &#34;I&#34;
-        if underline:
-            style += &#34;U&#34;
-        pdf.set_font(font, style, size)
-        pdf.set_xy(x1, y1)
-        pdf.write(5, text, link)</code></pre>
+            self.pdf.output(outfile)</code></pre>
 </details>
-<h3>Static methods</h3>
-<dl>
-<dt id="fpdf.Template.barcode"><code class="name flex">
-<span>def <span class="ident">barcode</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, text='', font='helvetica', size=1, foreground=0, **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def barcode(
-    pdf,
-    *_,
-    x1=0,
-    y1=0,
-    x2=0,
-    y2=0,
-    text=&#34;&#34;,
-    font=&#34;helvetica&#34;,
-    size=1,
-    foreground=0,
-    **__,
-):
-    # pylint: disable=unused-argument
-    if pdf.draw_color.lower() != rgb_as_str(foreground):
-        pdf.set_draw_color(*rgb(foreground))
-    font = font.lower().strip()
-    if font == &#34;interleaved 2of5 nt&#34;:
-        pdf.interleaved2of5(text, x1, y1, w=size, h=y2 - y1)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.code39"><code class="name flex">
-<span>def <span class="ident">code39</span></span>(<span>pdf, text, x, y, *_, w=1.5, h=5, **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def code39(
-    pdf,
-    text,
-    x,
-    y,
-    *_,
-    w=1.5,
-    h=5,
-    **__,
-):
-    pdf.code39(text, x, y, w, h)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.image"><code class="name flex">
-<span>def <span class="ident">image</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, text='', **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def image(pdf, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
-    if text:
-        pdf.image(text, x1, y1, w=x2 - x1, h=y2 - y1, link=&#34;&#34;)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.line"><code class="name flex">
-<span>def <span class="ident">line</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def line(pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, **__):
-    if pdf.draw_color.lower() != rgb_as_str(foreground):
-        pdf.set_draw_color(*rgb(foreground))
-    # print &#34;SetLineWidth&#34;, size
-    pdf.set_line_width(size)
-    pdf.line(x1, y1, x2, y2)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.rect"><code class="name flex">
-<span>def <span class="ident">rect</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=16777215, **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def rect(
-    pdf, *_, x1=0, y1=0, x2=0, y2=0, size=0, foreground=0, background=0xFFFFFF, **__
-):
-    if pdf.draw_color.lower() != rgb_as_str(foreground):
-        pdf.set_draw_color(*rgb(foreground))
-    if pdf.fill_color != rgb_as_str(background):
-        pdf.set_fill_color(*rgb(background))
-    pdf.set_line_width(size)
-    pdf.rect(x1, y1, x2 - x1, y2 - y1, style=&#34;FD&#34;)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.text"><code class="name flex">
-<span>def <span class="ident">text</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, text='', font='helvetica', size=10, bold=False, italic=False, underline=False, align='', foreground=0, background=16777215, multiline=None, **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def text(
-    pdf,
-    *_,
-    x1=0,
-    y1=0,
-    x2=0,
-    y2=0,
-    text=&#34;&#34;,
-    font=&#34;helvetica&#34;,
-    size=10,
-    bold=False,
-    italic=False,
-    underline=False,
-    align=&#34;&#34;,
-    foreground=0,
-    background=0xFFFFFF,
-    multiline=None,
-    **__,
-):
-    if not text:
-        return
-    if pdf.text_color != rgb_as_str(foreground):
-        pdf.set_text_color(*rgb(foreground))
-    if pdf.fill_color != rgb_as_str(background):
-        pdf.set_fill_color(*rgb(background))
-
-    font = font.strip().lower()
-    style = &#34;&#34;
-    for tag in &#34;B&#34;, &#34;I&#34;, &#34;U&#34;:
-        if text.startswith(f&#34;&lt;{tag}&gt;&#34;) and text.endswith(f&#34;&lt;/{tag}&gt;&#34;):
-            text = text[3:-4]
-            style += tag
-    if bold:
-        style += &#34;B&#34;
-    if italic:
-        style += &#34;I&#34;
-    if underline:
-        style += &#34;U&#34;
-    pdf.set_font(font, style, size)
-    pdf.set_xy(x1, y1)
-    width, height = x2 - x1, y2 - y1
-    if multiline is None:  # write without wrapping/trimming (default)
-        pdf.cell(
-            w=width, h=height, txt=text, border=0, ln=0, align=align, fill=True
-        )
-    elif multiline:  # automatic word - warp
-        pdf.multi_cell(
-            w=width, h=height, txt=text, border=0, align=align, fill=True
-        )
-    else:  # trim to fit exactly the space defined
-        text = pdf.multi_cell(
-            w=width, h=height, txt=text, align=align, split_only=True
-        )[0]
-        pdf.cell(
-            w=width, h=height, txt=text, border=0, ln=0, align=align, fill=True
-        )</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>pdf, *_, x1=0, y1=0, x2=0, y2=0, text='', font='helvetica', size=10, bold=False, italic=False, underline=False, link='', foreground=0, **__)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def write(
-    pdf,
-    *_,
-    x1=0,
-    y1=0,
-    x2=0,
-    y2=0,
-    text=&#34;&#34;,
-    font=&#34;helvetica&#34;,
-    size=10,
-    bold=False,
-    italic=False,
-    underline=False,
-    link=&#34;&#34;,
-    foreground=0,
-    **__,
-):
-    # pylint: disable=unused-argument
-    if pdf.text_color != rgb_as_str(foreground):
-        pdf.set_text_color(*rgb(foreground))
-    font = font.strip().lower()
-    style = &#34;&#34;
-    for tag in &#34;B&#34;, &#34;I&#34;, &#34;U&#34;:
-        if text.startswith(f&#34;&lt;{tag}&gt;&#34;) and text.endswith(f&#34;&lt;/{tag}&gt;&#34;):
-            text = text[3:-4]
-            style += tag
-    if bold:
-        style += &#34;B&#34;
-    if italic:
-        style += &#34;I&#34;
-    if underline:
-        style += &#34;U&#34;
-    pdf.set_font(font, style, size)
-    pdf.set_xy(x1, y1)
-    pdf.write(5, text, link)</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.template.FlexTemplate" href="template.html#fpdf.template.FlexTemplate">FlexTemplate</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.Template.add_page"><code class="name flex">
 <span>def <span class="ident">add_page</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Finish the current page, and proceed to the next one.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def add_page(self):
-    self.pg_no += 1
-    self.texts[self.pg_no] = {}</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.load_elements"><code class="name flex">
-<span>def <span class="ident">load_elements</span></span>(<span>self, elements)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Initialize the internal element structures</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def load_elements(self, elements):
-    &#34;&#34;&#34;Initialize the internal element structures&#34;&#34;&#34;
-    self.pg_no = 0
-    self.elements = elements
-    self.keys = [v[&#34;name&#34;].lower() for v in self.elements]</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.parse_csv"><code class="name flex">
-<span>def <span class="ident">parse_csv</span></span>(<span>self, infile, delimiter=',', decimal_sep='.', encoding=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Parse template format csv file and create elements dict</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
-    &#34;&#34;&#34;Parse template format csv file and create elements dict&#34;&#34;&#34;
-
-    def varsep_float(s):
-        &#34;&#34;&#34;Convert to float with given decimal seperator&#34;&#34;&#34;
-        # glad to have nonlocal scoping...
-        return float(s.replace(decimal_sep, &#34;.&#34;))
-
-    handlers = (
-        (&#34;name&#34;, str.strip),
-        (&#34;type&#34;, str.strip),
-        (&#34;x1&#34;, varsep_float),
-        (&#34;y1&#34;, varsep_float),
-        (&#34;x2&#34;, varsep_float),
-        (&#34;y2&#34;, varsep_float),
-        (&#34;font&#34;, str.strip),
-        (&#34;size&#34;, varsep_float),
-        (&#34;bold&#34;, int),
-        (&#34;italic&#34;, int),
-        (&#34;underline&#34;, int),
-        (&#34;foreground&#34;, self._parse_colorcode),
-        (&#34;background&#34;, self._parse_colorcode),
-        (&#34;align&#34;, str.strip),
-        (&#34;text&#34;, str.strip),
-        (&#34;priority&#34;, int),
-        (&#34;multiline&#34;, int),
-    )
-    self.elements = []
-    self.pg_no = 0
-    if encoding is None:
-        encoding = locale.getpreferredencoding()
-    with open(infile, encoding=encoding) as f:
-        for row in csv.reader(f, delimiter=delimiter):
-            kargs = {}
-            for i, v in enumerate(row):
-                kargs[handlers[i][0]] = handlers[i][1](v)
-            self.elements.append(kargs)
-    self.keys = [v[&#34;name&#34;].lower() for v in self.elements]</code></pre>
+    &#34;&#34;&#34;Finish the current page, and proceed to the next one.&#34;&#34;&#34;
+    if self.pdf.page:
+        self.render()
+    self.pdf.add_page()</code></pre>
 </details>
 </dd>
 <dt id="fpdf.Template.render"><code class="name flex">
 <span>def <span class="ident">render</span></span>(<span>self, outfile=None, dest=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>outfile</code></strong> :&ensp;<code>str</code></dt>
-<dd>optional output PDF file path. If ommited, the
-<code>.pdf.output(&hellip;)</code> method can be manuallyy called afterwise.</dd>
-<dt><strong><code>dest</code></strong> :&ensp;<code>str</code></dt>
-<dd>[<strong>DEPRECATED</strong>] unused, will be removed in a later version</dd>
-</dl></div>
+<div class="desc"><p>Finish the document and process all pending data.</p>
+<h2 id="arguments">Arguments</h2>
+<p>outfile (str):
+If given, the PDF file will be written to this file name.
+Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
+<p>dest (str):
+[<strong>DEPRECATED</strong>] unused, will be removed in a later version.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def render(self, outfile=None, dest=None):
     &#34;&#34;&#34;
-    Args:
-        outfile (str): optional output PDF file path. If ommited, the
-            `.pdf.output(...)` method can be manuallyy called afterwise.
-        dest (str): [**DEPRECATED**] unused, will be removed in a later version
+    Finish the document and process all pending data.
+
+    Arguments:
+
+        outfile (str):
+            If given, the PDF file will be written to this file name.
+            Alternatively, the `.pdf.output()` method can be manually called.
+
+        dest (str):
+            [**DEPRECATED**] unused, will be removed in a later version.
     &#34;&#34;&#34;
     if dest:
         warnings.warn(
             &#39;&#34;dest&#34; is unused and will soon be deprecated&#39;,
             PendingDeprecationWarning,
         )
-    pdf = self.pdf
-    for pg in range(1, self.pg_no + 1):
-        pdf.add_page()
-        pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
-        pdf.set_auto_page_break(False, margin=0)
-
-        sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
-
-        for element in sorted_elements:
-            element = element.copy()
-            element[&#34;text&#34;] = self.texts[pg].get(
-                element[&#34;name&#34;].lower(), element[&#34;text&#34;]
-            )
-            handler_name = element[&#34;type&#34;].upper()
-            if &#34;rotate&#34; in element:
-                with pdf.rotation(element[&#34;rotate&#34;], element[&#34;x1&#34;], element[&#34;y1&#34;]):
-                    self.handlers[handler_name](pdf, **element)
-            else:
-                self.handlers[handler_name](pdf, **element)
+    self.pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
+    self.pdf.set_auto_page_break(False, margin=0)
+    super().render()
     if outfile:
-        pdf.output(outfile)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.set"><code class="name flex">
-<span>def <span class="ident">set</span></span>(<span>self, name, value)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def __setitem__(self, name, value):
-    if name.lower() not in self.keys:
-        raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
-    if not self.pg_no:
-        raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
-    self.texts[self.pg_no][name.lower()] = value</code></pre>
-</details>
-</dd>
-<dt id="fpdf.Template.split_multicell"><code class="name flex">
-<span>def <span class="ident">split_multicell</span></span>(<span>self, text, element_name)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Divide (
-) a string using a given element width</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def split_multicell(self, text, element_name):
-    &#34;&#34;&#34;Divide (\n) a string using a given element width&#34;&#34;&#34;
-    element = next(
-        element
-        for element in self.elements
-        if element[&#34;name&#34;].lower() == element_name.lower()
-    )
-    style = &#34;&#34;
-    if element[&#34;bold&#34;]:
-        style += &#34;B&#34;
-    if element[&#34;italic&#34;]:
-        style += &#34;I&#34;
-    if element[&#34;underline&#34;]:
-        style += &#34;U&#34;
-    self.pdf.set_font(element[&#34;font&#34;], style, element[&#34;size&#34;])
-    return self.pdf.multi_cell(
-        w=element[&#34;x2&#34;] - element[&#34;x1&#34;],
-        h=element[&#34;y2&#34;] - element[&#34;y1&#34;],
-        txt=str(text),
-        align=element[&#34;align&#34;],
-        split_only=True,
-    )</code></pre>
+        self.pdf.output(outfile)</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.template.FlexTemplate" href="template.html#fpdf.template.FlexTemplate">FlexTemplate</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.template.FlexTemplate.load_elements" href="template.html#fpdf.template.FlexTemplate.load_elements">load_elements</a></code></li>
+<li><code><a title="fpdf.template.FlexTemplate.parse_csv" href="template.html#fpdf.template.FlexTemplate.parse_csv">parse_csv</a></code></li>
+<li><code><a title="fpdf.template.FlexTemplate.split_multicell" href="template.html#fpdf.template.FlexTemplate.split_multicell">split_multicell</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.TitleStyle"><code class="flex name class">
 <span>class <span class="ident">TitleStyle</span></span>
@@ -9267,20 +8713,9 @@ def write(
 </li>
 <li>
 <h4><code><a title="fpdf.Template" href="#fpdf.Template">Template</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="fpdf.Template.add_page" href="#fpdf.Template.add_page">add_page</a></code></li>
-<li><code><a title="fpdf.Template.barcode" href="#fpdf.Template.barcode">barcode</a></code></li>
-<li><code><a title="fpdf.Template.code39" href="#fpdf.Template.code39">code39</a></code></li>
-<li><code><a title="fpdf.Template.image" href="#fpdf.Template.image">image</a></code></li>
-<li><code><a title="fpdf.Template.line" href="#fpdf.Template.line">line</a></code></li>
-<li><code><a title="fpdf.Template.load_elements" href="#fpdf.Template.load_elements">load_elements</a></code></li>
-<li><code><a title="fpdf.Template.parse_csv" href="#fpdf.Template.parse_csv">parse_csv</a></code></li>
-<li><code><a title="fpdf.Template.rect" href="#fpdf.Template.rect">rect</a></code></li>
 <li><code><a title="fpdf.Template.render" href="#fpdf.Template.render">render</a></code></li>
-<li><code><a title="fpdf.Template.set" href="#fpdf.Template.set">set</a></code></li>
-<li><code><a title="fpdf.Template.split_multicell" href="#fpdf.Template.split_multicell">split_multicell</a></code></li>
-<li><code><a title="fpdf.Template.text" href="#fpdf.Template.text">text</a></code></li>
-<li><code><a title="fpdf.Template.write" href="#fpdf.Template.write">write</a></code></li>
 </ul>
 </li>
 <li>
