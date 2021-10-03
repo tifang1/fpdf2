@@ -108,9 +108,9 @@ class FlexTemplate:
             &#34;y2&#34;: (int, float),
             &#34;font&#34;: (str, type(None)),
             &#34;size&#34;: (int, float),
-            &#34;bold&#34;: int,
-            &#34;italic&#34;: int,
-            &#34;underline&#34;: int,
+            &#34;bold&#34;: object,  # &#34;bool or equivalent&#34;
+            &#34;italic&#34;: object,
+            &#34;underline&#34;: object,
             &#34;foreground&#34;: int,
             &#34;background&#34;: int,
             &#34;align&#34;: (str, type(None)),
@@ -128,6 +128,19 @@ class FlexTemplate:
                 e[&#34;priority&#34;] = 0
             for k in (&#34;name&#34;, &#34;type&#34;, &#34;x1&#34;, &#34;y1&#34;, &#34;y2&#34;):
                 if k not in e:
+                    if e[&#34;type&#34;] == &#34;C39&#34;:
+                        # lots of legacy special casing.
+                        # We need to do that here, so that rotation and scaling
+                        # still work.
+                        if k == &#34;x1&#34; and &#34;x&#34; in e:
+                            e[&#34;x1&#34;] = e[&#34;x&#34;]
+                            continue
+                        if k == &#34;y1&#34; and &#34;y&#34; in e:
+                            e[&#34;y1&#34;] = e[&#34;y&#34;]
+                            continue
+                        if k == &#34;y2&#34; and &#34;h&#34; in e:
+                            e[&#34;y2&#34;] = e[&#34;y1&#34;] + e[&#34;h&#34;]
+                            continue
                     raise KeyError(f&#34;Mandatory key &#39;{k}&#39; missing in input data&#34;)
             # x2 is optional for barcode types, but needed for offset rendering
             if &#34;x2&#34; not in e:
@@ -135,6 +148,9 @@ class FlexTemplate:
                     e[&#34;x2&#34;] = 0
                 else:
                     raise KeyError(&#34;Mandatory key &#39;x2&#39; missing in input data&#34;)
+            if not &#34;size&#34; in e and e[&#34;type&#34;] == &#34;C39&#34;:
+                if &#34;w&#34; in e:
+                    e[&#34;size&#34;] = e[&#34;w&#34;]
             for k, t in key_config.items():
                 if k in e and not isinstance(e[k], t):
                     raise TypeError(
@@ -514,16 +530,6 @@ class FlexTemplate:
                 &#34;code39 arguments x/y/w/h are deprecated, please use x1/y1/y2/size instead&#34;,
                 PendingDeprecationWarning,
             )
-            if x1 is None and x is not None:
-                x1 = x
-            if y1 is None and y is not None:
-                y1 = y
-            if size is None and w is not None:
-                size = w
-            if x2 is None:
-                x2 = x1 + size
-            if y2 is None and h is not None:
-                y2 = y1 + h
         pdf = self.pdf
         if pdf.fill_color.lower() != _rgb_as_str(foreground):
             pdf.set_fill_color(*_rgb(foreground))
@@ -834,9 +840,9 @@ or parse_csv() before doing anything else.</p></div>
             &#34;y2&#34;: (int, float),
             &#34;font&#34;: (str, type(None)),
             &#34;size&#34;: (int, float),
-            &#34;bold&#34;: int,
-            &#34;italic&#34;: int,
-            &#34;underline&#34;: int,
+            &#34;bold&#34;: object,  # &#34;bool or equivalent&#34;
+            &#34;italic&#34;: object,
+            &#34;underline&#34;: object,
             &#34;foreground&#34;: int,
             &#34;background&#34;: int,
             &#34;align&#34;: (str, type(None)),
@@ -854,6 +860,19 @@ or parse_csv() before doing anything else.</p></div>
                 e[&#34;priority&#34;] = 0
             for k in (&#34;name&#34;, &#34;type&#34;, &#34;x1&#34;, &#34;y1&#34;, &#34;y2&#34;):
                 if k not in e:
+                    if e[&#34;type&#34;] == &#34;C39&#34;:
+                        # lots of legacy special casing.
+                        # We need to do that here, so that rotation and scaling
+                        # still work.
+                        if k == &#34;x1&#34; and &#34;x&#34; in e:
+                            e[&#34;x1&#34;] = e[&#34;x&#34;]
+                            continue
+                        if k == &#34;y1&#34; and &#34;y&#34; in e:
+                            e[&#34;y1&#34;] = e[&#34;y&#34;]
+                            continue
+                        if k == &#34;y2&#34; and &#34;h&#34; in e:
+                            e[&#34;y2&#34;] = e[&#34;y1&#34;] + e[&#34;h&#34;]
+                            continue
                     raise KeyError(f&#34;Mandatory key &#39;{k}&#39; missing in input data&#34;)
             # x2 is optional for barcode types, but needed for offset rendering
             if &#34;x2&#34; not in e:
@@ -861,6 +880,9 @@ or parse_csv() before doing anything else.</p></div>
                     e[&#34;x2&#34;] = 0
                 else:
                     raise KeyError(&#34;Mandatory key &#39;x2&#39; missing in input data&#34;)
+            if not &#34;size&#34; in e and e[&#34;type&#34;] == &#34;C39&#34;:
+                if &#34;w&#34; in e:
+                    e[&#34;size&#34;] = e[&#34;w&#34;]
             for k, t in key_config.items():
                 if k in e and not isinstance(e[k], t):
                     raise TypeError(
@@ -1240,16 +1262,6 @@ or parse_csv() before doing anything else.</p></div>
                 &#34;code39 arguments x/y/w/h are deprecated, please use x1/y1/y2/size instead&#34;,
                 PendingDeprecationWarning,
             )
-            if x1 is None and x is not None:
-                x1 = x
-            if y1 is None and y is not None:
-                y1 = y
-            if size is None and w is not None:
-                size = w
-            if x2 is None:
-                x2 = x1 + size
-            if y2 is None and h is not None:
-                y2 = y1 + h
         pdf = self.pdf
         if pdf.fill_color.lower() != _rgb_as_str(foreground):
             pdf.set_fill_color(*_rgb(foreground))
@@ -1402,9 +1414,9 @@ A template definition in a list of dicts</p></div>
         &#34;y2&#34;: (int, float),
         &#34;font&#34;: (str, type(None)),
         &#34;size&#34;: (int, float),
-        &#34;bold&#34;: int,
-        &#34;italic&#34;: int,
-        &#34;underline&#34;: int,
+        &#34;bold&#34;: object,  # &#34;bool or equivalent&#34;
+        &#34;italic&#34;: object,
+        &#34;underline&#34;: object,
         &#34;foreground&#34;: int,
         &#34;background&#34;: int,
         &#34;align&#34;: (str, type(None)),
@@ -1422,6 +1434,19 @@ A template definition in a list of dicts</p></div>
             e[&#34;priority&#34;] = 0
         for k in (&#34;name&#34;, &#34;type&#34;, &#34;x1&#34;, &#34;y1&#34;, &#34;y2&#34;):
             if k not in e:
+                if e[&#34;type&#34;] == &#34;C39&#34;:
+                    # lots of legacy special casing.
+                    # We need to do that here, so that rotation and scaling
+                    # still work.
+                    if k == &#34;x1&#34; and &#34;x&#34; in e:
+                        e[&#34;x1&#34;] = e[&#34;x&#34;]
+                        continue
+                    if k == &#34;y1&#34; and &#34;y&#34; in e:
+                        e[&#34;y1&#34;] = e[&#34;y&#34;]
+                        continue
+                    if k == &#34;y2&#34; and &#34;h&#34; in e:
+                        e[&#34;y2&#34;] = e[&#34;y1&#34;] + e[&#34;h&#34;]
+                        continue
                 raise KeyError(f&#34;Mandatory key &#39;{k}&#39; missing in input data&#34;)
         # x2 is optional for barcode types, but needed for offset rendering
         if &#34;x2&#34; not in e:
@@ -1429,6 +1454,9 @@ A template definition in a list of dicts</p></div>
                 e[&#34;x2&#34;] = 0
             else:
                 raise KeyError(&#34;Mandatory key &#39;x2&#39; missing in input data&#34;)
+        if not &#34;size&#34; in e and e[&#34;type&#34;] == &#34;C39&#34;:
+            if &#34;w&#34; in e:
+                e[&#34;size&#34;] = e[&#34;w&#34;]
         for k, t in key_config.items():
             if k in e and not isinstance(e[k], t):
                 raise TypeError(
