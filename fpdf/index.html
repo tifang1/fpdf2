@@ -3306,12 +3306,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 f&#34;{cb}{cs}&#34; for cb, cs in zip(bar_char[char_bar], bar_char[char_space])
             )
 
-            for bar, char in enumerate(seq):
+            for bar_index, char in enumerate(seq):
                 # set line_width depending on value
                 line_width = narrow if char == &#34;n&#34; else wide
 
                 # draw every second value, the other is represented by space
-                if bar % 2 == 0:
+                if bar_index % 2 == 0:
                     self.rect(x, y, line_width, h, &#34;F&#34;)
 
                 x += line_width
@@ -5015,12 +5015,12 @@ def interleaved2of5(self, txt, x, y, w=1, h=10):
             f&#34;{cb}{cs}&#34; for cb, cs in zip(bar_char[char_bar], bar_char[char_space])
         )
 
-        for bar, char in enumerate(seq):
+        for bar_index, char in enumerate(seq):
             # set line_width depending on value
             line_width = narrow if char == &#34;n&#34; else wide
 
             # draw every second value, the other is represented by space
-            if bar % 2 == 0:
+            if bar_index % 2 == 0:
                 self.rect(x, y, line_width, h, &#34;F&#34;)
 
             x += line_width</code></pre>
