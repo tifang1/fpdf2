@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Templates.html">
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.3.2">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.3.3">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.24c991ad.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.5143246d.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.3f5d1f46.min.css">
@@ -781,6 +781,7 @@ Dimensions (except font size, which always uses points) are given in user define
 <li>'<strong>L</strong>': Line - draws a line from x1/y1 to x2/y2</li>
 <li>'<strong>I</strong>': Image - positions and scales an image into the bounding box</li>
 <li>'<strong>B</strong>': Box - draws a rectangle around the bounding box</li>
+<li>'<strong>E</strong>': Ellipse - draws an ellipse inside the bounding box</li>
 <li>'<strong>BC</strong>': Barcode - inserts an "Interleaved 2 of 5" type barcode</li>
 <li>'<strong>C39</strong>': Code 39 - inserts a "Code 39" type barcode<ul>
 <li>Incompatible change: A previous implementation of this type used the non-standard element keys "x", "y", "w", and "h", which are now deprecated (but still work for the moment).</li>
@@ -791,7 +792,7 @@ Dimensions (except font size, which always uses points) are given in user define
 </ul>
 </li>
 <li><strong>x1, y1, x2, y2</strong>: top-left, bottom-right coordinates, defining a bounding box in most cases<ul>
-<li>for multiline text, this is the bounding box for just the first line, not the complete box</li>
+<li>for multiline text, this is the bounding box of just the first line, not the complete box</li>
 <li>for the barcodes types, the height of the barcode is <code>y2 - y1</code>, x2 is ignored.</li>
 <li><em>mandatory</em> ("x2" <em>optional</em> for the barcode types)</li>
 </ul>
@@ -803,7 +804,7 @@ Dimensions (except font size, which always uses points) are given in user define
 </li>
 <li><strong>size</strong>: the size property of the element (float value)<ul>
 <li>for text, the font size (in points!)</li>
-<li>for line and rect, the line width</li>
+<li>for line, box, and ellipse, the line width</li>
 <li>for the barcode types, the width of one bar </li>
 <li><em>optional</em></li>
 <li>default: 10 for text, 2 for 'BC', 1.5 for 'C39'</li>
@@ -818,7 +819,8 @@ Dimensions (except font size, which always uses points) are given in user define
 </li>
 <li><strong>foreground, background</strong>: text and fill colors (int value, commonly given in hex as 0xRRGGBB)<ul>
 <li><em>optional</em></li>
-<li>default: 0x000000/0xFFFFFF</li>
+<li>default: foreground 0x000000 = black; background None/empty = transparent</li>
+<li>Incompatible change: Up to 2.4.5, the default background for text and box elements was solid white, with no way to make them transparent.</li>
 </ul>
 </li>
 <li><strong>align</strong>: text alignment, '<strong>L</strong>': left, '<strong>R</strong>': right, '<strong>C</strong>': center<ul>
@@ -983,10 +985,10 @@ As noted above, most fields may be left empty, so a line is valid with only 6 it
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.e99e714c.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.8397ff9e.min.js", "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.bc35569b.min.js"></script>
+      <script src="assets/javascripts/bundle.f89c2efe.min.js"></script>
       
     
   </body>

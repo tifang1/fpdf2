@@ -83,6 +83,7 @@ class FlexTemplate:
             &#34;L&#34;: self._line,
             &#34;I&#34;: self._image,
             &#34;B&#34;: self._rect,
+            &#34;E&#34;: self._ellipse,
             &#34;BC&#34;: self._barcode,
             &#34;C39&#34;: self._code39,
             &#34;W&#34;: self._write,
@@ -144,7 +145,7 @@ class FlexTemplate:
                     raise KeyError(f&#34;Mandatory key &#39;{k}&#39; missing in input data&#34;)
             # x2 is optional for barcode types, but needed for offset rendering
             if &#34;x2&#34; not in e:
-                if e[&#34;type&#34;] in [&#34;B&#34;, &#34;C39&#34;]:
+                if e[&#34;type&#34;] in [&#34;BC&#34;, &#34;C39&#34;]:
                     e[&#34;x2&#34;] = 0
                 else:
                     raise KeyError(&#34;Mandatory key &#39;x2&#39; missing in input data&#34;)
@@ -153,8 +154,14 @@ class FlexTemplate:
                     e[&#34;size&#34;] = e[&#34;w&#34;]
             for k, t in key_config.items():
                 if k in e and not isinstance(e[k], t):
+                    # pylint: disable=no-member
+                    ttype = (
+                        t.__name__
+                        if isinstance(t, type)
+                        else &#34; or &#34;.join([f&#34;&#39;{x.__name__}&#39;&#34; for x in t])
+                    )
                     raise TypeError(
-                        f&#39;Value of element item &#34;{k}&#34; must be {t}, not {type(e[k])}.&#39;
+                        f&#34;Value of element item &#39;{k}&#39; must be {ttype}, not &#39;{type(e[k]).__name__}&#39;.&#34;
                     )
             self.keys.append(e[&#34;name&#34;].lower())
 
@@ -237,7 +244,7 @@ class FlexTemplate:
                     vs = val.strip()
                     if not vs:
                         if cfg[2]:  # mandatory
-                            if cfg[0] == &#34;x2&#34; and row[&#34;type&#34;] in [&#34;B&#34;, &#34;C39&#34;]:
+                            if cfg[0] == &#34;x2&#34; and row[1] in [&#34;BC&#34;, &#34;C39&#34;]:
                                 # two types don&#39;t need x2, but offset rendering does
                                 pass
                             else:
@@ -254,6 +261,10 @@ class FlexTemplate:
         self.keys = [val[&#34;name&#34;].lower() for val in self.elements]
 
     def __setitem__(self, name, value):
+        assert isinstance(
+            name, str
+        ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
+        # value has too many valid types to reasonably check here
         if name.lower() not in self.keys:
             raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
         self.texts[name.lower()] = value
@@ -262,11 +273,17 @@ class FlexTemplate:
     set = __setitem__
 
     def __contains__(self, name):
+        assert isinstance(
+            name, str
+        ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
         return name.lower() in self.keys
 
     def __getitem__(self, name):
+        assert isinstance(
+            name, str
+        ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
         if name not in self.keys:
-            return None
+            raise KeyError(name)
         key = name.lower()
         if key in self.texts:
             # text for this page:
@@ -334,7 +351,7 @@ class FlexTemplate:
         underline=False,
         align=&#34;&#34;,
         foreground=0,
-        background=0xFFFFFF,
+        background=None,
         multiline=None,
         **__,
     ):
@@ -343,8 +360,12 @@ class FlexTemplate:
         pdf = self.pdf
         if pdf.text_color != _rgb_as_str(foreground):
             pdf.set_text_color(*_rgb(foreground))
-        if pdf.fill_color != _rgb_as_str(background):
-            pdf.set_fill_color(*_rgb(background))
+        if background is None:
+            fill = False
+        else:
+            fill = True
+            if pdf.fill_color != _rgb_as_str(background):
+                pdf.set_fill_color(*_rgb(background))
 
         font = font.strip().lower()
         style = &#34;&#34;
@@ -375,7 +396,7 @@ class FlexTemplate:
                     &#34;border&#34;: 0,
                     &#34;ln&#34;: 0,
                     &#34;align&#34;: align,
-                    &#34;fill&#34;: True,
+                    &#34;fill&#34;: fill,
                 },
                 rotations,
             )
@@ -390,7 +411,7 @@ class FlexTemplate:
                     &#34;txt&#34;: text,
                     &#34;border&#34;: 0,
                     &#34;align&#34;: align,
-                    &#34;fill&#34;: True,
+                    &#34;fill&#34;: fill,
                 },
                 rotations,
             )
@@ -409,7 +430,7 @@ class FlexTemplate:
                     &#34;border&#34;: 0,
                     &#34;ln&#34;: 0,
                     &#34;align&#34;: align,
-                    &#34;fill&#34;: True,
+                    &#34;fill&#34;: fill,
                 },
                 rotations,
             )
@@ -447,20 +468,55 @@ class FlexTemplate:
         size=0,
         scale=1.0,
         foreground=0,
-        background=0xFFFFFF,
+        background=None,
         **__,
     ):
         pdf = self.pdf
         if pdf.draw_color.lower() != _rgb_as_str(foreground):
             pdf.set_draw_color(*_rgb(foreground))
-        if pdf.fill_color != _rgb_as_str(background):
-            pdf.set_fill_color(*_rgb(background))
+        if background is None:
+            style = &#34;D&#34;
+        else:
+            style = &#34;FD&#34;
+            if pdf.fill_color != _rgb_as_str(background):
+                pdf.set_fill_color(*_rgb(background))
         pdf.set_line_width(size * scale)
         rotate = __.get(&#34;rotate&#34;)
         if rotate:
             rotations.append((rotate, x1, y2))
         self._render_rotated(
-            None, pdf.rect, (x1, y1, x2 - x1, y2 - y1), {&#34;style&#34;: &#34;FD&#34;}, rotations
+            None, pdf.rect, (x1, y1, x2 - x1, y2 - y1), {&#34;style&#34;: style}, rotations
+        )
+
+    def _ellipse(
+        self,
+        rotations,
+        *_,
+        x1=0,
+        y1=0,
+        x2=0,
+        y2=0,
+        size=0,
+        scale=1.0,
+        foreground=0,
+        background=None,
+        **__,
+    ):
+        pdf = self.pdf
+        if pdf.draw_color.lower() != _rgb_as_str(foreground):
+            pdf.set_draw_color(*_rgb(foreground))
+        if background is None:
+            style = &#34;D&#34;
+        else:
+            style = &#34;FD&#34;
+            if pdf.fill_color != _rgb_as_str(background):
+                pdf.set_fill_color(*_rgb(background))
+        pdf.set_line_width(size * scale)
+        rotate = __.get(&#34;rotate&#34;)
+        if rotate:
+            rotations.append((rotate, x1, y2))
+        self._render_rotated(
+            None, pdf.ellipse, (x1, y1, x2 - x1, y2 - y1), {&#34;style&#34;: style}, rotations
         )
 
     def _image(self, rotations, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
@@ -815,6 +871,7 @@ or parse_csv() before doing anything else.</p></div>
             &#34;L&#34;: self._line,
             &#34;I&#34;: self._image,
             &#34;B&#34;: self._rect,
+            &#34;E&#34;: self._ellipse,
             &#34;BC&#34;: self._barcode,
             &#34;C39&#34;: self._code39,
             &#34;W&#34;: self._write,
@@ -876,7 +933,7 @@ or parse_csv() before doing anything else.</p></div>
                     raise KeyError(f&#34;Mandatory key &#39;{k}&#39; missing in input data&#34;)
             # x2 is optional for barcode types, but needed for offset rendering
             if &#34;x2&#34; not in e:
-                if e[&#34;type&#34;] in [&#34;B&#34;, &#34;C39&#34;]:
+                if e[&#34;type&#34;] in [&#34;BC&#34;, &#34;C39&#34;]:
                     e[&#34;x2&#34;] = 0
                 else:
                     raise KeyError(&#34;Mandatory key &#39;x2&#39; missing in input data&#34;)
@@ -885,8 +942,14 @@ or parse_csv() before doing anything else.</p></div>
                     e[&#34;size&#34;] = e[&#34;w&#34;]
             for k, t in key_config.items():
                 if k in e and not isinstance(e[k], t):
+                    # pylint: disable=no-member
+                    ttype = (
+                        t.__name__
+                        if isinstance(t, type)
+                        else &#34; or &#34;.join([f&#34;&#39;{x.__name__}&#39;&#34; for x in t])
+                    )
                     raise TypeError(
-                        f&#39;Value of element item &#34;{k}&#34; must be {t}, not {type(e[k])}.&#39;
+                        f&#34;Value of element item &#39;{k}&#39; must be {ttype}, not &#39;{type(e[k]).__name__}&#39;.&#34;
                     )
             self.keys.append(e[&#34;name&#34;].lower())
 
@@ -969,7 +1032,7 @@ or parse_csv() before doing anything else.</p></div>
                     vs = val.strip()
                     if not vs:
                         if cfg[2]:  # mandatory
-                            if cfg[0] == &#34;x2&#34; and row[&#34;type&#34;] in [&#34;B&#34;, &#34;C39&#34;]:
+                            if cfg[0] == &#34;x2&#34; and row[1] in [&#34;BC&#34;, &#34;C39&#34;]:
                                 # two types don&#39;t need x2, but offset rendering does
                                 pass
                             else:
@@ -986,6 +1049,10 @@ or parse_csv() before doing anything else.</p></div>
         self.keys = [val[&#34;name&#34;].lower() for val in self.elements]
 
     def __setitem__(self, name, value):
+        assert isinstance(
+            name, str
+        ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
+        # value has too many valid types to reasonably check here
         if name.lower() not in self.keys:
             raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
         self.texts[name.lower()] = value
@@ -994,11 +1061,17 @@ or parse_csv() before doing anything else.</p></div>
     set = __setitem__
 
     def __contains__(self, name):
+        assert isinstance(
+            name, str
+        ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
         return name.lower() in self.keys
 
     def __getitem__(self, name):
+        assert isinstance(
+            name, str
+        ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
         if name not in self.keys:
-            return None
+            raise KeyError(name)
         key = name.lower()
         if key in self.texts:
             # text for this page:
@@ -1066,7 +1139,7 @@ or parse_csv() before doing anything else.</p></div>
         underline=False,
         align=&#34;&#34;,
         foreground=0,
-        background=0xFFFFFF,
+        background=None,
         multiline=None,
         **__,
     ):
@@ -1075,8 +1148,12 @@ or parse_csv() before doing anything else.</p></div>
         pdf = self.pdf
         if pdf.text_color != _rgb_as_str(foreground):
             pdf.set_text_color(*_rgb(foreground))
-        if pdf.fill_color != _rgb_as_str(background):
-            pdf.set_fill_color(*_rgb(background))
+        if background is None:
+            fill = False
+        else:
+            fill = True
+            if pdf.fill_color != _rgb_as_str(background):
+                pdf.set_fill_color(*_rgb(background))
 
         font = font.strip().lower()
         style = &#34;&#34;
@@ -1107,7 +1184,7 @@ or parse_csv() before doing anything else.</p></div>
                     &#34;border&#34;: 0,
                     &#34;ln&#34;: 0,
                     &#34;align&#34;: align,
-                    &#34;fill&#34;: True,
+                    &#34;fill&#34;: fill,
                 },
                 rotations,
             )
@@ -1122,7 +1199,7 @@ or parse_csv() before doing anything else.</p></div>
                     &#34;txt&#34;: text,
                     &#34;border&#34;: 0,
                     &#34;align&#34;: align,
-                    &#34;fill&#34;: True,
+                    &#34;fill&#34;: fill,
                 },
                 rotations,
             )
@@ -1141,7 +1218,7 @@ or parse_csv() before doing anything else.</p></div>
                     &#34;border&#34;: 0,
                     &#34;ln&#34;: 0,
                     &#34;align&#34;: align,
-                    &#34;fill&#34;: True,
+                    &#34;fill&#34;: fill,
                 },
                 rotations,
             )
@@ -1179,20 +1256,55 @@ or parse_csv() before doing anything else.</p></div>
         size=0,
         scale=1.0,
         foreground=0,
-        background=0xFFFFFF,
+        background=None,
         **__,
     ):
         pdf = self.pdf
         if pdf.draw_color.lower() != _rgb_as_str(foreground):
             pdf.set_draw_color(*_rgb(foreground))
-        if pdf.fill_color != _rgb_as_str(background):
-            pdf.set_fill_color(*_rgb(background))
+        if background is None:
+            style = &#34;D&#34;
+        else:
+            style = &#34;FD&#34;
+            if pdf.fill_color != _rgb_as_str(background):
+                pdf.set_fill_color(*_rgb(background))
         pdf.set_line_width(size * scale)
         rotate = __.get(&#34;rotate&#34;)
         if rotate:
             rotations.append((rotate, x1, y2))
         self._render_rotated(
-            None, pdf.rect, (x1, y1, x2 - x1, y2 - y1), {&#34;style&#34;: &#34;FD&#34;}, rotations
+            None, pdf.rect, (x1, y1, x2 - x1, y2 - y1), {&#34;style&#34;: style}, rotations
+        )
+
+    def _ellipse(
+        self,
+        rotations,
+        *_,
+        x1=0,
+        y1=0,
+        x2=0,
+        y2=0,
+        size=0,
+        scale=1.0,
+        foreground=0,
+        background=None,
+        **__,
+    ):
+        pdf = self.pdf
+        if pdf.draw_color.lower() != _rgb_as_str(foreground):
+            pdf.set_draw_color(*_rgb(foreground))
+        if background is None:
+            style = &#34;D&#34;
+        else:
+            style = &#34;FD&#34;
+            if pdf.fill_color != _rgb_as_str(background):
+                pdf.set_fill_color(*_rgb(background))
+        pdf.set_line_width(size * scale)
+        rotate = __.get(&#34;rotate&#34;)
+        if rotate:
+            rotations.append((rotate, x1, y2))
+        self._render_rotated(
+            None, pdf.ellipse, (x1, y1, x2 - x1, y2 - y1), {&#34;style&#34;: style}, rotations
         )
 
     def _image(self, rotations, *_, x1=0, y1=0, x2=0, y2=0, text=&#34;&#34;, **__):
@@ -1450,7 +1562,7 @@ A template definition in a list of dicts</p></div>
                 raise KeyError(f&#34;Mandatory key &#39;{k}&#39; missing in input data&#34;)
         # x2 is optional for barcode types, but needed for offset rendering
         if &#34;x2&#34; not in e:
-            if e[&#34;type&#34;] in [&#34;B&#34;, &#34;C39&#34;]:
+            if e[&#34;type&#34;] in [&#34;BC&#34;, &#34;C39&#34;]:
                 e[&#34;x2&#34;] = 0
             else:
                 raise KeyError(&#34;Mandatory key &#39;x2&#39; missing in input data&#34;)
@@ -1459,8 +1571,14 @@ A template definition in a list of dicts</p></div>
                 e[&#34;size&#34;] = e[&#34;w&#34;]
         for k, t in key_config.items():
             if k in e and not isinstance(e[k], t):
+                # pylint: disable=no-member
+                ttype = (
+                    t.__name__
+                    if isinstance(t, type)
+                    else &#34; or &#34;.join([f&#34;&#39;{x.__name__}&#39;&#34; for x in t])
+                )
                 raise TypeError(
-                    f&#39;Value of element item &#34;{k}&#34; must be {t}, not {type(e[k])}.&#39;
+                    f&#34;Value of element item &#39;{k}&#39; must be {ttype}, not &#39;{type(e[k]).__name__}&#39;.&#34;
                 )
         self.keys.append(e[&#34;name&#34;].lower())</code></pre>
 </details>
@@ -1547,7 +1665,7 @@ Default is the system default encoding.</p></div>
                 vs = val.strip()
                 if not vs:
                     if cfg[2]:  # mandatory
-                        if cfg[0] == &#34;x2&#34; and row[&#34;type&#34;] in [&#34;B&#34;, &#34;C39&#34;]:
+                        if cfg[0] == &#34;x2&#34; and row[1] in [&#34;BC&#34;, &#34;C39&#34;]:
                             # two types don&#39;t need x2, but offset rendering does
                             pass
                         else:
@@ -1632,6 +1750,10 @@ Scale the inserted template by this factor.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def __setitem__(self, name, value):
+    assert isinstance(
+        name, str
+    ), f&#34;name must be of type &#39;str&#39;, not &#39;{type(name).__name__}&#39;.&#34;
+    # value has too many valid types to reasonably check here
     if name.lower() not in self.keys:
         raise FPDFException(f&#34;Element not loaded, cannot set item: {name}&#34;)
     self.texts[name.lower()] = value</code></pre>
