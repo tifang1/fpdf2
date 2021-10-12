@@ -119,40 +119,6 @@
     
     
     
-      <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-      </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
-      <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Search">
-        
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-        </button>
-      </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Initializing search
-          </div>
-          <ol class="md-search-result__list"></ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-    
     
       <div class="md-header__source">
         
@@ -766,8 +732,8 @@
                 
                 
                 <h1 id="tutorial">Tutorial</h1>
-<p>Español: <a href="Tutorial-es.html">Tutorial-es</a></p>
-<p><a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF">Documentation</a></p>
+<p>Versión en español: <a href="Tutorial-es.html">Tutorial-es</a></p>
+<p>Methods full documentation: <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF"><code>fpdf.FPDF</code> API doc</a></p>
 <div class="toc">
 <ul>
 <li><a href="#tutorial">Tutorial</a><ul>
@@ -787,11 +753,11 @@
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Hello World!&#39;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;tuto1.pdf&#39;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto1.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto1.pdf">Demo</a></p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto1.pdf">Resulting PDF</a></p>
 <p>After including the library file, we create an <code>FPDF</code> object. The 
 <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF">FPDF</a> constructor is used here with the default values: 
 pages are in A4 portrait and the measure unit is millimeter.
@@ -833,38 +799,39 @@ returns the PDF <code>bytearray</code> buffer.</p>
 <p>Here is a two page example with header, footer and logo:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
+
 <span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Logo</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s1">&#39;logo_pb.png&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
-        <span class="c1"># helvetica bold 15</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
-        <span class="c1"># Move to the right</span>
+        <span class="c1"># Rendering logo:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;../docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+        <span class="c1"># Setting font: helvetica bold 15</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="c1"># Moving cursor to the right:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>
-        <span class="c1"># Title</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Title&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)</span>
-        <span class="c1"># Line break</span>
+        <span class="c1"># Printing title:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
-    <span class="c1"># Page footer</span>
     <span class="k">def</span> <span class="nf">footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Position at 1.5 cm from bottom</span>
+        <span class="c1"># Position cursor at 1.5 cm from bottom:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
-        <span class="c1"># helvetica italic 8</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
-        <span class="c1"># Page number</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Page &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">())</span> <span class="o">+</span> <span class="s1">&#39;/</span><span class="si">{nb}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="c1"># Setting font: helvetica italic 8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="c1"># Printing page number:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">/</span><span class="se">{{</span><span class="s2">nb</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;Times&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
-    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Printing line number &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;tuto2.pdf&#39;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Printing line number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto2.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">Demo</a></p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">Resulting PDF</a></p>
 <p>This example makes use of the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.header">header</a> and 
 <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.footer">footer</a> methods to process page headers and footers. They
 are called automatically. They already exist in the FPDF class but do nothing,
@@ -894,73 +861,73 @@ The limit which triggers page breaks can be set with
 illustrates the use of colors.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
-<span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;20000 Leagues Under the Seas&#39;</span>
 
 <span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># helvetica bold 15</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
-        <span class="c1"># Calculate width of title and position</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
-        <span class="c1"># Colors of frame, background and text</span>
+        <span class="c1"># Setting font: helvetica bold 15</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="c1"># Calculating width of title and setting cursor position:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Setting colors for frame, background and text:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
-        <span class="c1"># Thickness of frame (1 mm)</span>
+        <span class="c1"># Setting thickness of the frame (1 mm)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="c1"># Title</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="c1"># Line break</span>
+        <span class="c1"># Printing title:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Position at 1.5 cm from bottom</span>
+        <span class="c1"># Setting position at 1.5 cm from bottom:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
-        <span class="c1"># helvetica italic 8</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
-        <span class="c1"># Text color in gray</span>
+        <span class="c1"># Setting font: helvetica italic 8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="c1"># Setting text color to gray:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
-        <span class="c1"># Page number</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Page &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">)</span>
+        <span class="c1"># Printing page number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">chapter_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-        <span class="c1"># helvetica 12</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
-        <span class="c1"># Background color</span>
+        <span class="c1"># Setting font: helvetica 12</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="c1"># Setting background color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
-        <span class="c1"># Title</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s1"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="c1"># Line break</span>
+        <span class="c1"># Printing chapter name:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">chapter_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="c1"># Read text file</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
-        <span class="c1"># Times 12</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;Times&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
-        <span class="c1"># Output justified text</span>
+    <span class="k">def</span> <span class="nf">chapter_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="c1"># Reading text file:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span>
+        <span class="c1"># Setting font: Times 12</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="c1"># Printing justified text:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
-        <span class="c1"># Line break</span>
+        <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
-        <span class="c1"># Mention in italics</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;I&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;(end of excerpt)&#39;</span><span class="p">)</span>
+        <span class="c1"># Final mention in italics:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;(end of excerpt)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">print_chapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">print_chapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chapter_title</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">chapter_body</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chapter_body</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s1">&#39;Jules Verne&#39;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;A RUNAWAY REEF&#39;</span><span class="p">,</span> <span class="s1">&#39;20k_c1.txt&#39;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;THE PROS AND CONS&#39;</span><span class="p">,</span> <span class="s1">&#39;20k_c2.txt&#39;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;tuto3.pdf&#39;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;20000 Leagues Under the Seas&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">&quot;Jules Verne&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A RUNAWAY REEF&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;THE PROS AND CONS&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto3.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto3.pdf">Demo</a></p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto3.pdf">Resulting PDF</a></p>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/20k_c1.txt">Jules Verne text</a></p>
 <p>The <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.get_string_width">get_string_width</a> method allows determining
 the length of a string in the current font, which is used here to calculate the
@@ -983,38 +950,36 @@ and choose the Document Properties option. The second, also available from the
 plug-in, is to right-click and select Document Properties.</p>
 <h2 id="tuto-4-multi-columns">Tuto 4 - Multi Columns</h2>
 <p>This example is a variant of the previous one, showing how to lay the text across multiple columns.</p>
-<div class="highlight"><pre><span></span><code> <span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 
 <span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
-    <span class="c1"># Current column</span>
-    <span class="n">col</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="c1"># Ordinate of column start</span>
-    <span class="n">y0</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Current column</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Ordinate of column start</span>
 
     <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Page header</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">w</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-        <span class="c1"># Save ordinate</span>
+        <span class="c1"># Saving ordinate position:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_y</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Page footer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">set_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
-        <span class="c1"># Set position at a given column</span>
+        <span class="c1"># Set column position:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">col</span> <span class="o">=</span> <span class="n">col</span>
         <span class="n">x</span> <span class="o">=</span> <span class="mi">10</span> <span class="o">+</span> <span class="n">col</span> <span class="o">*</span> <span class="mi">65</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_left_margin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -1035,45 +1000,42 @@ plug-in, is to right-click and select Document Properties.</p>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">chapter_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-        <span class="c1"># Title</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-        <span class="c1"># Save ordinate</span>
+        <span class="c1"># Saving ordinate position:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_y</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">chapter_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="c1"># Read text file</span>
+        <span class="c1"># Reading text file:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
             <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span>
-        <span class="c1"># Font</span>
+        <span class="c1"># Setting font: Times 12</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
-        <span class="c1"># Output text in a 6 cm width column</span>
+        <span class="c1"># Printing text in a 6cm width column:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
-        <span class="c1"># Mention</span>
+        <span class="c1"># Final mention in italics:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;(end of excerpt)&quot;</span><span class="p">)</span>
-        <span class="c1"># Go back to first column</span>
+        <span class="c1"># Start back at first column:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_col</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">print_chapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="c1"># Add chapter</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chapter_title</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">chapter_body</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;20000 Leagues Under the Seas&quot;</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;20000 Leagues Under the Seas&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">&quot;Jules Verne&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A RUNAWAY REEF&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;THE PROS AND CONS&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto4.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto4.pdf">Demo</a></p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto4.pdf">Resulting PDF</a></p>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/20k_c1.txt">Jules Verne text</a></p>
 <p>The key difference from the previous tutorial is the use of the 
 <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.accept_page_break">accept_page_break</a> and the set_col methods.</p>
@@ -1088,93 +1050,81 @@ back to the first column and trigger a page break.</p>
 <p>This tutorial will explain how to create tables easily.</p>
 <p>The code will create three different tables to explain what
  can be achieved with some simple adjustments.</p>
-<div class="highlight"><pre><span></span><code> <span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 
 <span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
-    <span class="c1"># Load data</span>
-    <span class="k">def</span> <span class="nf">load_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="c1"># Read file lines</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file</span><span class="p">:</span>
-                <span class="n">data</span> <span class="o">+=</span> <span class="p">[</span><span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)]</span>
-        <span class="k">return</span> <span class="n">data</span>
-
-    <span class="c1"># Simple table</span>
-    <span class="k">def</span> <span class="nf">basic_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="c1"># Header</span>
-        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">basic_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">heading</span> <span class="ow">in</span> <span class="n">headings</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
-        <span class="c1"># Data</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">48</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
 
-    <span class="c1"># Better table</span>
-    <span class="k">def</span> <span class="nf">improved_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="c1"># Column widths</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="p">[</span><span class="mi">42</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">]</span>
-        <span class="c1"># Header</span>
-        <span class="k">for</span> <span class="n">width</span><span class="p">,</span> <span class="n">header_text</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">header_text</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">improved_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">col_widths</span><span class="o">=</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">col_width</span><span class="p">,</span> <span class="n">heading</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">col_widths</span><span class="p">,</span> <span class="n">headings</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
-        <span class="c1"># Data</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
-        <span class="c1"># Closure line</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">)</span>
+        <span class="c1"># Closure line:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">col_widths</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Colored table</span>
-    <span class="k">def</span> <span class="nf">fancy_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="c1"># Colors, line width and bold font</span>
+    <span class="k">def</span> <span class="nf">colored_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">col_widths</span><span class="o">=</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">42</span><span class="p">)):</span>
+        <span class="c1"># Colors, line width and bold font:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
-        <span class="c1"># Header</span>
-        <span class="n">w</span> <span class="o">=</span> <span class="p">[</span><span class="mi">40</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">38</span><span class="p">,</span> <span class="mi">45</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">width</span><span class="p">,</span> <span class="n">header_text</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">header_text</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">col_width</span><span class="p">,</span> <span class="n">heading</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">col_widths</span><span class="p">,</span> <span class="n">headings</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
-        <span class="c1"># Color and font restoration</span>
+        <span class="c1"># Color and font restoration:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">()</span>
-        <span class="c1"># Data</span>
         <span class="n">fill</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
             <span class="n">fill</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">fill</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">col_widths</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
 
+<span class="k">def</span> <span class="nf">load_data_from_csv</span><span class="p">(</span><span class="n">csv_filepath</span><span class="p">):</span>
+    <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_filepath</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csv_file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">headings</span><span class="p">:</span>  <span class="c1"># extracting column names from first row:</span>
+                <span class="n">headings</span> <span class="o">=</span> <span class="n">row</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span>
+
+
+<span class="n">col_names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">load_data_from_csv</span><span class="p">(</span><span class="s2">&quot;countries.txt&quot;</span><span class="p">)</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="c1"># Column titles</span>
-<span class="n">header</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Country&quot;</span><span class="p">,</span> <span class="s2">&quot;Capital&quot;</span><span class="p">,</span> <span class="s2">&quot;Area (sq km)&quot;</span><span class="p">,</span> <span class="s2">&quot;Population&quot;</span><span class="p">]</span>
-<span class="c1"># Data loading</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">load_data</span><span class="p">(</span><span class="s2">&quot;countries.txt&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">basic_table</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">basic_table</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">improved_table</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">improved_table</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">fancy_table</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">colored_table</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto5.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto5.pdf">Demo</a>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto5.pdf">Resulting PDF</a> -
 <a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/countries.txt">Countries text</a></p>
 <p>Since a table is just a collection of cells, it is natural to build one
  from them.</p>
@@ -1197,16 +1147,16 @@ back to the first column and trigger a page break.</p>
  as well as adding links to external sources.</p>
 <p>It will also show several ways we can use different text styles,
  (bold, italic, underline) within the same text.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">fpdf</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span><span class="p">,</span> <span class="n">HTMLMixin</span>
 
 
-<span class="k">class</span> <span class="nc">MyFPDF</span><span class="p">(</span><span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">,</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">HTMLMixin</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">MyFPDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">,</span> <span class="n">HTMLMixin</span><span class="p">):</span>
     <span class="k">pass</span>
 
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">MyFPDF</span><span class="p">()</span>
 
-<span class="c1"># First page</span>
+<span class="c1"># First page:</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;To find out what&#39;s new in self tutorial, click &quot;</span><span class="p">)</span>
@@ -1215,24 +1165,24 @@ back to the first column and trigger a page break.</p>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;here&quot;</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">()</span>
 
-<span class="c1"># Second page</span>
+<span class="c1"># Second page:</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;../docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;http://www.fpdf.org&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_left_margin</span><span class="p">(</span><span class="mi">45</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font_size</span><span class="p">(</span><span class="mi">14</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
-    <span class="sd">&quot;&quot;&quot;You can now easily print text mixing different</span>
-<span class="sd">styles: &lt;B&gt;bold&lt;/B&gt;, &lt;I&gt;italic&lt;/I&gt;, &lt;U&gt;underlined&lt;/U&gt;, or</span>
-<span class="sd">&lt;B&gt;&lt;I&gt;&lt;U&gt;all at once&lt;/U&gt;&lt;/I&gt;&lt;/B&gt;!&lt;BR&gt;You can also insert links</span>
-<span class="sd">on text, such as &lt;A HREF=&quot;http://www.fpdf.org&quot;&gt;www.fpdf.org&lt;/A&gt;,</span>
-<span class="sd">or on an image: click on the logo.&quot;&quot;&quot;</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span>
+    <span class="s2">&quot;../docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;https://pyfpdf.github.io/fpdf2/&quot;</span>
 <span class="p">)</span>
-
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_left_margin</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font_size</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
+    <span class="sd">&quot;&quot;&quot;You can print text mixing different styles using HTML tags: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;,</span>
+<span class="sd">&lt;u&gt;underlined&lt;/u&gt;, or &lt;b&gt;&lt;i&gt;&lt;u&gt;all at once&lt;/u&gt;&lt;/i&gt;&lt;/b&gt;!</span>
+<span class="sd">&lt;br&gt;&lt;br&gt;You can also insert links on text, such as &lt;a href=&quot;https://pyfpdf.github.io/fpdf2/&quot;&gt;https://pyfpdf.github.io/fpdf2/&lt;/a&gt;,</span>
+<span class="sd">or on an image: the logo is clickable!&quot;&quot;&quot;</span>
+<span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto6.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto6.pdf">Demo</a></p>
-<p><a href="https://raw.githubusercontent.com/PyFPDF/fpdf2/master/docs/fpdf2-logo.png">fpdf2-logo</a></p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto6.pdf">Resulting PDF</a> -
+<a href="https://raw.githubusercontent.com/PyFPDF/fpdf2/master/docs/fpdf2-logo.png">fpdf2-logo</a></p>
 <p>The new method shown here to print text is
  <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.write">write()</a>
 . It is very similar to
@@ -1267,7 +1217,7 @@ On the other hand, its main drawback is that we cannot justify the text like
  option to pass a link as one of its arguments. The link can be both internal
  or external.</p>
 <p>As an alternative, another option to change the font style and add links is to
- use the write_html() method. It is an html parser, which allows adding text,
+ use the <code>write_html()</code> method. It is an html parser, which allows adding text,
  changing font style and adding links using html.</p>
                 
               
