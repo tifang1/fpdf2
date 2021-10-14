@@ -529,9 +529,60 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Web2Py
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="Web2Py.html" class="md-nav__link md-nav__link--active">
         Web2Py
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sample-report" class="md-nav__link">
+    Sample Report
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-table-listing" class="md-nav__link">
+    Sample Table Listing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#samples-template-definitions" class="md-nav__link">
+    Samples Template Definitions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-templating-engine" class="md-nav__link">
+    Sample Templating Engine
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -601,6 +652,42 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sample-report" class="md-nav__link">
+    Sample Report
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-table-listing" class="md-nav__link">
+    Sample Table Listing
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#samples-template-definitions" class="md-nav__link">
+    Samples Template Definitions
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-templating-engine" class="md-nav__link">
+    Sample Templating Engine
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -624,7 +711,7 @@
 <p>PyFPDF is included in <a href="http://www.web2py.com/">web2py</a> since release <a href="http://www.web2py.com/examples/default/download">1.85.2</a>.</p>
 <p>Also, you can put the content of the <code>fpdf/</code> directory in this repository into the <code>web2py/gluon/contrib</code> folder.</p>
 <p><strong>Note about images</strong>: these sample images are small so they may look like low quality ones. For better results, use bigger images: more DPI (screen is often 72/96DPI, printers are often 300/600DPI). As a rule of thumb, use at least half of the image size when rendering to PDF, ie. if an image is 500x200px, use 250x100px as width and height attributes of the IMG tag.</p>
-<h1 id="sample-report">Sample Report</h1>
+<h2 id="sample-report">Sample Report</h2>
 <p>You could make a "professional looking" bussiness report just using web2py HTML helpers, mixin headers, logos, charts, text and tables.</p>
 <p>The main advantage of this method is that the same report can be rendered in a HTML view, or can be downloaded as PDF, with a minimal effort:</p>
 <p>Sample: <a href="http://pyfpdf.googlecode.com/files/report.pdf">report.pdf</a></p>
@@ -679,7 +766,7 @@
         <span class="c1"># normal html view:</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">chart</span><span class="o">=</span><span class="n">chart</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">)</span>
 </code></pre></div>
-<h1 id="sample-table-listing">Sample Table Listing</h1>
+<h2 id="sample-table-listing">Sample Table Listing</h2>
 <p>Also, you can make nice tables that automatically spreads over several pages, with headers and footers, column and row highlighting, etc., in a very pythonic way:</p>
 <p>Sample: <a href="http://pyfpdf.googlecode.com/files/listing.pdf">listing.pdf</a></p>
 <p>Updated Live Demo (HTML and PDF version):</p>
@@ -740,11 +827,11 @@
         <span class="c1"># normal html view:</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">table</span><span class="o">=</span><span class="n">table</span><span class="p">)}}}</span>
 </code></pre></div>
-<h1 id="samples-template-definitions">Samples Template Definitions</h1>
+<h2 id="samples-template-definitions">Samples Template Definitions</h2>
 <p>As stated in the <a href="Templates.html">Templates</a> page, there are 3 ways of putting your templates in place.
 As in that page there are samples for the manually hardcoded way and CSV document loading.
 Here we will only show a sample of the template engine.</p>
-<h1 id="sample-templating-engine">Sample Templating Engine</h1>
+<h2 id="sample-templating-engine">Sample Templating Engine</h2>
 <p>PyFPDF and web2py can be used to make PDF documents using templates like invoices, badges, certificates, etc.:</p>
 <p>Sample: <a href="http://pyfpdf.googlecode.com/files/invoice.pdf">invoice.pdf</a></p>
 <p>Updated Live Demo: <a href="http://www.web2py.com.ar/fpdf/default/invoice.pdf">http://www.web2py.com.ar/fpdf/default/invoice.pdf</a></p>

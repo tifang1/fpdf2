@@ -499,9 +499,46 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Templates
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="Templates.html" class="md-nav__link md-nav__link--active">
         Templates
       </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-template" class="md-nav__link">
+    Using Template()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-flextemplate" class="md-nav__link">
+    Using FlexTemplate()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -601,6 +638,28 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-template" class="md-nav__link">
+    Using Template()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-flextemplate" class="md-nav__link">
+    Using FlexTemplate()
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -621,8 +680,8 @@
 <p>These elements can act as placeholders, so the program can change the default text "filling in" the document.</p>
 <p>Besides being defined in code, the elements can also be defined in a CSV file or in a database, so the user can easily adapt the form to his printing needs.</p>
 <p>A template is used like a dict, setting its items' values.</p>
-<h1 id="how-to-use-templates">How to use Templates</h1>
-<p>There are two approaches to using templates.</p>
+<p><strong> How to use Templates? </strong></p>
+<p>There are two approaches to using templates, detailed in the sections below:</p>
 <h2 id="using-template">Using Template()</h2>
 <p>The traditional approach is to use the Template() class, This class accepts one template definition, and can apply it to each page of a document. The usage pattern here is:</p>
 <div class="highlight"><pre><span></span><code><span class="n">tmpl</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">)</span>
