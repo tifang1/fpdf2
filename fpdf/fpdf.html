@@ -303,6 +303,7 @@ class FPDF:
         self.draw_color = &#34;0 G&#34;
         self.fill_color = &#34;0 g&#34;
         self.text_color = &#34;0 g&#34;
+        self.dash_pattern = &#34;[] 0 d&#34;
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
@@ -310,7 +311,7 @@ class FPDF:
         self.image_filter = &#34;AUTO&#34;
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
-        self._rotating = False
+        self._rotating = 0  # counting levels of nested rotation contexts
         self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
@@ -913,6 +914,44 @@ class FPDF:
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
 
+    def set_dash_pattern(self, dash=0, gap=0, phase=0):
+        &#34;&#34;&#34;
+        Set the current dash pattern for lines and curves.
+
+        Args:
+            dash (float &gt;= 0):
+                The length of the dashes in current units.
+
+            gap (float &gt;= 0):
+                The length of the gaps between dashes in current units.
+                If omitted, the dash length will be used.
+
+            phase (float &gt;= 0):
+                Where in the sequence to start drawing.
+
+        Omitting &#39;dash&#39; (= 0) resets the pattern to a solid line.
+        &#34;&#34;&#34;
+        if not (isinstance(dash, (int, float)) and dash &gt;= 0):
+            raise ValueError(&#34;Dash length must be zero or a positive number.&#34;)
+        if not (isinstance(gap, (int, float)) and gap &gt;= 0):
+            raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
+        if not (isinstance(phase, (int, float)) and phase &gt;= 0):
+            raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_dash_pattern() should not be called inside .rotation()&#34;
+            )
+        if dash:
+            if gap:
+                dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+            else:
+                dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
+        else:
+            dstr = &#34;[] 0 d&#34;
+        if dstr != self.dash_pattern:
+            self.dash_pattern = dstr
+            self._out(dstr)
+
     @check_page
     def line(self, x1, y1, x2, y2):
         &#34;&#34;&#34;
@@ -965,16 +1004,12 @@ class FPDF:
         &#34;&#34;&#34;
         self.polyline(point_list, fill=fill, polygon=True)
 
-    def _set_dash(self, dash_length=None, space_length=None):
-        dash = &#34;&#34;
-        if dash_length and space_length:
-            dash = f&#34;{dash_length * self.k:.3f} {space_length * self.k:.3f}&#34;
-        self._out(f&#34;[{dash}] 0 d&#34;)
-
     @check_page
     def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
         &#34;&#34;&#34;
         Draw a dashed line between two points.
+        **DEPRECATED** 2.4.6
+        - use set_dash_pattern() and the normal drawing operations instead
 
         Args:
             x1 (int): Abscissa of first point
@@ -984,9 +1019,14 @@ class FPDF:
             dash_length (int): Length of the dash
             space_length (int): Length of the space between 2 dashes
         &#34;&#34;&#34;
-        self._set_dash(dash_length, space_length)
+        warnings.warn(
+            &#34;dashed_line() is deprecated, and will be removed in a future release. &#34;
+            &#34;Use set_dash_pattern() and the normal drawing operations instead.&#34;,
+            PendingDeprecationWarning,
+        )
+        self.set_dash_pattern(dash_length, space_length)
         self.line(x1, y1, x2, y2)
-        self._set_dash()
+        self.set_dash_pattern()
 
     @check_page
     def rect(self, x, y, w, h, style=None):
@@ -1583,9 +1623,9 @@ class FPDF:
             f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
             f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
         )
-        self._rotating = True
+        self._rotating += 1
         yield
-        self._rotating = False
+        self._rotating -= 1
         self._out(&#34;Q\n&#34;)
 
     @property
@@ -3791,6 +3831,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.draw_color = &#34;0 G&#34;
         self.fill_color = &#34;0 g&#34;
         self.text_color = &#34;0 g&#34;
+        self.dash_pattern = &#34;[] 0 d&#34;
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
@@ -3798,7 +3839,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.image_filter = &#34;AUTO&#34;
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
-        self._rotating = False
+        self._rotating = 0  # counting levels of nested rotation contexts
         self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
@@ -4401,6 +4442,44 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
 
+    def set_dash_pattern(self, dash=0, gap=0, phase=0):
+        &#34;&#34;&#34;
+        Set the current dash pattern for lines and curves.
+
+        Args:
+            dash (float &gt;= 0):
+                The length of the dashes in current units.
+
+            gap (float &gt;= 0):
+                The length of the gaps between dashes in current units.
+                If omitted, the dash length will be used.
+
+            phase (float &gt;= 0):
+                Where in the sequence to start drawing.
+
+        Omitting &#39;dash&#39; (= 0) resets the pattern to a solid line.
+        &#34;&#34;&#34;
+        if not (isinstance(dash, (int, float)) and dash &gt;= 0):
+            raise ValueError(&#34;Dash length must be zero or a positive number.&#34;)
+        if not (isinstance(gap, (int, float)) and gap &gt;= 0):
+            raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
+        if not (isinstance(phase, (int, float)) and phase &gt;= 0):
+            raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
+        if self._rotating:
+            raise FPDFException(
+                &#34;.set_dash_pattern() should not be called inside .rotation()&#34;
+            )
+        if dash:
+            if gap:
+                dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+            else:
+                dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
+        else:
+            dstr = &#34;[] 0 d&#34;
+        if dstr != self.dash_pattern:
+            self.dash_pattern = dstr
+            self._out(dstr)
+
     @check_page
     def line(self, x1, y1, x2, y2):
         &#34;&#34;&#34;
@@ -4453,16 +4532,12 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         self.polyline(point_list, fill=fill, polygon=True)
 
-    def _set_dash(self, dash_length=None, space_length=None):
-        dash = &#34;&#34;
-        if dash_length and space_length:
-            dash = f&#34;{dash_length * self.k:.3f} {space_length * self.k:.3f}&#34;
-        self._out(f&#34;[{dash}] 0 d&#34;)
-
     @check_page
     def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
         &#34;&#34;&#34;
         Draw a dashed line between two points.
+        **DEPRECATED** 2.4.6
+        - use set_dash_pattern() and the normal drawing operations instead
 
         Args:
             x1 (int): Abscissa of first point
@@ -4472,9 +4547,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
             dash_length (int): Length of the dash
             space_length (int): Length of the space between 2 dashes
         &#34;&#34;&#34;
-        self._set_dash(dash_length, space_length)
+        warnings.warn(
+            &#34;dashed_line() is deprecated, and will be removed in a future release. &#34;
+            &#34;Use set_dash_pattern() and the normal drawing operations instead.&#34;,
+            PendingDeprecationWarning,
+        )
+        self.set_dash_pattern(dash_length, space_length)
         self.line(x1, y1, x2, y2)
-        self._set_dash()
+        self.set_dash_pattern()
 
     @check_page
     def rect(self, x, y, w, h, style=None):
@@ -5071,9 +5151,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
             f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
             f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
         )
-        self._rotating = True
+        self._rotating += 1
         yield
-        self._rotating = False
+        self._rotating -= 1
         self._out(&#34;Q\n&#34;)
 
     @property
@@ -8050,7 +8130,9 @@ def code39(self, txt, x, y, w=1.5, h=5):
 <span>def <span class="ident">dashed_line</span></span>(<span>self, x1, y1, x2, y2, dash_length=1, space_length=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Draw a dashed line between two points.</p>
+<div class="desc"><p>Draw a dashed line between two points.
+<strong>DEPRECATED</strong> 2.4.6
+- use set_dash_pattern() and the normal drawing operations instead</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>x1</code></strong> :&ensp;<code>int</code></dt>
@@ -8074,6 +8156,8 @@ def code39(self, txt, x, y, w=1.5, h=5):
 def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
     &#34;&#34;&#34;
     Draw a dashed line between two points.
+    **DEPRECATED** 2.4.6
+    - use set_dash_pattern() and the normal drawing operations instead
 
     Args:
         x1 (int): Abscissa of first point
@@ -8083,9 +8167,14 @@ def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
         dash_length (int): Length of the dash
         space_length (int): Length of the space between 2 dashes
     &#34;&#34;&#34;
-    self._set_dash(dash_length, space_length)
+    warnings.warn(
+        &#34;dashed_line() is deprecated, and will be removed in a future release. &#34;
+        &#34;Use set_dash_pattern() and the normal drawing operations instead.&#34;,
+        PendingDeprecationWarning,
+    )
+    self.set_dash_pattern(dash_length, space_length)
     self.line(x1, y1, x2, y2)
-    self._set_dash()</code></pre>
+    self.set_dash_pattern()</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.ellipse"><code class="name flex">
@@ -9356,9 +9445,9 @@ def rotation(self, angle, x=None, y=None):
         f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
         f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
     )
-    self._rotating = True
+    self._rotating += 1
     yield
-    self._rotating = False
+    self._rotating -= 1
     self._out(&#34;Q\n&#34;)</code></pre>
 </details>
 </dd>
@@ -9488,6 +9577,63 @@ This is typically the name of the application that generates the PDF.</p>
         creator (str): name of the PDF creator
     &#34;&#34;&#34;
     self.creator = creator</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.FPDF.set_dash_pattern"><code class="name flex">
+<span>def <span class="ident">set_dash_pattern</span></span>(<span>self, dash=0, gap=0, phase=0)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Set the current dash pattern for lines and curves.</p>
+<h2 id="args">Args</h2>
+<p>dash (float &gt;= 0):
+The length of the dashes in current units.</p>
+<p>gap (float &gt;= 0):
+The length of the gaps between dashes in current units.
+If omitted, the dash length will be used.</p>
+<p>phase (float &gt;= 0):
+Where in the sequence to start drawing.
+Omitting 'dash' (= 0) resets the pattern to a solid line.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_dash_pattern(self, dash=0, gap=0, phase=0):
+    &#34;&#34;&#34;
+    Set the current dash pattern for lines and curves.
+
+    Args:
+        dash (float &gt;= 0):
+            The length of the dashes in current units.
+
+        gap (float &gt;= 0):
+            The length of the gaps between dashes in current units.
+            If omitted, the dash length will be used.
+
+        phase (float &gt;= 0):
+            Where in the sequence to start drawing.
+
+    Omitting &#39;dash&#39; (= 0) resets the pattern to a solid line.
+    &#34;&#34;&#34;
+    if not (isinstance(dash, (int, float)) and dash &gt;= 0):
+        raise ValueError(&#34;Dash length must be zero or a positive number.&#34;)
+    if not (isinstance(gap, (int, float)) and gap &gt;= 0):
+        raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
+    if not (isinstance(phase, (int, float)) and phase &gt;= 0):
+        raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
+    if self._rotating:
+        raise FPDFException(
+            &#34;.set_dash_pattern() should not be called inside .rotation()&#34;
+        )
+    if dash:
+        if gap:
+            dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+        else:
+            dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
+    else:
+        dstr = &#34;[] 0 d&#34;
+    if dstr != self.dash_pattern:
+        self.dash_pattern = dstr
+        self._out(dstr)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_display_mode"><code class="name flex">
@@ -10897,6 +11043,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.set_compression" href="#fpdf.fpdf.FPDF.set_compression">set_compression</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_creation_date" href="#fpdf.fpdf.FPDF.set_creation_date">set_creation_date</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_creator" href="#fpdf.fpdf.FPDF.set_creator">set_creator</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.set_dash_pattern" href="#fpdf.fpdf.FPDF.set_dash_pattern">set_dash_pattern</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_display_mode" href="#fpdf.fpdf.FPDF.set_display_mode">set_display_mode</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_doc_option" href="#fpdf.fpdf.FPDF.set_doc_option">set_doc_option</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_draw_color" href="#fpdf.fpdf.FPDF.set_draw_color">set_draw_color</a></code></li>
