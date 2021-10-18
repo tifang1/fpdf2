@@ -14,7 +14,7 @@
         <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Images.html">
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.3.3">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.3.4">
     
     
       
@@ -22,7 +22,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.5143246d.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.db9e7362.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.3f5d1f46.min.css">
@@ -312,6 +312,13 @@
         <li class="md-nav__item">
   <a href="#image-compression" class="md-nav__link">
     Image compression
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disabling-transparency" class="md-nav__link">
+    Disabling transparency
   </a>
   
 </li>
@@ -700,6 +707,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#disabling-transparency" class="md-nav__link">
+    Disabling transparency
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -767,6 +781,20 @@ no image conversion from / to PNG / JPEG is performed.</p>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-with-image.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Beware that "flattening" images this way will convert alpha channels to black.</p>
+<h2 id="disabling-transparency">Disabling transparency</h2>
+<p>By default images transparency is preserved:
+alpha channels are extracted and converted to an embedded <code>SMask</code>.
+This can be disabled by setting <code>.allow_images_transparency</code>,
+<em>e.g.</em> to allow compliance with <a href="https://en.wikipedia.org/wiki/PDF/A#Description">PDF/A-1</a>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">allow_images_transparency</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="n">pdf</span><span class="o">.</span><span class="n">epw</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Text behind. &quot;</span> <span class="o">*</span> <span class="mi">6</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-including-image-without-transparency.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
                 
               
               
@@ -842,7 +870,7 @@ no image conversion from / to PNG / JPEG is performed.</p>
     <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.8397ff9e.min.js", "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.f89c2efe.min.js"></script>
+      <script src="assets/javascripts/bundle.1e84347e.min.js"></script>
       
     
   </body>

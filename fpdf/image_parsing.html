@@ -59,11 +59,9 @@ def load_image(filename):
 
 def _decode_base64_image(base64Image):
     &#34;Decode the base 64 image string into an io byte stream.&#34;
-
     imageData = base64Image.split(&#34;base64,&#34;)[1]
     decodedData = base64.b64decode(imageData)
     imageBytes = BytesIO(decodedData)
-
     return imageBytes
 
 
@@ -89,7 +87,10 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;):
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
         alpha_channel = slice(1, None, 2)
         info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
-        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+        if _has_alpha(img, alpha_channel) and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
     elif img.mode == &#34;RGB&#34;:
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
@@ -98,7 +99,10 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;):
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
         alpha_channel = slice(3, None, 4)
         info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
-        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+        if _has_alpha(img, alpha_channel) and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
 
     dp = f&#34;/Predictor 15 /Colors {dpn} /BitsPerComponent {bpc} /Columns {w}&#34;
@@ -150,7 +154,12 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
     while i &lt; len(data):
         data[i:i] = b&#34;\0&#34;
         i += loop_incr
-    return zlib.compress(data)</code></pre>
+    return zlib.compress(data)
+
+
+def _has_alpha(img, alpha_channel):
+    alpha = bytearray(img.tobytes())[alpha_channel]
+    return any(c != 255 for c in alpha)</code></pre>
 </details>
 </section>
 <section>
@@ -197,7 +206,10 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
         alpha_channel = slice(1, None, 2)
         info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
-        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+        if _has_alpha(img, alpha_channel) and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
     elif img.mode == &#34;RGB&#34;:
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
@@ -206,7 +218,10 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
         alpha_channel = slice(3, None, 4)
         info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
-        if image_filter not in (&#34;DCTDecode&#34;, &#34;JPXDecode&#34;):
+        if _has_alpha(img, alpha_channel) and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
 
     dp = f&#34;/Predictor 15 /Colors {dpn} /BitsPerComponent {bpc} /Columns {w}&#34;

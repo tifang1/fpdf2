@@ -311,6 +311,7 @@ class FPDF:
         self.image_filter = &#34;AUTO&#34;
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
+        self.allow_images_transparency = True
         self._rotating = 0  # counting levels of nested rotation contexts
         self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
@@ -3082,7 +3083,7 @@ class FPDF:
             trns = &#34; &#34;.join(f&#34;{x} {x}&#34; for x in info[&#34;trns&#34;])
             self._out(f&#34;/Mask [{trns}]&#34;)
 
-        if &#34;smask&#34; in info:
+        if self.allow_images_transparency and &#34;smask&#34; in info:
             self._out(f&#34;/SMask {self.n + 1} 0 R&#34;)
 
         self._out(f&#34;/Length {len(info[&#39;data&#39;])}&gt;&gt;&#34;)
@@ -3090,7 +3091,7 @@ class FPDF:
         self._out(&#34;endobj&#34;)
 
         # Soft mask
-        if &#34;smask&#34; in info:
+        if self.allow_images_transparency and &#34;smask&#34; in info:
             dp = f&#34;/Predictor 15 /Colors 1 /BitsPerComponent 8 /Columns {info[&#39;w&#39;]}&#34;
             smask = {
                 &#34;w&#34;: info[&#34;w&#34;],
@@ -3839,6 +3840,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.image_filter = &#34;AUTO&#34;
         self.page_duration = 0  # optional pages display duration, cf. add_page()
         self.page_transition = None  # optional pages transition, cf. add_page()
+        self.allow_images_transparency = True
         self._rotating = 0  # counting levels of nested rotation contexts
         self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
@@ -6610,7 +6612,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             trns = &#34; &#34;.join(f&#34;{x} {x}&#34; for x in info[&#34;trns&#34;])
             self._out(f&#34;/Mask [{trns}]&#34;)
 
-        if &#34;smask&#34; in info:
+        if self.allow_images_transparency and &#34;smask&#34; in info:
             self._out(f&#34;/SMask {self.n + 1} 0 R&#34;)
 
         self._out(f&#34;/Length {len(info[&#39;data&#39;])}&gt;&gt;&#34;)
@@ -6618,7 +6620,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(&#34;endobj&#34;)
 
         # Soft mask
-        if &#34;smask&#34; in info:
+        if self.allow_images_transparency and &#34;smask&#34; in info:
             dp = f&#34;/Predictor 15 /Colors 1 /BitsPerComponent 8 /Columns {info[&#39;w&#39;]}&#34;
             smask = {
                 &#34;w&#34;: info[&#34;w&#34;],
