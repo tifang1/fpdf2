@@ -65,7 +65,7 @@ def _decode_base64_image(base64Image):
     return imageBytes
 
 
-def get_img_info(img, image_filter=&#34;AUTO&#34;):
+def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
     Args:
         img: `BytesIO` or `PIL.Image.Image` instance
@@ -73,6 +73,8 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;):
     &#34;&#34;&#34;
     if not isinstance(img, Image.Image):
         img = Image.open(img)
+    if dims:
+        img = img.resize(dims, resample=Image.ANTIALIAS)
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
@@ -170,7 +172,7 @@ def _has_alpha(img, alpha_channel):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="fpdf.image_parsing.get_img_info"><code class="name flex">
-<span>def <span class="ident">get_img_info</span></span>(<span>img, image_filter='AUTO')</span>
+<span>def <span class="ident">get_img_info</span></span>(<span>img, image_filter='AUTO', dims=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><h2 id="args">Args</h2>
@@ -184,7 +186,7 @@ def _has_alpha(img, alpha_channel):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_img_info(img, image_filter=&#34;AUTO&#34;):
+<pre><code class="python">def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
     Args:
         img: `BytesIO` or `PIL.Image.Image` instance
@@ -192,6 +194,8 @@ def _has_alpha(img, alpha_channel):
     &#34;&#34;&#34;
     if not isinstance(img, Image.Image):
         img = Image.open(img)
+    if dims:
+        img = img.resize(dims, resample=Image.ANTIALIAS)
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;

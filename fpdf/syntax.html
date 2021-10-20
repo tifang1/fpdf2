@@ -321,7 +321,7 @@ class DestinationXYZ(Destination):
         if isinstance(top, float):
             top = round(top, 2)
         # The page object ID is predictable given that _putpages is invoked first in _enddoc:
-        page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
+        page = iobj_ref(2 * self.page + 1) if self.page_as_obj_id else self.page
         return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 </section>
@@ -519,7 +519,7 @@ inheritance.</p></div>
         if isinstance(top, float):
             top = round(top, 2)
         # The page object ID is predictable given that _putpages is invoked first in _enddoc:
-        page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
+        page = iobj_ref(2 * self.page + 1) if self.page_as_obj_id else self.page
         return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -546,7 +546,7 @@ inheritance.</p></div>
     if isinstance(top, float):
         top = round(top, 2)
     # The page object ID is predictable given that _putpages is invoked first in _enddoc:
-    page = f&#34;{2 * self.page + 1} 0 R&#34; if self.page_as_obj_id else self.page
+    page = iobj_ref(2 * self.page + 1) if self.page_as_obj_id else self.page
     return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 </dd>
