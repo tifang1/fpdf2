@@ -490,6 +490,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#arc" class="md-nav__link">
+    Arc
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solid-arc" class="md-nav__link">
+    Solid arc
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -701,6 +715,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#arc" class="md-nav__link">
+    Arc
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#solid-arc" class="md-nav__link">
+    Solid arc
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -775,6 +803,26 @@
 <span class="n">coords</span> <span class="o">=</span> <span class="p">((</span><span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">69</span><span class="p">),</span> <span class="p">(</span><span class="mi">41</span><span class="p">,</span> <span class="mi">181</span><span class="p">),</span> <span class="p">(</span><span class="mi">159</span><span class="p">,</span> <span class="mi">181</span><span class="p">),</span> <span class="p">(</span><span class="mi">195</span><span class="p">,</span> <span class="mi">69</span><span class="p">))</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">polygon</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;polygon.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="arc">Arc</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;arc.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="solid-arc">Solid arc</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">solid_arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;solid_arc.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
                 
               

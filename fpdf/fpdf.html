@@ -1129,6 +1129,202 @@ class FPDF:
         &#34;&#34;&#34;
         self.ellipse(x, y, r, r, style)
 
+    @check_page
+    def arc(
+        self,
+        x,
+        y,
+        a,
+        start_angle,
+        end_angle,
+        b=None,
+        inclination=0,
+        clockwise=False,
+        start_from_center=False,
+        end_at_center=False,
+        style=None,
+    ):
+        &#34;&#34;&#34;
+        Outputs an arc.
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (int): Abscissa of upper-left bounging box.
+            y (int): Ordinate of upper-left bounging box.
+            a (int): Semi-major axis diameter.
+            b (int): Semi-minor axis diameter, if None, equals to a (default: None).
+            start_angle (int): Start angle of the arc (in degrees).
+            end_angle (int): End angle of the arc (in degrees).
+            inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+            clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+            start_from_center (bool): Start drawing from the center of the circle (default: False).
+            end_at_center (bool): End drawing at the center of the circle (default: False).
+            style (int): Style of rendering. Possible values are:
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+        &#34;&#34;&#34;
+        style_to_operators = {None: &#34;S&#34;, &#34;D&#34;: &#34;S&#34;, &#34;F&#34;: &#34;f&#34;, &#34;FD&#34;: &#34;B&#34;, &#34;DF&#34;: &#34;B&#34;}
+
+        if style not in style_to_operators:
+            raise FPDFException(
+                f&#34;Undefined style: {style} - &#34;
+                f&#34;Style should be one of {list(style_to_operators.keys())}&#34;
+            )
+
+        op = style_to_operators[style]
+
+        if b is None:
+            b = a
+
+        a /= 2
+        b /= 2
+
+        cx = x + a
+        cy = y + b
+
+        # Functions used only to construct other points of the bezier curve
+        def deg_to_rad(deg):
+            return deg * math.pi / 180
+
+        def angle_to_param(angle):
+            angle = deg_to_rad(angle % 360)
+            eta = math.atan2(math.sin(angle) / b, math.cos(angle) / a)
+
+            if eta &lt; 0:
+                eta += 2 * math.pi
+            return eta
+
+        theta = deg_to_rad(inclination)
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+
+        def evaluate(eta):
+            a_cos_eta = a * math.cos(eta)
+            b_sin_eta = b * math.sin(eta)
+
+            return [
+                cx + a_cos_eta * cos_theta - b_sin_eta * sin_theta,
+                cy + a_cos_eta * sin_theta + b_sin_eta * cos_theta,
+            ]
+
+        def derivative_evaluate(eta):
+            a_sin_eta = a * math.sin(eta)
+            b_cos_eta = b * math.cos(eta)
+
+            return [
+                -a_sin_eta * cos_theta - b_cos_eta * sin_theta,
+                -a_sin_eta * sin_theta + b_cos_eta * cos_theta,
+            ]
+
+        # Calculating start_eta and end_eta so that
+        #   start_eta &lt; end_eta   &lt;= start_eta + 2*PI if counterclockwise
+        #   end_eta   &lt; start_eta &lt;= end_eta + 2*PI   if clockwise
+        start_eta = angle_to_param(start_angle)
+        end_eta = angle_to_param(end_angle)
+
+        if not clockwise and end_eta &lt;= start_eta:
+            end_eta += 2 * math.pi
+        elif clockwise and end_eta &gt;= start_eta:
+            start_eta += 2 * math.pi
+
+        start_point = evaluate(start_eta)
+
+        # Move to the start point
+        if start_from_center:
+            self._out(f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} m&#34;)
+            self._out(
+                f&#34;{start_point[0] * self.k:.2f} {(self.h - start_point[1]) * self.k:.2f} l&#34;
+            )
+        else:
+            self._out(
+                f&#34;{start_point[0] * self.k:.2f} {(self.h - start_point[1]) * self.k:.2f} m&#34;
+            )
+
+        # Number of curves to use, maximal segment angle is 2*PI/max_curves
+        max_curves = 4
+        n = min(
+            max_curves, math.ceil(abs(end_eta - start_eta) / (2 * math.pi / max_curves))
+        )
+        d_eta = (end_eta - start_eta) / n
+
+        alpha = math.sin(d_eta) * (math.sqrt(4 + 3 * math.tan(d_eta / 2) ** 2) - 1) / 3
+
+        eta2 = start_eta
+        p2 = evaluate(eta2)
+        p2_prime = derivative_evaluate(eta2)
+
+        for i in range(n):
+            p1 = p2
+            p1_prime = p2_prime
+
+            eta2 += d_eta
+            p2 = evaluate(eta2)
+            p2_prime = derivative_evaluate(eta2)
+
+            control_point_1 = [p1[0] + alpha * p1_prime[0], p1[1] + alpha * p1_prime[1]]
+            control_point_2 = [p2[0] - alpha * p2_prime[0], p2[1] - alpha * p2_prime[1]]
+
+            end = &#34;&#34;
+            if i == n - 1 and not end_at_center:
+                end = f&#34; {op}&#34;
+
+            self._out(
+                (
+                    f&#34;{control_point_1[0] * self.k:.2f} {(self.h - control_point_1[1]) * self.k:.2f} &#34;
+                    f&#34;{control_point_2[0] * self.k:.2f} {(self.h - control_point_2[1]) * self.k:.2f} &#34;
+                    f&#34;{p2[0] * self.k:.2f} {(self.h - p2[1]) * self.k:.2f} c&#34; + end
+                )
+            )
+
+        if end_at_center:
+            self._out(f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {op}&#34;)
+
+    @check_page
+    def solid_arc(
+        self,
+        x,
+        y,
+        a,
+        start_angle,
+        end_angle,
+        b=None,
+        inclination=0,
+        clockwise=False,
+        style=None,
+    ):
+        &#34;&#34;&#34;
+        Outputs a solid arc. A solid arc combines an arc and a triangle to form a pie slice
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (int): Abscissa of upper-left bounging box.
+            y (int): Ordinate of upper-left bounging box.
+            a (int): Semi-major axis.
+            b (int): Semi-minor axis, if None, equals to a (default: None).
+            start_angle (int): Start angle of the arc (in degrees).
+            end_angle (int): End angle of the arc (in degrees).
+            inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+            clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+            style (int): Style of rendering. Possible values are:
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+        &#34;&#34;&#34;
+        self.arc(
+            x,
+            y,
+            a,
+            start_angle,
+            end_angle,
+            b,
+            inclination,
+            clockwise,
+            True,
+            True,
+            style,
+        )
+
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
         &#34;&#34;&#34;
         Imports a TrueType, OpenType or Type1 font and makes it available
@@ -4744,6 +4940,202 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         self.ellipse(x, y, r, r, style)
 
+    @check_page
+    def arc(
+        self,
+        x,
+        y,
+        a,
+        start_angle,
+        end_angle,
+        b=None,
+        inclination=0,
+        clockwise=False,
+        start_from_center=False,
+        end_at_center=False,
+        style=None,
+    ):
+        &#34;&#34;&#34;
+        Outputs an arc.
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (int): Abscissa of upper-left bounging box.
+            y (int): Ordinate of upper-left bounging box.
+            a (int): Semi-major axis diameter.
+            b (int): Semi-minor axis diameter, if None, equals to a (default: None).
+            start_angle (int): Start angle of the arc (in degrees).
+            end_angle (int): End angle of the arc (in degrees).
+            inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+            clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+            start_from_center (bool): Start drawing from the center of the circle (default: False).
+            end_at_center (bool): End drawing at the center of the circle (default: False).
+            style (int): Style of rendering. Possible values are:
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+        &#34;&#34;&#34;
+        style_to_operators = {None: &#34;S&#34;, &#34;D&#34;: &#34;S&#34;, &#34;F&#34;: &#34;f&#34;, &#34;FD&#34;: &#34;B&#34;, &#34;DF&#34;: &#34;B&#34;}
+
+        if style not in style_to_operators:
+            raise FPDFException(
+                f&#34;Undefined style: {style} - &#34;
+                f&#34;Style should be one of {list(style_to_operators.keys())}&#34;
+            )
+
+        op = style_to_operators[style]
+
+        if b is None:
+            b = a
+
+        a /= 2
+        b /= 2
+
+        cx = x + a
+        cy = y + b
+
+        # Functions used only to construct other points of the bezier curve
+        def deg_to_rad(deg):
+            return deg * math.pi / 180
+
+        def angle_to_param(angle):
+            angle = deg_to_rad(angle % 360)
+            eta = math.atan2(math.sin(angle) / b, math.cos(angle) / a)
+
+            if eta &lt; 0:
+                eta += 2 * math.pi
+            return eta
+
+        theta = deg_to_rad(inclination)
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+
+        def evaluate(eta):
+            a_cos_eta = a * math.cos(eta)
+            b_sin_eta = b * math.sin(eta)
+
+            return [
+                cx + a_cos_eta * cos_theta - b_sin_eta * sin_theta,
+                cy + a_cos_eta * sin_theta + b_sin_eta * cos_theta,
+            ]
+
+        def derivative_evaluate(eta):
+            a_sin_eta = a * math.sin(eta)
+            b_cos_eta = b * math.cos(eta)
+
+            return [
+                -a_sin_eta * cos_theta - b_cos_eta * sin_theta,
+                -a_sin_eta * sin_theta + b_cos_eta * cos_theta,
+            ]
+
+        # Calculating start_eta and end_eta so that
+        #   start_eta &lt; end_eta   &lt;= start_eta + 2*PI if counterclockwise
+        #   end_eta   &lt; start_eta &lt;= end_eta + 2*PI   if clockwise
+        start_eta = angle_to_param(start_angle)
+        end_eta = angle_to_param(end_angle)
+
+        if not clockwise and end_eta &lt;= start_eta:
+            end_eta += 2 * math.pi
+        elif clockwise and end_eta &gt;= start_eta:
+            start_eta += 2 * math.pi
+
+        start_point = evaluate(start_eta)
+
+        # Move to the start point
+        if start_from_center:
+            self._out(f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} m&#34;)
+            self._out(
+                f&#34;{start_point[0] * self.k:.2f} {(self.h - start_point[1]) * self.k:.2f} l&#34;
+            )
+        else:
+            self._out(
+                f&#34;{start_point[0] * self.k:.2f} {(self.h - start_point[1]) * self.k:.2f} m&#34;
+            )
+
+        # Number of curves to use, maximal segment angle is 2*PI/max_curves
+        max_curves = 4
+        n = min(
+            max_curves, math.ceil(abs(end_eta - start_eta) / (2 * math.pi / max_curves))
+        )
+        d_eta = (end_eta - start_eta) / n
+
+        alpha = math.sin(d_eta) * (math.sqrt(4 + 3 * math.tan(d_eta / 2) ** 2) - 1) / 3
+
+        eta2 = start_eta
+        p2 = evaluate(eta2)
+        p2_prime = derivative_evaluate(eta2)
+
+        for i in range(n):
+            p1 = p2
+            p1_prime = p2_prime
+
+            eta2 += d_eta
+            p2 = evaluate(eta2)
+            p2_prime = derivative_evaluate(eta2)
+
+            control_point_1 = [p1[0] + alpha * p1_prime[0], p1[1] + alpha * p1_prime[1]]
+            control_point_2 = [p2[0] - alpha * p2_prime[0], p2[1] - alpha * p2_prime[1]]
+
+            end = &#34;&#34;
+            if i == n - 1 and not end_at_center:
+                end = f&#34; {op}&#34;
+
+            self._out(
+                (
+                    f&#34;{control_point_1[0] * self.k:.2f} {(self.h - control_point_1[1]) * self.k:.2f} &#34;
+                    f&#34;{control_point_2[0] * self.k:.2f} {(self.h - control_point_2[1]) * self.k:.2f} &#34;
+                    f&#34;{p2[0] * self.k:.2f} {(self.h - p2[1]) * self.k:.2f} c&#34; + end
+                )
+            )
+
+        if end_at_center:
+            self._out(f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {op}&#34;)
+
+    @check_page
+    def solid_arc(
+        self,
+        x,
+        y,
+        a,
+        start_angle,
+        end_angle,
+        b=None,
+        inclination=0,
+        clockwise=False,
+        style=None,
+    ):
+        &#34;&#34;&#34;
+        Outputs a solid arc. A solid arc combines an arc and a triangle to form a pie slice
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (int): Abscissa of upper-left bounging box.
+            y (int): Ordinate of upper-left bounging box.
+            a (int): Semi-major axis.
+            b (int): Semi-minor axis, if None, equals to a (default: None).
+            start_angle (int): Start angle of the arc (in degrees).
+            end_angle (int): End angle of the arc (in degrees).
+            inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+            clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+            style (int): Style of rendering. Possible values are:
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+        &#34;&#34;&#34;
+        self.arc(
+            x,
+            y,
+            a,
+            start_angle,
+            end_angle,
+            b,
+            inclination,
+            clockwise,
+            True,
+            True,
+            style,
+        )
+
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=False):
         &#34;&#34;&#34;
         Imports a TrueType, OpenType or Type1 font and makes it available
@@ -7866,6 +8258,196 @@ which can causes slight positioning differences.</p></div>
     self.str_alias_nb_pages = alias</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.arc"><code class="name flex">
+<span>def <span class="ident">arc</span></span>(<span>self, x, y, a, start_angle, end_angle, b=None, inclination=0, clockwise=False, start_from_center=False, end_at_center=False, style=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs an arc.
+It can be drawn (border only), filled (with no border) or both.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Abscissa of upper-left bounging box.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Ordinate of upper-left bounging box.</dd>
+<dt><strong><code>a</code></strong> :&ensp;<code>int</code></dt>
+<dd>Semi-major axis diameter.</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>int</code></dt>
+<dd>Semi-minor axis diameter, if None, equals to a (default: None).</dd>
+<dt><strong><code>start_angle</code></strong> :&ensp;<code>int</code></dt>
+<dd>Start angle of the arc (in degrees).</dd>
+<dt><strong><code>end_angle</code></strong> :&ensp;<code>int</code></dt>
+<dd>End angle of the arc (in degrees).</dd>
+<dt><strong><code>inclination</code></strong> :&ensp;<code>int</code></dt>
+<dd>Inclination of the arc in respect of the x-axis (default: 0).</dd>
+<dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).</dd>
+<dt><strong><code>start_from_center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Start drawing from the center of the circle (default: False).</dd>
+<dt><strong><code>end_at_center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>End drawing at the center of the circle (default: False).</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>int</code></dt>
+<dd>Style of rendering. Possible values are:
+* <code>D</code> or None: draw border. This is the default value.
+* <code>F</code>: fill
+* <code>DF</code> or <code>FD</code>: draw and fill</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def arc(
+    self,
+    x,
+    y,
+    a,
+    start_angle,
+    end_angle,
+    b=None,
+    inclination=0,
+    clockwise=False,
+    start_from_center=False,
+    end_at_center=False,
+    style=None,
+):
+    &#34;&#34;&#34;
+    Outputs an arc.
+    It can be drawn (border only), filled (with no border) or both.
+
+    Args:
+        x (int): Abscissa of upper-left bounging box.
+        y (int): Ordinate of upper-left bounging box.
+        a (int): Semi-major axis diameter.
+        b (int): Semi-minor axis diameter, if None, equals to a (default: None).
+        start_angle (int): Start angle of the arc (in degrees).
+        end_angle (int): End angle of the arc (in degrees).
+        inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+        clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+        start_from_center (bool): Start drawing from the center of the circle (default: False).
+        end_at_center (bool): End drawing at the center of the circle (default: False).
+        style (int): Style of rendering. Possible values are:
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
+    &#34;&#34;&#34;
+    style_to_operators = {None: &#34;S&#34;, &#34;D&#34;: &#34;S&#34;, &#34;F&#34;: &#34;f&#34;, &#34;FD&#34;: &#34;B&#34;, &#34;DF&#34;: &#34;B&#34;}
+
+    if style not in style_to_operators:
+        raise FPDFException(
+            f&#34;Undefined style: {style} - &#34;
+            f&#34;Style should be one of {list(style_to_operators.keys())}&#34;
+        )
+
+    op = style_to_operators[style]
+
+    if b is None:
+        b = a
+
+    a /= 2
+    b /= 2
+
+    cx = x + a
+    cy = y + b
+
+    # Functions used only to construct other points of the bezier curve
+    def deg_to_rad(deg):
+        return deg * math.pi / 180
+
+    def angle_to_param(angle):
+        angle = deg_to_rad(angle % 360)
+        eta = math.atan2(math.sin(angle) / b, math.cos(angle) / a)
+
+        if eta &lt; 0:
+            eta += 2 * math.pi
+        return eta
+
+    theta = deg_to_rad(inclination)
+    cos_theta = math.cos(theta)
+    sin_theta = math.sin(theta)
+
+    def evaluate(eta):
+        a_cos_eta = a * math.cos(eta)
+        b_sin_eta = b * math.sin(eta)
+
+        return [
+            cx + a_cos_eta * cos_theta - b_sin_eta * sin_theta,
+            cy + a_cos_eta * sin_theta + b_sin_eta * cos_theta,
+        ]
+
+    def derivative_evaluate(eta):
+        a_sin_eta = a * math.sin(eta)
+        b_cos_eta = b * math.cos(eta)
+
+        return [
+            -a_sin_eta * cos_theta - b_cos_eta * sin_theta,
+            -a_sin_eta * sin_theta + b_cos_eta * cos_theta,
+        ]
+
+    # Calculating start_eta and end_eta so that
+    #   start_eta &lt; end_eta   &lt;= start_eta + 2*PI if counterclockwise
+    #   end_eta   &lt; start_eta &lt;= end_eta + 2*PI   if clockwise
+    start_eta = angle_to_param(start_angle)
+    end_eta = angle_to_param(end_angle)
+
+    if not clockwise and end_eta &lt;= start_eta:
+        end_eta += 2 * math.pi
+    elif clockwise and end_eta &gt;= start_eta:
+        start_eta += 2 * math.pi
+
+    start_point = evaluate(start_eta)
+
+    # Move to the start point
+    if start_from_center:
+        self._out(f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} m&#34;)
+        self._out(
+            f&#34;{start_point[0] * self.k:.2f} {(self.h - start_point[1]) * self.k:.2f} l&#34;
+        )
+    else:
+        self._out(
+            f&#34;{start_point[0] * self.k:.2f} {(self.h - start_point[1]) * self.k:.2f} m&#34;
+        )
+
+    # Number of curves to use, maximal segment angle is 2*PI/max_curves
+    max_curves = 4
+    n = min(
+        max_curves, math.ceil(abs(end_eta - start_eta) / (2 * math.pi / max_curves))
+    )
+    d_eta = (end_eta - start_eta) / n
+
+    alpha = math.sin(d_eta) * (math.sqrt(4 + 3 * math.tan(d_eta / 2) ** 2) - 1) / 3
+
+    eta2 = start_eta
+    p2 = evaluate(eta2)
+    p2_prime = derivative_evaluate(eta2)
+
+    for i in range(n):
+        p1 = p2
+        p1_prime = p2_prime
+
+        eta2 += d_eta
+        p2 = evaluate(eta2)
+        p2_prime = derivative_evaluate(eta2)
+
+        control_point_1 = [p1[0] + alpha * p1_prime[0], p1[1] + alpha * p1_prime[1]]
+        control_point_2 = [p2[0] - alpha * p2_prime[0], p2[1] - alpha * p2_prime[1]]
+
+        end = &#34;&#34;
+        if i == n - 1 and not end_at_center:
+            end = f&#34; {op}&#34;
+
+        self._out(
+            (
+                f&#34;{control_point_1[0] * self.k:.2f} {(self.h - control_point_1[1]) * self.k:.2f} &#34;
+                f&#34;{control_point_2[0] * self.k:.2f} {(self.h - control_point_2[1]) * self.k:.2f} &#34;
+                f&#34;{p2[0] * self.k:.2f} {(self.h - p2[1]) * self.k:.2f} c&#34; + end
+            )
+        )
+
+    if end_at_center:
+        self._out(f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {op}&#34;)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.cell"><code class="name flex">
 <span>def <span class="ident">cell</span></span>(<span>self, w=None, h=None, txt='', border=0, ln=0, align='', fill=False, link='', center=False, markdown=False)</span>
 </code></dt>
@@ -10773,6 +11355,86 @@ If the value provided is negative, it is relative to the bottom of the page.</p>
     self.y = y if y &gt;= 0 else self.h + y</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.solid_arc"><code class="name flex">
+<span>def <span class="ident">solid_arc</span></span>(<span>self, x, y, a, start_angle, end_angle, b=None, inclination=0, clockwise=False, style=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs a solid arc. A solid arc combines an arc and a triangle to form a pie slice
+It can be drawn (border only), filled (with no border) or both.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Abscissa of upper-left bounging box.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Ordinate of upper-left bounging box.</dd>
+<dt><strong><code>a</code></strong> :&ensp;<code>int</code></dt>
+<dd>Semi-major axis.</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>int</code></dt>
+<dd>Semi-minor axis, if None, equals to a (default: None).</dd>
+<dt><strong><code>start_angle</code></strong> :&ensp;<code>int</code></dt>
+<dd>Start angle of the arc (in degrees).</dd>
+<dt><strong><code>end_angle</code></strong> :&ensp;<code>int</code></dt>
+<dd>End angle of the arc (in degrees).</dd>
+<dt><strong><code>inclination</code></strong> :&ensp;<code>int</code></dt>
+<dd>Inclination of the arc in respect of the x-axis (default: 0).</dd>
+<dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>int</code></dt>
+<dd>Style of rendering. Possible values are:
+* <code>D</code> or None: draw border. This is the default value.
+* <code>F</code>: fill
+* <code>DF</code> or <code>FD</code>: draw and fill</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def solid_arc(
+    self,
+    x,
+    y,
+    a,
+    start_angle,
+    end_angle,
+    b=None,
+    inclination=0,
+    clockwise=False,
+    style=None,
+):
+    &#34;&#34;&#34;
+    Outputs a solid arc. A solid arc combines an arc and a triangle to form a pie slice
+    It can be drawn (border only), filled (with no border) or both.
+
+    Args:
+        x (int): Abscissa of upper-left bounging box.
+        y (int): Ordinate of upper-left bounging box.
+        a (int): Semi-major axis.
+        b (int): Semi-minor axis, if None, equals to a (default: None).
+        start_angle (int): Start angle of the arc (in degrees).
+        end_angle (int): End angle of the arc (in degrees).
+        inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+        clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+        style (int): Style of rendering. Possible values are:
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
+    &#34;&#34;&#34;
+    self.arc(
+        x,
+        y,
+        a,
+        start_angle,
+        end_angle,
+        b,
+        inclination,
+        clockwise,
+        True,
+        True,
+        style,
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.start_section"><code class="name flex">
 <span>def <span class="ident">start_section</span></span>(<span>self, name, level=0)</span>
 </code></dt>
@@ -11188,6 +11850,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.add_link" href="#fpdf.fpdf.FPDF.add_link">add_link</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_page" href="#fpdf.fpdf.FPDF.add_page">add_page</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.alias_nb_pages" href="#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.arc" href="#fpdf.fpdf.FPDF.arc">arc</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.cell" href="#fpdf.fpdf.FPDF.cell">cell</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.circle" href="#fpdf.fpdf.FPDF.circle">circle</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.close" href="#fpdf.fpdf.FPDF.close">close</a></code></li>
@@ -11250,6 +11913,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.set_xmp_metadata" href="#fpdf.fpdf.FPDF.set_xmp_metadata">set_xmp_metadata</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_xy" href="#fpdf.fpdf.FPDF.set_xy">set_xy</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_y" href="#fpdf.fpdf.FPDF.set_y">set_y</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.solid_arc" href="#fpdf.fpdf.FPDF.solid_arc">solid_arc</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.start_section" href="#fpdf.fpdf.FPDF.start_section">start_section</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.text" href="#fpdf.fpdf.FPDF.text">text</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.text_annotation" href="#fpdf.fpdf.FPDF.text_annotation">text_annotation</a></code></li>
