@@ -629,8 +629,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tuto-3-sauts-de-ligne-et-couleurs" class="md-nav__link">
-    Tuto 3 - Sauts de ligne et couleurs
+  <a href="#tuto-3-saut-de-ligne-et-couleur" class="md-nav__link">
+    Tuto 3 - Saut de ligne et couleur
   </a>
   
 </li>
@@ -682,7 +682,7 @@
 <li><a href="#tutorial">Tutorial</a><ul>
 <li><a href="#tuto-1-exemple-minimal">Tuto 1 - Exemple minimal</a></li>
 <li><a href="#tuto-2-en-tete-bas-de-page-saut-de-page-et-image">Tuto 2 - En-tête, bas de page, saut de page et image</a></li>
-<li><a href="#tuto-3-sauts-de-ligne-et-couleurs">Tuto 3 - Sauts de ligne et couleurs</a></li>
+<li><a href="#tuto-3-saut-de-ligne-et-couleur">Tuto 3 - Saut de ligne et couleur</a></li>
 <li><a href="#tuto-4-colonnes-multiples">Tuto 4 - Colonnes multiples</a></li>
 <li><a href="#tuto-5-creer-des-tables">Tuto 5 - Créer des tables</a></li>
 <li><a href="#tuto-6-creer-des-liens-et-melanger-differents-styles-de-textes">Tuto 6 - Créer des liens et mélanger différents styles de textes</a></li>
@@ -758,10 +758,90 @@ Les autres polices fournies par défaut sont <code>Times</code>, <code>Courier</
     <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Printing line number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto2.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">PDF généré</a>
-En cours de traduction.</p>
-<h2 id="tuto-3-sauts-de-ligne-et-couleurs">Tuto 3 - Sauts de ligne et couleurs</h2>
-<p>En cours de traduction.</p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">PDF généré</a></p>
+<p>Cet exemple utilise les méthodes <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.header">header</a> et <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.footer">footer</a> pour générer des en-têtes et des bas de page. Elles sont appelées automatiquement. Elles existent déjà dans la classe FPDF mais elles ne font rien, il faut donc les redéfinir dans une classe fille.</p>
+<p>Le logo est affiché avec la méthode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.image">image</a> en spécifiant la position du coin supérieur gauche et la largeur de l'image. La hauteur est calculée automatiquement pour garder les proportions de l'image.</p>
+<p>Pour centrer le numéro de page dans le bas de page, il faut passer la valeur nulle à la place de la largeur de la cellule. Cela fait prendre toute la largeur de la page à la cellule, ce qui permet de centrer le texte. Le numéro de page actuel est obtenu avec la méthode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no">page_no</a>; le nombre total de pages est obtenu avec la variable <code>{nb}</code> qui prend sa valeur quand le document est fermé (la méthode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a> permet de définir un autre nom de variable pour cette valeur).
+La méthode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a> permet de spécifier une position dans la page relative au haut ou pas de page.</p>
+<p>Une autre fonctionnalité intéressante est utilisée ici : les sauts de page automatiques. Si une cellule dépasse la limite du contenu de la page (par défaut à 2 centimètres du bas), un saut de page est inséré à la place et la police de caractères est restaurée. C'est-à-dire, bien que l'en-tête et le bas de page utilisent la police (<code>helvetica</code>), le corps du texte garde la police <code>Times</code>.
+Ce mécanisme de restauration automatique s'applique également à la couleur et l'épaisseur des lignes.
+La limite du contenu qui déclenche le saut de page peut être spécifiée avec <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_auto_page_break">set_auto_page_break</a>.</p>
+<h2 id="tuto-3-saut-de-ligne-et-couleur">Tuto 3 - Saut de ligne et couleur</h2>
+<p>Continuons avec un exemple qui affiche des paragraphes avec du texte justifié. Cet exemple montre également l'utilisation de couleurs.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+
+<span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setting font: helvetica bold 15</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="c1"># Calculating width of title and setting cursor position:</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="c1"># Setting colors for frame, background and text:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="c1"># Setting thickness of the frame (1 mm)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Printing title:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Performing a line break:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Setting position at 1.5 cm from bottom:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
+        <span class="c1"># Setting font: helvetica italic 8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="c1"># Setting text color to gray:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+        <span class="c1"># Printing page number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">chapter_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+        <span class="c1"># Setting font: helvetica 12</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="c1"># Setting background color</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+        <span class="c1"># Printing chapter name:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Performing a line break:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">chapter_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="c1"># Reading text file:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span>
+        <span class="c1"># Setting font: Times 12</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="c1"># Printing justified text:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
+        <span class="c1"># Performing a line break:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
+        <span class="c1"># Final mention in italics:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;(end of excerpt)&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">print_chapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chapter_title</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chapter_body</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;20000 Leagues Under the Seas&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">&quot;Jules Verne&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A RUNAWAY REEF&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;THE PROS AND CONS&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto3.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto3.pdf">PDF généré</a></p>
+<p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/20k_c1.txt">Texte de Jules Verne</a></p>
+<p>La méthode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.get_string_width">get_string_width</a> permet de déterminer la largeur d'un texte utilisant la police actuelle, ce qui permet de calculer la position et la largeur du cadre autour du titre. Ensuite les couleurs sont spécifiées (avec <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_draw_color">set_draw_color</a>, <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_fill_color">set_fill_color</a> et <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_text_color">set_text_color</a>) et on spécifie l'épaisseur de la bordure du cadre à 1 mm (contre 0.2 par défaut) avec <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_line_width">set_line_width</a>. Enfin, on affiche la cellule (le dernier paramètre "true" indique que le fond doit être rempli).</p>
+<p>La méthode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell">multi_cell</a> est utilisée pour afficher les paragraphes.
+Chaque fois qu'une ligne atteint le bord d'une cellule ou qu'un caractère de retour à la ligne est présent, un saut de ligne est inséré et une nouvelle cellule est créée automatiquement sous la cellule actuelle. Le texte est justifié par défaut.</p>
+<p>Deux propriétés sont définies pour le document : le titre (<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_title">set_title</a>) et l'auteur (<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_author">set_author</a>). Les propriétés peuvent être trouvées en ouvrant le document PDF avec Acrobat Reader. Elles sont alors visibles dans le menu Fichier -&gt; Propriétés du document.</p>
 <h2 id="tuto-4-colonnes-multiples">Tuto 4 - Colonnes multiples</h2>
 <p>En cours de traduction.</p>
 <h2 id="tuto-5-creer-des-tables">Tuto 5 - Créer des tables</h2>
