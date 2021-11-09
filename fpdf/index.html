@@ -1081,6 +1081,43 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.ellipse(x, y, r, r, style)
 
     @check_page
+    def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None):
+        &#34;&#34;&#34;
+        Outputs a regular polygon with n sides
+        It can be rotated
+        Style can also be applied (fill, border...)
+
+        Args:
+            x (int): Abscissa of upper-left bounding box.
+            y (int): Ordinate of upper-left bounding box.
+            numSides (int): Number of sides for polygon.
+            polyWidth (int): width of the polygon.
+            rotateDegrees (int): degree amount to rotate polygon. (can be left blank)
+            style (int): Style of rendering. Possible values are: (can be left blank)
+                * `D` or None: draw border. This is the default value.
+                * `F`: fill
+                * `DF` or `FD`: draw and fill
+
+        &#34;&#34;&#34;
+        radius = polyWidth / 2
+        centerX = x + radius
+        centerY = y - radius
+        # center point is (centerX, centerY)
+        points = []
+        i = 1
+        for i in range(1, numSides + 1):
+            point = centerX + radius * math.cos(
+                math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
+            ), centerY + radius * math.sin(
+                math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
+            )
+            points.append(point)
+            i += 1
+        # creates list of touples containing cordinate points of vertices
+
+        self.polygon(points, style)
+        # passes points through polygon function
+
     def arc(
         self,
         x,
@@ -1098,10 +1135,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         Outputs an arc.
         It can be drawn (border only), filled (with no border) or both.
-
-        Args:
-            x (int): Abscissa of upper-left bounging box.
-            y (int): Ordinate of upper-left bounging box.
             a (int): Semi-major axis diameter.
             b (int): Semi-minor axis diameter, if None, equals to a (default: None).
             start_angle (int): Start angle of the arc (in degrees).
@@ -4395,41 +4428,24 @@ which can causes slight positioning differences.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Outputs an arc.
-It can be drawn (border only), filled (with no border) or both.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
-<dd>Abscissa of upper-left bounging box.</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
-<dd>Ordinate of upper-left bounging box.</dd>
-<dt><strong><code>a</code></strong> :&ensp;<code>int</code></dt>
-<dd>Semi-major axis diameter.</dd>
-<dt><strong><code>b</code></strong> :&ensp;<code>int</code></dt>
-<dd>Semi-minor axis diameter, if None, equals to a (default: None).</dd>
-<dt><strong><code>start_angle</code></strong> :&ensp;<code>int</code></dt>
-<dd>Start angle of the arc (in degrees).</dd>
-<dt><strong><code>end_angle</code></strong> :&ensp;<code>int</code></dt>
-<dd>End angle of the arc (in degrees).</dd>
-<dt><strong><code>inclination</code></strong> :&ensp;<code>int</code></dt>
-<dd>Inclination of the arc in respect of the x-axis (default: 0).</dd>
-<dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).</dd>
-<dt><strong><code>start_from_center</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Start drawing from the center of the circle (default: False).</dd>
-<dt><strong><code>end_at_center</code></strong> :&ensp;<code>bool</code></dt>
-<dd>End drawing at the center of the circle (default: False).</dd>
-<dt><strong><code>style</code></strong> :&ensp;<code>int</code></dt>
-<dd>Style of rendering. Possible values are:
+It can be drawn (border only), filled (with no border) or both.
+a (int): Semi-major axis diameter.
+b (int): Semi-minor axis diameter, if None, equals to a (default: None).
+start_angle (int): Start angle of the arc (in degrees).
+end_angle (int): End angle of the arc (in degrees).
+inclination (int): Inclination of the arc in respect of the x-axis (default: 0).
+clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
+start_from_center (bool): Start drawing from the center of the circle (default: False).
+end_at_center (bool): End drawing at the center of the circle (default: False).
+style (int): Style of rendering. Possible values are:
 * <code>D</code> or None: draw border. This is the default value.
 * <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</dd>
-</dl></div>
+* <code>DF</code> or <code>FD</code>: draw and fill</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@check_page
-def arc(
+<pre><code class="python">def arc(
     self,
     x,
     y,
@@ -4446,10 +4462,6 @@ def arc(
     &#34;&#34;&#34;
     Outputs an arc.
     It can be drawn (border only), filled (with no border) or both.
-
-    Args:
-        x (int): Abscissa of upper-left bounging box.
-        y (int): Ordinate of upper-left bounging box.
         a (int): Semi-major axis diameter.
         b (int): Semi-minor axis diameter, if None, equals to a (default: None).
         start_angle (int): Start angle of the arc (in degrees).
@@ -6223,6 +6235,74 @@ def rect_clip(self, x, y, w, h):
     )
     yield
     self._out(&#34;Q\n&#34;)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.regular_polygon"><code class="name flex">
+<span>def <span class="ident">regular_polygon</span></span>(<span>self, x, y, numSides, polyWidth, rotateDegrees=0, style=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs a regular polygon with n sides
+It can be rotated
+Style can also be applied (fill, border&hellip;)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Abscissa of upper-left bounding box.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Ordinate of upper-left bounding box.</dd>
+<dt><strong><code>numSides</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of sides for polygon.</dd>
+<dt><strong><code>polyWidth</code></strong> :&ensp;<code>int</code></dt>
+<dd>width of the polygon.</dd>
+<dt><strong><code>rotateDegrees</code></strong> :&ensp;<code>int</code></dt>
+<dd>degree amount to rotate polygon. (can be left blank)</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code>int</code></dt>
+<dd>Style of rendering. Possible values are: (can be left blank)
+* <code>D</code> or None: draw border. This is the default value.
+* <code>F</code>: fill
+* <code>DF</code> or <code>FD</code>: draw and fill</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None):
+    &#34;&#34;&#34;
+    Outputs a regular polygon with n sides
+    It can be rotated
+    Style can also be applied (fill, border...)
+
+    Args:
+        x (int): Abscissa of upper-left bounding box.
+        y (int): Ordinate of upper-left bounding box.
+        numSides (int): Number of sides for polygon.
+        polyWidth (int): width of the polygon.
+        rotateDegrees (int): degree amount to rotate polygon. (can be left blank)
+        style (int): Style of rendering. Possible values are: (can be left blank)
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
+
+    &#34;&#34;&#34;
+    radius = polyWidth / 2
+    centerX = x + radius
+    centerY = y - radius
+    # center point is (centerX, centerY)
+    points = []
+    i = 1
+    for i in range(1, numSides + 1):
+        point = centerX + radius * math.cos(
+            math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
+        ), centerY + radius * math.sin(
+            math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
+        )
+        points.append(point)
+        i += 1
+    # creates list of touples containing cordinate points of vertices
+
+    self.polygon(points, style)
+    # passes points through polygon function</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.rotate"><code class="name flex">
@@ -10290,6 +10370,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.FPDF.polyline" href="#fpdf.FPDF.polyline">polyline</a></code></li>
 <li><code><a title="fpdf.FPDF.rect" href="#fpdf.FPDF.rect">rect</a></code></li>
 <li><code><a title="fpdf.FPDF.rect_clip" href="#fpdf.FPDF.rect_clip">rect_clip</a></code></li>
+<li><code><a title="fpdf.FPDF.regular_polygon" href="#fpdf.FPDF.regular_polygon">regular_polygon</a></code></li>
 <li><code><a title="fpdf.FPDF.rotate" href="#fpdf.FPDF.rotate">rotate</a></code></li>
 <li><code><a title="fpdf.FPDF.rotation" href="#fpdf.FPDF.rotation">rotation</a></code></li>
 <li><code><a title="fpdf.FPDF.set_author" href="#fpdf.FPDF.set_author">set_author</a></code></li>
