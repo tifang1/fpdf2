@@ -590,9 +590,10 @@ If you do not want to run tests for all versions of python, run <code>tox -e py3
 (or your version of Python).</p>
 <h3 id="why-is-a-test-failing">Why is a test failing?</h3>
 <p>If there are some failing tests after you made a code change,
-<code>pytest</code> output will display <strong>the difference of PDF source code between the expected &amp; actual files</strong>.</p>
-<p>This "diff" can be quite difficult to understand,
-but you can have a look at the PDF files involved by navigating to the temporary test directory
+it is usually because <strong>there are difference between an expected PDF generated and the actual one produced</strong>.</p>
+<p>Calling <code>pytest -vv</code> will display <strong>the difference of PDF source code</strong> between the expected &amp; actual files,
+but that may be difficult to understand,</p>
+<p>You can also have a look at the PDF files involved by navigating to the temporary test directory
 that is printed out during the test failure:
 <div class="highlight"><pre><span></span><code>=================================== FAILURES ===================================
 ____________________________ test_html_simple_table ____________________________
