@@ -75,6 +75,7 @@ from .outline import serialize_outline, OutlineSection
 from .recorder import FPDFRecorder
 from .structure_tree import MarkedContent, StructureTreeBuilder
 from .ttfonts import TTFontFile
+from .graphics_state import GraphicsStateMixin
 from .util import (
     enclose_in_parens,
     escape_parens,
@@ -252,7 +253,7 @@ def check_page(fn):
     return wrapper
 
 
-class FPDF:
+class FPDF(GraphicsStateMixin):
     &#34;PDF Generation class&#34;
     MARKDOWN_BOLD_MARKER = &#34;**&#34;
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
@@ -277,7 +278,8 @@ class FPDF:
                 `None` disables font chaching.
                 The default is `True`, meaning the current folder.
         &#34;&#34;&#34;
-        # Initialization of properties
+        super().__init__()
+        # Initialization of instance attributes
         self.offsets = {}  # array of object offsets
         self.page = 0  # current page number
         self.n = 2  # current object number
@@ -294,16 +296,8 @@ class FPDF:
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
         self.current_font = {}  # current font
-        self.font_family = &#34;&#34;  # current font family
-        self.font_style = &#34;&#34;  # current font style
-        self.font_size_pt = 12  # current font size in points
-        self.font_stretching = 100  # current font stretching
         self.str_alias_nb_pages = &#34;{nb}&#34;
-        self.underline = 0  # underlining flag
-        self.draw_color = &#34;0 G&#34;
-        self.fill_color = &#34;0 g&#34;
-        self.text_color = &#34;0 g&#34;
-        self.dash_pattern = &#34;[] 0 d&#34;
+
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
@@ -315,7 +309,6 @@ class FPDF:
         # Do nothing by default. Allowed values: &#39;WARN&#39;, &#39;DOWNSCALE&#39;:
         self.oversized_images = None
         self.oversized_images_ratio = 2  # number of pixels per UserSpace point
-        self._rotating = 0  # counting levels of nested rotation contexts
         self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
@@ -355,11 +348,24 @@ class FPDF:
         # Scale factor
         self.k = get_scale_factor(unit)
 
+        # Graphics state variables defined as properties by GraphicsStateMixin.
+        # We set their default values here.
+        self.font_family = &#34;&#34;  # current font family
+        self.font_style = &#34;&#34;  # current font style
+        self.font_size_pt = 12  # current font size in points
+        self.font_size = self.font_size_pt / self.k
+        self.font_stretching = 100  # current font stretching
+        self.underline = 0  # underlining flag
+        self.draw_color = &#34;0 G&#34;
+        self.fill_color = &#34;0 g&#34;
+        self.text_color = &#34;0 g&#34;
+        self.dash_pattern = &#34;[] 0 d&#34;
+        self.line_width = 0.567 / self.k  # line width (0.2 mm)
+        # end of grapics state variables
+
         self.dw_pt, self.dh_pt = get_page_format(format, self.k)
         self._set_orientation(orientation, self.dw_pt, self.dh_pt)
         self.def_orientation = self.cur_orientation
-        self.font_size = self.font_size_pt / self.k
-
         # Page spacing
         # Page margins (1 cm)
         margin = (7200 / 254) / self.k
@@ -367,7 +373,6 @@ class FPDF:
         self.set_margins(margin, margin)
         self.x, self.y = self.l_margin, self.t_margin
         self.c_margin = margin / 10.0  # Interior cell margin (1 mm)
-        self.line_width = 0.567 / self.k  # line width (0.2 mm)
         # sets self.auto_page_break, self.b_margin &amp; self.page_break_trigger:
         self.set_auto_page_break(True, 2 * margin)
         self.set_display_mode(&#34;fullwidth&#34;)  # Full width display mode
@@ -715,8 +720,6 @@ class FPDF:
             raise FPDFException(
                 &#34;A page cannot be added on a closed document, after calling output()&#34;
             )
-        if self._rotating:
-            raise FPDFException(&#34;.add_page() should not be called inside .rotation()&#34;)
         if self.state == DocumentState.UNINITIALIZED:
             self.open()
         family = self.font_family
@@ -818,10 +821,6 @@ class FPDF:
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_draw_color() should not be called inside .rotation()&#34;
-            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.draw_color = f&#34;{r / 255:.3f} G&#34;
         else:
@@ -841,10 +840,6 @@ class FPDF:
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_fill_color() should not be called inside .rotation()&#34;
-            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.fill_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -864,10 +859,6 @@ class FPDF:
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_text_color() should not be called inside .rotation()&#34;
-            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.text_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -910,10 +901,6 @@ class FPDF:
         Args:
             width (int): the width in user unit
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_line_width() should not be called inside .rotation()&#34;
-            )
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
@@ -941,10 +928,6 @@ class FPDF:
             raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
         if not (isinstance(phase, (int, float)) and phase &gt;= 0):
             raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_dash_pattern() should not be called inside .rotation()&#34;
-            )
         if dash:
             if gap:
                 dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
@@ -1544,13 +1527,11 @@ class FPDF:
             raise ValueError(
                 f&#34;Unknown style provided (only B/I/U letters are allowed): {style}&#34;
             )
-        if self._rotating:
-            raise FPDFException(&#34;.set_font() should not be called inside .rotation()&#34;)
         if &#34;U&#34; in style:
-            self.underline = 1
+            self.underline = True
             style = style.replace(&#34;U&#34;, &#34;&#34;)
         else:
-            self.underline = 0
+            self.underline = False
 
         if family in self.font_aliases and family + style not in self.fonts:
             warnings.warn(
@@ -1611,10 +1592,6 @@ class FPDF:
         Args:
             size (int): font size in points
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_font_size() should not be called inside .rotation()&#34;
-            )
         if self.font_size_pt == size:
             return
         self.font_size_pt = size
@@ -1634,10 +1611,6 @@ class FPDF:
         Args:
             stretching (int): horizontal stretching (scaling) in percents.
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_stretching() should not be called inside .rotation()&#34;
-            )
         if self.font_stretching == stretching:
             return
         self.font_stretching = stretching
@@ -1816,13 +1789,14 @@ class FPDF:
     @contextmanager
     def rotation(self, angle, x=None, y=None):
         &#34;&#34;&#34;
-        This method allows to perform a rotation around a given center. It must be used as a context-manager using `with`:
+        This method allows to perform a rotation around a given center.
+        It must be used as a context-manager using `with`:
 
             with rotation(angle=90, x=x, y=y):
                 pdf.something()
 
-        The rotation affects all elements which are printed inside the indented context
-        (with the exception of clickable areas).
+        The rotation affects all elements which are printed inside the indented
+        context (with the exception of clickable areas).
 
         Args:
             angle (float): angle in degrees
@@ -1832,8 +1806,11 @@ class FPDF:
         Notes
         -----
 
-        Only the rendering is altered. The `get_x()` and `get_y()` methods are not
-        affected, nor the automatic page break mechanism.
+        Only the rendering is altered. The `get_x()` and `get_y()` methods are
+        not affected, nor the automatic page break mechanism.
+        The rotation also establishes a local graphics state, so that any
+        graphics state settings changed within will not affect the operations
+        invoked after it has finished.
         &#34;&#34;&#34;
         if x is None:
             x = self.x
@@ -1842,14 +1819,42 @@ class FPDF:
         angle *= math.pi / 180
         c, s = math.cos(angle), math.sin(angle)
         cx, cy = x * self.k, (self.h - y) * self.k
-        self._out(
-            f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
-            f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
-        )
-        self._rotating += 1
+        with self.local_context():
+            self._out(
+                f&#34;{c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
+                f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
+            )
+            yield
+
+    @check_page
+    @contextmanager
+    def local_context(self):
+        &#34;&#34;&#34;
+        Create a local grapics state, which won&#39;t affect the surrounding code.
+        This method must be used as a context manager using `with`:
+
+            with local_context():
+                set_some_state()
+                draw_some_stuff()
+
+        The affected settings are:
+            draw_color
+            fill_color
+            text_color
+            underline
+            font_style
+            font_stretching
+            font_family
+            font_size_pt
+            font_size
+            dash_pattern
+            line_width
+        &#34;&#34;&#34;
+        self._push_local_stack()
+        self._out(&#34;\nq &#34;)
         yield
-        self._rotating -= 1
-        self._out(&#34;Q\n&#34;)
+        self._out(&#34; Q\n&#34;)
+        self._pop_local_stack()
 
     @property
     def accept_page_break(self):
@@ -4097,7 +4102,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FPDF:
+<pre><code class="python">class FPDF(GraphicsStateMixin):
     &#34;PDF Generation class&#34;
     MARKDOWN_BOLD_MARKER = &#34;**&#34;
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
@@ -4122,7 +4127,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 `None` disables font chaching.
                 The default is `True`, meaning the current folder.
         &#34;&#34;&#34;
-        # Initialization of properties
+        super().__init__()
+        # Initialization of instance attributes
         self.offsets = {}  # array of object offsets
         self.page = 0  # current page number
         self.n = 2  # current object number
@@ -4139,16 +4145,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
         self.current_font = {}  # current font
-        self.font_family = &#34;&#34;  # current font family
-        self.font_style = &#34;&#34;  # current font style
-        self.font_size_pt = 12  # current font size in points
-        self.font_stretching = 100  # current font stretching
         self.str_alias_nb_pages = &#34;{nb}&#34;
-        self.underline = 0  # underlining flag
-        self.draw_color = &#34;0 G&#34;
-        self.fill_color = &#34;0 g&#34;
-        self.text_color = &#34;0 g&#34;
-        self.dash_pattern = &#34;[] 0 d&#34;
+
         self.ws = 0  # word spacing
         self.angle = 0  # used by deprecated method: rotate()
         self.font_cache_dir = font_cache_dir
@@ -4160,7 +4158,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         # Do nothing by default. Allowed values: &#39;WARN&#39;, &#39;DOWNSCALE&#39;:
         self.oversized_images = None
         self.oversized_images_ratio = 2  # number of pixels per UserSpace point
-        self._rotating = 0  # counting levels of nested rotation contexts
         self._markdown_leak_end_style = False
         # Only set if XMP metadata is added to the document:
         self._xmp_metadata_obj_id = None
@@ -4200,11 +4197,24 @@ The default is <code>True</code>, meaning the current folder.</dd>
         # Scale factor
         self.k = get_scale_factor(unit)
 
+        # Graphics state variables defined as properties by GraphicsStateMixin.
+        # We set their default values here.
+        self.font_family = &#34;&#34;  # current font family
+        self.font_style = &#34;&#34;  # current font style
+        self.font_size_pt = 12  # current font size in points
+        self.font_size = self.font_size_pt / self.k
+        self.font_stretching = 100  # current font stretching
+        self.underline = 0  # underlining flag
+        self.draw_color = &#34;0 G&#34;
+        self.fill_color = &#34;0 g&#34;
+        self.text_color = &#34;0 g&#34;
+        self.dash_pattern = &#34;[] 0 d&#34;
+        self.line_width = 0.567 / self.k  # line width (0.2 mm)
+        # end of grapics state variables
+
         self.dw_pt, self.dh_pt = get_page_format(format, self.k)
         self._set_orientation(orientation, self.dw_pt, self.dh_pt)
         self.def_orientation = self.cur_orientation
-        self.font_size = self.font_size_pt / self.k
-
         # Page spacing
         # Page margins (1 cm)
         margin = (7200 / 254) / self.k
@@ -4212,7 +4222,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.set_margins(margin, margin)
         self.x, self.y = self.l_margin, self.t_margin
         self.c_margin = margin / 10.0  # Interior cell margin (1 mm)
-        self.line_width = 0.567 / self.k  # line width (0.2 mm)
         # sets self.auto_page_break, self.b_margin &amp; self.page_break_trigger:
         self.set_auto_page_break(True, 2 * margin)
         self.set_display_mode(&#34;fullwidth&#34;)  # Full width display mode
@@ -4560,8 +4569,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise FPDFException(
                 &#34;A page cannot be added on a closed document, after calling output()&#34;
             )
-        if self._rotating:
-            raise FPDFException(&#34;.add_page() should not be called inside .rotation()&#34;)
         if self.state == DocumentState.UNINITIALIZED:
             self.open()
         family = self.font_family
@@ -4663,10 +4670,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_draw_color() should not be called inside .rotation()&#34;
-            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.draw_color = f&#34;{r / 255:.3f} G&#34;
         else:
@@ -4686,10 +4689,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_fill_color() should not be called inside .rotation()&#34;
-            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.fill_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -4709,10 +4708,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             g (int): green component (between 0 and 255)
             b (int): blue component (between 0 and 255)
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_text_color() should not be called inside .rotation()&#34;
-            )
         if (r == 0 and g == 0 and b == 0) or g == -1:
             self.text_color = f&#34;{r / 255:.3f} g&#34;
         else:
@@ -4755,10 +4750,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             width (int): the width in user unit
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_line_width() should not be called inside .rotation()&#34;
-            )
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
@@ -4786,10 +4777,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
         if not (isinstance(phase, (int, float)) and phase &gt;= 0):
             raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_dash_pattern() should not be called inside .rotation()&#34;
-            )
         if dash:
             if gap:
                 dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
@@ -5389,13 +5376,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise ValueError(
                 f&#34;Unknown style provided (only B/I/U letters are allowed): {style}&#34;
             )
-        if self._rotating:
-            raise FPDFException(&#34;.set_font() should not be called inside .rotation()&#34;)
         if &#34;U&#34; in style:
-            self.underline = 1
+            self.underline = True
             style = style.replace(&#34;U&#34;, &#34;&#34;)
         else:
-            self.underline = 0
+            self.underline = False
 
         if family in self.font_aliases and family + style not in self.fonts:
             warnings.warn(
@@ -5456,10 +5441,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             size (int): font size in points
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_font_size() should not be called inside .rotation()&#34;
-            )
         if self.font_size_pt == size:
             return
         self.font_size_pt = size
@@ -5479,10 +5460,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Args:
             stretching (int): horizontal stretching (scaling) in percents.
         &#34;&#34;&#34;
-        if self._rotating:
-            raise FPDFException(
-                &#34;.set_stretching() should not be called inside .rotation()&#34;
-            )
         if self.font_stretching == stretching:
             return
         self.font_stretching = stretching
@@ -5661,13 +5638,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
     @contextmanager
     def rotation(self, angle, x=None, y=None):
         &#34;&#34;&#34;
-        This method allows to perform a rotation around a given center. It must be used as a context-manager using `with`:
+        This method allows to perform a rotation around a given center.
+        It must be used as a context-manager using `with`:
 
             with rotation(angle=90, x=x, y=y):
                 pdf.something()
 
-        The rotation affects all elements which are printed inside the indented context
-        (with the exception of clickable areas).
+        The rotation affects all elements which are printed inside the indented
+        context (with the exception of clickable areas).
 
         Args:
             angle (float): angle in degrees
@@ -5677,8 +5655,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Notes
         -----
 
-        Only the rendering is altered. The `get_x()` and `get_y()` methods are not
-        affected, nor the automatic page break mechanism.
+        Only the rendering is altered. The `get_x()` and `get_y()` methods are
+        not affected, nor the automatic page break mechanism.
+        The rotation also establishes a local graphics state, so that any
+        graphics state settings changed within will not affect the operations
+        invoked after it has finished.
         &#34;&#34;&#34;
         if x is None:
             x = self.x
@@ -5687,14 +5668,42 @@ The default is <code>True</code>, meaning the current folder.</dd>
         angle *= math.pi / 180
         c, s = math.cos(angle), math.sin(angle)
         cx, cy = x * self.k, (self.h - y) * self.k
-        self._out(
-            f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
-            f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
-        )
-        self._rotating += 1
+        with self.local_context():
+            self._out(
+                f&#34;{c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
+                f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
+            )
+            yield
+
+    @check_page
+    @contextmanager
+    def local_context(self):
+        &#34;&#34;&#34;
+        Create a local grapics state, which won&#39;t affect the surrounding code.
+        This method must be used as a context manager using `with`:
+
+            with local_context():
+                set_some_state()
+                draw_some_stuff()
+
+        The affected settings are:
+            draw_color
+            fill_color
+            text_color
+            underline
+            font_style
+            font_stretching
+            font_family
+            font_size_pt
+            font_size
+            dash_pattern
+            line_width
+        &#34;&#34;&#34;
+        self._push_local_stack()
+        self._out(&#34;\nq &#34;)
         yield
-        self._rotating -= 1
-        self._out(&#34;Q\n&#34;)
+        self._out(&#34; Q\n&#34;)
+        self._pop_local_stack()
 
     @property
     def accept_page_break(self):
@@ -7783,6 +7792,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.text_color = prev_text_color
         self.underline = prev_underline</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.graphics_state.GraphicsStateMixin" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin">GraphicsStateMixin</a></li>
+</ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER"><code class="name">var <span class="ident">MARKDOWN_BOLD_MARKER</span></code></dt>
@@ -8198,8 +8211,6 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
         raise FPDFException(
             &#34;A page cannot be added on a closed document, after calling output()&#34;
         )
-    if self._rotating:
-        raise FPDFException(&#34;.add_page() should not be called inside .rotation()&#34;)
     if self.state == DocumentState.UNINITIALIZED:
         self.open()
     family = self.font_family
@@ -9565,6 +9576,63 @@ def ln(self, h=None):
     self.y += self.lasth if h is None else h</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.local_context"><code class="name flex">
+<span>def <span class="ident">local_context</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a local grapics state, which won't affect the surrounding code.
+This method must be used as a context manager using <code>with</code>:</p>
+<pre><code>with local_context():
+    set_some_state()
+    draw_some_stuff()
+</code></pre>
+<p>The affected settings are:
+draw_color
+fill_color
+text_color
+underline
+font_style
+font_stretching
+font_family
+font_size_pt
+font_size
+dash_pattern
+line_width</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+@contextmanager
+def local_context(self):
+    &#34;&#34;&#34;
+    Create a local grapics state, which won&#39;t affect the surrounding code.
+    This method must be used as a context manager using `with`:
+
+        with local_context():
+            set_some_state()
+            draw_some_stuff()
+
+    The affected settings are:
+        draw_color
+        fill_color
+        text_color
+        underline
+        font_style
+        font_stretching
+        font_family
+        font_size_pt
+        font_size
+        dash_pattern
+        line_width
+    &#34;&#34;&#34;
+    self._push_local_stack()
+    self._out(&#34;\nq &#34;)
+    yield
+    self._out(&#34; Q\n&#34;)
+    self._pop_local_stack()</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.multi_cell"><code class="name flex">
 <span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align='J', fill=False, split_only=False, link='', ln=0, max_line_height=None, markdown=False)</span>
 </code></dt>
@@ -10245,12 +10313,13 @@ def rotate(self, angle, x=None, y=None):
 <span>def <span class="ident">rotation</span></span>(<span>self, angle, x=None, y=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This method allows to perform a rotation around a given center. It must be used as a context-manager using <code>with</code>:</p>
+<div class="desc"><p>This method allows to perform a rotation around a given center.
+It must be used as a context-manager using <code>with</code>:</p>
 <pre><code>with rotation(angle=90, x=x, y=y):
     pdf.something()
 </code></pre>
-<p>The rotation affects all elements which are printed inside the indented context
-(with the exception of clickable areas).</p>
+<p>The rotation affects all elements which are printed inside the indented
+context (with the exception of clickable areas).</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>angle</code></strong> :&ensp;<code>float</code></dt>
@@ -10261,8 +10330,11 @@ def rotate(self, angle, x=None, y=None):
 <dd>ordinate of the center of the rotation</dd>
 </dl>
 <h2 id="notes">Notes</h2>
-<p>Only the rendering is altered. The <code>get_x()</code> and <code>get_y()</code> methods are not
-affected, nor the automatic page break mechanism.</p></div>
+<p>Only the rendering is altered. The <code>get_x()</code> and <code>get_y()</code> methods are
+not affected, nor the automatic page break mechanism.
+The rotation also establishes a local graphics state, so that any
+graphics state settings changed within will not affect the operations
+invoked after it has finished.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -10271,13 +10343,14 @@ affected, nor the automatic page break mechanism.</p></div>
 @contextmanager
 def rotation(self, angle, x=None, y=None):
     &#34;&#34;&#34;
-    This method allows to perform a rotation around a given center. It must be used as a context-manager using `with`:
+    This method allows to perform a rotation around a given center.
+    It must be used as a context-manager using `with`:
 
         with rotation(angle=90, x=x, y=y):
             pdf.something()
 
-    The rotation affects all elements which are printed inside the indented context
-    (with the exception of clickable areas).
+    The rotation affects all elements which are printed inside the indented
+    context (with the exception of clickable areas).
 
     Args:
         angle (float): angle in degrees
@@ -10287,8 +10360,11 @@ def rotation(self, angle, x=None, y=None):
     Notes
     -----
 
-    Only the rendering is altered. The `get_x()` and `get_y()` methods are not
-    affected, nor the automatic page break mechanism.
+    Only the rendering is altered. The `get_x()` and `get_y()` methods are
+    not affected, nor the automatic page break mechanism.
+    The rotation also establishes a local graphics state, so that any
+    graphics state settings changed within will not affect the operations
+    invoked after it has finished.
     &#34;&#34;&#34;
     if x is None:
         x = self.x
@@ -10297,14 +10373,12 @@ def rotation(self, angle, x=None, y=None):
     angle *= math.pi / 180
     c, s = math.cos(angle), math.sin(angle)
     cx, cy = x * self.k, (self.h - y) * self.k
-    self._out(
-        f&#34;q {c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
-        f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
-    )
-    self._rotating += 1
-    yield
-    self._rotating -= 1
-    self._out(&#34;Q\n&#34;)</code></pre>
+    with self.local_context():
+        self._out(
+            f&#34;{c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
+            f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
+        )
+        yield</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.set_author"><code class="name flex">
@@ -10476,10 +10550,6 @@ Omitting 'dash' (= 0) resets the pattern to a solid line.</p></div>
         raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
     if not (isinstance(phase, (int, float)) and phase &gt;= 0):
         raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_dash_pattern() should not be called inside .rotation()&#34;
-        )
     if dash:
         if gap:
             dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
@@ -10620,10 +10690,6 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         g (int): green component (between 0 and 255)
         b (int): blue component (between 0 and 255)
     &#34;&#34;&#34;
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_draw_color() should not be called inside .rotation()&#34;
-        )
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.draw_color = f&#34;{r / 255:.3f} G&#34;
     else:
@@ -10665,10 +10731,6 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         g (int): green component (between 0 and 255)
         b (int): blue component (between 0 and 255)
     &#34;&#34;&#34;
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_fill_color() should not be called inside .rotation()&#34;
-        )
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.fill_color = f&#34;{r / 255:.3f} g&#34;
     else:
@@ -10744,13 +10806,11 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
         raise ValueError(
             f&#34;Unknown style provided (only B/I/U letters are allowed): {style}&#34;
         )
-    if self._rotating:
-        raise FPDFException(&#34;.set_font() should not be called inside .rotation()&#34;)
     if &#34;U&#34; in style:
-        self.underline = 1
+        self.underline = True
         style = style.replace(&#34;U&#34;, &#34;&#34;)
     else:
-        self.underline = 0
+        self.underline = False
 
     if family in self.font_aliases and family + style not in self.fonts:
         warnings.warn(
@@ -10826,10 +10886,6 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     Args:
         size (int): font size in points
     &#34;&#34;&#34;
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_font_size() should not be called inside .rotation()&#34;
-        )
     if self.font_size_pt == size:
         return
     self.font_size_pt = size
@@ -10976,10 +11032,6 @@ The method can be called before the first page is created and the value is retai
     Args:
         width (int): the width in user unit
     &#34;&#34;&#34;
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_line_width() should not be called inside .rotation()&#34;
-        )
     self.line_width = width
     if self.page &gt; 0:
         self._out(f&#34;{width * self.k:.2f} w&#34;)</code></pre>
@@ -11223,10 +11275,6 @@ By default, no stretching is set (which is equivalent to a value of 100).</p>
     Args:
         stretching (int): horizontal stretching (scaling) in percents.
     &#34;&#34;&#34;
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_stretching() should not be called inside .rotation()&#34;
-        )
     if self.font_stretching == stretching:
         return
     self.font_stretching = stretching
@@ -11291,10 +11339,6 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         g (int): green component (between 0 and 255)
         b (int): blue component (between 0 and 255)
     &#34;&#34;&#34;
-    if self._rotating:
-        raise FPDFException(
-            &#34;.set_text_color() should not be called inside .rotation()&#34;
-        )
     if (r == 0 and g == 0 and b == 0) or g == -1:
         self.text_color = f&#34;{r / 255:.3f} g&#34;
     else:
@@ -11964,6 +12008,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.line" href="#fpdf.fpdf.FPDF.line">line</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.link" href="#fpdf.fpdf.FPDF.link">link</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.ln" href="#fpdf.fpdf.FPDF.ln">ln</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.local_context" href="#fpdf.fpdf.FPDF.local_context">local_context</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.multi_cell" href="#fpdf.fpdf.FPDF.multi_cell">multi_cell</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.normalize_text" href="#fpdf.fpdf.FPDF.normalize_text">normalize_text</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.open" href="#fpdf.fpdf.FPDF.open">open</a></code></li>
