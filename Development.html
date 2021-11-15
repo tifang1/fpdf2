@@ -622,10 +622,9 @@ check the output in case of a failed test.</p>
 once with <code>generate=True</code>.</p>
 <h2 id="github-pipeline">GitHub pipeline</h2>
 <p>A <a href="https://help.github.com/en/actions/reference">GitHub Actions</a> pipeline
-is executed on every commit on the <code>master</code> branch,
-and for every <em>Pull Request</em>.</p>
+is executed on every commit on the <code>master</code> branch, and for every <em>Pull Request</em>.</p>
 <p>It performs all validation steps detailed above: code checking with <code>black</code>,
-linting with <code>pylint</code>, unit tests...
+static code analysis with <code>pylint</code>, unit tests...
 <em>Pull Requests</em> submitted must pass all those checks in order to be approved.
 Ask maintainers through comments if some errors in the pipeline seem obscure to you.</p>
 <h3 id="release-checklist">Release checklist</h3>
