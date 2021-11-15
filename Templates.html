@@ -30,7 +30,7 @@
 <input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
 <label class="md-overlay" for="__drawer"></label>
 <div data-md-component="skip">
-<a class="md-skip" href="#introduction">
+<a class="md-skip" href="#templates">
           Skip to content
         </a>
 </div>
@@ -260,6 +260,30 @@
 <a class="md-nav__link" href="#using-flextemplate">
     Using FlexTemplate()
   </a>
+<nav aria-label="Using FlexTemplate()" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#details-template-definition">
+    Details - Template definition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-create-a-template">
+    How to create a template
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-hardcoded">
+    Example - Hardcoded
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-elements-defined-in-csv-file">
+    Example - Elements defined in CSV file
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -312,6 +336,30 @@
 <a class="md-nav__link" href="#using-flextemplate">
     Using FlexTemplate()
   </a>
+<nav aria-label="Using FlexTemplate()" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#details-template-definition">
+    Details - Template definition
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#how-to-create-a-template">
+    How to create a template
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-hardcoded">
+    Example - Hardcoded
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#example-elements-defined-in-csv-file">
+    Example - Elements defined in CSV file
+  </a>
+</li>
+</ul>
+</nav>
 </li>
 </ul>
 </nav>
@@ -323,7 +371,7 @@
 <a class="md-content__button md-icon" href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Templates.md" title="Edit this page">
 <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
 </a>
-<h1 id="introduction">Introduction</h1>
+<h1 id="templates">Templates</h1>
 <p>Templates are predefined documents (like invoices, tax forms, etc.), or parts of such documents, where each element (text, lines, barcodes, etc.) has a fixed position (x1, y1, x2, y2), style (font, size, etc.) and a default text.</p>
 <p>These elements can act as placeholders, so the program can change the default text "filling in" the document.</p>
 <p>Besides being defined in code, the elements can also be defined in a CSV file or in a database, so the user can easily adapt the form to his printing needs.</p>
@@ -443,7 +491,7 @@ In this case, you first need to create your own FPDF() instance. You can then pa
 <p>The dict syntax for setting text values is the same as above:</p>
 <div class="highlight"><pre><span></span><code><span class="n">FlexTemplate</span><span class="p">[</span><span class="s2">"company_name"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Sample Company"</span>
 </code></pre></div>
-<h1 id="details-template-definition">Details - Template definition</h1>
+<h3 id="details-template-definition">Details - Template definition</h3>
 <p>A template definition consists of a number of elements, which have the following properties (columns in a CSV, items in a dict, fields in a database).
 Dimensions (except font size, which always uses points) are given in user defined units (default: mm). Those are the units that can be specified when creating a <code>Template()</code> or a <code>FPDF()</code> instance.</p>
 <ul>
@@ -529,14 +577,14 @@ Dimensions (except font size, which always uses points) are given in user define
 </li>
 </ul>
 <p>Fields that are not relevant to a specific element type will be ignored there, but if not left empty, they must still adhere to the specified data type (in dicts, string fields may be None).</p>
-<h1 id="how-to-create-a-template">How to create a template</h1>
+<h3 id="how-to-create-a-template">How to create a template</h3>
 <p>A template can be created in 3 ways:</p>
 <ul>
 <li>By defining everything manually in a hardcoded way as a Python dictionary</li>
 <li>By using a template definition in a CSV document and parsing the CSV with Template.parse_dict()</li>
 <li>By defining the template in a database (this applies to [Web2Py] (Web2Py.md) integration)</li>
 </ul>
-<h1 id="example-hardcoded">Example - Hardcoded</h1>
+<h3 id="example-hardcoded">Example - Hardcoded</h3>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">Template</span>
 
 <span class="c1">#this will define the ELEMENTS that will compose the template. </span>
@@ -564,7 +612,7 @@ Dimensions (except font size, which always uses points) are given in user define
 <span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s2">"./template.pdf"</span><span class="p">)</span>
 </code></pre></div>
 <p>See template.py or [Web2Py] (Web2Py.md) for a complete example.</p>
-<h1 id="example-elements-defined-in-csv-file">Example - Elements defined in CSV file</h1>
+<h3 id="example-elements-defined-in-csv-file">Example - Elements defined in CSV file</h3>
 <p>You define your elements in a CSV file "mycsvfile.csv"
 that will look like:
 <div class="highlight"><pre><span></span><code>line0;L;20.0;12.0;190.0;12.0;times;0.5;0;0;0;0;16777215;C;;0;0;0.0
