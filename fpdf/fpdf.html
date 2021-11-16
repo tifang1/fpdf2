@@ -397,6 +397,13 @@ class FPDF(GraphicsStateMixin):
         &#34;&#34;&#34;
         return self.h - self.t_margin - self.b_margin
 
+    @property
+    def pages_count(self):
+        &#34;&#34;&#34;
+        Returns the total pages of the document.
+        &#34;&#34;&#34;
+        return len(self.pages)
+
     def set_margin(self, margin):
         &#34;&#34;&#34;
         Sets the document right, left, top &amp; bottom margins to the same value.
@@ -722,6 +729,7 @@ class FPDF(GraphicsStateMixin):
             )
         if self.state == DocumentState.UNINITIALIZED:
             self.open()
+
         family = self.font_family
         style = f&#34;{self.font_style}U&#34; if self.underline else self.font_style
         size = self.font_size_pt
@@ -730,6 +738,7 @@ class FPDF(GraphicsStateMixin):
         fc = self.fill_color
         tc = self.text_color
         stretching = self.font_stretching
+
         if self.page &gt; 0:
             # Page footer
             self.in_footer = 1
@@ -745,7 +754,9 @@ class FPDF(GraphicsStateMixin):
             same,
             duration or self.page_duration,
             transition or self.page_transition,
+            new_page=not self._has_next_page(),
         )
+
         self._out(&#34;2 J&#34;)  # Set line cap style to square
         self.line_width = lw  # Set line width
         self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -2210,6 +2221,9 @@ class FPDF(GraphicsStateMixin):
             self.ws = ws
             self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
 
+    def _has_next_page(self):
+        return self.pages_count &gt; self.page
+
     @check_page
     def multi_cell(
         self,
@@ -2851,7 +2865,7 @@ class FPDF(GraphicsStateMixin):
         return txt
 
     def _putpages(self):
-        nb = self.page  # total number of pages
+        nb = self.pages_count  # total number of pages
         if self.str_alias_nb_pages:
             self._substitute_page_number()
         if self._toc_placeholder:
@@ -2953,7 +2967,7 @@ class FPDF(GraphicsStateMixin):
         self._out(&#34;endobj&#34;)
 
     def _substitute_page_number(self):
-        nb = self.page  # total number of pages
+        nb = self.pages_count  # total number of pages
         substituted = False
         # Replace number of pages in fonts using subsets (unicode)
         alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
@@ -3598,10 +3612,19 @@ class FPDF(GraphicsStateMixin):
         self._out(&#34;%%EOF&#34;)
         self.state = DocumentState.CLOSED
 
-    def _beginpage(self, orientation, format, same, duration, transition):
+    def _beginpage(
+        self, orientation, format, same, duration, transition, new_page=True
+    ):
         self.page += 1
-        page = {&#34;content&#34;: bytearray(), &#34;duration&#34;: duration, &#34;transition&#34;: transition}
-        self.pages[self.page] = page
+        if new_page:
+            page = {
+                &#34;content&#34;: bytearray(),
+                &#34;duration&#34;: duration,
+                &#34;transition&#34;: transition,
+            }
+            self.pages[self.page] = page
+        else:
+            page = self.pages[self.page]
         self.state = DocumentState.GENERATING_PAGE
         self.x = self.l_margin
         self.y = self.t_margin
@@ -4246,6 +4269,13 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         return self.h - self.t_margin - self.b_margin
 
+    @property
+    def pages_count(self):
+        &#34;&#34;&#34;
+        Returns the total pages of the document.
+        &#34;&#34;&#34;
+        return len(self.pages)
+
     def set_margin(self, margin):
         &#34;&#34;&#34;
         Sets the document right, left, top &amp; bottom margins to the same value.
@@ -4571,6 +4601,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             )
         if self.state == DocumentState.UNINITIALIZED:
             self.open()
+
         family = self.font_family
         style = f&#34;{self.font_style}U&#34; if self.underline else self.font_style
         size = self.font_size_pt
@@ -4579,6 +4610,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         fc = self.fill_color
         tc = self.text_color
         stretching = self.font_stretching
+
         if self.page &gt; 0:
             # Page footer
             self.in_footer = 1
@@ -4594,7 +4626,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
             same,
             duration or self.page_duration,
             transition or self.page_transition,
+            new_page=not self._has_next_page(),
         )
+
         self._out(&#34;2 J&#34;)  # Set line cap style to square
         self.line_width = lw  # Set line width
         self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -6059,6 +6093,9 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self.ws = ws
             self._out(f&#34;{ws * self.k:.3f} Tw&#34;)
 
+    def _has_next_page(self):
+        return self.pages_count &gt; self.page
+
     @check_page
     def multi_cell(
         self,
@@ -6700,7 +6737,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         return txt
 
     def _putpages(self):
-        nb = self.page  # total number of pages
+        nb = self.pages_count  # total number of pages
         if self.str_alias_nb_pages:
             self._substitute_page_number()
         if self._toc_placeholder:
@@ -6802,7 +6839,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(&#34;endobj&#34;)
 
     def _substitute_page_number(self):
-        nb = self.page  # total number of pages
+        nb = self.pages_count  # total number of pages
         substituted = False
         # Replace number of pages in fonts using subsets (unicode)
         alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
@@ -7447,10 +7484,19 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._out(&#34;%%EOF&#34;)
         self.state = DocumentState.CLOSED
 
-    def _beginpage(self, orientation, format, same, duration, transition):
+    def _beginpage(
+        self, orientation, format, same, duration, transition, new_page=True
+    ):
         self.page += 1
-        page = {&#34;content&#34;: bytearray(), &#34;duration&#34;: duration, &#34;transition&#34;: transition}
-        self.pages[self.page] = page
+        if new_page:
+            page = {
+                &#34;content&#34;: bytearray(),
+                &#34;duration&#34;: duration,
+                &#34;transition&#34;: transition,
+            }
+            self.pages[self.page] = page
+        else:
+            page = self.pages[self.page]
         self.state = DocumentState.GENERATING_PAGE
         self.x = self.l_margin
         self.y = self.t_margin
@@ -7865,6 +7911,21 @@ def epw(self):
     return self.w - self.l_margin - self.r_margin</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.pages_count"><code class="name">var <span class="ident">pages_count</span></code></dt>
+<dd>
+<div class="desc"><p>Returns the total pages of the document.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def pages_count(self):
+    &#34;&#34;&#34;
+    Returns the total pages of the document.
+    &#34;&#34;&#34;
+    return len(self.pages)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.unifontsubset"><code class="name">var <span class="ident">unifontsubset</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -8213,6 +8274,7 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
         )
     if self.state == DocumentState.UNINITIALIZED:
         self.open()
+
     family = self.font_family
     style = f&#34;{self.font_style}U&#34; if self.underline else self.font_style
     size = self.font_size_pt
@@ -8221,6 +8283,7 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
     fc = self.fill_color
     tc = self.text_color
     stretching = self.font_stretching
+
     if self.page &gt; 0:
         # Page footer
         self.in_footer = 1
@@ -8236,7 +8299,9 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
         same,
         duration or self.page_duration,
         transition or self.page_transition,
+        new_page=not self._has_next_page(),
     )
+
     self._out(&#34;2 J&#34;)  # Set line cap style to square
     self.line_width = lw  # Set line width
     self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -12014,6 +12079,7 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
 <li><code><a title="fpdf.fpdf.FPDF.open" href="#fpdf.fpdf.FPDF.open">open</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.output" href="#fpdf.fpdf.FPDF.output">output</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.page_no" href="#fpdf.fpdf.FPDF.page_no">page_no</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.pages_count" href="#fpdf.fpdf.FPDF.pages_count">pages_count</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.polygon" href="#fpdf.fpdf.FPDF.polygon">polygon</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.polyline" href="#fpdf.fpdf.FPDF.polyline">polyline</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.rect" href="#fpdf.fpdf.FPDF.rect">rect</a></code></li>
