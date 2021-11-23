@@ -1800,7 +1800,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Create a local grapics state, which won&#39;t affect the surrounding code.
         This method must be used as a context manager using `with`:
 
-            with local_context():
+            with pdf.local_context():
                 set_some_state()
                 draw_some_stuff()
 
@@ -5731,7 +5731,7 @@ def ln(self, h=None):
 <dd>
 <div class="desc"><p>Create a local grapics state, which won't affect the surrounding code.
 This method must be used as a context manager using <code>with</code>:</p>
-<pre><code>with local_context():
+<pre><code>with pdf.local_context():
     set_some_state()
     draw_some_stuff()
 </code></pre>
@@ -5758,7 +5758,7 @@ def local_context(self):
     Create a local grapics state, which won&#39;t affect the surrounding code.
     This method must be used as a context manager using `with`:
 
-        with local_context():
+        with pdf.local_context():
             set_some_state()
             draw_some_stuff()
 
