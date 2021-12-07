@@ -1,338 +1,740 @@
 
-<!DOCTYPE html>
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="fpdf2 - minimalist PDF creation library for Python">
+      
+      
+      
+        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Tables.html">
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.0.5">
+    
+    
+      
+        <title>Tables - fpdf2</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.a617204b.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.9204c3b2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
 
-<html class="no-js" lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<meta content="fpdf2 - minimalist PDF creation library for Python" name="description"/>
-<link href="https://pyfpdf.github.io/fpdf2/Tables.html" rel="canonical"/>
-<link href="assets/images/favicon.png" rel="icon"/>
-<meta content="mkdocs-1.2.3, mkdocs-material-7.3.6" name="generator"/>
-<title>Tables - fpdf2</title>
-<link href="assets/stylesheets/main.a57b2b03.min.css" rel="stylesheet"/>
-<link href="assets/stylesheets/palette.3f5d1f46.min.css" rel="stylesheet"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
-<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
-<meta content="website" property="og:type">
-<meta content="fpdf2 - Tables" property="og:title">
-<meta content="fpdf2 - minimalist PDF creation library for Python" property="og:description">
-<meta content="https://pyfpdf.github.io/fpdf2/Tables.html" property="og:url">
-<meta content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" property="og:image"/>
-<meta content="image/png" property="og:image:type"/>
-<meta content="500" property="og:image:width"/>
-<meta content="500" property="og:image:height"/>
-</meta></meta></meta></meta></head>
-<body data-md-color-accent="none" data-md-color-primary="none" data-md-color-scheme="" dir="ltr">
-<script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
-<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
-<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
-<label class="md-overlay" for="__drawer"></label>
-<div data-md-component="skip">
-<a class="md-skip" href="#tables">
+    
+    
+  
+  
+    
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="fpdf2 - Tables" />
+  <meta property="og:description" content="fpdf2 - minimalist PDF creation library for Python" />
+  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/Tables.html" />
+  <meta property="og:image" content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="500" />
+  <meta property="og:image:height" content="500" />
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#tables" class="md-skip">
           Skip to content
         </a>
-</div>
-<div data-md-component="announce">
-</div>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
 <header class="md-header" data-md-component="header">
-<nav aria-label="Header" class="md-header__inner md-grid">
-<a aria-label="fpdf2" class="md-header__button md-logo" data-md-component="logo" href="index.html" title="fpdf2">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
-</a>
-<label class="md-header__button md-icon" for="__drawer">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
-</label>
-<div class="md-header__title" data-md-component="header-title">
-<div class="md-header__ellipsis">
-<div class="md-header__topic">
-<span class="md-ellipsis">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="fpdf2" class="md-header__button md-logo" aria-label="fpdf2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
             fpdf2
           </span>
-</div>
-<div class="md-header__topic" data-md-component="header-topic">
-<span class="md-ellipsis">
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
             
               Tables
             
           </span>
-</div>
-</div>
-</div>
-<label class="md-header__button md-icon" for="__search">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
-</label>
-<div class="md-search" data-md-component="search" role="dialog">
-<label class="md-search__overlay" for="__search"></label>
-<div class="md-search__inner" role="search">
-<form class="md-search__form" name="search">
-<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
-<label class="md-search__icon md-icon" for="__search">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</label>
-<nav aria-label="Search" class="md-search__options">
-<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
-</button>
-</nav>
-</form>
-<div class="md-search__output">
-<div class="md-search__scrollwrap" data-md-scrollfix="">
-<div class="md-search-result" data-md-component="search-result">
-<div class="md-search-result__meta">
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
             Initializing search
           </div>
-<ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="md-header__source">
-<a class="md-source" data-md-component="source" href="https://github.com/PyFPDF/fpdf2/" title="Go to repository">
-<div class="md-source__icon md-icon">
-<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
-</div>
-<div class="md-source__repository">
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PyFPDF/fpdf2/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
     GitHub
   </div>
 </a>
-</div>
-</nav>
+      </div>
+    
+  </nav>
+  
 </header>
-<div class="md-container" data-md-component="container">
-<main class="md-main" data-md-component="main">
-<div class="md-main__inner md-grid">
-<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
-<div class="md-sidebar__scrollwrap">
-<div class="md-sidebar__inner">
-<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
-<label class="md-nav__title" for="__drawer">
-<a aria-label="fpdf2" class="md-nav__button md-logo" data-md-component="logo" href="index.html" title="fpdf2">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
-</a>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="fpdf2" class="md-nav__button md-logo" aria-label="fpdf2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
     fpdf2
   </label>
-<div class="md-nav__source">
-<a class="md-source" data-md-component="source" href="https://github.com/PyFPDF/fpdf2/" title="Go to repository">
-<div class="md-source__icon md-icon">
-<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
-</div>
-<div class="md-source__repository">
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PyFPDF/fpdf2/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
     GitHub
   </div>
 </a>
-</div>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="index.html">
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
         Project Home
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Tutorial.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Tutorial.html" class="md-nav__link">
         Tutorial
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="ExistingPDFs.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ExistingPDFs.html" class="md-nav__link">
         Existing PDFs
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="HTML.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="HTML.html" class="md-nav__link">
         HTML
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Images.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Images.html" class="md-nav__link">
         Images
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Links.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Links.html" class="md-nav__link">
         Links
       </a>
-</li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
           Tables
           <span class="md-nav__icon md-icon"></span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="Tables.html">
+        </label>
+      
+      <a href="Tables.html" class="md-nav__link md-nav__link--active">
         Tables
       </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon"></span>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-cells">
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-cells" class="md-nav__link">
     Using cells
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-write_html">
+      
+        <li class="md-nav__item">
+  <a href="#using-write_html" class="md-nav__link">
     Using write_html
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#repeat-table-header-on-each-page">
+      
+        <li class="md-nav__item">
+  <a href="#repeat-table-header-on-each-page" class="md-nav__link">
     Repeat table header on each page
   </a>
+  
 </li>
-</ul>
+      
+    </ul>
+  
 </nav>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" id="__nav_8" type="checkbox"/>
-<label class="md-nav__link" for="__nav_8">
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8">
           Layout
           <span class="md-nav__icon md-icon"></span>
-</label>
-<nav aria-label="Layout" class="md-nav" data-md-level="1">
-<label class="md-nav__title" for="__nav_8">
-<span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Layout" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
           Layout
         </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="PageFormatAndOrientation.html">
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PageFormatAndOrientation.html" class="md-nav__link">
         Page format and orientation
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Margins.html">
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Margins.html" class="md-nav__link">
         Margins
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="PageBreaks.html">
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PageBreaks.html" class="md-nav__link">
         Page breaks
       </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="DocumentOutlineAndTableOfContents.html">
-        Document outline &amp; table of contents
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="DocumentOutlineAndTableOfContents.html" class="md-nav__link">
+        Document outline & table of contents
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="TextStyling.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="TextStyling.html" class="md-nav__link">
         Text styling
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Presentations.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Presentations.html" class="md-nav__link">
         Presentations
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Annotations.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Annotations.html" class="md-nav__link">
         Annotations
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Shapes.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Shapes.html" class="md-nav__link">
         Shapes
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Maths.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Maths.html" class="md-nav__link">
         Maths
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Barcodes.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Barcodes.html" class="md-nav__link">
         Barcodes
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Metadata.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Metadata.html" class="md-nav__link">
         Metadata
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Logging.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Logging.html" class="md-nav__link">
         Logging
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Templates.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Templates.html" class="md-nav__link">
         Templates
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Unicode.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Unicode.html" class="md-nav__link">
         Unicode
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Web2Py.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Web2Py.html" class="md-nav__link">
         Web2Py
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="https://pyfpdf.github.io/fpdf2/fpdf/">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://pyfpdf.github.io/fpdf2/fpdf/" class="md-nav__link">
         API
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Development.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Development.html" class="md-nav__link">
         Development
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="FAQ.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="FAQ.html" class="md-nav__link">
         FAQ
       </a>
-</li>
-</ul>
+    </li>
+  
+
+    
+  </ul>
 </nav>
-</div>
-</div>
-</div>
-<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
-<div class="md-sidebar__scrollwrap">
-<div class="md-sidebar__inner">
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon"></span>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-cells">
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-cells" class="md-nav__link">
     Using cells
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-write_html">
+      
+        <li class="md-nav__item">
+  <a href="#using-write_html" class="md-nav__link">
     Using write_html
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#repeat-table-header-on-each-page">
+      
+        <li class="md-nav__item">
+  <a href="#repeat-table-header-on-each-page" class="md-nav__link">
     Repeat table header on each page
   </a>
+  
 </li>
-</ul>
+      
+    </ul>
+  
 </nav>
-</div>
-</div>
-</div>
-<div class="md-content" data-md-component="content">
-<article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Tables.md" title="Edit this page">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Tables.md" title="Edit this page" class="md-content__button md-icon">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
 </a>
+
+
 <h1 id="tables">Tables</h1>
 <p>Tables can be built either using <strong>cells</strong>
 or with <a href="HTML.html"><code>write_html</code></a>.</p>
@@ -341,23 +743,23 @@ or with <a href="HTML.html"><code>write_html</code></a>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="p">(</span><span class="s2">"First name"</span><span class="p">,</span> <span class="s2">"Last name"</span><span class="p">,</span> <span class="s2">"Age"</span><span class="p">,</span> <span class="s2">"City"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Jules"</span><span class="p">,</span> <span class="s2">"Smith"</span><span class="p">,</span> <span class="s2">"34"</span><span class="p">,</span> <span class="s2">"San Juan"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Mary"</span><span class="p">,</span> <span class="s2">"Ramos"</span><span class="p">,</span> <span class="s2">"45"</span><span class="p">,</span> <span class="s2">"Orlando"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Carlson"</span><span class="p">,</span> <span class="s2">"Banks"</span><span class="p">,</span> <span class="s2">"19"</span><span class="p">,</span> <span class="s2">"Los Angeles"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Lucas"</span><span class="p">,</span> <span class="s2">"Cimon"</span><span class="p">,</span> <span class="s2">"31"</span><span class="p">,</span> <span class="s2">"Saint-Mahturin-sur-Loire"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;First name&quot;</span><span class="p">,</span> <span class="s2">&quot;Last name&quot;</span><span class="p">,</span> <span class="s2">&quot;Age&quot;</span><span class="p">,</span> <span class="s2">&quot;City&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Jules&quot;</span><span class="p">,</span> <span class="s2">&quot;Smith&quot;</span><span class="p">,</span> <span class="s2">&quot;34&quot;</span><span class="p">,</span> <span class="s2">&quot;San Juan&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Mary&quot;</span><span class="p">,</span> <span class="s2">&quot;Ramos&quot;</span><span class="p">,</span> <span class="s2">&quot;45&quot;</span><span class="p">,</span> <span class="s2">&quot;Orlando&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Carlson&quot;</span><span class="p">,</span> <span class="s2">&quot;Banks&quot;</span><span class="p">,</span> <span class="s2">&quot;19&quot;</span><span class="p">,</span> <span class="s2">&quot;Los Angeles&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Lucas&quot;</span><span class="p">,</span> <span class="s2">&quot;Cimon&quot;</span><span class="p">,</span> <span class="s2">&quot;31&quot;</span><span class="p">,</span> <span class="s2">&quot;Saint-Mahturin-sur-Loire&quot;</span><span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"Times"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 <span class="n">line_height</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">font_size</span> <span class="o">*</span> <span class="mf">2.5</span>
 <span class="n">col_width</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">epw</span> <span class="o">/</span> <span class="mi">4</span>  <span class="c1"># distribute content evenly</span>
 <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
     <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
         <span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="n">line_height</span><span class="p">,</span> <span class="n">datum</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_line_height</span><span class="o">=</span><span class="n">pdf</span><span class="o">.</span><span class="n">font_size</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="n">line_height</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">'table_with_cells.pdf'</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;table_with_cells.pdf&#39;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="using-write_html">Using write_html</h2>
 <p>An alternative method using <a href="HTML.html"><code>fpdf.HTMLMixin</code></a>,
@@ -371,48 +773,48 @@ with the same <code>data</code> as above, and column widths defined as percent o
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font_size</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"""&lt;table border="1"&gt;&lt;thead&gt;&lt;tr&gt;</span>
-<span class="s2">    &lt;th width="25%"&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
-<span class="s2">    &lt;th width="25%"&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
-<span class="s2">    &lt;th width="15%"&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
-<span class="s2">    &lt;th width="35%"&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
+    <span class="sa">f</span><span class="s2">&quot;&quot;&quot;&lt;table border=&quot;1&quot;&gt;&lt;thead&gt;&lt;tr&gt;</span>
+<span class="s2">    &lt;th width=&quot;25%&quot;&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
+<span class="s2">    &lt;th width=&quot;25%&quot;&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
+<span class="s2">    &lt;th width=&quot;15%&quot;&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
+<span class="s2">    &lt;th width=&quot;35%&quot;&gt;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s2">&lt;/th&gt;</span>
 <span class="s2">&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;&lt;tr&gt;</span>
-<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">'&lt;/td&gt;&lt;td&gt;'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">&#39;&lt;/td&gt;&lt;td&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
 <span class="s2">&lt;/tr&gt;&lt;tr&gt;</span>
-<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">'&lt;/td&gt;&lt;td&gt;'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">&#39;&lt;/td&gt;&lt;td&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
 <span class="s2">&lt;/tr&gt;&lt;tr&gt;</span>
-<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">'&lt;/td&gt;&lt;td&gt;'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">&#39;&lt;/td&gt;&lt;td&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
 <span class="s2">&lt;/tr&gt;&lt;tr&gt;</span>
-<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">'&lt;/td&gt;&lt;td&gt;'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
-<span class="s2">&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;"""</span><span class="p">,</span>
+<span class="s2">    &lt;td&gt;</span><span class="si">{</span><span class="s1">&#39;&lt;/td&gt;&lt;td&gt;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="si">}</span><span class="s2">&lt;/td&gt;</span>
+<span class="s2">&lt;/tr&gt;&lt;/tbody&gt;&lt;/table&gt;&quot;&quot;&quot;</span><span class="p">,</span>
     <span class="n">table_line_separators</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">'table_html.pdf'</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s1">&#39;table_html.pdf&#39;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="repeat-table-header-on-each-page">Repeat table header on each page</h2>
 <p>The following recipe demonstrates a solution to handle this requirement:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
-<span class="n">TABLE_COL_NAMES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"First name"</span><span class="p">,</span> <span class="s2">"Last name"</span><span class="p">,</span> <span class="s2">"Age"</span><span class="p">,</span> <span class="s2">"City"</span><span class="p">)</span>
+<span class="n">TABLE_COL_NAMES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;First name&quot;</span><span class="p">,</span> <span class="s2">&quot;Last name&quot;</span><span class="p">,</span> <span class="s2">&quot;Age&quot;</span><span class="p">,</span> <span class="s2">&quot;City&quot;</span><span class="p">)</span>
 <span class="n">TABLE_DATA</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="p">(</span><span class="s2">"Jules"</span><span class="p">,</span> <span class="s2">"Smith"</span><span class="p">,</span> <span class="s2">"34"</span><span class="p">,</span> <span class="s2">"San Juan"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Mary"</span><span class="p">,</span> <span class="s2">"Ramos"</span><span class="p">,</span> <span class="s2">"45"</span><span class="p">,</span> <span class="s2">"Orlando"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Carlson"</span><span class="p">,</span> <span class="s2">"Banks"</span><span class="p">,</span> <span class="s2">"19"</span><span class="p">,</span> <span class="s2">"Los Angeles"</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">"Lucas"</span><span class="p">,</span> <span class="s2">"Cimon"</span><span class="p">,</span> <span class="s2">"31"</span><span class="p">,</span> <span class="s2">"Angers"</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Jules&quot;</span><span class="p">,</span> <span class="s2">&quot;Smith&quot;</span><span class="p">,</span> <span class="s2">&quot;34&quot;</span><span class="p">,</span> <span class="s2">&quot;San Juan&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Mary&quot;</span><span class="p">,</span> <span class="s2">&quot;Ramos&quot;</span><span class="p">,</span> <span class="s2">&quot;45&quot;</span><span class="p">,</span> <span class="s2">&quot;Orlando&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Carlson&quot;</span><span class="p">,</span> <span class="s2">&quot;Banks&quot;</span><span class="p">,</span> <span class="s2">&quot;19&quot;</span><span class="p">,</span> <span class="s2">&quot;Los Angeles&quot;</span><span class="p">),</span>
+    <span class="p">(</span><span class="s2">&quot;Lucas&quot;</span><span class="p">,</span> <span class="s2">&quot;Cimon&quot;</span><span class="p">,</span> <span class="s2">&quot;31&quot;</span><span class="p">,</span> <span class="s2">&quot;Angers&quot;</span><span class="p">),</span>
 <span class="p">)</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"Times"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
 <span class="n">line_height</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">font_size</span> <span class="o">*</span> <span class="mi">2</span>
 <span class="n">col_width</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">epw</span> <span class="o">/</span> <span class="mi">4</span>  <span class="c1"># distribute content evenly</span>
 
 <span class="k">def</span> <span class="nf">render_table_header</span><span class="p">():</span>
-    <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">"B"</span><span class="p">)</span>  <span class="c1"># enabling bold text</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>  <span class="c1"># enabling bold text</span>
     <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">TABLE_COL_NAMES</span><span class="p">:</span>
         <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="n">line_height</span><span class="p">,</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="n">line_height</span><span class="p">)</span>
-    <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>  <span class="c1"># disabling bold text</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># disabling bold text</span>
 
 <span class="n">render_table_header</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>  <span class="c1"># repeat data rows</span>
@@ -423,62 +825,81 @@ with the same <code>data</code> as above, and column widths defined as percent o
             <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="n">line_height</span><span class="p">,</span> <span class="n">datum</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="n">line_height</span><span class="p">)</span>
 
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"table_with_headers_on_every_page.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;table_with_headers_on_every_page.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Note that if you want to use <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell"><code>multi_cell()</code></a> method instead of <code>cell()</code>,
 some extra code will be required: an initial call to <code>multi_cell</code> with <code>split_only=True</code>
 will be needed in order to compute the number of lines in the cell.</p>
-</article>
-</div>
-</div>
-</main>
-<footer class="md-footer">
-<nav aria-label="Footer" class="md-footer__inner md-grid">
-<a aria-label="Previous: Links" class="md-footer__link md-footer__link--prev" href="Links.html" rel="prev">
-<div class="md-footer__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</div>
-<div class="md-footer__title">
-<div class="md-ellipsis">
-<span class="md-footer__direction">
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="Links.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Links" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
                 Previous
               </span>
               Links
             </div>
-</div>
-</a>
-<a aria-label="Next: Page format and orientation" class="md-footer__link md-footer__link--next" href="PageFormatAndOrientation.html" rel="next">
-<div class="md-footer__title">
-<div class="md-ellipsis">
-<span class="md-footer__direction">
+          </div>
+        </a>
+      
+      
+        
+        <a href="PageFormatAndOrientation.html" class="md-footer__link md-footer__link--next" aria-label="Next: Page format and orientation" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
                 Next
               </span>
               Page format and orientation
             </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
 </div>
-<div class="md-footer__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
-</div>
-</a>
-</nav>
-<div class="md-footer-meta md-typeset">
-<div class="md-footer-meta__inner md-grid">
-<div class="md-footer-copyright">
-        
-        
-          Made with
-          <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
-            Material for MkDocs
-          </a>
- ... <a class="link--pdf-download" download href="./fpdf2-manual.pdf" title="PDF">download PDF</a></div>
-</div>
-</div>
+      
+    </div>
+  </div>
 </footer>
-</div>
-<div class="md-dialog" data-md-component="dialog">
-<div class="md-dialog__inner md-typeset"></div>
-</div>
-<script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.fcfe8b6d.min.js", "version": null}</script>
-<script src="assets/javascripts/bundle.b1047164.min.js"></script>
-</body>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.cefbb252.min.js"}</script>
+    
+    
+      <script src="assets/javascripts/bundle.a5f8ea78.min.js"></script>
+      
+    
+  </body>
 </html>

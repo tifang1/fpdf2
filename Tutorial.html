@@ -1,368 +1,782 @@
 
-<!DOCTYPE html>
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="fpdf2 - minimalist PDF creation library for Python">
+      
+      
+      
+        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Tutorial.html">
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.0.5">
+    
+    
+      
+        <title>Tutorial - fpdf2</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.a617204b.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.9204c3b2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
 
-<html class="no-js" lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<meta content="fpdf2 - minimalist PDF creation library for Python" name="description"/>
-<link href="https://pyfpdf.github.io/fpdf2/Tutorial.html" rel="canonical"/>
-<link href="assets/images/favicon.png" rel="icon"/>
-<meta content="mkdocs-1.2.3, mkdocs-material-7.3.6" name="generator"/>
-<title>Tutorial - fpdf2</title>
-<link href="assets/stylesheets/main.a57b2b03.min.css" rel="stylesheet"/>
-<link href="assets/stylesheets/palette.3f5d1f46.min.css" rel="stylesheet"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
-<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
-<meta content="website" property="og:type">
-<meta content="fpdf2 - Tutorial" property="og:title">
-<meta content="fpdf2 - minimalist PDF creation library for Python" property="og:description">
-<meta content="https://pyfpdf.github.io/fpdf2/Tutorial.html" property="og:url">
-<meta content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" property="og:image"/>
-<meta content="image/png" property="og:image:type"/>
-<meta content="500" property="og:image:width"/>
-<meta content="500" property="og:image:height"/>
-</meta></meta></meta></meta></head>
-<body data-md-color-accent="none" data-md-color-primary="none" data-md-color-scheme="" dir="ltr">
-<script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
-<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
-<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
-<label class="md-overlay" for="__drawer"></label>
-<div data-md-component="skip">
-<a class="md-skip" href="#tutorial">
+    
+    
+  
+  
+    
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="fpdf2 - Tutorial" />
+  <meta property="og:description" content="fpdf2 - minimalist PDF creation library for Python" />
+  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/Tutorial.html" />
+  <meta property="og:image" content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="500" />
+  <meta property="og:image:height" content="500" />
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#tutorial" class="md-skip">
           Skip to content
         </a>
-</div>
-<div data-md-component="announce">
-</div>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
 <header class="md-header" data-md-component="header">
-<nav aria-label="Header" class="md-header__inner md-grid">
-<a aria-label="fpdf2" class="md-header__button md-logo" data-md-component="logo" href="index.html" title="fpdf2">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
-</a>
-<label class="md-header__button md-icon" for="__drawer">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
-</label>
-<div class="md-header__title" data-md-component="header-title">
-<div class="md-header__ellipsis">
-<div class="md-header__topic">
-<span class="md-ellipsis">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="fpdf2" class="md-header__button md-logo" aria-label="fpdf2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
             fpdf2
           </span>
-</div>
-<div class="md-header__topic" data-md-component="header-topic">
-<span class="md-ellipsis">
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
             
               Tutorial
             
           </span>
-</div>
-</div>
-</div>
-<label class="md-header__button md-icon" for="__search">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
-</label>
-<div class="md-search" data-md-component="search" role="dialog">
-<label class="md-search__overlay" for="__search"></label>
-<div class="md-search__inner" role="search">
-<form class="md-search__form" name="search">
-<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
-<label class="md-search__icon md-icon" for="__search">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</label>
-<nav aria-label="Search" class="md-search__options">
-<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
-</button>
-</nav>
-</form>
-<div class="md-search__output">
-<div class="md-search__scrollwrap" data-md-scrollfix="">
-<div class="md-search-result" data-md-component="search-result">
-<div class="md-search-result__meta">
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
             Initializing search
           </div>
-<ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="md-header__source">
-<a class="md-source" data-md-component="source" href="https://github.com/PyFPDF/fpdf2/" title="Go to repository">
-<div class="md-source__icon md-icon">
-<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
-</div>
-<div class="md-source__repository">
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PyFPDF/fpdf2/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
     GitHub
   </div>
 </a>
-</div>
-</nav>
+      </div>
+    
+  </nav>
+  
 </header>
-<div class="md-container" data-md-component="container">
-<main class="md-main" data-md-component="main">
-<div class="md-main__inner md-grid">
-<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
-<div class="md-sidebar__scrollwrap">
-<div class="md-sidebar__inner">
-<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
-<label class="md-nav__title" for="__drawer">
-<a aria-label="fpdf2" class="md-nav__button md-logo" data-md-component="logo" href="index.html" title="fpdf2">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
-</a>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="fpdf2" class="md-nav__button md-logo" aria-label="fpdf2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
     fpdf2
   </label>
-<div class="md-nav__source">
-<a class="md-source" data-md-component="source" href="https://github.com/PyFPDF/fpdf2/" title="Go to repository">
-<div class="md-source__icon md-icon">
-<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
-</div>
-<div class="md-source__repository">
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PyFPDF/fpdf2/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
     GitHub
   </div>
 </a>
-</div>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="index.html">
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
         Project Home
       </a>
-</li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
           Tutorial
           <span class="md-nav__icon md-icon"></span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="Tutorial.html">
+        </label>
+      
+      <a href="Tutorial.html" class="md-nav__link md-nav__link--active">
         Tutorial
       </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon"></span>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-1-minimal-example">
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tuto-1-minimal-example" class="md-nav__link">
     Tuto 1 - Minimal Example
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-2-header-footer-page-break-and-image">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-2-header-footer-page-break-and-image" class="md-nav__link">
     Tuto 2 - Header, footer, page break and image
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-3-line-breaks-and-colors">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-3-line-breaks-and-colors" class="md-nav__link">
     Tuto 3 - Line breaks and colors
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-4-multi-columns">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-4-multi-columns" class="md-nav__link">
     Tuto 4 - Multi Columns
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-5-creating-tables">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-5-creating-tables" class="md-nav__link">
     Tuto 5 - Creating Tables
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-6-creating-links-and-mixing-text-styles">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-6-creating-links-and-mixing-text-styles" class="md-nav__link">
     Tuto 6 - Creating links and mixing text styles
   </a>
+  
 </li>
-</ul>
+      
+    </ul>
+  
 </nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="ExistingPDFs.html">
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ExistingPDFs.html" class="md-nav__link">
         Existing PDFs
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="HTML.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="HTML.html" class="md-nav__link">
         HTML
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Images.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Images.html" class="md-nav__link">
         Images
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Links.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Links.html" class="md-nav__link">
         Links
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Tables.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Tables.html" class="md-nav__link">
         Tables
       </a>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" id="__nav_8" type="checkbox"/>
-<label class="md-nav__link" for="__nav_8">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8">
           Layout
           <span class="md-nav__icon md-icon"></span>
-</label>
-<nav aria-label="Layout" class="md-nav" data-md-level="1">
-<label class="md-nav__title" for="__nav_8">
-<span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Layout" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
           Layout
         </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="PageFormatAndOrientation.html">
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PageFormatAndOrientation.html" class="md-nav__link">
         Page format and orientation
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Margins.html">
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Margins.html" class="md-nav__link">
         Margins
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="PageBreaks.html">
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PageBreaks.html" class="md-nav__link">
         Page breaks
       </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="DocumentOutlineAndTableOfContents.html">
-        Document outline &amp; table of contents
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="DocumentOutlineAndTableOfContents.html" class="md-nav__link">
+        Document outline & table of contents
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="TextStyling.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="TextStyling.html" class="md-nav__link">
         Text styling
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Presentations.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Presentations.html" class="md-nav__link">
         Presentations
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Annotations.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Annotations.html" class="md-nav__link">
         Annotations
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Shapes.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Shapes.html" class="md-nav__link">
         Shapes
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Maths.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Maths.html" class="md-nav__link">
         Maths
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Barcodes.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Barcodes.html" class="md-nav__link">
         Barcodes
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Metadata.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Metadata.html" class="md-nav__link">
         Metadata
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Logging.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Logging.html" class="md-nav__link">
         Logging
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Templates.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Templates.html" class="md-nav__link">
         Templates
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Unicode.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Unicode.html" class="md-nav__link">
         Unicode
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Web2Py.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Web2Py.html" class="md-nav__link">
         Web2Py
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="https://pyfpdf.github.io/fpdf2/fpdf/">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://pyfpdf.github.io/fpdf2/fpdf/" class="md-nav__link">
         API
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Development.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Development.html" class="md-nav__link">
         Development
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="FAQ.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="FAQ.html" class="md-nav__link">
         FAQ
       </a>
-</li>
-</ul>
+    </li>
+  
+
+    
+  </ul>
 </nav>
-</div>
-</div>
-</div>
-<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
-<div class="md-sidebar__scrollwrap">
-<div class="md-sidebar__inner">
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon"></span>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-1-minimal-example">
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#tuto-1-minimal-example" class="md-nav__link">
     Tuto 1 - Minimal Example
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-2-header-footer-page-break-and-image">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-2-header-footer-page-break-and-image" class="md-nav__link">
     Tuto 2 - Header, footer, page break and image
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-3-line-breaks-and-colors">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-3-line-breaks-and-colors" class="md-nav__link">
     Tuto 3 - Line breaks and colors
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-4-multi-columns">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-4-multi-columns" class="md-nav__link">
     Tuto 4 - Multi Columns
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-5-creating-tables">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-5-creating-tables" class="md-nav__link">
     Tuto 5 - Creating Tables
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#tuto-6-creating-links-and-mixing-text-styles">
+      
+        <li class="md-nav__item">
+  <a href="#tuto-6-creating-links-and-mixing-text-styles" class="md-nav__link">
     Tuto 6 - Creating links and mixing text styles
   </a>
+  
 </li>
-</ul>
+      
+    </ul>
+  
 </nav>
-</div>
-</div>
-</div>
-<div class="md-content" data-md-component="content">
-<article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Tutorial.md" title="Edit this page">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Tutorial.md" title="Edit this page" class="md-content__button md-icon">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
 </a>
+
+
 <h1 id="tutorial">Tutorial</h1>
 <p>Version en français : <a href="Tutorial-fr.html">Tutorial-fr</a></p>
 <p>Deutsche Version: <a href="Tutorial-de.html">Tutorial-de</a></p>
@@ -390,16 +804,16 @@
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"Hello World!"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"tuto1.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto1.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto1.pdf">Resulting PDF</a></p>
 <p>After including the library file, we create an <code>FPDF</code> object. The 
 <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF">FPDF</a> constructor is used here with the default values: 
 pages are in A4 portrait and the measure unit is millimeter.
 It could have been specified explicitly with:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="s2">"P"</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">"mm"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"A4"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">(</span><span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;mm&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;A4&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>It is possible to set the PDF in landscape mode (<code>L</code>) or to use other page formats
 (such as <code>Letter</code> and <code>Legal</code>) and measure units (<code>pt</code>, <code>cm</code>, <code>in</code>).</p>
@@ -410,7 +824,7 @@ be changed with <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_margins">set_margins<
 <p>Before we can print text, it is mandatory to select a font with 
 <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_font">set_font</a>, otherwise the document would be invalid.
 We choose Helvetica bold 16:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">'helvetica'</span><span class="p">,</span> <span class="s1">'B'</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
 </code></pre></div>
 <p>We could have specified italics with <code>I</code>, underlined with <code>U</code> or a regular font
 with an empty string (or any combination). Note that the font size is given in
@@ -421,11 +835,11 @@ area, possibly framed, which contains some text. It is rendered at the current
 position. We specify its dimensions, its text (centered or aligned), if borders
 should be drawn, and where the current position moves after it (to the right,
 below or to the beginning of the next line). To add a frame, we would do this:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">'Hello World!'</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Hello World!&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
 <p>To add a new cell next to it with centered text and go to the next line, we
 would do:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">'Powered by FPDF.'</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">'C'</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Powered by FPDF.&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Remark</strong>: the line break can also be done with <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.ln">ln</a>. This
 method allows to specify in addition the height of the break.</p>
@@ -440,13 +854,13 @@ returns the PDF <code>bytearray</code> buffer.</p>
 <span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Rendering logo:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">"../docs/fpdf2-logo.png"</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;../docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">33</span><span class="p">)</span>
         <span class="c1"># Setting font: helvetica bold 15</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
         <span class="c1"># Moving cursor to the right:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>
         <span class="c1"># Printing title:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">"Title"</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
@@ -454,19 +868,19 @@ returns the PDF <code>bytearray</code> buffer.</p>
         <span class="c1"># Position cursor at 1.5 cm from bottom:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
         <span class="c1"># Setting font: helvetica italic 8</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"I"</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
         <span class="c1"># Printing page number:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">/</span><span class="se">{{</span><span class="s2">nb</span><span class="se">}}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">/</span><span class="se">{{</span><span class="s2">nb</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"Times"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
-    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Printing line number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"tuto2.pdf"</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Printing line number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto2.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">Resulting PDF</a></p>
 <p>This example makes use of the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.header">header</a> and 
@@ -502,7 +916,7 @@ illustrates the use of colors.</p>
 <span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Setting font: helvetica bold 15</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
         <span class="c1"># Calculating width of title and setting cursor position:</span>
         <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
@@ -513,7 +927,7 @@ illustrates the use of colors.</p>
         <span class="c1"># Setting thickness of the frame (1 mm)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="c1"># Printing title:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
@@ -521,35 +935,35 @@ illustrates the use of colors.</p>
         <span class="c1"># Setting position at 1.5 cm from bottom:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
         <span class="c1"># Setting font: helvetica italic 8</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"I"</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
         <span class="c1"># Setting text color to gray:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
         <span class="c1"># Printing page number</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">chapter_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
         <span class="c1"># Setting font: helvetica 12</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
         <span class="c1"># Setting background color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
         <span class="c1"># Printing chapter name:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">chapter_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
         <span class="c1"># Reading text file:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"latin-1"</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span>
         <span class="c1"># Setting font: Times 12</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"Times"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
         <span class="c1"># Printing justified text:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
         <span class="c1"># Final mention in italics:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">"I"</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"(end of excerpt)"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;(end of excerpt)&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">print_chapter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
@@ -558,11 +972,11 @@ illustrates the use of colors.</p>
 
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"20000 Leagues Under the Seas"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">"Jules Verne"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"A RUNAWAY REEF"</span><span class="p">,</span> <span class="s2">"20k_c1.txt"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">"THE PROS AND CONS"</span><span class="p">,</span> <span class="s2">"20k_c1.txt"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"tuto3.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;20000 Leagues Under the Seas&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">&quot;Jules Verne&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A RUNAWAY REEF&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;THE PROS AND CONS&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto3.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto3.pdf">Resulting PDF</a></p>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/20k_c1.txt">Jules Verne text</a></p>
@@ -597,23 +1011,23 @@ plug-in, is to right-click and select Document Properties.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Ordinate of column start</span>
 
     <span class="k">def</span> <span class="nf">header</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"B"</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
         <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_string_width</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">)</span> <span class="o">+</span> <span class="mi">6</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_x</span><span class="p">((</span><span class="mi">210</span> <span class="o">-</span> <span class="n">width</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">180</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">230</span><span class="p">,</span> <span class="mi">230</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">220</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
         <span class="c1"># Saving ordinate position:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_y</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">footer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">"I"</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">set_col</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">col</span><span class="p">):</span>
         <span class="c1"># Set column position:</span>
@@ -637,25 +1051,25 @@ plug-in, is to right-click and select Document Properties.</p>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">chapter_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
         <span class="c1"># Saving ordinate position:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">y0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_y</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">chapter_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="c1"># Reading text file:</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
-            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">"latin-1"</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;latin-1&quot;</span><span class="p">)</span>
         <span class="c1"># Setting font: Times 12</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"Times"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
         <span class="c1"># Printing text in a 6cm width column:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">txt</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
         <span class="c1"># Final mention in italics:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">"I"</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"(end of excerpt)"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;I&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;(end of excerpt)&quot;</span><span class="p">)</span>
         <span class="c1"># Start back at first column:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_col</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
@@ -666,11 +1080,11 @@ plug-in, is to right-click and select Document Properties.</p>
 
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"20000 Leagues Under the Seas"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">"Jules Verne"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">"A RUNAWAY REEF"</span><span class="p">,</span> <span class="s2">"20k_c1.txt"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">"THE PROS AND CONS"</span><span class="p">,</span> <span class="s2">"20k_c1.txt"</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"tuto4.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;20000 Leagues Under the Seas&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_author</span><span class="p">(</span><span class="s2">&quot;Jules Verne&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;A RUNAWAY REEF&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">print_chapter</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;THE PROS AND CONS&quot;</span><span class="p">,</span> <span class="s2">&quot;20k_c1.txt&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto4.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto4.pdf">Resulting PDF</a></p>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/20k_c1.txt">Jules Verne text</a></p>
@@ -703,16 +1117,16 @@ back to the first column and trigger a page break.</p>
 
     <span class="k">def</span> <span class="nf">improved_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">col_widths</span><span class="o">=</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">)):</span>
         <span class="k">for</span> <span class="n">col_width</span><span class="p">,</span> <span class="n">heading</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">col_widths</span><span class="p">,</span> <span class="n">headings</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"R"</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"R"</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
         <span class="c1"># Closure line:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">col_widths</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"T"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">col_widths</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">colored_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">col_widths</span><span class="o">=</span><span class="p">(</span><span class="mi">42</span><span class="p">,</span> <span class="mi">39</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">42</span><span class="p">)):</span>
         <span class="c1"># Colors, line width and bold font:</span>
@@ -720,9 +1134,9 @@ back to the first column and trigger a page break.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mf">0.3</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">"B"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">col_width</span><span class="p">,</span> <span class="n">heading</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">col_widths</span><span class="p">,</span> <span class="n">headings</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"C"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="n">heading</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
         <span class="c1"># Color and font restoration:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">224</span><span class="p">,</span> <span class="mi">235</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
@@ -730,19 +1144,19 @@ back to the first column and trigger a page break.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">()</span>
         <span class="n">fill</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"L"</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"R"</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">"LR"</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"R"</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_widths</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="mi">6</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;LR&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
             <span class="n">fill</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">fill</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">col_widths</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"T"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">col_widths</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">load_data_from_csv</span><span class="p">(</span><span class="n">csv_filepath</span><span class="p">):</span>
     <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_filepath</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">"utf8"</span><span class="p">)</span> <span class="k">as</span> <span class="n">csv_file</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">","</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_filepath</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">csv_file</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">csv_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">headings</span><span class="p">:</span>  <span class="c1"># extracting column names from first row:</span>
                 <span class="n">headings</span> <span class="o">=</span> <span class="n">row</span>
             <span class="k">else</span><span class="p">:</span>
@@ -750,16 +1164,16 @@ back to the first column and trigger a page break.</p>
     <span class="k">return</span> <span class="n">headings</span><span class="p">,</span> <span class="n">rows</span>
 
 
-<span class="n">col_names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">load_data_from_csv</span><span class="p">(</span><span class="s2">"countries.txt"</span><span class="p">)</span>
+<span class="n">col_names</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">load_data_from_csv</span><span class="p">(</span><span class="s2">&quot;countries.txt&quot;</span><span class="p">)</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">basic_table</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">improved_table</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">colored_table</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"tuto5.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto5.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto5.pdf">Resulting PDF</a> -
 <a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/countries.txt">Countries text</a></p>
@@ -795,28 +1209,28 @@ back to the first column and trigger a page break.</p>
 
 <span class="c1"># First page:</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">"helvetica"</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">"To find out what's new in self tutorial, click "</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">"U"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;To find out what&#39;s new in self tutorial, click &quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="n">style</span><span class="o">=</span><span class="s2">&quot;U&quot;</span><span class="p">)</span>
 <span class="n">link</span> <span class="o">=</span> <span class="n">pdf</span><span class="o">.</span><span class="n">add_link</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">"here"</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;here&quot;</span><span class="p">,</span> <span class="n">link</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">()</span>
 
 <span class="c1"># Second page:</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_link</span><span class="p">(</span><span class="n">link</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span>
-    <span class="s2">"../docs/fpdf2-logo.png"</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">""</span><span class="p">,</span> <span class="s2">"https://pyfpdf.github.io/fpdf2/"</span>
+    <span class="s2">&quot;../docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;https://pyfpdf.github.io/fpdf2/&quot;</span>
 <span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_left_margin</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font_size</span><span class="p">(</span><span class="mi">18</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span>
-    <span class="sd">"""You can print text mixing different styles using HTML tags: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;,</span>
+    <span class="sd">&quot;&quot;&quot;You can print text mixing different styles using HTML tags: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;,</span>
 <span class="sd">&lt;u&gt;underlined&lt;/u&gt;, or &lt;b&gt;&lt;i&gt;&lt;u&gt;all at once&lt;/u&gt;&lt;/i&gt;&lt;/b&gt;!</span>
-<span class="sd">&lt;br&gt;&lt;br&gt;You can also insert links on text, such as &lt;a href="https://pyfpdf.github.io/fpdf2/"&gt;https://pyfpdf.github.io/fpdf2/&lt;/a&gt;,</span>
-<span class="sd">or on an image: the logo is clickable!"""</span>
+<span class="sd">&lt;br&gt;&lt;br&gt;You can also insert links on text, such as &lt;a href=&quot;https://pyfpdf.github.io/fpdf2/&quot;&gt;https://pyfpdf.github.io/fpdf2/&lt;/a&gt;,</span>
+<span class="sd">or on an image: the logo is clickable!&quot;&quot;&quot;</span>
 <span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"tuto6.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto6.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto6.pdf">Resulting PDF</a> -
 <a href="https://raw.githubusercontent.com/PyFPDF/fpdf2/master/docs/fpdf2-logo.png">fpdf2-logo</a></p>
@@ -856,57 +1270,76 @@ On the other hand, its main drawback is that we cannot justify the text like
 <p>As an alternative, another option to change the font style and add links is to
  use the <code>write_html()</code> method. It is an html parser, which allows adding text,
  changing font style and adding links using html.</p>
-</article>
-</div>
-</div>
-</main>
-<footer class="md-footer">
-<nav aria-label="Footer" class="md-footer__inner md-grid">
-<a aria-label="Previous: Project Home" class="md-footer__link md-footer__link--prev" href="index.html" rel="prev">
-<div class="md-footer__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</div>
-<div class="md-footer__title">
-<div class="md-ellipsis">
-<span class="md-footer__direction">
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="index.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Project Home" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
                 Previous
               </span>
               Project Home
             </div>
-</div>
-</a>
-<a aria-label="Next: Existing PDFs" class="md-footer__link md-footer__link--next" href="ExistingPDFs.html" rel="next">
-<div class="md-footer__title">
-<div class="md-ellipsis">
-<span class="md-footer__direction">
+          </div>
+        </a>
+      
+      
+        
+        <a href="ExistingPDFs.html" class="md-footer__link md-footer__link--next" aria-label="Next: Existing PDFs" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
                 Next
               </span>
               Existing PDFs
             </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
 </div>
-<div class="md-footer__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
-</div>
-</a>
-</nav>
-<div class="md-footer-meta md-typeset">
-<div class="md-footer-meta__inner md-grid">
-<div class="md-footer-copyright">
-        
-        
-          Made with
-          <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
-            Material for MkDocs
-          </a>
- ... <a class="link--pdf-download" download href="./fpdf2-manual.pdf" title="PDF">download PDF</a></div>
-</div>
-</div>
+      
+    </div>
+  </div>
 </footer>
-</div>
-<div class="md-dialog" data-md-component="dialog">
-<div class="md-dialog__inner md-typeset"></div>
-</div>
-<script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.fcfe8b6d.min.js", "version": null}</script>
-<script src="assets/javascripts/bundle.b1047164.min.js"></script>
-</body>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.cefbb252.min.js"}</script>
+    
+    
+      <script src="assets/javascripts/bundle.a5f8ea78.min.js"></script>
+      
+    
+  </body>
 </html>

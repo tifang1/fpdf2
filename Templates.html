@@ -1,376 +1,794 @@
 
-<!DOCTYPE html>
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="fpdf2 - minimalist PDF creation library for Python">
+      
+      
+      
+        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Templates.html">
+      
+      <link rel="icon" href="assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.0.5">
+    
+    
+      
+        <title>Templates - fpdf2</title>
+      
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.a617204b.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.9204c3b2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
 
-<html class="no-js" lang="en">
-<head>
-<meta charset="utf-8"/>
-<meta content="width=device-width,initial-scale=1" name="viewport"/>
-<meta content="fpdf2 - minimalist PDF creation library for Python" name="description"/>
-<link href="https://pyfpdf.github.io/fpdf2/Templates.html" rel="canonical"/>
-<link href="assets/images/favicon.png" rel="icon"/>
-<meta content="mkdocs-1.2.3, mkdocs-material-7.3.6" name="generator"/>
-<title>Templates - fpdf2</title>
-<link href="assets/stylesheets/main.a57b2b03.min.css" rel="stylesheet"/>
-<link href="assets/stylesheets/palette.3f5d1f46.min.css" rel="stylesheet"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
-<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
-<meta content="website" property="og:type">
-<meta content="fpdf2 - Templates" property="og:title">
-<meta content="fpdf2 - minimalist PDF creation library for Python" property="og:description">
-<meta content="https://pyfpdf.github.io/fpdf2/Templates.html" property="og:url">
-<meta content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" property="og:image"/>
-<meta content="image/png" property="og:image:type"/>
-<meta content="500" property="og:image:width"/>
-<meta content="500" property="og:image:height"/>
-</meta></meta></meta></meta></head>
-<body data-md-color-accent="none" data-md-color-primary="none" data-md-color-scheme="" dir="ltr">
-<script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
-<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
-<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
-<label class="md-overlay" for="__drawer"></label>
-<div data-md-component="skip">
-<a class="md-skip" href="#templates">
+    
+    
+  
+  
+    
+  
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="fpdf2 - Templates" />
+  <meta property="og:description" content="fpdf2 - minimalist PDF creation library for Python" />
+  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/Templates.html" />
+  <meta property="og:image" content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="500" />
+  <meta property="og:image:height" content="500" />
+
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#templates" class="md-skip">
           Skip to content
         </a>
-</div>
-<div data-md-component="announce">
-</div>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
 <header class="md-header" data-md-component="header">
-<nav aria-label="Header" class="md-header__inner md-grid">
-<a aria-label="fpdf2" class="md-header__button md-logo" data-md-component="logo" href="index.html" title="fpdf2">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
-</a>
-<label class="md-header__button md-icon" for="__drawer">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
-</label>
-<div class="md-header__title" data-md-component="header-title">
-<div class="md-header__ellipsis">
-<div class="md-header__topic">
-<span class="md-ellipsis">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="fpdf2" class="md-header__button md-logo" aria-label="fpdf2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
             fpdf2
           </span>
-</div>
-<div class="md-header__topic" data-md-component="header-topic">
-<span class="md-ellipsis">
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
             
               Templates
             
           </span>
-</div>
-</div>
-</div>
-<label class="md-header__button md-icon" for="__search">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
-</label>
-<div class="md-search" data-md-component="search" role="dialog">
-<label class="md-search__overlay" for="__search"></label>
-<div class="md-search__inner" role="search">
-<form class="md-search__form" name="search">
-<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
-<label class="md-search__icon md-icon" for="__search">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</label>
-<nav aria-label="Search" class="md-search__options">
-<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
-</button>
-</nav>
-</form>
-<div class="md-search__output">
-<div class="md-search__scrollwrap" data-md-scrollfix="">
-<div class="md-search-result" data-md-component="search-result">
-<div class="md-search-result__meta">
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
             Initializing search
           </div>
-<ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="md-header__source">
-<a class="md-source" data-md-component="source" href="https://github.com/PyFPDF/fpdf2/" title="Go to repository">
-<div class="md-source__icon md-icon">
-<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
-</div>
-<div class="md-source__repository">
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PyFPDF/fpdf2/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
     GitHub
   </div>
 </a>
-</div>
-</nav>
+      </div>
+    
+  </nav>
+  
 </header>
-<div class="md-container" data-md-component="container">
-<main class="md-main" data-md-component="main">
-<div class="md-main__inner md-grid">
-<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
-<div class="md-sidebar__scrollwrap">
-<div class="md-sidebar__inner">
-<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
-<label class="md-nav__title" for="__drawer">
-<a aria-label="fpdf2" class="md-nav__button md-logo" data-md-component="logo" href="index.html" title="fpdf2">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
-</a>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="fpdf2" class="md-nav__button md-logo" aria-label="fpdf2" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
+
+    </a>
     fpdf2
   </label>
-<div class="md-nav__source">
-<a class="md-source" data-md-component="source" href="https://github.com/PyFPDF/fpdf2/" title="Go to repository">
-<div class="md-source__icon md-icon">
-<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
-</div>
-<div class="md-source__repository">
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PyFPDF/fpdf2/" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
     GitHub
   </div>
 </a>
-</div>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="index.html">
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
         Project Home
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Tutorial.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Tutorial.html" class="md-nav__link">
         Tutorial
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="ExistingPDFs.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ExistingPDFs.html" class="md-nav__link">
         Existing PDFs
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="HTML.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="HTML.html" class="md-nav__link">
         HTML
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Images.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Images.html" class="md-nav__link">
         Images
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Links.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Links.html" class="md-nav__link">
         Links
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Tables.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Tables.html" class="md-nav__link">
         Tables
       </a>
-</li>
-<li class="md-nav__item md-nav__item--nested">
-<input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" id="__nav_8" type="checkbox"/>
-<label class="md-nav__link" for="__nav_8">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_8">
           Layout
           <span class="md-nav__icon md-icon"></span>
-</label>
-<nav aria-label="Layout" class="md-nav" data-md-level="1">
-<label class="md-nav__title" for="__nav_8">
-<span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Layout" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
           Layout
         </label>
-<ul class="md-nav__list" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="PageFormatAndOrientation.html">
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PageFormatAndOrientation.html" class="md-nav__link">
         Page format and orientation
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Margins.html">
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Margins.html" class="md-nav__link">
         Margins
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="PageBreaks.html">
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="PageBreaks.html" class="md-nav__link">
         Page breaks
       </a>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="DocumentOutlineAndTableOfContents.html">
-        Document outline &amp; table of contents
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="DocumentOutlineAndTableOfContents.html" class="md-nav__link">
+        Document outline & table of contents
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="TextStyling.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="TextStyling.html" class="md-nav__link">
         Text styling
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Presentations.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Presentations.html" class="md-nav__link">
         Presentations
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Annotations.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Annotations.html" class="md-nav__link">
         Annotations
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Shapes.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Shapes.html" class="md-nav__link">
         Shapes
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Maths.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Maths.html" class="md-nav__link">
         Maths
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Barcodes.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Barcodes.html" class="md-nav__link">
         Barcodes
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Metadata.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Metadata.html" class="md-nav__link">
         Metadata
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Logging.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Logging.html" class="md-nav__link">
         Logging
       </a>
-</li>
-<li class="md-nav__item md-nav__item--active">
-<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
-<label class="md-nav__link md-nav__link--active" for="__toc">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
           Templates
           <span class="md-nav__icon md-icon"></span>
-</label>
-<a class="md-nav__link md-nav__link--active" href="Templates.html">
+        </label>
+      
+      <a href="Templates.html" class="md-nav__link md-nav__link--active">
         Templates
       </a>
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon"></span>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-template">
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-template" class="md-nav__link">
     Using Template()
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-flextemplate">
+      
+        <li class="md-nav__item">
+  <a href="#using-flextemplate" class="md-nav__link">
     Using FlexTemplate()
   </a>
-<nav aria-label="Using FlexTemplate()" class="md-nav">
-<ul class="md-nav__list">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#details-template-definition">
+  
+    <nav class="md-nav" aria-label="Using FlexTemplate()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#details-template-definition" class="md-nav__link">
     Details - Template definition
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#how-to-create-a-template">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-create-a-template" class="md-nav__link">
     How to create a template
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#example-hardcoded">
+        
+          <li class="md-nav__item">
+  <a href="#example-hardcoded" class="md-nav__link">
     Example - Hardcoded
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#example-elements-defined-in-csv-file">
+        
+          <li class="md-nav__item">
+  <a href="#example-elements-defined-in-csv-file" class="md-nav__link">
     Example - Elements defined in CSV file
   </a>
+  
 </li>
-</ul>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
-</li>
-</ul>
-</nav>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Unicode.html">
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Unicode.html" class="md-nav__link">
         Unicode
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Web2Py.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Web2Py.html" class="md-nav__link">
         Web2Py
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="https://pyfpdf.github.io/fpdf2/fpdf/">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://pyfpdf.github.io/fpdf2/fpdf/" class="md-nav__link">
         API
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="Development.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="Development.html" class="md-nav__link">
         Development
       </a>
-</li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="FAQ.html">
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="FAQ.html" class="md-nav__link">
         FAQ
       </a>
-</li>
-</ul>
+    </li>
+  
+
+    
+  </ul>
 </nav>
-</div>
-</div>
-</div>
-<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
-<div class="md-sidebar__scrollwrap">
-<div class="md-sidebar__inner">
-<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
-<label class="md-nav__title" for="__toc">
-<span class="md-nav__icon md-icon"></span>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-template">
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-template" class="md-nav__link">
     Using Template()
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#using-flextemplate">
+      
+        <li class="md-nav__item">
+  <a href="#using-flextemplate" class="md-nav__link">
     Using FlexTemplate()
   </a>
-<nav aria-label="Using FlexTemplate()" class="md-nav">
-<ul class="md-nav__list">
-<li class="md-nav__item">
-<a class="md-nav__link" href="#details-template-definition">
+  
+    <nav class="md-nav" aria-label="Using FlexTemplate()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#details-template-definition" class="md-nav__link">
     Details - Template definition
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#how-to-create-a-template">
+        
+          <li class="md-nav__item">
+  <a href="#how-to-create-a-template" class="md-nav__link">
     How to create a template
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#example-hardcoded">
+        
+          <li class="md-nav__item">
+  <a href="#example-hardcoded" class="md-nav__link">
     Example - Hardcoded
   </a>
+  
 </li>
-<li class="md-nav__item">
-<a class="md-nav__link" href="#example-elements-defined-in-csv-file">
+        
+          <li class="md-nav__item">
+  <a href="#example-elements-defined-in-csv-file" class="md-nav__link">
     Example - Elements defined in CSV file
   </a>
+  
 </li>
-</ul>
-</nav>
+        
+      </ul>
+    </nav>
+  
 </li>
-</ul>
+      
+    </ul>
+  
 </nav>
-</div>
-</div>
-</div>
-<div class="md-content" data-md-component="content">
-<article class="md-content__inner md-typeset">
-<a class="md-content__button md-icon" href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Templates.md" title="Edit this page">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Templates.md" title="Edit this page" class="md-content__button md-icon">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
 </a>
+
+
 <h1 id="templates">Templates</h1>
 <p>Templates are predefined documents (like invoices, tax forms, etc.), or parts of such documents, where each element (text, lines, barcodes, etc.) has a fixed position (x1, y1, x2, y2), style (font, size, etc.) and a default text.</p>
 <p>These elements can act as placeholders, so the program can change the default text "filling in" the document.</p>
@@ -383,26 +801,26 @@
 <div class="highlight"><pre><span></span><code><span class="n">tmpl</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">)</span>
 <span class="c1"># first page and content</span>
 <span class="n">tmpl</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_01</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 01"</span>
-<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_02</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 02"</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_01</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 01&quot;</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_02</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 02&quot;</span>
 <span class="o">...</span>
 
 <span class="c1"># second page and content</span>
 <span class="n">tmpl</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_01</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 11"</span>
-<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_02</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 12"</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_01</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 11&quot;</span>
+<span class="n">tmpl</span><span class="p">[</span><span class="n">item_key_02</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 12&quot;</span>
 <span class="o">...</span>
 
 <span class="c1"># possibly more pages</span>
 <span class="o">...</span>
 
 <span class="c1"># finalize document and write to file</span>
-<span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">"example.pdf"</span><span class="p">)</span>
+<span class="n">tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">outfile</span><span class="o">=</span><span class="s2">&quot;example.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>The Template() class will create and manage its own FPDF() instance, so you don't need to worry about how it all works together. It also allows to set the page format, title of the document, measuring unit, and other metadata for the PDF file.</p>
 <p>For the method signatures, see <a href="https://pyfpdf.github.io/fpdf2/fpdf/template.html#fpdf.template.Template">pyfpdf.github.io: class Template</a>.</p>
 <p>Setting text values for specific template items is done by treating the class as a dict, with the name of the item as the key:</p>
-<div class="highlight"><pre><span></span><code><span class="n">Template</span><span class="p">[</span><span class="s2">"company_name"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Sample Company"</span>
+<div class="highlight"><pre><span></span><code><span class="n">Template</span><span class="p">[</span><span class="s2">&quot;company_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Sample Company&quot;</span>
 </code></pre></div>
 <h2 id="using-flextemplate">Using FlexTemplate()</h2>
 <p>When more flexibility is desired, then the FlexTemplate() class comes into play.
@@ -411,8 +829,8 @@ In this case, you first need to create your own FPDF() instance. You can then pa
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="c1"># One template for the first page</span>
 <span class="n">fp_tmpl</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">fp_elements</span><span class="p">)</span>
-<span class="n">fp_tmpl</span><span class="p">[</span><span class="s2">"item_key_01"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 01"</span>
-<span class="n">fp_tmpl</span><span class="p">[</span><span class="s2">"item_key_02"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 02"</span>
+<span class="n">fp_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_01&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 01&quot;</span>
+<span class="n">fp_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_02&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 02&quot;</span>
 <span class="o">...</span>
 <span class="n">fp_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add template items to first page</span>
 
@@ -423,15 +841,15 @@ In this case, you first need to create your own FPDF() instance. You can then pa
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="c1"># header for the second page</span>
 <span class="n">h_tmpl</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">h_elements</span><span class="p">)</span>
-<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">"item_key_HA"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 2A"</span>
-<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">"item_key_HB"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 2B"</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2A&quot;</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HB&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2B&quot;</span>
 <span class="o">...</span>
 <span class="n">h_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add header items to second page</span>
 
 <span class="c1"># footer for the second page</span>
 <span class="n">f_tmpl</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">f_elements</span><span class="p">)</span>
-<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">"item_key_FC"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 2C"</span>
-<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">"item_key_FD"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 2D"</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FC&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2C&quot;</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FD&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 2D&quot;</span>
 <span class="o">...</span>
 <span class="n">f_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add footer items to second page</span>
 
@@ -443,14 +861,14 @@ In this case, you first need to create your own FPDF() instance. You can then pa
 <span class="c1"># third page</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="c1"># header for the third page, just reuse the same template instance after render()</span>
-<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">"item_key_HA"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 3A"</span>
-<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">"item_key_HB"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 3B"</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3A&quot;</span>
+<span class="n">h_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_HB&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3B&quot;</span>
 <span class="o">...</span>
 <span class="n">h_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add header items to third page</span>
 
 <span class="c1"># footer for the third page</span>
-<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">"item_key_FC"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 3C"</span>
-<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">"item_key_FD"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Text 3D"</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FC&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3C&quot;</span>
+<span class="n">f_tmpl</span><span class="p">[</span><span class="s2">&quot;item_key_FD&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Text 3D&quot;</span>
 <span class="o">...</span>
 <span class="n">f_tmpl</span><span class="o">.</span><span class="n">render</span><span class="p">()</span> <span class="c1"># add footer items to third page</span>
 
@@ -463,33 +881,33 @@ In this case, you first need to create your own FPDF() instance. You can then pa
 <span class="o">...</span>
 
 <span class="c1"># finally write everything to a file</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"example.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;example.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Evidently, this can end up quite a bit more involved, but there are hardly any limits on how you can combine templated and non-templated content on each page. Just think of the different templates as of building blocks, like configurable rubber stamps, which you can apply in any combination on any page you like.</p>
 <p>Of course, you can just as well use a set of full-page templates, possibly differentiating between cover page, table of contents, normal content pages, and an index page, or something along those lines. </p>
 <p>And here's how you can use a template several times on one page (and by extension, several times on several pages). When rendering with an <code>offsetx</code> and/or <code>offsety</code> argument, the contents of the template will end up in a different place on the page. A <code>rotate</code> argument will change its orientation, rotated around the origin of the template. The pivot of the rotation is the offset location. And finally, a <code>scale</code> argument allows you to insert the template larger or smaller than it was defined.</p>
 <div class="highlight"><pre><span></span><code><span class="n">elements</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span><span class="s2">"box"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"x1"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"x2"</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">:</span><span class="mi">50</span><span class="p">,},</span>
-    <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span><span class="s2">"d1"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span><span class="s2">"L"</span><span class="p">,</span> <span class="s2">"x1"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"x2"</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">:</span><span class="mi">50</span><span class="p">,},</span>
-    <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span><span class="s2">"d2"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span><span class="s2">"L"</span><span class="p">,</span> <span class="s2">"x1"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">"x2"</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">:</span><span class="mi">0</span><span class="p">,},</span>
-    <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span><span class="s2">"label"</span><span class="p">,</span> <span class="s2">"type"</span><span class="p">:</span><span class="s2">"T"</span><span class="p">,</span> <span class="s2">"x1"</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"y1"</span><span class="p">:</span><span class="mi">52</span><span class="p">,</span> <span class="s2">"x2"</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">"y2"</span><span class="p">:</span><span class="mi">57</span><span class="p">,</span> <span class="s2">"text"</span><span class="p">:</span><span class="s2">"Label"</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;box&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;d1&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;d2&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span><span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="s2">&quot;x1&quot;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;y1&quot;</span><span class="p">:</span><span class="mi">52</span><span class="p">,</span> <span class="s2">&quot;x2&quot;</span><span class="p">:</span><span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;y2&quot;</span><span class="p">:</span><span class="mi">57</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span><span class="s2">&quot;Label&quot;</span><span class="p">,},</span>
 <span class="p">]</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">templ</span> <span class="o">=</span> <span class="n">FlexTemplate</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">elements</span><span class="p">)</span>
-<span class="n">templ</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Offset: 50 / 50 mm"</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 50 / 50 mm&quot;</span>
 <span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
-<span class="n">templ</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Offset: 50 / 120 mm"</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 50 / 120 mm&quot;</span>
 <span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
-<span class="n">templ</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Offset: 120 / 50 mm, Scale: 0.5"</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 120 / 50 mm, Scale: 0.5&quot;</span>
 <span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">templ</span><span class="p">[</span><span class="s2">"label"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Offset: 120 / 120 mm, Rotate: 30°, Scale=0.5"</span>
+<span class="n">templ</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Offset: 120 / 120 mm, Rotate: 30°, Scale=0.5&quot;</span>
 <span class="n">templ</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">offsetx</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">offsety</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">rotate</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">"example.pdf"</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;example.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>For the method signatures, see <a href="https://pyfpdf.github.io/fpdf2/fpdf/template.html#fpdf.template.FlexTemplate">pyfpdf.github.io: class FlexTemplate</a>.</p>
 <p>The dict syntax for setting text values is the same as above:</p>
-<div class="highlight"><pre><span></span><code><span class="n">FlexTemplate</span><span class="p">[</span><span class="s2">"company_name"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Sample Company"</span>
+<div class="highlight"><pre><span></span><code><span class="n">FlexTemplate</span><span class="p">[</span><span class="s2">&quot;company_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Sample Company&quot;</span>
 </code></pre></div>
 <h3 id="details-template-definition">Details - Template definition</h3>
 <p>A template definition consists of a number of elements, which have the following properties (columns in a CSV, items in a dict, fields in a database).
@@ -589,27 +1007,27 @@ Dimensions (except font size, which always uses points) are given in user define
 
 <span class="c1">#this will define the ELEMENTS that will compose the template. </span>
 <span class="n">elements</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'company_logo'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mf">17.0</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mf">78.0</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mf">30.0</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="s1">'logo'</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'company_name'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'T'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mf">17.0</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mf">32.5</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mf">115.0</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mf">37.5</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="s1">'helvetica'</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mf">12.0</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="s1">''</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'multline_text'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'T'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mi">105</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="s1">'helvetica'</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mh">0x88ff00</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="s1">'Lorem ipsum dolor sit amet, consectetur adipisici elit'</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'box'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'B'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mf">185.0</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mf">260.0</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="s1">'helvetica'</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'box_x'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'B'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mf">95.0</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mf">105.0</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mf">25.0</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="s1">'helvetica'</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'line1'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'L'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mf">25.0</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mf">57.0</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="s1">'helvetica'</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
-    <span class="p">{</span> <span class="s1">'name'</span><span class="p">:</span> <span class="s1">'barcode'</span><span class="p">,</span> <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'BC'</span><span class="p">,</span> <span class="s1">'x1'</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s1">'y1'</span><span class="p">:</span> <span class="mf">246.5</span><span class="p">,</span> <span class="s1">'x2'</span><span class="p">:</span> <span class="mf">140.0</span><span class="p">,</span> <span class="s1">'y2'</span><span class="p">:</span> <span class="mf">254.0</span><span class="p">,</span> <span class="s1">'font'</span><span class="p">:</span> <span class="s1">'Interleaved 2of5 NT'</span><span class="p">,</span> <span class="s1">'size'</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">'bold'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'italic'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'underline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'foreground'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'background'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'align'</span><span class="p">:</span> <span class="s1">'I'</span><span class="p">,</span> <span class="s1">'text'</span><span class="p">:</span> <span class="s1">'200000000001000159053338016581200810081'</span><span class="p">,</span> <span class="s1">'priority'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">'multiline'</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;company_logo&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">17.0</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">78.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">30.0</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;logo&#39;</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;company_name&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">17.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">32.5</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">115.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">37.5</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mf">12.0</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;multline_text&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;T&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mi">105</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mh">0x88ff00</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Lorem ipsum dolor sit amet, consectetur adipisici elit&#39;</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;box&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">185.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">260.0</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;box_x&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">95.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">15.0</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">105.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">25.0</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;line1&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">25.0</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">100.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">57.0</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
+    <span class="p">{</span> <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;BC&#39;</span><span class="p">,</span> <span class="s1">&#39;x1&#39;</span><span class="p">:</span> <span class="mf">20.0</span><span class="p">,</span> <span class="s1">&#39;y1&#39;</span><span class="p">:</span> <span class="mf">246.5</span><span class="p">,</span> <span class="s1">&#39;x2&#39;</span><span class="p">:</span> <span class="mf">140.0</span><span class="p">,</span> <span class="s1">&#39;y2&#39;</span><span class="p">:</span> <span class="mf">254.0</span><span class="p">,</span> <span class="s1">&#39;font&#39;</span><span class="p">:</span> <span class="s1">&#39;Interleaved 2of5 NT&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span> <span class="s1">&#39;bold&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;italic&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;underline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;foreground&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;background&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;align&#39;</span><span class="p">:</span> <span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;200000000001000159053338016581200810081&#39;</span><span class="p">,</span> <span class="s1">&#39;priority&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;multiline&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">},</span>
 <span class="p">]</span>
 
 <span class="c1">#here we instantiate the template</span>
-<span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">"A4"</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">,</span>
-             <span class="n">title</span><span class="o">=</span><span class="s2">"Sample Invoice"</span><span class="p">)</span>
+<span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;A4&quot;</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">,</span>
+             <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample Invoice&quot;</span><span class="p">)</span>
 <span class="n">f</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 
 <span class="c1">#we FILL some of the fields of the template with the information we want</span>
-<span class="c1">#note we access the elements treating the template instance as a "dict"</span>
-<span class="n">f</span><span class="p">[</span><span class="s2">"company_name"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Sample Company"</span>
-<span class="n">f</span><span class="p">[</span><span class="s2">"company_logo"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"docs/fpdf2-logo.png"</span>
+<span class="c1">#note we access the elements treating the template instance as a &quot;dict&quot;</span>
+<span class="n">f</span><span class="p">[</span><span class="s2">&quot;company_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Sample Company&quot;</span>
+<span class="n">f</span><span class="p">[</span><span class="s2">&quot;company_logo&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;docs/fpdf2-logo.png&quot;</span>
 
 <span class="c1">#and now we render the page</span>
-<span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s2">"./template.pdf"</span><span class="p">)</span>
+<span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s2">&quot;./template.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>See template.py or [Web2Py] (Web2Py.md) for a complete example.</p>
 <h3 id="example-elements-defined-in-csv-file">Example - Elements defined in CSV file</h3>
@@ -629,64 +1047,83 @@ rotated;T;21.0;80.0;100.0;84.0;times;10.5;0;0;0;0;;R;ROTATED;0;0;30.0
 As noted above, most fields may be left empty, so a line is valid with only 6 items. The "empty_fields" line of the example demonstrates all that can be left away. In addition, for the barcode types "x2" may be empty.</p>
 <p>Then you can use the file like this:</p>
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">test_template</span><span class="p">():</span>
-    <span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">"A4"</span><span class="p">,</span>
-                 <span class="n">title</span><span class="o">=</span><span class="s2">"Sample Invoice"</span><span class="p">)</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">parse_csv</span><span class="p">(</span><span class="s2">"mycsvfile.csv"</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">";"</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;A4&quot;</span><span class="p">,</span>
+                 <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Sample Invoice&quot;</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">parse_csv</span><span class="p">(</span><span class="s2">&quot;mycsvfile.csv&quot;</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;;&quot;</span><span class="p">)</span>
     <span class="n">f</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-    <span class="n">f</span><span class="p">[</span><span class="s2">"name0"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"Joe Doe"</span>
-    <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s2">"./template.pdf"</span><span class="p">)</span>
+    <span class="n">f</span><span class="p">[</span><span class="s2">&quot;name0&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Joe Doe&quot;</span>
+    <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s2">&quot;./template.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-</article>
-</div>
-</div>
-</main>
-<footer class="md-footer">
-<nav aria-label="Footer" class="md-footer__inner md-grid">
-<a aria-label="Previous: Logging" class="md-footer__link md-footer__link--prev" href="Logging.html" rel="prev">
-<div class="md-footer__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
-</div>
-<div class="md-footer__title">
-<div class="md-ellipsis">
-<span class="md-footer__direction">
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
+        
+        <a href="Logging.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Logging" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
                 Previous
               </span>
               Logging
             </div>
-</div>
-</a>
-<a aria-label="Next: Unicode" class="md-footer__link md-footer__link--next" href="Unicode.html" rel="next">
-<div class="md-footer__title">
-<div class="md-ellipsis">
-<span class="md-footer__direction">
+          </div>
+        </a>
+      
+      
+        
+        <a href="Unicode.html" class="md-footer__link md-footer__link--next" aria-label="Next: Unicode" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
                 Next
               </span>
               Unicode
             </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
 </div>
-<div class="md-footer__button md-icon">
-<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
-</div>
-</a>
-</nav>
-<div class="md-footer-meta md-typeset">
-<div class="md-footer-meta__inner md-grid">
-<div class="md-footer-copyright">
-        
-        
-          Made with
-          <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
-            Material for MkDocs
-          </a>
- ... <a class="link--pdf-download" download href="./fpdf2-manual.pdf" title="PDF">download PDF</a></div>
-</div>
-</div>
+      
+    </div>
+  </div>
 </footer>
-</div>
-<div class="md-dialog" data-md-component="dialog">
-<div class="md-dialog__inner md-typeset"></div>
-</div>
-<script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.fcfe8b6d.min.js", "version": null}</script>
-<script src="assets/javascripts/bundle.b1047164.min.js"></script>
-</body>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.cefbb252.min.js"}</script>
+    
+    
+      <script src="assets/javascripts/bundle.a5f8ea78.min.js"></script>
+      
+    
+  </body>
 </html>
