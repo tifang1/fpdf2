@@ -2236,9 +2236,14 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         page_break_triggered = False
         if split_only:
-            _out, _add_page = self._out, self.add_page
+            _out, _add_page, _perform_page_break_if_need_be = (
+                self._out,
+                self.add_page,
+                self._perform_page_break_if_need_be,
+            )
             self._out = lambda *args, **kwargs: None
             self.add_page = lambda *args, **kwargs: None
+            self._perform_page_break_if_need_be = lambda *args, **kwargs: None
 
         # Store this information for manipulating position.
         location = (self.get_x(), self.get_y())
@@ -2433,7 +2438,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         if split_only:
             # restore writing functions
-            self._out, self.add_page = _out, _add_page
+            self._out, self.add_page, self._perform_page_break_if_need_be = (
+                _out,
+                _add_page,
+                _perform_page_break_if_need_be,
+            )
             self.set_xy(*location)  # restore location
             return text_cells
         if markdown:
@@ -5883,9 +5892,14 @@ def multi_cell(
     &#34;&#34;&#34;
     page_break_triggered = False
     if split_only:
-        _out, _add_page = self._out, self.add_page
+        _out, _add_page, _perform_page_break_if_need_be = (
+            self._out,
+            self.add_page,
+            self._perform_page_break_if_need_be,
+        )
         self._out = lambda *args, **kwargs: None
         self.add_page = lambda *args, **kwargs: None
+        self._perform_page_break_if_need_be = lambda *args, **kwargs: None
 
     # Store this information for manipulating position.
     location = (self.get_x(), self.get_y())
@@ -6080,7 +6094,11 @@ def multi_cell(
 
     if split_only:
         # restore writing functions
-        self._out, self.add_page = _out, _add_page
+        self._out, self.add_page, self._perform_page_break_if_need_be = (
+            _out,
+            _add_page,
+            _perform_page_break_if_need_be,
+        )
         self.set_xy(*location)  # restore location
         return text_cells
     if markdown:
