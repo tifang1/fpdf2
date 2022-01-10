@@ -38,6 +38,7 @@ from .fpdf import (
 )
 from .html import HTMLMixin, HTML2FPDF
 from .template import Template, FlexTemplate
+from . import svg
 from .deprecation import WarnOnDeprecatedModuleAttributes
 
 FPDF_VERSION = _FPDF_VERSION
@@ -88,6 +89,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="fpdf.drawing" href="drawing.html">fpdf.drawing</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="fpdf.errors" href="errors.html">fpdf.errors</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -130,6 +135,10 @@ __all__ = [
 <p>PDF’s logical <em>structure facilities</em> provide a mechanism for incorporating
 structural information about a document’s content …</p>
 </blockquote></div>
+</dd>
+<dt><code class="name"><a title="fpdf.svg" href="svg.html">fpdf.svg</a></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="fpdf.syntax" href="syntax.html">fpdf.syntax</a></code></dt>
 <dd>
@@ -315,7 +324,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.draw_color = &#34;0 G&#34;
         self.fill_color = &#34;0 g&#34;
         self.text_color = &#34;0 g&#34;
-        self.dash_pattern = &#34;[] 0 d&#34;
+        self.dash_pattern = dict(dash=0, gap=0, phase=0)
         self.line_width = 0.567 / self.k  # line width (0.2 mm)
         # end of grapics state variables
 
@@ -334,6 +343,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self.set_display_mode(&#34;fullwidth&#34;)  # Full width display mode
         self.compress = True  # Enable compression by default
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
+        self._current_draw_context = None
+
+        self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
+        self._graphics_state_obj_refs = OrderedDict()
 
     @property
     def unifontsubset(self):
@@ -872,6 +885,99 @@ The default is <code>True</code>, meaning the current folder.</dd>
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
 
+    @contextmanager
+    @check_page
+    def drawing_context(self, debug_stream=None):
+        &#34;&#34;&#34;
+        Create a context for drawing paths on the current page.
+
+        If this context manager is called again inside of an active context, it will
+        raise an exception, as base drawing contexts cannot be nested.
+
+        Args:
+            debug_stream (TextIO): print a pretty tree of all items to be rendered
+                to the provided stream. To store the output in a string, use
+                `io.StringIO`.
+        &#34;&#34;&#34;
+
+        if self._current_draw_context is not None:
+            raise FPDFException(
+                &#34;cannot create a drawing context while one is already open&#34;
+            )
+
+        context = drawing.DrawingContext()
+        self._current_draw_context = context
+        try:
+            yield context
+        finally:
+            self._current_draw_context = None
+
+        starting_style = drawing.GraphicsStyle()
+        starting_style.allow_transparency = self.allow_images_transparency
+        starting_style.stroke_width = self.line_width
+
+        dash_info = self.dash_pattern
+        dash_pattern = (dash_info[&#34;dash&#34;], dash_info[&#34;gap&#34;])
+        if (dash_pattern[0] == 0) or (dash_pattern[1] == 0):
+            dash_pattern = None
+
+        starting_style.stroke_dash_pattern = dash_pattern
+        starting_style.stroke_dash_phase = dash_info[&#34;phase&#34;]
+
+        render_args = (
+            self._drawing_graphics_state_registry,
+            drawing.Point(self.x, self.y),
+            self.k,
+            self.h,
+            starting_style,
+        )
+
+        if debug_stream:
+            rendered = context.render_debug(*render_args, debug_stream)
+        else:
+            rendered = context.render(*render_args)
+
+        self._out(rendered)
+
+        self.pdf_version = max(self.pdf_version, &#34;1.4&#34;)
+
+    @contextmanager
+    def new_path(
+        self, x=0, y=0, paint_rule=drawing.PathPaintRule.AUTO, debug_stream=None
+    ):
+        &#34;&#34;&#34;
+        Create a path for appending lines and curves to.
+
+        Args:
+            x (float): Abscissa of the path starting point
+            y (float): Ordinate of the path starting point
+            paint_rule (drawing.PathPaintRule): Optional choice of how the path should
+                be painted. The default (AUTO) automatically selects stroke/fill based
+                on the path style settings.
+            debug_stream (TextIO): print a pretty tree of all items to be rendered
+                to the provided stream. To store the output in a string, use
+                `io.StringIO`.
+
+        &#34;&#34;&#34;
+        with self.drawing_context(debug_stream=debug_stream) as ctxt:
+            path = drawing.PaintedPath(x=x, y=y)
+            path.style.paint_rule = paint_rule
+            yield path
+            ctxt.add_item(path)
+
+    def draw_path(self, path, debug_stream=None):
+        &#34;&#34;&#34;
+        Add a pre-constructed path to the document.
+
+        Args:
+            path (drawing.PaintedPath): the path to be drawn.
+            debug_stream (TextIO): print a pretty tree of all items to be rendered
+                to the provided stream. To store the output in a string, use
+                `io.StringIO`.
+        &#34;&#34;&#34;
+        with self.drawing_context(debug_stream=debug_stream) as ctxt:
+            ctxt.add_item(path)
+
     def set_dash_pattern(self, dash=0, gap=0, phase=0):
         &#34;&#34;&#34;
         Set the current dash pattern for lines and curves.
@@ -895,15 +1001,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
             raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
         if not (isinstance(phase, (int, float)) and phase &gt;= 0):
             raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
-        if dash:
-            if gap:
-                dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+
+        pattern = dict(dash=dash, gap=gap, phase=phase)
+
+        if pattern != self.dash_pattern:
+            self.dash_pattern = pattern
+
+            if dash:
+                if gap:
+                    dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+                else:
+                    dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
             else:
-                dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
-        else:
-            dstr = &#34;[] 0 d&#34;
-        if dstr != self.dash_pattern:
-            self.dash_pattern = dstr
+                dstr = &#34;[] 0 d&#34;
+
             self._out(dstr)
 
     @check_page
@@ -3411,6 +3522,17 @@ The default is <code>True</code>, meaning the current folder.</dd>
         for idx, n in img_ids:
             self._out(f&#34;/I{idx} {pdf_ref(n)}&#34;)
 
+    def _put_graphics_state_dicts(self):
+        for state_dict, name in self._drawing_graphics_state_registry.items():
+            self._newobj()
+            self._graphics_state_obj_refs[name] = self.n
+            self._out(state_dict)
+            self._out(&#34;endobj&#34;)
+
+    def _put_graphics_state_refs(self):
+        for name, obj_id in self._graphics_state_obj_refs.items():
+            self._out(f&#34;{drawing.render_pdf_primitive(name)} {pdf_ref(obj_id)}&#34;)
+
     def _putresourcedict(self):
         # From section 10.1, &#34;Procedure Sets&#34;, of PDF 1.7 spec:
         # &gt; Beginning with PDF 1.4, this feature is considered obsolete.
@@ -3428,11 +3550,18 @@ The default is <code>True</code>, meaning the current folder.</dd>
         self._putxobjectdict()
         self._out(&#34;&gt;&gt;&#34;)
 
+        if self._drawing_graphics_state_registry:
+            self._out(&#34;/ExtGState &lt;&lt;&#34;)
+            self._put_graphics_state_refs()
+            self._out(&#34;&gt;&gt;&#34;)
+
     def _putresources(self):
         with self._trace_size(&#34;resources.fonts&#34;):
             self._putfonts()
         with self._trace_size(&#34;resources.images&#34;):
             self._putimages()
+        with self._trace_size(&#34;resources.gfxstate&#34;):
+            self._put_graphics_state_dicts()
 
         # Resource dictionary
         with self._trace_size(&#34;resources.dict&#34;):
@@ -5130,6 +5259,113 @@ def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
     self.set_dash_pattern()</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.draw_path"><code class="name flex">
+<span>def <span class="ident">draw_path</span></span>(<span>self, path, debug_stream=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Add a pre-constructed path to the document.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>path</code></strong> :&ensp;<code><a title="fpdf.drawing.PaintedPath" href="drawing.html#fpdf.drawing.PaintedPath">PaintedPath</a></code></dt>
+<dd>the path to be drawn.</dd>
+<dt><strong><code>debug_stream</code></strong> :&ensp;<code>TextIO</code></dt>
+<dd>print a pretty tree of all items to be rendered
+to the provided stream. To store the output in a string, use
+<code>io.StringIO</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def draw_path(self, path, debug_stream=None):
+    &#34;&#34;&#34;
+    Add a pre-constructed path to the document.
+
+    Args:
+        path (drawing.PaintedPath): the path to be drawn.
+        debug_stream (TextIO): print a pretty tree of all items to be rendered
+            to the provided stream. To store the output in a string, use
+            `io.StringIO`.
+    &#34;&#34;&#34;
+    with self.drawing_context(debug_stream=debug_stream) as ctxt:
+        ctxt.add_item(path)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.drawing_context"><code class="name flex">
+<span>def <span class="ident">drawing_context</span></span>(<span>self, debug_stream=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a context for drawing paths on the current page.</p>
+<p>If this context manager is called again inside of an active context, it will
+raise an exception, as base drawing contexts cannot be nested.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>debug_stream</code></strong> :&ensp;<code>TextIO</code></dt>
+<dd>print a pretty tree of all items to be rendered
+to the provided stream. To store the output in a string, use
+<code>io.StringIO</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+@check_page
+def drawing_context(self, debug_stream=None):
+    &#34;&#34;&#34;
+    Create a context for drawing paths on the current page.
+
+    If this context manager is called again inside of an active context, it will
+    raise an exception, as base drawing contexts cannot be nested.
+
+    Args:
+        debug_stream (TextIO): print a pretty tree of all items to be rendered
+            to the provided stream. To store the output in a string, use
+            `io.StringIO`.
+    &#34;&#34;&#34;
+
+    if self._current_draw_context is not None:
+        raise FPDFException(
+            &#34;cannot create a drawing context while one is already open&#34;
+        )
+
+    context = drawing.DrawingContext()
+    self._current_draw_context = context
+    try:
+        yield context
+    finally:
+        self._current_draw_context = None
+
+    starting_style = drawing.GraphicsStyle()
+    starting_style.allow_transparency = self.allow_images_transparency
+    starting_style.stroke_width = self.line_width
+
+    dash_info = self.dash_pattern
+    dash_pattern = (dash_info[&#34;dash&#34;], dash_info[&#34;gap&#34;])
+    if (dash_pattern[0] == 0) or (dash_pattern[1] == 0):
+        dash_pattern = None
+
+    starting_style.stroke_dash_pattern = dash_pattern
+    starting_style.stroke_dash_phase = dash_info[&#34;phase&#34;]
+
+    render_args = (
+        self._drawing_graphics_state_registry,
+        drawing.Point(self.x, self.y),
+        self.k,
+        self.h,
+        starting_style,
+    )
+
+    if debug_stream:
+        rendered = context.render_debug(*render_args, debug_stream)
+    else:
+        rendered = context.render(*render_args)
+
+    self._out(rendered)
+
+    self.pdf_version = max(self.pdf_version, &#34;1.4&#34;)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.ellipse"><code class="name flex">
 <span>def <span class="ident">ellipse</span></span>(<span>self, x, y, w, h, style=None)</span>
 </code></dt>
@@ -6112,6 +6348,55 @@ def multi_cell(
     return page_break_triggered</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.new_path"><code class="name flex">
+<span>def <span class="ident">new_path</span></span>(<span>self, x=0, y=0, paint_rule=PathPaintRule.AUTO, debug_stream=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Create a path for appending lines and curves to.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dd>Abscissa of the path starting point</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
+<dd>Ordinate of the path starting point</dd>
+<dt><strong><code>paint_rule</code></strong> :&ensp;<code><a title="fpdf.drawing.PathPaintRule" href="drawing.html#fpdf.drawing.PathPaintRule">PathPaintRule</a></code></dt>
+<dd>Optional choice of how the path should
+be painted. The default (AUTO) automatically selects stroke/fill based
+on the path style settings.</dd>
+<dt><strong><code>debug_stream</code></strong> :&ensp;<code>TextIO</code></dt>
+<dd>print a pretty tree of all items to be rendered
+to the provided stream. To store the output in a string, use
+<code>io.StringIO</code>.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def new_path(
+    self, x=0, y=0, paint_rule=drawing.PathPaintRule.AUTO, debug_stream=None
+):
+    &#34;&#34;&#34;
+    Create a path for appending lines and curves to.
+
+    Args:
+        x (float): Abscissa of the path starting point
+        y (float): Ordinate of the path starting point
+        paint_rule (drawing.PathPaintRule): Optional choice of how the path should
+            be painted. The default (AUTO) automatically selects stroke/fill based
+            on the path style settings.
+        debug_stream (TextIO): print a pretty tree of all items to be rendered
+            to the provided stream. To store the output in a string, use
+            `io.StringIO`.
+
+    &#34;&#34;&#34;
+    with self.drawing_context(debug_stream=debug_stream) as ctxt:
+        path = drawing.PaintedPath(x=x, y=y)
+        path.style.paint_rule = paint_rule
+        yield path
+        ctxt.add_item(path)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.normalize_text"><code class="name flex">
 <span>def <span class="ident">normalize_text</span></span>(<span>self, txt)</span>
 </code></dt>
@@ -6717,15 +7002,20 @@ Omitting 'dash' (= 0) resets the pattern to a solid line.</p></div>
         raise ValueError(&#34;gap length must be zero or a positive number.&#34;)
     if not (isinstance(phase, (int, float)) and phase &gt;= 0):
         raise ValueError(&#34;Phase must be zero or a positive number.&#34;)
-    if dash:
-        if gap:
-            dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+
+    pattern = dict(dash=dash, gap=gap, phase=phase)
+
+    if pattern != self.dash_pattern:
+        self.dash_pattern = pattern
+
+        if dash:
+            if gap:
+                dstr = f&#34;[{dash * self.k:.3f} {gap * self.k:.3f}] {phase *self.k:.3f} d&#34;
+            else:
+                dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
         else:
-            dstr = f&#34;[{dash * self.k:.3f}] {phase *self.k:.3f} d&#34;
-    else:
-        dstr = &#34;[] 0 d&#34;
-    if dstr != self.dash_pattern:
-        self.dash_pattern = dstr
+            dstr = &#34;[] 0 d&#34;
+
         self._out(dstr)</code></pre>
 </details>
 </dd>
@@ -10322,6 +10612,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <ul>
 <li><code><a title="fpdf.actions" href="actions.html">fpdf.actions</a></code></li>
 <li><code><a title="fpdf.deprecation" href="deprecation.html">fpdf.deprecation</a></code></li>
+<li><code><a title="fpdf.drawing" href="drawing.html">fpdf.drawing</a></code></li>
 <li><code><a title="fpdf.errors" href="errors.html">fpdf.errors</a></code></li>
 <li><code><a title="fpdf.fonts" href="fonts.html">fpdf.fonts</a></code></li>
 <li><code><a title="fpdf.fpdf" href="fpdf.html">fpdf.fpdf</a></code></li>
@@ -10331,6 +10622,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></li>
 <li><code><a title="fpdf.recorder" href="recorder.html">fpdf.recorder</a></code></li>
 <li><code><a title="fpdf.structure_tree" href="structure_tree.html">fpdf.structure_tree</a></code></li>
+<li><code><a title="fpdf.svg" href="svg.html">fpdf.svg</a></code></li>
 <li><code><a title="fpdf.syntax" href="syntax.html">fpdf.syntax</a></code></li>
 <li><code><a title="fpdf.template" href="template.html">fpdf.template</a></code></li>
 <li><code><a title="fpdf.transitions" href="transitions.html">fpdf.transitions</a></code></li>
@@ -10364,6 +10656,8 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.FPDF.close" href="#fpdf.FPDF.close">close</a></code></li>
 <li><code><a title="fpdf.FPDF.code39" href="#fpdf.FPDF.code39">code39</a></code></li>
 <li><code><a title="fpdf.FPDF.dashed_line" href="#fpdf.FPDF.dashed_line">dashed_line</a></code></li>
+<li><code><a title="fpdf.FPDF.draw_path" href="#fpdf.FPDF.draw_path">draw_path</a></code></li>
+<li><code><a title="fpdf.FPDF.drawing_context" href="#fpdf.FPDF.drawing_context">drawing_context</a></code></li>
 <li><code><a title="fpdf.FPDF.ellipse" href="#fpdf.FPDF.ellipse">ellipse</a></code></li>
 <li><code><a title="fpdf.FPDF.eph" href="#fpdf.FPDF.eph">eph</a></code></li>
 <li><code><a title="fpdf.FPDF.epw" href="#fpdf.FPDF.epw">epw</a></code></li>
@@ -10380,6 +10674,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.FPDF.ln" href="#fpdf.FPDF.ln">ln</a></code></li>
 <li><code><a title="fpdf.FPDF.local_context" href="#fpdf.FPDF.local_context">local_context</a></code></li>
 <li><code><a title="fpdf.FPDF.multi_cell" href="#fpdf.FPDF.multi_cell">multi_cell</a></code></li>
+<li><code><a title="fpdf.FPDF.new_path" href="#fpdf.FPDF.new_path">new_path</a></code></li>
 <li><code><a title="fpdf.FPDF.normalize_text" href="#fpdf.FPDF.normalize_text">normalize_text</a></code></li>
 <li><code><a title="fpdf.FPDF.open" href="#fpdf.FPDF.open">open</a></code></li>
 <li><code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">output</a></code></li>

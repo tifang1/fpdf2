@@ -10,14 +10,14 @@
       
       
       
-        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/DocumentOutlineAndTableOfContents.html">
+        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/SVG.html">
       
       <link rel="icon" href="assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.1.5">
     
     
       
-        <title>Document outline & table of contents - fpdf2</title>
+        <title>SVG - fpdf2</title>
       
     
     
@@ -49,9 +49,9 @@
     
   
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="fpdf2 - Document outline & table of contents" />
+  <meta property="og:title" content="fpdf2 - SVG" />
   <meta property="og:description" content="fpdf2 - minimalist PDF creation library for Python" />
-  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/DocumentOutlineAndTableOfContents.html" />
+  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/SVG.html" />
   <meta property="og:image" content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="500" />
@@ -75,7 +75,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#document-outline-table-of-contents" class="md-skip">
+        <a href="#scalable-vector-graphics-svg" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Document outline & table of contents
+              SVG
             
           </span>
         </div>
@@ -397,59 +397,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Document outline & table of contents
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="DocumentOutlineAndTableOfContents.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="DocumentOutlineAndTableOfContents.html" class="md-nav__link">
         Document outline & table of contents
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#with-html" class="md-nav__link">
-    With HTML
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#code-samples" class="md-nav__link">
-    Code samples
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -550,11 +502,66 @@
 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="SVG.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          SVG
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="SVG.html" class="md-nav__link md-nav__link--active">
         SVG
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#a-simple-example" class="md-nav__link">
+    A simple example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-svg-features" class="md-nav__link">
+    Supported SVG Features
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#currently-unsupported-notable-svg-features" class="md-nav__link">
+    Currently Unsupported Notable SVG Features
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -721,15 +728,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#with-html" class="md-nav__link">
-    With HTML
+  <a href="#a-simple-example" class="md-nav__link">
+    A simple example
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#code-samples" class="md-nav__link">
-    Code samples
+  <a href="#supported-svg-features" class="md-nav__link">
+    Supported SVG Features
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#currently-unsupported-notable-svg-features" class="md-nav__link">
+    Currently Unsupported Notable SVG Features
   </a>
   
 </li>
@@ -746,68 +760,92 @@
             <article class="md-content__inner md-typeset">
               
                 
-<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/DocumentOutlineAndTableOfContents.md" title="Edit this page" class="md-content__button md-icon">
+<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/SVG.md" title="Edit this page" class="md-content__button md-icon">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
 </a>
 
 
-<h1 id="document-outline-table-of-contents">Document outline &amp; table of contents</h1>
-<p>Quoting <a href="https://en.wikipedia.org/wiki/Table_of_contents">Wikipedia</a>, a <strong>table of contents</strong> is:</p>
-<blockquote>
-<p>a list, usually found on a page before the start of a written work, of its chapter or section titles or brief descriptions with their commencing page numbers.</p>
-</blockquote>
-<p>Now quoting the 6th edition of the PDF format reference (v1.7 - 2006) :</p>
-<blockquote>
-<p>A PDF document may optionally display a <strong>document outline</strong> on the screen, allowing the user to navigate interactively
-from one part of the document to another. The outline consists of a tree-structured hierarchy of outline items
-(sometimes called bookmarks), which serve as a visual table of contents to display the document’s structure to the user.</p>
-</blockquote>
-<p>For example, there is how a document outline looks like in <a href="https://www.sumatrapdfreader.org/free-pdf-reader.html">Sumatra PDF Reader</a>:</p>
-<p><img alt="" src="document-outline.png" /></p>
-<p>Since <code>fpdf2.3.3</code>, both features are supported through the use of the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.start_section"><code>start_section</code></a> method,
-that adds an entry in the internal "outline" table used to render both features.</p>
-<p>Note that by default, calling <code>start_section</code> only records the current position in the PDF and renders nothing.
-However, you can configure <strong>global title styles</strong> by calling <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_section_title_styles"><code>set_section_title_styles</code></a>,
-after which call to <code>start_section</code> will render titles visually using the styles defined.</p>
-<p>To provide a document outline to the PDF you generate, you just have to call the <code>start_section</code> method
-for every hierarchical section you want to define.</p>
-<p>If you also want to insert a table of contents somewhere,
-call <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.insert_toc_placeholder"><code>insert_toc_placeholder</code></a>
-wherever you want to put it.
-Note that a page break will always be triggered after inserting the table of contents.</p>
-<h2 id="with-html">With HTML</h2>
-<p>When using <a href="HTML.html"><code>fpdf.HTMLMixin</code></a>, a document outline is automatically built.
-You can insert a table of content with the special <code>&lt;toc&gt;</code> tag.</p>
-<p>Custom styling of the table of contents can be achieved by overriding the <code>render_toc</code> method
-in a subclass of <code>fpdf.html.HTML2FPDF</code>:
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span><span class="p">,</span> <span class="n">HTMLMixin</span><span class="p">,</span> <span class="n">HTML2FPDF</span>
+<h1 id="scalable-vector-graphics-svg">Scalable Vector Graphics (SVG)</h1>
+<p><code>fpdf2</code> supports basic conversion of SVG paths into PDF paths, which can be
+inserted into an existing PDF document or used as the contents of a new PDF
+document.</p>
+<p>Not all SVGs will convert correctly. Please see
+<a href="#currently-unsupported-notable-svg-features">the list of unsupported features</a>
+for more information about what to look out for.</p>
+<h2 id="a-simple-example">A simple example</h2>
+<p>The following script will create a PDF that consists only of the graphics
+contents of the provided SVG file:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">fpdf</span>
 
-<span class="k">class</span> <span class="nc">CustomHTML2FPDF</span><span class="p">(</span><span class="n">HTML2FPDF</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">render_toc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">outline</span><span class="p">):</span>
-        <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s1">&#39;Table of contents:&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">outline</span><span class="p">:</span>
-            <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;* </span><span class="si">{</span><span class="n">section</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1"> (page </span><span class="si">{</span><span class="n">section</span><span class="o">.</span><span class="n">page_number</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">svg</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">svg</span><span class="o">.</span><span class="n">SVGObject</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;my_file.svg&quot;</span><span class="p">)</span>
 
-<span class="k">class</span> <span class="nc">PDF</span><span class="p">(</span><span class="n">FPDF</span><span class="p">,</span> <span class="n">HTMLMixin</span><span class="p">):</span>
-    <span class="n">HTML2FPDF_CLASS</span> <span class="o">=</span> <span class="n">CustomHTML2FPDF</span>
-
-<span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s2">&quot;pt&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="p">(</span><span class="n">svg</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">svg</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">write_html</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;&lt;toc&gt;&lt;/toc&gt;</span>
-<span class="s2">    &lt;h1&gt;Level 1&lt;/h1&gt;</span>
-<span class="s2">    &lt;h2&gt;Level 2&lt;/h2&gt;</span>
-<span class="s2">    &lt;h3&gt;Level 3&lt;/h3&gt;</span>
-<span class="s2">    &lt;h4&gt;Level 4&lt;/h4&gt;</span>
-<span class="s2">    &lt;h5&gt;Level 5&lt;/h5&gt;</span>
-<span class="s2">    &lt;h6&gt;Level 6&lt;/h6&gt;</span>
-<span class="s2">    &lt;p&gt;paragraph&lt;p&gt;&quot;&quot;&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;html_toc.pdf&quot;</span><span class="p">)</span>
-</code></pre></div></p>
-<h2 id="code-samples">Code samples</h2>
-<p>The regression tests are a good place to find code samples.</p>
-<p>For example, the <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_outline.py"><code>test_simple_outline</code></a> test function generates the PDF document <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_simple_outline.pdf">test_simple_outline.pdf</a>.</p>
-<p>Similarly, <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/outline/test_outline_html.py"><code>test_html_toc</code></a>
-generates <a href="https://github.com/PyFPDF/fpdf2/blob/5453422bf560a909229c82e53eb516e44fea1817/test/outline/test_html_toc.pdf">test_html_toc.pdf</a>.</p>
+<span class="n">svg</span><span class="o">.</span><span class="n">draw_to_page</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;my_file.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Because this takes the PDF document size from the source SVG, it does assume
+that the width/height of the SVG are specified in absolute units rather than
+relative ones (i.e. the top-level <code>&lt;svg&gt;</code> tag has something like <code>width="5cm"</code>
+and not <code>width=50%</code>). In this case, if the values are percentages, they will be
+interpreted as their literal numeric value (i.e. <code>100%</code> would be treated as
+<code>100 pt</code>). The next example uses <code>transform_to_page_viewport</code>, which will scale
+an SVG with a percentage based <code>width</code> to the pre-defined PDF page size.</p>
+<p>The converted SVG object can be returned as an fpdf.drawing.GraphicsContext
+collection of drawing directives for more control over how it is rendered:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">fpdf</span>
+
+<span class="n">svg</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">svg</span><span class="o">.</span><span class="n">SVGObject</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;my_file.svg&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">(</span><span class="n">unit</span><span class="o">=</span><span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="p">(</span><span class="mf">8.5</span><span class="p">,</span> <span class="mi">11</span><span class="p">))</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+
+<span class="c1"># We pass align_viewbox=False because we want to perform positioning manually</span>
+<span class="c1"># after the size transform has been computed.</span>
+<span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">paths</span> <span class="o">=</span> <span class="n">svg</span><span class="o">.</span><span class="n">transform_to_page_viewport</span><span class="p">(</span><span class="n">pdf</span><span class="p">,</span> <span class="n">align_viewbox</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># note: transformation order is important! This centers the svg drawing at the</span>
+<span class="c1"># origin, rotates it 90 degrees clockwise, and then repositions it to the</span>
+<span class="c1"># middle of the output page.</span>
+<span class="n">paths</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">paths</span><span class="o">.</span><span class="n">transform</span> <span class="o">@</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">drawing</span><span class="o">.</span><span class="n">Transform</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span>
+    <span class="o">-</span><span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">height</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="p">)</span><span class="o">.</span><span class="n">rotate_d</span><span class="p">(</span><span class="mi">90</span><span class="p">)</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">pdf</span><span class="o">.</span><span class="n">w</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">pdf</span><span class="o">.</span><span class="n">h</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">draw_path</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;my_file.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="supported-svg-features">Supported SVG Features</h2>
+<ul>
+<li>groups</li>
+<li>paths</li>
+<li>basic shapes (rect, circle, ellipse, line, polyline, polygon)</li>
+<li>basic cross-references</li>
+<li>stroke &amp; fill coloring and opacity</li>
+<li>basic stroke styling</li>
+</ul>
+<h2 id="currently-unsupported-notable-svg-features">Currently Unsupported Notable SVG Features</h2>
+<p>Everything not listed as supported is unsupported, which is a lot. SVG is a
+ridiculously complex format that has become increasingly complex as it absorbs
+more of the entire browser rendering stack into its specification. However,
+there are some pretty commonly used features that are unsupported that may
+cause unexpected results (up to and including a normal-looking SVG rendering as
+a completely blank PDF). It is very likely that off-the-shelf SVGs will not be
+converted fully correctly without some preprocessing.</p>
+<p>The biggest unsupported feature is probably:</p>
+<ul>
+<li>CSS styling of SVG elements</li>
+</ul>
+<p>In addition to that:</p>
+<ul>
+<li>text/tspan/textPath</li>
+<li>symbols</li>
+<li>markers</li>
+<li>patterns</li>
+<li>gradients</li>
+<li>embedded images or other content (including nested SVGs)</li>
+<li>a lot of attributes</li>
+</ul>
 
               
             </article>
@@ -821,7 +859,7 @@ generates <a href="https://github.com/PyFPDF/fpdf2/blob/5453422bf560a909229c82e5
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="PageBreaks.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Page breaks" rel="prev">
+        <a href="Drawing.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Drawing" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -830,20 +868,20 @@ generates <a href="https://github.com/PyFPDF/fpdf2/blob/5453422bf560a909229c82e5
               <span class="md-footer__direction">
                 Previous
               </span>
-              Page breaks
+              Drawing
             </div>
           </div>
         </a>
       
       
         
-        <a href="TextStyling.html" class="md-footer__link md-footer__link--next" aria-label="Next: Text styling" rel="next">
+        <a href="Barcodes.html" class="md-footer__link md-footer__link--next" aria-label="Next: Barcodes" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Text styling
+              Barcodes
             </div>
           </div>
           <div class="md-footer__button md-icon">
