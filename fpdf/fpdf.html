@@ -1616,7 +1616,7 @@ class FPDF(GraphicsStateMixin):
 
         Standard fonts use `Latin-1` encoding by default, but Windows
         encoding `cp1252` (Western Europe) can be used with
-        [set_doc_option](set_doc_option.md) (&#34;core_fonts_encoding&#34;, encoding).
+        `self.core_fonts_encoding = encoding`.
 
         The font specified is retained from page to page.
         The method can be called before the first page is created.
@@ -5617,7 +5617,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
         Standard fonts use `Latin-1` encoding by default, but Windows
         encoding `cp1252` (Western Europe) can be used with
-        [set_doc_option](set_doc_option.md) (&#34;core_fonts_encoding&#34;, encoding).
+        `self.core_fonts_encoding = encoding`.
 
         The font specified is retained from page to page.
         The method can be called before the first page is created.
@@ -11243,7 +11243,7 @@ It is mandatory to call this method at least once before printing text.</p>
 unicode for external fonts and one byte encoding for standard.</p>
 <p>Standard fonts use <code>Latin-1</code> encoding by default, but Windows
 encoding <code>cp1252</code> (Western Europe) can be used with
-<a href="set_doc_option.md">set_doc_option</a> ("core_fonts_encoding", encoding).</p>
+<code>self.core_fonts_encoding = encoding</code>.</p>
 <p>The font specified is retained from page to page.
 The method can be called before the first page is created.</p>
 <h2 id="args">Args</h2>
@@ -11275,7 +11275,7 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
 
     Standard fonts use `Latin-1` encoding by default, but Windows
     encoding `cp1252` (Western Europe) can be used with
-    [set_doc_option](set_doc_option.md) (&#34;core_fonts_encoding&#34;, encoding).
+    `self.core_fonts_encoding = encoding`.
 
     The font specified is retained from page to page.
     The method can be called before the first page is created.
