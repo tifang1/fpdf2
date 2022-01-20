@@ -1858,7 +1858,7 @@ class FPDF(GraphicsStateMixin):
                 # Instead of adding the actual character to the stream its code is
                 # mapped to a position in the font&#39;s subset
                 txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
-            txt2 = escape_parens(txt_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+            txt2 = escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
         else:
             txt2 = escape_parens(txt)
         s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
@@ -2114,7 +2114,7 @@ class FPDF(GraphicsStateMixin):
             # If multibyte, Tw has no effect - do word spacing using an
             # adjustment before each space
             if self.ws and self.unifontsubset:
-                space = escape_parens(&#34; &#34;.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                space = escape_parens(&#34; &#34;.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
                 s += &#34; 0 Tw&#34;
                 for txt_frag, style, underline in styled_txt_frags:
                     if self.font_style != style:
@@ -2136,7 +2136,7 @@ class FPDF(GraphicsStateMixin):
 
                     s += &#34; [&#34;
                     for i, word in enumerate(words):
-                        word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                        word = escape_parens(word.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
                         s += f&#34;({word}) &#34;
                         is_last_word = (i + 1) == len(words)
                         if not is_last_word:
@@ -2164,7 +2164,7 @@ class FPDF(GraphicsStateMixin):
                             )
 
                         txt_frag_escaped = escape_parens(
-                            txt_frag_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+                            txt_frag_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;)
                         )
                     else:
                         txt_frag_escaped = escape_parens(txt_frag)
@@ -3082,8 +3082,8 @@ class FPDF(GraphicsStateMixin):
         nb = self.pages_count  # total number of pages
         substituted = False
         # Replace number of pages in fonts using subsets (unicode)
-        alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
-        encoded_nb = str(nb).encode(&#34;UTF-16BE&#34;)
+        alias = self.str_alias_nb_pages.encode(&#34;utf-16-be&#34;)
+        encoded_nb = str(nb).encode(&#34;utf-16-be&#34;)
         for n in range(1, nb + 1):
             page = self.pages[n]
             new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
@@ -5859,7 +5859,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 # Instead of adding the actual character to the stream its code is
                 # mapped to a position in the font&#39;s subset
                 txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
-            txt2 = escape_parens(txt_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+            txt2 = escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
         else:
             txt2 = escape_parens(txt)
         s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
@@ -6115,7 +6115,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             # If multibyte, Tw has no effect - do word spacing using an
             # adjustment before each space
             if self.ws and self.unifontsubset:
-                space = escape_parens(&#34; &#34;.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                space = escape_parens(&#34; &#34;.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
                 s += &#34; 0 Tw&#34;
                 for txt_frag, style, underline in styled_txt_frags:
                     if self.font_style != style:
@@ -6137,7 +6137,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
                     s += &#34; [&#34;
                     for i, word in enumerate(words):
-                        word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                        word = escape_parens(word.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
                         s += f&#34;({word}) &#34;
                         is_last_word = (i + 1) == len(words)
                         if not is_last_word:
@@ -6165,7 +6165,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                             )
 
                         txt_frag_escaped = escape_parens(
-                            txt_frag_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+                            txt_frag_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;)
                         )
                     else:
                         txt_frag_escaped = escape_parens(txt_frag)
@@ -7083,8 +7083,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
         nb = self.pages_count  # total number of pages
         substituted = False
         # Replace number of pages in fonts using subsets (unicode)
-        alias = self.str_alias_nb_pages.encode(&#34;UTF-16BE&#34;)
-        encoded_nb = str(nb).encode(&#34;UTF-16BE&#34;)
+        alias = self.str_alias_nb_pages.encode(&#34;utf-16-be&#34;)
+        encoded_nb = str(nb).encode(&#34;utf-16-be&#34;)
         for n in range(1, nb + 1):
             page = self.pages[n]
             new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
@@ -8997,7 +8997,7 @@ def cell(
         # If multibyte, Tw has no effect - do word spacing using an
         # adjustment before each space
         if self.ws and self.unifontsubset:
-            space = escape_parens(&#34; &#34;.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+            space = escape_parens(&#34; &#34;.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
             s += &#34; 0 Tw&#34;
             for txt_frag, style, underline in styled_txt_frags:
                 if self.font_style != style:
@@ -9019,7 +9019,7 @@ def cell(
 
                 s += &#34; [&#34;
                 for i, word in enumerate(words):
-                    word = escape_parens(word.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+                    word = escape_parens(word.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
                     s += f&#34;({word}) &#34;
                     is_last_word = (i + 1) == len(words)
                     if not is_last_word:
@@ -9047,7 +9047,7 @@ def cell(
                         )
 
                     txt_frag_escaped = escape_parens(
-                        txt_frag_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;)
+                        txt_frag_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;)
                     )
                 else:
                     txt_frag_escaped = escape_parens(txt_frag)
@@ -12154,7 +12154,7 @@ def text(self, x, y, txt=&#34;&#34;):
             # Instead of adding the actual character to the stream its code is
             # mapped to a position in the font&#39;s subset
             txt_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
-        txt2 = escape_parens(txt_mapped.encode(&#34;UTF-16BE&#34;).decode(&#34;latin-1&#34;))
+        txt2 = escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
     else:
         txt2 = escape_parens(txt)
     s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
