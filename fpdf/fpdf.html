@@ -2431,7 +2431,7 @@ class FPDF(GraphicsStateMixin):
         i = 0
         j = 0
         l = 0
-        ns = 0
+        whitespace_count = 0
         nl = 1
         prev_x, prev_y = self.x, self.y
         while i &lt; normalized_string_length:
@@ -2467,7 +2467,7 @@ class FPDF(GraphicsStateMixin):
                 sep = -1
                 j = i
                 l = 0
-                ns = 0
+                whitespace_count = 0
                 nl += 1
                 if border and nl == 2:
                     b = b2
@@ -2475,8 +2475,8 @@ class FPDF(GraphicsStateMixin):
 
             if c == &#34; &#34;:
                 sep = i
-                ls = l
-                ns += 1
+                chars_total_width = l
+                whitespace_count += 1
             if self.unifontsubset:
                 l += self.get_string_width(c, True) / self.font_size * 1000
             else:
@@ -2513,8 +2513,11 @@ class FPDF(GraphicsStateMixin):
                 else:
                     if align == &#34;J&#34;:
                         self.ws = (
-                            (wmax - ls) / 1000 * self.font_size / (ns - 1)
-                            if ns &gt; 1
+                            (wmax - chars_total_width)
+                            / 1000
+                            * self.font_size
+                            / (whitespace_count - 1)
+                            if whitespace_count &gt; 1
                             else 0
                         )
                         self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
@@ -2542,7 +2545,7 @@ class FPDF(GraphicsStateMixin):
                 sep = -1
                 j = i
                 l = 0
-                ns = 0
+                whitespace_count = 0
                 nl += 1
                 if border and nl == 2:
                     b = b2
@@ -6432,7 +6435,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
         i = 0
         j = 0
         l = 0
-        ns = 0
+        whitespace_count = 0
         nl = 1
         prev_x, prev_y = self.x, self.y
         while i &lt; normalized_string_length:
@@ -6468,7 +6471,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 sep = -1
                 j = i
                 l = 0
-                ns = 0
+                whitespace_count = 0
                 nl += 1
                 if border and nl == 2:
                     b = b2
@@ -6476,8 +6479,8 @@ The default is <code>True</code>, meaning the current folder.</dd>
 
             if c == &#34; &#34;:
                 sep = i
-                ls = l
-                ns += 1
+                chars_total_width = l
+                whitespace_count += 1
             if self.unifontsubset:
                 l += self.get_string_width(c, True) / self.font_size * 1000
             else:
@@ -6514,8 +6517,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 else:
                     if align == &#34;J&#34;:
                         self.ws = (
-                            (wmax - ls) / 1000 * self.font_size / (ns - 1)
-                            if ns &gt; 1
+                            (wmax - chars_total_width)
+                            / 1000
+                            * self.font_size
+                            / (whitespace_count - 1)
+                            if whitespace_count &gt; 1
                             else 0
                         )
                         self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
@@ -6543,7 +6549,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 sep = -1
                 j = i
                 l = 0
-                ns = 0
+                whitespace_count = 0
                 nl += 1
                 if border and nl == 2:
                     b = b2
@@ -10213,7 +10219,7 @@ def multi_cell(
     i = 0
     j = 0
     l = 0
-    ns = 0
+    whitespace_count = 0
     nl = 1
     prev_x, prev_y = self.x, self.y
     while i &lt; normalized_string_length:
@@ -10249,7 +10255,7 @@ def multi_cell(
             sep = -1
             j = i
             l = 0
-            ns = 0
+            whitespace_count = 0
             nl += 1
             if border and nl == 2:
                 b = b2
@@ -10257,8 +10263,8 @@ def multi_cell(
 
         if c == &#34; &#34;:
             sep = i
-            ls = l
-            ns += 1
+            chars_total_width = l
+            whitespace_count += 1
         if self.unifontsubset:
             l += self.get_string_width(c, True) / self.font_size * 1000
         else:
@@ -10295,8 +10301,11 @@ def multi_cell(
             else:
                 if align == &#34;J&#34;:
                     self.ws = (
-                        (wmax - ls) / 1000 * self.font_size / (ns - 1)
-                        if ns &gt; 1
+                        (wmax - chars_total_width)
+                        / 1000
+                        * self.font_size
+                        / (whitespace_count - 1)
+                        if whitespace_count &gt; 1
                         else 0
                     )
                     self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
@@ -10324,7 +10333,7 @@ def multi_cell(
             sep = -1
             j = i
             l = 0
-            ns = 0
+            whitespace_count = 0
             nl += 1
             if border and nl == 2:
                 b = b2
