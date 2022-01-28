@@ -3065,7 +3065,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
             substituted |= page[&#34;content&#34;] != new_content
             page[&#34;content&#34;] = new_content
         if substituted:
-            LOGGER.info(
+            LOGGER.debug(
                 &#34;Substitution of &#39;%s&#39; was performed in the document&#34;,
                 self.str_alias_nb_pages,
             )
