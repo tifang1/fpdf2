@@ -540,7 +540,7 @@ class Point(NamedTuple):
             The scalar result of the distance computation.
         &#34;&#34;&#34;
 
-        return (self.x ** 2 + self.y ** 2) ** 0.5
+        return (self.x**2 + self.y**2) ** 0.5
 
     @force_document
     def __add__(self, other):
@@ -2688,7 +2688,7 @@ class Arc(NamedTuple):
         lam_da = (prime.x / radii.x) ** 2 + (prime.y / radii.y) ** 2
 
         if lam_da &gt; 1:
-            radii = Point(x=(lam_da ** 0.5) * radii.x, y=(lam_da ** 0.5) * radii.y)
+            radii = Point(x=(lam_da**0.5) * radii.x, y=(lam_da**0.5) * radii.y)
 
         sign = (self.large != self.sweep) - (self.large == self.sweep)
         rxry2 = (radii.x * radii.y) ** 2
@@ -4816,7 +4816,7 @@ using a number of parameters to determine how it is constructed.</p>
         lam_da = (prime.x / radii.x) ** 2 + (prime.y / radii.y) ** 2
 
         if lam_da &gt; 1:
-            radii = Point(x=(lam_da ** 0.5) * radii.x, y=(lam_da ** 0.5) * radii.y)
+            radii = Point(x=(lam_da**0.5) * radii.x, y=(lam_da**0.5) * radii.y)
 
         sign = (self.large != self.sweep) - (self.large == self.sweep)
         rxry2 = (radii.x * radii.y) ** 2
@@ -10251,7 +10251,7 @@ identical path objects, painting the first with <code>FILL_NONZERO</code> and th
             The scalar result of the distance computation.
         &#34;&#34;&#34;
 
-        return (self.x ** 2 + self.y ** 2) ** 0.5
+        return (self.x**2 + self.y**2) ** 0.5
 
     @force_document
     def __add__(self, other):
@@ -10798,7 +10798,7 @@ point.</p>
         The scalar result of the distance computation.
     &#34;&#34;&#34;
 
-    return (self.x ** 2 + self.y ** 2) ** 0.5</code></pre>
+    return (self.x**2 + self.y**2) ** 0.5</code></pre>
 </details>
 </dd>
 <dt id="fpdf.drawing.Point.render"><code class="name flex">

@@ -1999,6 +1999,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+        if isinstance(w, str) or isinstance(h, str):
+            raise ValueError(
+                &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
+                &#34; You can omit them by passing string content with txt=&#34;
+            )
         if isinstance(border, int) and border not in (0, 1):
             warnings.warn(
                 &#39;Integer values for &#34;border&#34; parameter other than 1 are currently &#39;
@@ -2345,6 +2350,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
         Returns: a boolean indicating if page break was triggered,
             or if `split_only == True`: `txt` splitted into lines in an array
         &#34;&#34;&#34;
+        if isinstance(w, str) or isinstance(h, str):
+            raise ValueError(
+                &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
+                &#34; You can omit them by passing string content with txt=&#34;
+            )
         page_break_triggered = False
         if split_only:
             _out, _add_page, _perform_page_break_if_need_be = (
@@ -2585,6 +2595,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
         &#34;&#34;&#34;
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+        if isinstance(h, str):
+            raise ValueError(
+                &#34;Parameter &#39;h&#39; must be a number, not a string.&#34;
+                &#34; You can omit it by passing string content with txt=&#34;
+            )
         if h is None:
             h = self.font_size
         txt = self.normalize_text(txt)
@@ -4884,6 +4899,11 @@ def cell(
     &#34;&#34;&#34;
     if not self.font_family:
         raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+    if isinstance(w, str) or isinstance(h, str):
+        raise ValueError(
+            &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
+            &#34; You can omit them by passing string content with txt=&#34;
+        )
     if isinstance(border, int) and border not in (0, 1):
         warnings.warn(
             &#39;Integer values for &#34;border&#34; parameter other than 1 are currently &#39;
@@ -6129,6 +6149,11 @@ def multi_cell(
     Returns: a boolean indicating if page break was triggered,
         or if `split_only == True`: `txt` splitted into lines in an array
     &#34;&#34;&#34;
+    if isinstance(w, str) or isinstance(h, str):
+        raise ValueError(
+            &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
+            &#34; You can omit them by passing string content with txt=&#34;
+        )
     page_break_triggered = False
     if split_only:
         _out, _add_page, _perform_page_break_if_need_be = (
@@ -8288,6 +8313,11 @@ def write(self, h=None, txt=&#34;&#34;, link=&#34;&#34;):
     &#34;&#34;&#34;
     if not self.font_family:
         raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+    if isinstance(h, str):
+        raise ValueError(
+            &#34;Parameter &#39;h&#39; must be a number, not a string.&#34;
+            &#34; You can omit it by passing string content with txt=&#34;
+        )
     if h is None:
         h = self.font_size
     txt = self.normalize_text(txt)
