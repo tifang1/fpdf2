@@ -295,6 +295,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#borb" class="md-nav__link">
+    borb
+  </a>
+  
+    <nav class="md-nav" aria-label="borb">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-document-with-fpdf2-and-transforming-it-into-a-borbpdfdocumentdocument" class="md-nav__link">
+    Creating a document with fpdf2 and transforming it into a borb.pdf.document.Document
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -749,6 +769,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#borb" class="md-nav__link">
+    borb
+  </a>
+  
+    <nav class="md-nav" aria-label="borb">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-document-with-fpdf2-and-transforming-it-into-a-borbpdfdocumentdocument" class="md-nav__link">
+    Creating a document with fpdf2 and transforming it into a borb.pdf.document.Document
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -819,6 +859,24 @@ with numerous examples and a very clean set of classes modelling the PDF interna
 <p>This example relies on <a href="https://github.com/pmaupin/pdfrw/pull/216">pdfrw <em>Pull Request</em> #216</a>.
 Until it is merged, you can install a forked version of <code>pdfrw</code> including the required patch:</p>
 <div class="highlight"><pre><span></span><code>pip install git+https://github.com/PyPDF/pdfrw.git@addpage_at_index
+</code></pre></div>
+<h2 id="borb">borb</h2>
+<p><img alt="" src="https://raw.githubusercontent.com/jorisschellekens/borb/master/logo/borb_64.png" /></p>
+<p>Joris Schellekens made another excellent pure-Python library dedicated to reading &amp; write PDF: <a href="https://github.com/jorisschellekens/borb/">borb</a>.
+He even wrote a book about it, available publicly there: <a href="https://github.com/jorisschellekens/borb-examples/">borb-examples</a>.</p>
+<h3 id="creating-a-document-with-fpdf2-and-transforming-it-into-a-borbpdfdocumentdocument">Creating a document with <code>fpdf2</code> and transforming it into a <code>borb.pdf.document.Document</code></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span> <span class="nn">borb.pdf.pdf</span> <span class="kn">import</span> <span class="n">PDF</span>  
+<span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Initiating a borb doc from a FPDF instance&#39;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">)</span>
+
+<span class="n">doc</span> <span class="o">=</span> <span class="n">PDF</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">()))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">get_document_info</span><span class="p">()</span><span class="o">.</span><span class="n">get_title</span><span class="p">())</span>
 </code></pre></div>
 
               
