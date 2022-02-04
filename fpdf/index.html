@@ -117,6 +117,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="fpdf.line_break" href="line_break.html">fpdf.line_break</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></dt>
 <dd>
 <div class="desc"><p>Quoting section 8.2.2 "Document Outline" of the 2006 PDF spec 1.7:</p>
@@ -857,20 +861,32 @@ The default is <code>True</code>, meaning the current folder.</dd>
         # normalized is parameter for internal use
         s = s if normalized else self.normalize_text(s)
         w = 0
-        for txt_frag, style, _ in (
+        for frag in (
             self._markdown_parse(s)
             if markdown
-            else ((s, self.font_style, bool(self.underline)),)
+            else (Fragment.from_string(s, self.font_style, bool(self.underline)),)
         ):
-            font = self.fonts[self.font_family + style]
-            if self.unifontsubset:
-                for char in txt_frag:
-                    w += _char_width(font, ord(char))
-            else:
-                w += sum(_char_width(font, char) for char in txt_frag)
+            w += self.get_normalized_string_width_with_style(frag.string, frag.style)
         if self.font_stretching != 100:
             w *= self.font_stretching / 100
         return w * self.font_size / 1000
+
+    def get_normalized_string_width_with_style(self, string, style):
+        &#34;&#34;&#34;
+        Returns the length of a string with given style
+
+        Args:
+            string (str): the string whose length is to be computed.
+            style (str) : the string representing the style
+        &#34;&#34;&#34;
+        w = 0
+        font = self.fonts[self.font_family + style]
+        if self.unifontsubset:
+            for char in string:
+                w += _char_width(font, ord(char))
+        else:
+            w += sum(_char_width(font, char) for char in string)
+        return w
 
     def set_line_width(self, width):
         &#34;&#34;&#34;
@@ -2013,12 +2029,86 @@ The default is <code>True</code>, meaning the current folder.</dd>
         # Font styles preloading must be performed before any call to FPDF.get_string_width:
         txt = self.normalize_text(txt)
         styled_txt_frags = self._preload_font_styles(txt, markdown)
+        return self._render_styled_cell_text(
+            w,
+            h,
+            styled_txt_frags,
+            border,
+            ln,
+            align,
+            fill,
+            link,
+            center,
+        )
+
+    def _render_styled_cell_text(
+        self,
+        w=None,
+        h=None,
+        styled_txt_frags=(),
+        border=0,
+        ln=0,
+        align=&#34;&#34;,
+        fill=False,
+        link=&#34;&#34;,
+        center=False,
+    ):
+        &#34;&#34;&#34;
+        Prints a cell (rectangular area) with optional borders, background color and
+        character string. The upper-left corner of the cell corresponds to the current
+        position. The text can be aligned or centered. After the call, the current
+        position moves to the right or to the next line. It is possible to put a link
+        on the text.
+
+        If automatic page breaking is enabled and the cell goes beyond the limit, a
+        page break is performed before outputting.
+
+        Args:
+            w (int): Cell width. Default value: None, meaning to fit text width.
+                If 0, the cell extends up to the right margin.
+            h (int): Cell height. Default value: None, meaning an height equal
+                to the current font size.
+            styled_txt_frags (tuple): Tuple of fragments to render.
+                Default value: empty tuple.
+            border: Indicates if borders must be drawn around the cell.
+                The value can be either a number (`0`: no border ; `1`: frame)
+                or a string containing some or all of the following characters
+                (in any order):
+                `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
+            ln (int): Indicates where the current position should go after the call.
+                Possible values are: `0`: to the right ; `1`: to the beginning of the
+                next line ; `2`: below. Putting 1 is equivalent to putting 0 and calling
+                `ln` just after. Default value: 0.
+            align (str): Allows to center or align the text inside the cell.
+                Possible values are: `L` or empty string: left align (default value) ;
+                `C`: center ; `R`: right align
+            fill (bool): Indicates if the cell background must be painted (`True`)
+                or transparent (`False`). Default value: False.
+            link (str): optional link to add on the cell, internal
+                (identifier returned by `add_link`) or external URL.
+            center (bool): center the cell horizontally in the page
+            markdown (bool): enable minimal markdown-like markup to render part
+                of text as bold / italics / underlined. Default to False.
+
+        Returns: a boolean indicating if page break was triggered
+        &#34;&#34;&#34;
+        if not self.font_family:
+            raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+        if isinstance(border, int) and border not in (0, 1):
+            warnings.warn(
+                &#39;Integer values for &#34;border&#34; parameter other than 1 are currently &#39;
+                &#34;ignored&#34;
+            )
+            border = 1
+        styled_txt_width = 0
+        for styled_txt_frag in styled_txt_frags:
+            styled_txt_width += self.get_string_width(styled_txt_frag.string)
         if w == 0:
             w = self.w - self.r_margin - self.x
         elif w is None:
-            if not txt:
+            if not styled_txt_frags:
                 raise ValueError(&#34;A &#39;txt&#39; parameter must be provided if &#39;w&#39; is None&#34;)
-            w = self.get_string_width(txt, True, markdown) + 2
+            w = styled_txt_width + 2
         if h is None:
             h = self.font_size
         # pylint: disable=invalid-unary-operand-type
@@ -2063,11 +2153,11 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     f&#34;{(x + w) * k:.2f} {(self.h - (y + h)) * k:.2f} l S &#34;
                 )
 
-        if txt:
+        if styled_txt_frags:
             if align == &#34;R&#34;:
-                dx = w - self.c_margin - self.get_string_width(txt, True, markdown)
+                dx = w - self.c_margin - styled_txt_width
             elif align == &#34;C&#34;:
-                dx = (w - self.get_string_width(txt, True, markdown)) / 2
+                dx = (w - styled_txt_width) / 2
             else:
                 dx = self.c_margin
 
@@ -2085,7 +2175,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
             if self.ws and self.unifontsubset:
                 space = escape_parens(&#34; &#34;.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
                 s += &#34; 0 Tw&#34;
-                for txt_frag, style, underline in styled_txt_frags:
+                for frag in styled_txt_frags:
+                    txt_frag = frag.string
+                    style = frag.style
+                    underline = frag.underline
                     if self.font_style != style:
                         self.font_style = style
                         self.current_font = self.fonts[
@@ -2117,7 +2210,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     s_width += self.get_string_width(txt_frag, True)
                     s += &#34;] TJ&#34;
             else:
-                for txt_frag, style, underline in styled_txt_frags:
+                for frag in styled_txt_frags:
+                    txt_frag = frag.string
+                    style = frag.style
+                    underline = frag.underline
                     if self.font_style != style:
                         self.font_style = style
                         self.current_font = self.fonts[
@@ -2163,7 +2259,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 self.link(
                     self.x + dx,
                     self.y + (0.5 * h) - (0.5 * self.font_size),
-                    self.get_string_width(txt, True, markdown),
+                    styled_txt_width,
                     self.font_size,
                     link,
                 )
@@ -2189,18 +2285,22 @@ The default is <code>True</code>, meaning the current folder.</dd>
         so we return the resulting `styled_txt_frags` tuple
         to avoid repeating this processing later on.
         &#34;&#34;&#34;
-        if not txt or not markdown:
-            return tuple([[txt, self.font_style, bool(self.underline)]])
+        if not txt:
+            return tuple()
+        if not markdown:
+            return tuple(
+                [Fragment.from_string(txt, self.font_style, bool(self.underline))]
+            )
         prev_font_style = self.font_style
         styled_txt_frags = tuple(self._markdown_parse(txt))
         page = self.page
         # We set the current to page to zero so that
         # set_font() does not produce any text object on the stream buffer:
         self.page = 0
-        if any(&#34;B&#34; in style for _, style, _ in styled_txt_frags):
+        if any(&#34;B&#34; in frag.style for frag in styled_txt_frags):
             # Ensuring bold font is supported:
             self.set_font(style=&#34;B&#34;)
-        if any(&#34;I&#34; in style for _, style, _ in styled_txt_frags):
+        if any(&#34;I&#34; in frag.style for frag in styled_txt_frags):
             # Ensuring italics font is supported:
             self.set_font(style=&#34;I&#34;)
         # Restoring initial style:
@@ -2211,7 +2311,7 @@ The default is <code>True</code>, meaning the current folder.</dd>
     def _markdown_parse(self, txt):
         &#34;Split some text into fragments based on styling: **bold**, __italics__, --underlined--&#34;
         txt_frag, in_bold, in_italics, in_underline = (
-            &#34;&#34;,
+            [],
             &#34;B&#34; in self.font_style,
             &#34;I&#34; in self.font_style,
             bool(self.underline),
@@ -2230,10 +2330,10 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 and (len(txt) &lt; 3 or txt[2] != half_marker)
             ):
                 if txt_frag:
-                    yield (
-                        txt_frag,
+                    yield Fragment(
                         (&#34;B&#34; if in_bold else &#34;&#34;) + (&#34;I&#34; if in_italics else &#34;&#34;),
                         in_underline,
+                        txt_frag,
                     )
                 if txt[:2] == self.MARKDOWN_BOLD_MARKER:
                     in_bold = not in_bold
@@ -2241,16 +2341,16 @@ The default is <code>True</code>, meaning the current folder.</dd>
                     in_italics = not in_italics
                 if txt[:2] == self.MARKDOWN_UNDERLINE_MARKER:
                     in_underline = not in_underline
-                txt_frag = &#34;&#34;
+                txt_frag = []
                 txt = txt[2:]
             else:
-                txt_frag += txt[0]
+                txt_frag.append(txt[0])
                 txt = txt[1:]
         if txt_frag:
-            yield (
-                txt_frag,
+            yield Fragment(
                 (&#34;B&#34; if in_bold else &#34;&#34;) + (&#34;I&#34; if in_italics else &#34;&#34;),
                 in_underline,
+                txt_frag,
             )
 
     def will_page_break(self, height):
@@ -2374,183 +2474,79 @@ The default is <code>True</code>, meaning the current folder.</dd>
             w = self.w - self.r_margin - self.x
         if h is None:
             h = self.font_size
-        wmax = (w - 2 * self.c_margin) * 1000 / self.font_size
+        maximum_allowed_width = (w - 2 * self.c_margin) * 1000 / self.font_size
 
         # Calculate text length
         txt = self.normalize_text(txt)
-        s = txt.replace(&#34;\r&#34;, &#34;&#34;)
-        normalized_string_length = len(s)
-        if normalized_string_length &gt; 0 and s[-1] == &#34;\n&#34;:
-            normalized_string_length -= 1
+        normalized_string = txt.replace(&#34;\r&#34;, &#34;&#34;)
+        styled_text_fragments = self._preload_font_styles(normalized_string, markdown)
 
         prev_font_style, prev_underline = self.font_style, self.underline
         if markdown and not split_only:
             self._markdown_leak_end_style = True
-
-        b = 0
-        if border:
-            if border == 1:
-                border = &#34;LTRB&#34;
-                b = &#34;LRT&#34;
-                b2 = &#34;LR&#34;
-            else:
-                b2 = &#34;&#34;
-                if &#34;L&#34; in border:
-                    b2 += &#34;L&#34;
-                if &#34;R&#34; in border:
-                    b2 += &#34;R&#34;
-                b = b2 + &#34;T&#34; if &#34;T&#34; in border else b2
-        text_cells = []
-        sep = -1
-        i = 0
-        j = 0
-        l = 0
-        whitespace_count = 0
-        nl = 1
         prev_x, prev_y = self.x, self.y
-        while i &lt; normalized_string_length:
-            # Get next character
-            c = s[i]
 
-            # Explicit line break
-            if c == &#34;\n&#34;:
-                if self.ws &gt; 0:
-                    self.ws = 0
-                    self._out(&#34;0 Tw&#34;)
+        if not border:
+            border = &#34;&#34;
+        elif border == 1:
+            border = &#34;LTRB&#34;
 
-                if max_line_height and h &gt; max_line_height:
-                    height = max_line_height
-                    h -= height
-                else:
-                    height = h
-                new_page = self.cell(
-                    w,
-                    h=height,
-                    txt=substr(s, j, i - j),
-                    border=b,
-                    ln=2,
-                    align=align,
-                    fill=fill,
-                    link=link,
-                    markdown=markdown,
-                )
-                page_break_triggered = page_break_triggered or new_page
-                text_cells.append(substr(s, j, i - j))
-
-                i += 1
-                sep = -1
-                j = i
-                l = 0
-                whitespace_count = 0
-                nl += 1
-                if border and nl == 2:
-                    b = b2
-                continue
-
-            if c == &#34; &#34;:
-                sep = i
-                chars_total_width = l
-                whitespace_count += 1
-            if self.unifontsubset:
-                l += self.get_string_width(c, True) / self.font_size * 1000
-            else:
-                l += _char_width(self.current_font, c)
-
-            # Automatic line break
-            if l &gt; wmax:
-                if sep == -1:
-                    if i == j:
-                        i += 1
-                    if self.ws &gt; 0:
-                        self.ws = 0
-                        self._out(&#34;0 Tw&#34;)
-
-                    if max_line_height and h &gt; max_line_height:
-                        height = max_line_height
-                        h -= height
-                    else:
-                        height = h
-                    new_page = self.cell(
-                        w,
-                        h=height,
-                        txt=substr(s, j, i - j),
-                        border=b,
-                        ln=2,
-                        align=align,
-                        fill=fill,
-                        link=link,
-                        markdown=markdown,
-                    )
-                    page_break_triggered = page_break_triggered or new_page
-                    text_cells.append(substr(s, j, i - j))
-
-                else:
-                    if align == &#34;J&#34;:
-                        self.ws = (
-                            (wmax - chars_total_width)
-                            / 1000
-                            * self.font_size
-                            / (whitespace_count - 1)
-                            if whitespace_count &gt; 1
-                            else 0
-                        )
-                        self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
-
-                    if max_line_height and h &gt; max_line_height:
-                        height = max_line_height
-                        h -= height
-                    else:
-                        height = h
-                    new_page = self.cell(
-                        w,
-                        h=height,
-                        txt=substr(s, j, sep - j),
-                        border=b,
-                        ln=2,
-                        align=align,
-                        fill=fill,
-                        link=link,
-                        markdown=markdown,
-                    )
-                    page_break_triggered = page_break_triggered or new_page
-                    text_cells.append(substr(s, j, sep - j))
-
-                    i = sep + 1
-                sep = -1
-                j = i
-                l = 0
-                whitespace_count = 0
-                nl += 1
-                if border and nl == 2:
-                    b = b2
-            else:
-                i += 1
-
-        # Last chunk
-        if self.ws &gt; 0:
-            self.ws = 0
-            self._out(&#34;0 Tw&#34;)
-        if border and &#34;B&#34; in border:
-            b += &#34;B&#34;
-
-        new_page = self.cell(
-            w,
-            h=h,
-            txt=substr(s, j, i - j),
-            border=b,
-            ln=0 if ln == 3 else ln,
-            align=align,
-            fill=fill,
-            link=link,
-            markdown=markdown,
+        text_lines = []
+        multi_line_break = MultiLineBreak(
+            styled_text_fragments,
+            self.get_normalized_string_width_with_style,
+            justify=(align == &#34;J&#34;),
         )
-        if new_page:
-            # When a page jump is performed and ln=3,
-            # we stick to that new vertical offset.
-            # cf. test_multi_cell_table_with_automatic_page_break
-            prev_y = self.y
-        page_break_triggered = page_break_triggered or new_page
-        text_cells.append(substr(s, j, i - j))
+        text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
+        while (text_line) is not None:
+            text_lines.append(text_line)
+            text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
+
+        for text_line_index, text_line in enumerate(text_lines):
+            is_last_line = text_line_index == len(text_lines) - 1
+
+            if max_line_height is not None and h &gt; max_line_height and not is_last_line:
+                current_cell_height = max_line_height
+                h -= current_cell_height
+            else:
+                current_cell_height = h
+
+            word_spacing = 0
+            if text_line.justify:
+                word_spacing = (
+                    (maximum_allowed_width - text_line.text_width)
+                    / 1000
+                    * self.font_size
+                    / text_line.number_of_spaces_between_words
+                )
+                self._out(f&#34;{word_spacing * self.k:.3f} Tw&#34;)
+            elif self.ws &gt; 0:
+                self._out(&#34;0 Tw&#34;)
+            self.ws = word_spacing
+
+            new_page = self._render_styled_cell_text(
+                w,
+                h=current_cell_height,
+                styled_txt_frags=text_line.fragments,
+                border=&#34;&#34;.join(
+                    (
+                        &#34;T&#34; if &#34;T&#34; in border and text_line_index == 0 else &#34;&#34;,
+                        &#34;L&#34; if &#34;L&#34; in border else &#34;&#34;,
+                        &#34;R&#34; if &#34;R&#34; in border else &#34;&#34;,
+                        &#34;B&#34; if &#34;B&#34; in border and is_last_line else &#34;&#34;,
+                    )
+                ),
+                ln=(2 if not is_last_line else (0 if ln == 3 else ln)),
+                align=align,
+                fill=fill,
+                link=link,
+            )
+            if is_last_line and new_page and ln == 3:
+                # When a page jump is performed and ln=3,
+                # we stick to that new vertical offset.
+                # cf. test_multi_cell_table_with_automatic_page_break
+                prev_y = self.y
+            page_break_triggered = page_break_triggered or new_page
 
         new_x, new_y = {
             0: (self.x, self.y + h),
@@ -2568,12 +2564,20 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 _perform_page_break_if_need_be,
             )
             self.set_xy(*location)  # restore location
-            return text_cells
+            result = []
+            for text_line in text_lines:
+                characters = []
+                for frag in text_line.fragments:
+                    characters.extend(frag.characters)
+                result.append(&#34;&#34;.join(characters))
+            return result
         if markdown:
             if self.font_style != prev_font_style:
                 self.font_style = prev_font_style
                 self.current_font = self.fonts[self.font_family + self.font_style]
-                s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+                normalized_string += (
+                    f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+                )
             self.underline = prev_underline
             self._markdown_leak_end_style = False
 
@@ -4913,172 +4917,17 @@ def cell(
     # Font styles preloading must be performed before any call to FPDF.get_string_width:
     txt = self.normalize_text(txt)
     styled_txt_frags = self._preload_font_styles(txt, markdown)
-    if w == 0:
-        w = self.w - self.r_margin - self.x
-    elif w is None:
-        if not txt:
-            raise ValueError(&#34;A &#39;txt&#39; parameter must be provided if &#39;w&#39; is None&#34;)
-        w = self.get_string_width(txt, True, markdown) + 2
-    if h is None:
-        h = self.font_size
-    # pylint: disable=invalid-unary-operand-type
-    if center:
-        self.x = self.l_margin + (self.epw - w) / 2
-    page_break_triggered = self._perform_page_break_if_need_be(h)
-    s = &#34;&#34;
-    k = self.k
-    if fill:
-        op = &#34;B&#34; if border == 1 else &#34;f&#34;
-        s = (
-            f&#34;{self.x * k:.2f} {(self.h - self.y) * k:.2f} &#34;
-            f&#34;{w * k:.2f} {-h * k:.2f} re {op} &#34;
-        )
-    elif border == 1:
-        s = (
-            f&#34;{self.x * k:.2f} {(self.h - self.y) * k:.2f} &#34;
-            f&#34;{w * k:.2f} {-h * k:.2f} re S &#34;
-        )
-
-    if isinstance(border, str):
-        x = self.x
-        y = self.y
-        if &#34;L&#34; in border:
-            s += (
-                f&#34;{x * k:.2f} {(self.h - y) * k:.2f} m &#34;
-                f&#34;{x * k:.2f} {(self.h - (y + h)) * k:.2f} l S &#34;
-            )
-        if &#34;T&#34; in border:
-            s += (
-                f&#34;{x * k:.2f} {(self.h - y) * k:.2f} m &#34;
-                f&#34;{(x + w) * k:.2f} {(self.h - y) * k:.2f} l S &#34;
-            )
-        if &#34;R&#34; in border:
-            s += (
-                f&#34;{(x + w) * k:.2f} {(self.h - y) * k:.2f} m &#34;
-                f&#34;{(x + w) * k:.2f} {(self.h - (y + h)) * k:.2f} l S &#34;
-            )
-        if &#34;B&#34; in border:
-            s += (
-                f&#34;{x * k:.2f} {(self.h - (y + h)) * k:.2f} m &#34;
-                f&#34;{(x + w) * k:.2f} {(self.h - (y + h)) * k:.2f} l S &#34;
-            )
-
-    if txt:
-        if align == &#34;R&#34;:
-            dx = w - self.c_margin - self.get_string_width(txt, True, markdown)
-        elif align == &#34;C&#34;:
-            dx = (w - self.get_string_width(txt, True, markdown)) / 2
-        else:
-            dx = self.c_margin
-
-        if self.fill_color != self.text_color:
-            s += f&#34;q {self.text_color} &#34;
-
-        prev_font_style, prev_underline = self.font_style, self.underline
-        s_width, underlines = 0, []
-        s += (
-            f&#34;BT {(self.x + dx) * k:.2f} &#34;
-            f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2f} Td&#34;
-        )
-        # If multibyte, Tw has no effect - do word spacing using an
-        # adjustment before each space
-        if self.ws and self.unifontsubset:
-            space = escape_parens(&#34; &#34;.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
-            s += &#34; 0 Tw&#34;
-            for txt_frag, style, underline in styled_txt_frags:
-                if self.font_style != style:
-                    self.font_style = style
-                    self.current_font = self.fonts[
-                        self.font_family + self.font_style
-                    ]
-                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                txt_frag_mapped = &#34;&#34;
-                for char in txt_frag:
-                    uni = ord(char)
-                    txt_frag_mapped += chr(self.current_font[&#34;subset&#34;].pick(uni))
-
-                # Determine the position of space (&#34; &#34;) in the current subset and
-                # split words whenever this mapping code is found
-                words = txt_frag_mapped.split(
-                    chr(self.current_font[&#34;subset&#34;].pick(ord(&#34; &#34;)))
-                )
-
-                s += &#34; [&#34;
-                for i, word in enumerate(words):
-                    word = escape_parens(word.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
-                    s += f&#34;({word}) &#34;
-                    is_last_word = (i + 1) == len(words)
-                    if not is_last_word:
-                        adj = -(self.ws * self.k) * 1000 / self.font_size_pt
-                        s += f&#34;{adj}({space}) &#34;
-                if underline:
-                    underlines.append((self.x + dx + s_width, txt_frag))
-                self.underline = underline
-                s_width += self.get_string_width(txt_frag, True)
-                s += &#34;] TJ&#34;
-        else:
-            for txt_frag, style, underline in styled_txt_frags:
-                if self.font_style != style:
-                    self.font_style = style
-                    self.current_font = self.fonts[
-                        self.font_family + self.font_style
-                    ]
-                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-                if self.unifontsubset:
-                    txt_frag_mapped = &#34;&#34;
-                    for char in txt_frag:
-                        uni = ord(char)
-                        txt_frag_mapped += chr(
-                            self.current_font[&#34;subset&#34;].pick(uni)
-                        )
-
-                    txt_frag_escaped = escape_parens(
-                        txt_frag_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;)
-                    )
-                else:
-                    txt_frag_escaped = escape_parens(txt_frag)
-                s += f&#34; ({txt_frag_escaped}) Tj&#34;
-                if underline:
-                    underlines.append((self.x + dx + s_width, txt_frag))
-                self.underline = underline
-                s_width += self.get_string_width(txt_frag, True)
-        s += &#34; ET&#34;
-        # Restoring font style &amp; underline mode after handling changes by Markdown annotations:
-        if not self._markdown_leak_end_style:
-            if self.font_style != prev_font_style:
-                self.font_style = prev_font_style
-                self.current_font = self.fonts[self.font_family + self.font_style]
-                s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
-            self.underline = prev_underline
-
-        for start_x, txt_frag in underlines:
-            s += &#34; &#34; + self._do_underline(
-                start_x, self.y + (0.5 * h) + (0.3 * self.font_size), txt_frag
-            )
-
-        if self.fill_color != self.text_color:
-            s += &#34; Q&#34;
-
-        if link:
-            self.link(
-                self.x + dx,
-                self.y + (0.5 * h) - (0.5 * self.font_size),
-                self.get_string_width(txt, True, markdown),
-                self.font_size,
-                link,
-            )
-    if s:
-        self._out(s)
-    self.lasth = h
-
-    if ln &gt; 0:
-        self.y += h  # Go to next line
-        if ln == 1:
-            self.x = self.l_margin
-    else:
-        self.x += w
-
-    return page_break_triggered</code></pre>
+    return self._render_styled_cell_text(
+        w,
+        h,
+        styled_txt_frags,
+        border,
+        ln,
+        align,
+        fill,
+        link,
+        center,
+    )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.circle"><code class="name flex">
@@ -5496,6 +5345,39 @@ in a subclass to implement your own rendering logic.</p></div>
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.get_normalized_string_width_with_style"><code class="name flex">
+<span>def <span class="ident">get_normalized_string_width_with_style</span></span>(<span>self, string, style)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the length of a string with given style</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>string</code></strong> :&ensp;<code>str</code></dt>
+<dd>the string whose length is to be computed.</dd>
+</dl>
+<p>style (str) : the string representing the style</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_normalized_string_width_with_style(self, string, style):
+    &#34;&#34;&#34;
+    Returns the length of a string with given style
+
+    Args:
+        string (str): the string whose length is to be computed.
+        style (str) : the string representing the style
+    &#34;&#34;&#34;
+    w = 0
+    font = self.fonts[self.font_family + style]
+    if self.unifontsubset:
+        for char in string:
+            w += _char_width(font, ord(char))
+    else:
+        w += sum(_char_width(font, char) for char in string)
+    return w</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.get_string_width"><code class="name flex">
 <span>def <span class="ident">get_string_width</span></span>(<span>self, s, normalized=False, markdown=False)</span>
 </code></dt>
@@ -5528,17 +5410,12 @@ The value is calculated with stretching and spacing.</p>
     # normalized is parameter for internal use
     s = s if normalized else self.normalize_text(s)
     w = 0
-    for txt_frag, style, _ in (
+    for frag in (
         self._markdown_parse(s)
         if markdown
-        else ((s, self.font_style, bool(self.underline)),)
+        else (Fragment.from_string(s, self.font_style, bool(self.underline)),)
     ):
-        font = self.fonts[self.font_family + style]
-        if self.unifontsubset:
-            for char in txt_frag:
-                w += _char_width(font, ord(char))
-        else:
-            w += sum(_char_width(font, char) for char in txt_frag)
+        w += self.get_normalized_string_width_with_style(frag.string, frag.style)
     if self.font_stretching != 100:
         w *= self.font_stretching / 100
     return w * self.font_size / 1000</code></pre>
@@ -6173,183 +6050,79 @@ def multi_cell(
         w = self.w - self.r_margin - self.x
     if h is None:
         h = self.font_size
-    wmax = (w - 2 * self.c_margin) * 1000 / self.font_size
+    maximum_allowed_width = (w - 2 * self.c_margin) * 1000 / self.font_size
 
     # Calculate text length
     txt = self.normalize_text(txt)
-    s = txt.replace(&#34;\r&#34;, &#34;&#34;)
-    normalized_string_length = len(s)
-    if normalized_string_length &gt; 0 and s[-1] == &#34;\n&#34;:
-        normalized_string_length -= 1
+    normalized_string = txt.replace(&#34;\r&#34;, &#34;&#34;)
+    styled_text_fragments = self._preload_font_styles(normalized_string, markdown)
 
     prev_font_style, prev_underline = self.font_style, self.underline
     if markdown and not split_only:
         self._markdown_leak_end_style = True
-
-    b = 0
-    if border:
-        if border == 1:
-            border = &#34;LTRB&#34;
-            b = &#34;LRT&#34;
-            b2 = &#34;LR&#34;
-        else:
-            b2 = &#34;&#34;
-            if &#34;L&#34; in border:
-                b2 += &#34;L&#34;
-            if &#34;R&#34; in border:
-                b2 += &#34;R&#34;
-            b = b2 + &#34;T&#34; if &#34;T&#34; in border else b2
-    text_cells = []
-    sep = -1
-    i = 0
-    j = 0
-    l = 0
-    whitespace_count = 0
-    nl = 1
     prev_x, prev_y = self.x, self.y
-    while i &lt; normalized_string_length:
-        # Get next character
-        c = s[i]
 
-        # Explicit line break
-        if c == &#34;\n&#34;:
-            if self.ws &gt; 0:
-                self.ws = 0
-                self._out(&#34;0 Tw&#34;)
+    if not border:
+        border = &#34;&#34;
+    elif border == 1:
+        border = &#34;LTRB&#34;
 
-            if max_line_height and h &gt; max_line_height:
-                height = max_line_height
-                h -= height
-            else:
-                height = h
-            new_page = self.cell(
-                w,
-                h=height,
-                txt=substr(s, j, i - j),
-                border=b,
-                ln=2,
-                align=align,
-                fill=fill,
-                link=link,
-                markdown=markdown,
-            )
-            page_break_triggered = page_break_triggered or new_page
-            text_cells.append(substr(s, j, i - j))
-
-            i += 1
-            sep = -1
-            j = i
-            l = 0
-            whitespace_count = 0
-            nl += 1
-            if border and nl == 2:
-                b = b2
-            continue
-
-        if c == &#34; &#34;:
-            sep = i
-            chars_total_width = l
-            whitespace_count += 1
-        if self.unifontsubset:
-            l += self.get_string_width(c, True) / self.font_size * 1000
-        else:
-            l += _char_width(self.current_font, c)
-
-        # Automatic line break
-        if l &gt; wmax:
-            if sep == -1:
-                if i == j:
-                    i += 1
-                if self.ws &gt; 0:
-                    self.ws = 0
-                    self._out(&#34;0 Tw&#34;)
-
-                if max_line_height and h &gt; max_line_height:
-                    height = max_line_height
-                    h -= height
-                else:
-                    height = h
-                new_page = self.cell(
-                    w,
-                    h=height,
-                    txt=substr(s, j, i - j),
-                    border=b,
-                    ln=2,
-                    align=align,
-                    fill=fill,
-                    link=link,
-                    markdown=markdown,
-                )
-                page_break_triggered = page_break_triggered or new_page
-                text_cells.append(substr(s, j, i - j))
-
-            else:
-                if align == &#34;J&#34;:
-                    self.ws = (
-                        (wmax - chars_total_width)
-                        / 1000
-                        * self.font_size
-                        / (whitespace_count - 1)
-                        if whitespace_count &gt; 1
-                        else 0
-                    )
-                    self._out(f&#34;{self.ws * self.k:.3f} Tw&#34;)
-
-                if max_line_height and h &gt; max_line_height:
-                    height = max_line_height
-                    h -= height
-                else:
-                    height = h
-                new_page = self.cell(
-                    w,
-                    h=height,
-                    txt=substr(s, j, sep - j),
-                    border=b,
-                    ln=2,
-                    align=align,
-                    fill=fill,
-                    link=link,
-                    markdown=markdown,
-                )
-                page_break_triggered = page_break_triggered or new_page
-                text_cells.append(substr(s, j, sep - j))
-
-                i = sep + 1
-            sep = -1
-            j = i
-            l = 0
-            whitespace_count = 0
-            nl += 1
-            if border and nl == 2:
-                b = b2
-        else:
-            i += 1
-
-    # Last chunk
-    if self.ws &gt; 0:
-        self.ws = 0
-        self._out(&#34;0 Tw&#34;)
-    if border and &#34;B&#34; in border:
-        b += &#34;B&#34;
-
-    new_page = self.cell(
-        w,
-        h=h,
-        txt=substr(s, j, i - j),
-        border=b,
-        ln=0 if ln == 3 else ln,
-        align=align,
-        fill=fill,
-        link=link,
-        markdown=markdown,
+    text_lines = []
+    multi_line_break = MultiLineBreak(
+        styled_text_fragments,
+        self.get_normalized_string_width_with_style,
+        justify=(align == &#34;J&#34;),
     )
-    if new_page:
-        # When a page jump is performed and ln=3,
-        # we stick to that new vertical offset.
-        # cf. test_multi_cell_table_with_automatic_page_break
-        prev_y = self.y
-    page_break_triggered = page_break_triggered or new_page
-    text_cells.append(substr(s, j, i - j))
+    text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
+    while (text_line) is not None:
+        text_lines.append(text_line)
+        text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
+
+    for text_line_index, text_line in enumerate(text_lines):
+        is_last_line = text_line_index == len(text_lines) - 1
+
+        if max_line_height is not None and h &gt; max_line_height and not is_last_line:
+            current_cell_height = max_line_height
+            h -= current_cell_height
+        else:
+            current_cell_height = h
+
+        word_spacing = 0
+        if text_line.justify:
+            word_spacing = (
+                (maximum_allowed_width - text_line.text_width)
+                / 1000
+                * self.font_size
+                / text_line.number_of_spaces_between_words
+            )
+            self._out(f&#34;{word_spacing * self.k:.3f} Tw&#34;)
+        elif self.ws &gt; 0:
+            self._out(&#34;0 Tw&#34;)
+        self.ws = word_spacing
+
+        new_page = self._render_styled_cell_text(
+            w,
+            h=current_cell_height,
+            styled_txt_frags=text_line.fragments,
+            border=&#34;&#34;.join(
+                (
+                    &#34;T&#34; if &#34;T&#34; in border and text_line_index == 0 else &#34;&#34;,
+                    &#34;L&#34; if &#34;L&#34; in border else &#34;&#34;,
+                    &#34;R&#34; if &#34;R&#34; in border else &#34;&#34;,
+                    &#34;B&#34; if &#34;B&#34; in border and is_last_line else &#34;&#34;,
+                )
+            ),
+            ln=(2 if not is_last_line else (0 if ln == 3 else ln)),
+            align=align,
+            fill=fill,
+            link=link,
+        )
+        if is_last_line and new_page and ln == 3:
+            # When a page jump is performed and ln=3,
+            # we stick to that new vertical offset.
+            # cf. test_multi_cell_table_with_automatic_page_break
+            prev_y = self.y
+        page_break_triggered = page_break_triggered or new_page
 
     new_x, new_y = {
         0: (self.x, self.y + h),
@@ -6367,12 +6140,20 @@ def multi_cell(
             _perform_page_break_if_need_be,
         )
         self.set_xy(*location)  # restore location
-        return text_cells
+        result = []
+        for text_line in text_lines:
+            characters = []
+            for frag in text_line.fragments:
+                characters.extend(frag.characters)
+            result.append(&#34;&#34;.join(characters))
+        return result
     if markdown:
         if self.font_style != prev_font_style:
             self.font_style = prev_font_style
             self.current_font = self.fonts[self.font_family + self.font_style]
-            s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+            normalized_string += (
+                f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+            )
         self.underline = prev_underline
         self._markdown_leak_end_style = False
 
@@ -10655,6 +10436,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.graphics_state" href="graphics_state.html">fpdf.graphics_state</a></code></li>
 <li><code><a title="fpdf.html" href="html.html">fpdf.html</a></code></li>
 <li><code><a title="fpdf.image_parsing" href="image_parsing.html">fpdf.image_parsing</a></code></li>
+<li><code><a title="fpdf.line_break" href="line_break.html">fpdf.line_break</a></code></li>
 <li><code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></li>
 <li><code><a title="fpdf.recorder" href="recorder.html">fpdf.recorder</a></code></li>
 <li><code><a title="fpdf.structure_tree" href="structure_tree.html">fpdf.structure_tree</a></code></li>
@@ -10698,6 +10480,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.FPDF.eph" href="#fpdf.FPDF.eph">eph</a></code></li>
 <li><code><a title="fpdf.FPDF.epw" href="#fpdf.FPDF.epw">epw</a></code></li>
 <li><code><a title="fpdf.FPDF.footer" href="#fpdf.FPDF.footer">footer</a></code></li>
+<li><code><a title="fpdf.FPDF.get_normalized_string_width_with_style" href="#fpdf.FPDF.get_normalized_string_width_with_style">get_normalized_string_width_with_style</a></code></li>
 <li><code><a title="fpdf.FPDF.get_string_width" href="#fpdf.FPDF.get_string_width">get_string_width</a></code></li>
 <li><code><a title="fpdf.FPDF.get_x" href="#fpdf.FPDF.get_x">get_x</a></code></li>
 <li><code><a title="fpdf.FPDF.get_y" href="#fpdf.FPDF.get_y">get_y</a></code></li>
