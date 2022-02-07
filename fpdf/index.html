@@ -2722,11 +2722,17 @@ The default is <code>True</code>, meaning the current folder.</dd>
                 &#39;&#34;type&#34; is unused and will soon be deprecated&#39;,
                 PendingDeprecationWarning,
             )
+        if str(name).endswith(&#34;.svg&#34;):
+            # Insert it as a PDF path:
+            img = load_image(str(name))
+            return self._vector_image(img, x, y, w, h, link, title, alt_text)
         if isinstance(name, str):
             img = None
         elif isinstance(name, Image.Image):
             name, img = hashlib.md5(name.tobytes()).hexdigest(), name
         elif isinstance(name, io.BytesIO):
+            if _is_xml(name):
+                return self._vector_image(name, x, y, w, h, link, title, alt_text)
             name, img = hashlib.md5(name.getvalue()).hexdigest(), name
         else:
             name, img = str(name), name
@@ -2758,7 +2764,6 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self._perform_page_break_if_need_be(h)
             y = self.y
             self.y += h
-
         if x is None:
             x = self.x
 
@@ -2775,6 +2780,66 @@ The default is <code>True</code>, meaning the current folder.</dd>
             self.link(x, y, w, h, link)
 
         return info
+
+    def _vector_image(
+        self,
+        img: io.BytesIO,
+        x=None,
+        y=None,
+        w=0,
+        h=0,
+        link=&#34;&#34;,
+        title=None,
+        alt_text=None,
+    ):
+        svg = SVGObject(img.getvalue())
+        if w == 0 and h == 0:
+            if not svg.width or not svg.height:
+                raise ValueError(
+                    &#39;&lt;svg&gt; has no &#34;height&#34; / &#34;width&#34;: w= or h= must be provided to FPDF.image()&#39;
+                )
+            w = (
+                svg.width * self.epw / 100
+                if isinstance(svg.width, Percent)
+                else svg.width
+            )
+            h = (
+                svg.height * self.eph / 100
+                if isinstance(svg.height, Percent)
+                else svg.height
+            )
+        else:
+            _, _, vw, vh = svg.viewbox
+            if w == 0:
+                w = vw * h / vh
+            elif h == 0:
+                h = vh * w / vw
+
+        # Flowing mode
+        if y is None:
+            self._perform_page_break_if_need_be(h)
+            y = self.y
+            self.y += h
+        if x is None:
+            x = self.x
+
+        _, _, path = svg.transform_to_rect_viewport(
+            scale=1, width=w, height=h, ignore_svg_top_attrs=True
+        )
+        path.transform = path.transform @ drawing.Transform.translation(x, y)
+
+        try:
+            old_x, old_y = self.x, self.y
+            self.set_xy(0, 0)
+            if title or alt_text:
+                with self._marked_sequence(title=title, alt_text=alt_text):
+                    self.draw_path(path)
+            else:
+                self.draw_path(path)
+        finally:
+            self.set_xy(old_x, old_y)
+        if link:
+            self.link(x, y, w, h, link)
 
     def _downscale_image(self, name, img, info, w, h):
         width_in_pt, height_in_pt = w * self.k, h * self.k
@@ -5573,11 +5638,17 @@ def image(
             &#39;&#34;type&#34; is unused and will soon be deprecated&#39;,
             PendingDeprecationWarning,
         )
+    if str(name).endswith(&#34;.svg&#34;):
+        # Insert it as a PDF path:
+        img = load_image(str(name))
+        return self._vector_image(img, x, y, w, h, link, title, alt_text)
     if isinstance(name, str):
         img = None
     elif isinstance(name, Image.Image):
         name, img = hashlib.md5(name.tobytes()).hexdigest(), name
     elif isinstance(name, io.BytesIO):
+        if _is_xml(name):
+            return self._vector_image(name, x, y, w, h, link, title, alt_text)
         name, img = hashlib.md5(name.getvalue()).hexdigest(), name
     else:
         name, img = str(name), name
@@ -5609,7 +5680,6 @@ def image(
         self._perform_page_break_if_need_be(h)
         y = self.y
         self.y += h
-
     if x is None:
         x = self.x
 

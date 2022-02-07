@@ -43,6 +43,7 @@ def load_image(filename):
     &#34;&#34;&#34;
     This method is used to load external resources, such as images.
     It is automatically called when resource added to document by `FPDF.image()`.
+    It always return a BytesIO buffer.
     &#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
     if isinstance(filename, BytesIO):
@@ -61,8 +62,7 @@ def _decode_base64_image(base64Image):
     &#34;Decode the base 64 image string into an io byte stream.&#34;
     imageData = base64Image.split(&#34;base64,&#34;)[1]
     decodedData = base64.b64decode(imageData)
-    imageBytes = BytesIO(decodedData)
-    return imageBytes
+    return BytesIO(decodedData)
 
 
 def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
@@ -251,7 +251,8 @@ def _has_alpha(img, alpha_channel):
 </code></dt>
 <dd>
 <div class="desc"><p>This method is used to load external resources, such as images.
-It is automatically called when resource added to document by <code>FPDF.image()</code>.</p></div>
+It is automatically called when resource added to document by <code>FPDF.image()</code>.
+It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -260,6 +261,7 @@ It is automatically called when resource added to document by <code>FPDF.image()
     &#34;&#34;&#34;
     This method is used to load external resources, such as images.
     It is automatically called when resource added to document by `FPDF.image()`.
+    It always return a BytesIO buffer.
     &#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
     if isinstance(filename, BytesIO):
