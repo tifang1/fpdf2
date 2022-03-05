@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Unicode.html">
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.3">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.4">
     
     
       
@@ -21,7 +21,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.e8d9bf0c.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.2d9f7617.min.css">
       
         
         <link rel="stylesheet" href="assets/stylesheets/palette.e6a45f82.min.css">
@@ -31,6 +31,7 @@
     
     
       
+        
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
@@ -850,7 +851,7 @@ install the fonts in the <code>font</code> directory first.</p>
 <span class="c1"># Add a DejaVu Unicode font (uses UTF-8)</span>
 <span class="c1"># Supports more than 200 languages. For a coverage status see:</span>
 <span class="c1"># http://dejavu.svn.sourceforge.net/viewvc/dejavu/trunk/dejavu-fonts/langcover.txt</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;DejaVuSansCondensed.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;DejaVuSansCondensed.ttf&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;DejaVu&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 
 <span class="n">text</span> <span class="o">=</span> <span class="sa">u</span><span class="s2">&quot;&quot;&quot;</span>
@@ -872,14 +873,14 @@ install the fonts in the <code>font</code> directory first.</p>
 <span class="c1"># Supports: Bengali, Devanagari, Gujarati, </span>
 <span class="c1">#           Gurmukhi (including the variants for Punjabi) </span>
 <span class="c1">#           Kannada, Malayalam, Oriya, Tamil, Telugu, Tibetan</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;gargi.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;gargi.ttf&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;gargi&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Hindi: नमस्ते दुनिया&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
 <span class="c1"># Add a AR PL New Sung Unicode font (uses UTF-8)</span>
 <span class="c1"># The Open Source Chinese Font (also supports other east Asian languages)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;fireflysung.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;fireflysung.ttf&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;fireflysung&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Chinese: 你好世界</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Japanese: こんにちは世界</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -888,13 +889,13 @@ install the fonts in the <code>font</code> directory first.</p>
 <span class="c1"># Add a Alee Unicode font (uses UTF-8)</span>
 <span class="c1"># General purpose Hangul truetype fonts that contain Korean syllable </span>
 <span class="c1"># and Latin9 (iso8859-15) characters.</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Eunjin.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Eunjin.ttf&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;eunjin&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Korean: 안녕하세요&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
 <span class="c1"># Add a Fonts-TLWG (formerly ThaiFonts-Scalable) (uses UTF-8)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Waree.ttf&#39;</span><span class="p">,</span> <span class="n">uni</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;Waree.ttf&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;waree&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">u</span><span class="s1">&#39;Thai: สวัสดีชาวโลก&#39;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
@@ -1004,7 +1005,7 @@ filename.ttf cannot be embedded due to copyright restrictions."</p>
     <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.bd0b6b67.min.js"}</script>
     
     
-      <script src="assets/javascripts/bundle.b88e97c5.min.js"></script>
+      <script src="assets/javascripts/bundle.5413a266.min.js"></script>
       
     
   </body>

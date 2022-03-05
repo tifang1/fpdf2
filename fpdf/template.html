@@ -509,7 +509,7 @@ class FlexTemplate:
         if x is not None or y is not None or w is not None or h is not None:
             warnings.warn(
                 &#34;code39 arguments x/y/w/h are deprecated, please use x1/y1/y2/size instead&#34;,
-                PendingDeprecationWarning,
+                DeprecationWarning,
             )
         pdf = self.pdf
         if pdf.fill_color.lower() != _rgb_as_str(foreground):
@@ -665,7 +665,7 @@ class Template(FlexTemplate):
         if infile:
             warnings.warn(
                 &#39;&#34;infile&#34; is unused and will soon be deprecated&#39;,
-                PendingDeprecationWarning,
+                DeprecationWarning,
             )
         for arg in (
             &#34;format&#34;,
@@ -710,7 +710,7 @@ class Template(FlexTemplate):
         if dest:
             warnings.warn(
                 &#39;&#34;dest&#34; is unused and will soon be deprecated&#39;,
-                PendingDeprecationWarning,
+                DeprecationWarning,
             )
         self.pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
         self.pdf.set_auto_page_break(False, margin=0)
@@ -1204,7 +1204,7 @@ or parse_csv() before doing anything else.</p></div>
         if x is not None or y is not None or w is not None or h is not None:
             warnings.warn(
                 &#34;code39 arguments x/y/w/h are deprecated, please use x1/y1/y2/size instead&#34;,
-                PendingDeprecationWarning,
+                DeprecationWarning,
             )
         pdf = self.pdf
         if pdf.fill_color.lower() != _rgb_as_str(foreground):
@@ -1727,7 +1727,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
         if infile:
             warnings.warn(
                 &#39;&#34;infile&#34; is unused and will soon be deprecated&#39;,
-                PendingDeprecationWarning,
+                DeprecationWarning,
             )
         for arg in (
             &#34;format&#34;,
@@ -1772,7 +1772,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
         if dest:
             warnings.warn(
                 &#39;&#34;dest&#34; is unused and will soon be deprecated&#39;,
-                PendingDeprecationWarning,
+                DeprecationWarning,
             )
         self.pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
         self.pdf.set_auto_page_break(False, margin=0)
@@ -1833,7 +1833,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
     if dest:
         warnings.warn(
             &#39;&#34;dest&#34; is unused and will soon be deprecated&#39;,
-            PendingDeprecationWarning,
+            DeprecationWarning,
         )
     self.pdf.set_font(&#34;helvetica&#34;, &#34;B&#34;, 16)
     self.pdf.set_auto_page_break(False, margin=0)
