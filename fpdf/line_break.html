@@ -26,7 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import namedtuple
+<pre><code class="python">from typing import NamedTuple, Any, Union, Sequence
 
 SOFT_HYPHEN = &#34;\u00ad&#34;
 HYPHEN = &#34;\u002d&#34;
@@ -35,23 +35,23 @@ NEWLINE = &#34;\n&#34;
 
 
 class Fragment:
-    def __init__(self, style, underlined, characters=None):
+    def __init__(self, style: str, underlined: bool, characters: str = None):
         self.characters = [] if characters is None else characters
         self.style = style
         self.underline = underlined
 
     @classmethod
-    def from_string(cls, string, style, underlined):
+    def from_string(cls, string: str, style: str, underlined: bool):
         return cls(style, underlined, list(string))
 
-    def trim(self, index):
+    def trim(self, index: int):
         self.characters = self.characters[:index]
 
     @property
     def string(self):
         return &#34;&#34;.join(self.characters)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         return (
             self.characters == other.characters
             and self.style == other.style
@@ -59,37 +59,44 @@ class Fragment:
         )
 
 
-TextLine = namedtuple(
-    &#34;TextLine&#34;,
-    (&#34;fragments&#34;, &#34;text_width&#34;, &#34;number_of_spaces_between_words&#34;, &#34;justify&#34;),
-)
+class TextLine(NamedTuple):
+    fragments: tuple
+    text_width: float
+    number_of_spaces_between_words: int
+    justify: bool
 
-SpaceHint = namedtuple(
-    &#34;SpaceHint&#34;,
-    (
-        &#34;original_fragment_index&#34;,
-        &#34;original_character_index&#34;,
-        &#34;current_line_fragment_index&#34;,
-        &#34;current_line_character_index&#34;,
-        &#34;width&#34;,
-        &#34;number_of_spaces&#34;,
-    ),
-)
 
-HyphenHint = namedtuple(
-    &#34;HyphenHint&#34;,
-    SpaceHint._fields
-    + (
-        &#34;character_to_append&#34;,
-        &#34;character_to_append_width&#34;,
-        &#34;character_to_append_style&#34;,
-        &#34;character_to_append_underline&#34;,
-    ),
-)
+class SpaceHint(NamedTuple):
+    original_fragment_index: int
+    original_character_index: int
+    current_line_fragment_index: int
+    current_line_character_index: int
+    width: float
+    number_of_spaces: int
+
+
+class HyphenHint(NamedTuple):
+    original_fragment_index: int
+    original_character_index: int
+    current_line_fragment_index: int
+    current_line_character_index: int
+    width: float
+    number_of_spaces: int
+    character_to_append: str
+    character_to_append_width: float
+    character_to_append_style: str
+    character_to_append_underline: bool
 
 
 class CurrentLine:
-    def __init__(self):
+    def __init__(self, print_sh: bool = False):
+        &#34;&#34;&#34;
+        Per-line text fragment management for use by MultiLineBreak.
+            Args:
+                print_sh (bool): If true, a soft-hyphen will be rendered
+                    normally, instead of triggering a line break. Default: False
+        &#34;&#34;&#34;
+        self.print_sh = print_sh
         self.fragments = []
         self.width = 0
         self.number_of_spaces = 0
@@ -110,12 +117,12 @@ class CurrentLine:
 
     def add_character(
         self,
-        character,
-        character_width,
-        style,
-        underline,
-        original_fragment_index,
-        original_character_index,
+        character: str,
+        character_width: float,
+        style: str,
+        underline: bool,
+        original_fragment_index: int,
+        original_character_index: int,
     ):
         assert character != NEWLINE
 
@@ -143,7 +150,7 @@ class CurrentLine:
                 self.number_of_spaces,
             )
             self.number_of_spaces += 1
-        elif character == SOFT_HYPHEN:
+        elif character == SOFT_HYPHEN and not self.print_sh:
             self.hyphen_break_hint = HyphenHint(
                 original_fragment_index,
                 original_character_index,
@@ -157,11 +164,11 @@ class CurrentLine:
                 underline,
             )
 
-        if character != SOFT_HYPHEN:
+        if character != SOFT_HYPHEN or self.print_sh:
             self.width += character_width
             active_fragment.characters.append(character)
 
-    def _apply_automatic_hint(self, break_hint):
+    def _apply_automatic_hint(self, break_hint: Union[SpaceHint, HyphenHint]):
         &#34;&#34;&#34;
         This function mutates the current_line, applying one of the states
         observed in the past and stored in
@@ -173,7 +180,7 @@ class CurrentLine:
         self.number_of_spaces = break_hint.number_of_spaces
         self.width = break_hint.width
 
-    def manual_break(self, justify=False):
+    def manual_break(self, justify: bool = False):
         return TextLine(
             fragments=self.fragments,
             text_width=self.width,
@@ -184,7 +191,7 @@ class CurrentLine:
     def automatic_break_possible(self):
         return self.hyphen_break_hint is not None or self.space_break_hint is not None
 
-    def automatic_break(self, justify):
+    def automatic_break(self, justify: bool):
         assert self.automatic_break_possible()
         if self.hyphen_break_hint is not None and (
             self.space_break_hint is None
@@ -213,28 +220,37 @@ class CurrentLine:
 
 
 class MultiLineBreak:
-    def __init__(self, styled_text_fragments, size_by_style, justify=False):
-
+    def __init__(
+        self,
+        styled_text_fragments: Sequence,
+        size_by_style: Sequence,
+        justify: bool = False,
+        print_sh: bool = False,
+    ):
         self.styled_text_fragments = styled_text_fragments
-
         self.size_by_style = size_by_style
         self.justify = justify
-
+        self.print_sh = print_sh
         self.fragment_index = 0
         self.character_index = 0
 
-    def _get_character_width(self, character, style=&#34;&#34;):
-        if character == SOFT_HYPHEN:
+    def _get_character_width(self, character: str, style: str = &#34;&#34;):
+        if character == SOFT_HYPHEN and not self.print_sh:
             # HYPHEN is inserted instead of SOFT_HYPHEN
             character = HYPHEN
         return self.size_by_style(character, style)
 
-    def get_line_of_given_width(self, maximum_width):
+    # pylint: disable=too-many-return-statements
+    def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
 
         if self.fragment_index == len(self.styled_text_fragments):
             return None
 
-        current_line = CurrentLine()
+        last_fragment_index = self.fragment_index
+        last_character_index = self.character_index
+        line_full = False
+
+        current_line = CurrentLine(print_sh=self.print_sh)
         while self.fragment_index &lt; len(self.styled_text_fragments):
 
             current_fragment = self.styled_text_fragments[self.fragment_index]
@@ -265,7 +281,10 @@ class MultiLineBreak:
                     ) = current_line.automatic_break(self.justify)
                     self.character_index += 1
                     return line
-                return current_line.manual_break()
+                if not wordsplit:
+                    line_full = True
+                    break
+                return current_line.manual_break(self.justify)
 
             current_line.add_character(
                 character,
@@ -278,6 +297,12 @@ class MultiLineBreak:
 
             self.character_index += 1
 
+        if line_full and not wordsplit:
+            # roll back and return empty line to trigger continuation
+            # on the next line.
+            self.fragment_index = last_fragment_index
+            self.character_index = last_character_index
+            return CurrentLine().manual_break(self.justify)
         if current_line.width:
             return current_line.manual_break()</code></pre>
 </details>
@@ -293,15 +318,26 @@ class MultiLineBreak:
 <dl>
 <dt id="fpdf.line_break.CurrentLine"><code class="flex name class">
 <span>class <span class="ident">CurrentLine</span></span>
+<span>(</span><span>print_sh: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Per-line text fragment management for use by MultiLineBreak.
+Args:
+print_sh (bool): If true, a soft-hyphen will be rendered
+normally, instead of triggering a line break. Default: False</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CurrentLine:
-    def __init__(self):
+    def __init__(self, print_sh: bool = False):
+        &#34;&#34;&#34;
+        Per-line text fragment management for use by MultiLineBreak.
+            Args:
+                print_sh (bool): If true, a soft-hyphen will be rendered
+                    normally, instead of triggering a line break. Default: False
+        &#34;&#34;&#34;
+        self.print_sh = print_sh
         self.fragments = []
         self.width = 0
         self.number_of_spaces = 0
@@ -322,12 +358,12 @@ class MultiLineBreak:
 
     def add_character(
         self,
-        character,
-        character_width,
-        style,
-        underline,
-        original_fragment_index,
-        original_character_index,
+        character: str,
+        character_width: float,
+        style: str,
+        underline: bool,
+        original_fragment_index: int,
+        original_character_index: int,
     ):
         assert character != NEWLINE
 
@@ -355,7 +391,7 @@ class MultiLineBreak:
                 self.number_of_spaces,
             )
             self.number_of_spaces += 1
-        elif character == SOFT_HYPHEN:
+        elif character == SOFT_HYPHEN and not self.print_sh:
             self.hyphen_break_hint = HyphenHint(
                 original_fragment_index,
                 original_character_index,
@@ -369,11 +405,11 @@ class MultiLineBreak:
                 underline,
             )
 
-        if character != SOFT_HYPHEN:
+        if character != SOFT_HYPHEN or self.print_sh:
             self.width += character_width
             active_fragment.characters.append(character)
 
-    def _apply_automatic_hint(self, break_hint):
+    def _apply_automatic_hint(self, break_hint: Union[SpaceHint, HyphenHint]):
         &#34;&#34;&#34;
         This function mutates the current_line, applying one of the states
         observed in the past and stored in
@@ -385,7 +421,7 @@ class MultiLineBreak:
         self.number_of_spaces = break_hint.number_of_spaces
         self.width = break_hint.width
 
-    def manual_break(self, justify=False):
+    def manual_break(self, justify: bool = False):
         return TextLine(
             fragments=self.fragments,
             text_width=self.width,
@@ -396,7 +432,7 @@ class MultiLineBreak:
     def automatic_break_possible(self):
         return self.hyphen_break_hint is not None or self.space_break_hint is not None
 
-    def automatic_break(self, justify):
+    def automatic_break(self, justify: bool):
         assert self.automatic_break_possible()
         if self.hyphen_break_hint is not None and (
             self.space_break_hint is None
@@ -426,7 +462,7 @@ class MultiLineBreak:
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.line_break.CurrentLine.add_character"><code class="name flex">
-<span>def <span class="ident">add_character</span></span>(<span>self, character, character_width, style, underline, original_fragment_index, original_character_index)</span>
+<span>def <span class="ident">add_character</span></span>(<span>self, character: str, character_width: float, style: str, underline: bool, original_fragment_index: int, original_character_index: int)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -436,12 +472,12 @@ class MultiLineBreak:
 </summary>
 <pre><code class="python">def add_character(
     self,
-    character,
-    character_width,
-    style,
-    underline,
-    original_fragment_index,
-    original_character_index,
+    character: str,
+    character_width: float,
+    style: str,
+    underline: bool,
+    original_fragment_index: int,
+    original_character_index: int,
 ):
     assert character != NEWLINE
 
@@ -469,7 +505,7 @@ class MultiLineBreak:
             self.number_of_spaces,
         )
         self.number_of_spaces += 1
-    elif character == SOFT_HYPHEN:
+    elif character == SOFT_HYPHEN and not self.print_sh:
         self.hyphen_break_hint = HyphenHint(
             original_fragment_index,
             original_character_index,
@@ -483,13 +519,13 @@ class MultiLineBreak:
             underline,
         )
 
-    if character != SOFT_HYPHEN:
+    if character != SOFT_HYPHEN or self.print_sh:
         self.width += character_width
         active_fragment.characters.append(character)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.CurrentLine.automatic_break"><code class="name flex">
-<span>def <span class="ident">automatic_break</span></span>(<span>self, justify)</span>
+<span>def <span class="ident">automatic_break</span></span>(<span>self, justify: bool)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -497,7 +533,7 @@ class MultiLineBreak:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def automatic_break(self, justify):
+<pre><code class="python">def automatic_break(self, justify: bool):
     assert self.automatic_break_possible()
     if self.hyphen_break_hint is not None and (
         self.space_break_hint is None
@@ -539,7 +575,7 @@ class MultiLineBreak:
 </details>
 </dd>
 <dt id="fpdf.line_break.CurrentLine.manual_break"><code class="name flex">
-<span>def <span class="ident">manual_break</span></span>(<span>self, justify=False)</span>
+<span>def <span class="ident">manual_break</span></span>(<span>self, justify: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -547,7 +583,7 @@ class MultiLineBreak:
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def manual_break(self, justify=False):
+<pre><code class="python">def manual_break(self, justify: bool = False):
     return TextLine(
         fragments=self.fragments,
         text_width=self.width,
@@ -560,7 +596,7 @@ class MultiLineBreak:
 </dd>
 <dt id="fpdf.line_break.Fragment"><code class="flex name class">
 <span>class <span class="ident">Fragment</span></span>
-<span>(</span><span>style, underlined, characters=None)</span>
+<span>(</span><span>style: str, underlined: bool, characters: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -569,23 +605,23 @@ class MultiLineBreak:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Fragment:
-    def __init__(self, style, underlined, characters=None):
+    def __init__(self, style: str, underlined: bool, characters: str = None):
         self.characters = [] if characters is None else characters
         self.style = style
         self.underline = underlined
 
     @classmethod
-    def from_string(cls, string, style, underlined):
+    def from_string(cls, string: str, style: str, underlined: bool):
         return cls(style, underlined, list(string))
 
-    def trim(self, index):
+    def trim(self, index: int):
         self.characters = self.characters[:index]
 
     @property
     def string(self):
         return &#34;&#34;.join(self.characters)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any):
         return (
             self.characters == other.characters
             and self.style == other.style
@@ -595,7 +631,7 @@ class MultiLineBreak:
 <h3>Static methods</h3>
 <dl>
 <dt id="fpdf.line_break.Fragment.from_string"><code class="name flex">
-<span>def <span class="ident">from_string</span></span>(<span>string, style, underlined)</span>
+<span>def <span class="ident">from_string</span></span>(<span>string: str, style: str, underlined: bool)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -604,7 +640,7 @@ class MultiLineBreak:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@classmethod
-def from_string(cls, string, style, underlined):
+def from_string(cls, string: str, style: str, underlined: bool):
     return cls(style, underlined, list(string))</code></pre>
 </details>
 </dd>
@@ -627,7 +663,7 @@ def string(self):
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.line_break.Fragment.trim"><code class="name flex">
-<span>def <span class="ident">trim</span></span>(<span>self, index)</span>
+<span>def <span class="ident">trim</span></span>(<span>self, index: int)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -635,7 +671,7 @@ def string(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def trim(self, index):
+<pre><code class="python">def trim(self, index: int):
     self.characters = self.characters[:index]</code></pre>
 </details>
 </dd>
@@ -643,53 +679,69 @@ def string(self):
 </dd>
 <dt id="fpdf.line_break.HyphenHint"><code class="flex name class">
 <span>class <span class="ident">HyphenHint</span></span>
-<span>(</span><span>original_fragment_index, original_character_index, current_line_fragment_index, current_line_character_index, width, number_of_spaces, character_to_append, character_to_append_width, character_to_append_style, character_to_append_underline)</span>
+<span>(</span><span>original_fragment_index: int, original_character_index: int, current_line_fragment_index: int, current_line_character_index: int, width: float, number_of_spaces: int, character_to_append: str, character_to_append_width: float, character_to_append_style: str, character_to_append_underline: bool)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>HyphenHint(original_fragment_index, original_character_index, current_line_fragment_index, current_line_character_index, width, number_of_spaces, character_to_append, character_to_append_width, character_to_append_style, character_to_append_underline)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HyphenHint(NamedTuple):
+    original_fragment_index: int
+    original_character_index: int
+    current_line_fragment_index: int
+    current_line_character_index: int
+    width: float
+    number_of_spaces: int
+    character_to_append: str
+    character_to_append_width: float
+    character_to_append_style: str
+    character_to_append_underline: bool</code></pre>
+</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.tuple</li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="fpdf.line_break.HyphenHint.character_to_append"><code class="name">var <span class="ident">character_to_append</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.character_to_append"><code class="name">var <span class="ident">character_to_append</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 6</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.character_to_append_style"><code class="name">var <span class="ident">character_to_append_style</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.character_to_append_style"><code class="name">var <span class="ident">character_to_append_style</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 8</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.character_to_append_underline"><code class="name">var <span class="ident">character_to_append_underline</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.character_to_append_underline"><code class="name">var <span class="ident">character_to_append_underline</span> : bool</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 9</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.character_to_append_width"><code class="name">var <span class="ident">character_to_append_width</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.character_to_append_width"><code class="name">var <span class="ident">character_to_append_width</span> : float</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 7</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.current_line_character_index"><code class="name">var <span class="ident">current_line_character_index</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.current_line_character_index"><code class="name">var <span class="ident">current_line_character_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 3</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.current_line_fragment_index"><code class="name">var <span class="ident">current_line_fragment_index</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.current_line_fragment_index"><code class="name">var <span class="ident">current_line_fragment_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 2</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.number_of_spaces"><code class="name">var <span class="ident">number_of_spaces</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.number_of_spaces"><code class="name">var <span class="ident">number_of_spaces</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 5</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.original_character_index"><code class="name">var <span class="ident">original_character_index</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.original_character_index"><code class="name">var <span class="ident">original_character_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 1</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.original_fragment_index"><code class="name">var <span class="ident">original_fragment_index</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.original_fragment_index"><code class="name">var <span class="ident">original_fragment_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 0</p></div>
 </dd>
-<dt id="fpdf.line_break.HyphenHint.width"><code class="name">var <span class="ident">width</span></code></dt>
+<dt id="fpdf.line_break.HyphenHint.width"><code class="name">var <span class="ident">width</span> : float</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 4</p></div>
 </dd>
@@ -697,7 +749,7 @@ def string(self):
 </dd>
 <dt id="fpdf.line_break.MultiLineBreak"><code class="flex name class">
 <span>class <span class="ident">MultiLineBreak</span></span>
-<span>(</span><span>styled_text_fragments, size_by_style, justify=False)</span>
+<span>(</span><span>styled_text_fragments: Sequence, size_by_style: Sequence, justify: bool = False, print_sh: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -706,28 +758,37 @@ def string(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class MultiLineBreak:
-    def __init__(self, styled_text_fragments, size_by_style, justify=False):
-
+    def __init__(
+        self,
+        styled_text_fragments: Sequence,
+        size_by_style: Sequence,
+        justify: bool = False,
+        print_sh: bool = False,
+    ):
         self.styled_text_fragments = styled_text_fragments
-
         self.size_by_style = size_by_style
         self.justify = justify
-
+        self.print_sh = print_sh
         self.fragment_index = 0
         self.character_index = 0
 
-    def _get_character_width(self, character, style=&#34;&#34;):
-        if character == SOFT_HYPHEN:
+    def _get_character_width(self, character: str, style: str = &#34;&#34;):
+        if character == SOFT_HYPHEN and not self.print_sh:
             # HYPHEN is inserted instead of SOFT_HYPHEN
             character = HYPHEN
         return self.size_by_style(character, style)
 
-    def get_line_of_given_width(self, maximum_width):
+    # pylint: disable=too-many-return-statements
+    def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
 
         if self.fragment_index == len(self.styled_text_fragments):
             return None
 
-        current_line = CurrentLine()
+        last_fragment_index = self.fragment_index
+        last_character_index = self.character_index
+        line_full = False
+
+        current_line = CurrentLine(print_sh=self.print_sh)
         while self.fragment_index &lt; len(self.styled_text_fragments):
 
             current_fragment = self.styled_text_fragments[self.fragment_index]
@@ -758,7 +819,10 @@ def string(self):
                     ) = current_line.automatic_break(self.justify)
                     self.character_index += 1
                     return line
-                return current_line.manual_break()
+                if not wordsplit:
+                    line_full = True
+                    break
+                return current_line.manual_break(self.justify)
 
             current_line.add_character(
                 character,
@@ -771,13 +835,19 @@ def string(self):
 
             self.character_index += 1
 
+        if line_full and not wordsplit:
+            # roll back and return empty line to trigger continuation
+            # on the next line.
+            self.fragment_index = last_fragment_index
+            self.character_index = last_character_index
+            return CurrentLine().manual_break(self.justify)
         if current_line.width:
             return current_line.manual_break()</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.line_break.MultiLineBreak.get_line_of_given_width"><code class="name flex">
-<span>def <span class="ident">get_line_of_given_width</span></span>(<span>self, maximum_width)</span>
+<span>def <span class="ident">get_line_of_given_width</span></span>(<span>self, maximum_width: float, wordsplit: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -785,12 +855,16 @@ def string(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_line_of_given_width(self, maximum_width):
+<pre><code class="python">def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
 
     if self.fragment_index == len(self.styled_text_fragments):
         return None
 
-    current_line = CurrentLine()
+    last_fragment_index = self.fragment_index
+    last_character_index = self.character_index
+    line_full = False
+
+    current_line = CurrentLine(print_sh=self.print_sh)
     while self.fragment_index &lt; len(self.styled_text_fragments):
 
         current_fragment = self.styled_text_fragments[self.fragment_index]
@@ -821,7 +895,10 @@ def string(self):
                 ) = current_line.automatic_break(self.justify)
                 self.character_index += 1
                 return line
-            return current_line.manual_break()
+            if not wordsplit:
+                line_full = True
+                break
+            return current_line.manual_break(self.justify)
 
         current_line.add_character(
             character,
@@ -834,6 +911,12 @@ def string(self):
 
         self.character_index += 1
 
+    if line_full and not wordsplit:
+        # roll back and return empty line to trigger continuation
+        # on the next line.
+        self.fragment_index = last_fragment_index
+        self.character_index = last_character_index
+        return CurrentLine().manual_break(self.justify)
     if current_line.width:
         return current_line.manual_break()</code></pre>
 </details>
@@ -842,37 +925,49 @@ def string(self):
 </dd>
 <dt id="fpdf.line_break.SpaceHint"><code class="flex name class">
 <span>class <span class="ident">SpaceHint</span></span>
-<span>(</span><span>original_fragment_index, original_character_index, current_line_fragment_index, current_line_character_index, width, number_of_spaces)</span>
+<span>(</span><span>original_fragment_index: int, original_character_index: int, current_line_fragment_index: int, current_line_character_index: int, width: float, number_of_spaces: int)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>SpaceHint(original_fragment_index, original_character_index, current_line_fragment_index, current_line_character_index, width, number_of_spaces)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SpaceHint(NamedTuple):
+    original_fragment_index: int
+    original_character_index: int
+    current_line_fragment_index: int
+    current_line_character_index: int
+    width: float
+    number_of_spaces: int</code></pre>
+</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.tuple</li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="fpdf.line_break.SpaceHint.current_line_character_index"><code class="name">var <span class="ident">current_line_character_index</span></code></dt>
+<dt id="fpdf.line_break.SpaceHint.current_line_character_index"><code class="name">var <span class="ident">current_line_character_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 3</p></div>
 </dd>
-<dt id="fpdf.line_break.SpaceHint.current_line_fragment_index"><code class="name">var <span class="ident">current_line_fragment_index</span></code></dt>
+<dt id="fpdf.line_break.SpaceHint.current_line_fragment_index"><code class="name">var <span class="ident">current_line_fragment_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 2</p></div>
 </dd>
-<dt id="fpdf.line_break.SpaceHint.number_of_spaces"><code class="name">var <span class="ident">number_of_spaces</span></code></dt>
+<dt id="fpdf.line_break.SpaceHint.number_of_spaces"><code class="name">var <span class="ident">number_of_spaces</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 5</p></div>
 </dd>
-<dt id="fpdf.line_break.SpaceHint.original_character_index"><code class="name">var <span class="ident">original_character_index</span></code></dt>
+<dt id="fpdf.line_break.SpaceHint.original_character_index"><code class="name">var <span class="ident">original_character_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 1</p></div>
 </dd>
-<dt id="fpdf.line_break.SpaceHint.original_fragment_index"><code class="name">var <span class="ident">original_fragment_index</span></code></dt>
+<dt id="fpdf.line_break.SpaceHint.original_fragment_index"><code class="name">var <span class="ident">original_fragment_index</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 0</p></div>
 </dd>
-<dt id="fpdf.line_break.SpaceHint.width"><code class="name">var <span class="ident">width</span></code></dt>
+<dt id="fpdf.line_break.SpaceHint.width"><code class="name">var <span class="ident">width</span> : float</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 4</p></div>
 </dd>
@@ -880,29 +975,39 @@ def string(self):
 </dd>
 <dt id="fpdf.line_break.TextLine"><code class="flex name class">
 <span>class <span class="ident">TextLine</span></span>
-<span>(</span><span>fragments, text_width, number_of_spaces_between_words, justify)</span>
+<span>(</span><span>fragments: tuple, text_width: float, number_of_spaces_between_words: int, justify: bool)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>TextLine(fragments, text_width, number_of_spaces_between_words, justify)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TextLine(NamedTuple):
+    fragments: tuple
+    text_width: float
+    number_of_spaces_between_words: int
+    justify: bool</code></pre>
+</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.tuple</li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="fpdf.line_break.TextLine.fragments"><code class="name">var <span class="ident">fragments</span></code></dt>
+<dt id="fpdf.line_break.TextLine.fragments"><code class="name">var <span class="ident">fragments</span> : tuple</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 0</p></div>
 </dd>
-<dt id="fpdf.line_break.TextLine.justify"><code class="name">var <span class="ident">justify</span></code></dt>
+<dt id="fpdf.line_break.TextLine.justify"><code class="name">var <span class="ident">justify</span> : bool</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 3</p></div>
 </dd>
-<dt id="fpdf.line_break.TextLine.number_of_spaces_between_words"><code class="name">var <span class="ident">number_of_spaces_between_words</span></code></dt>
+<dt id="fpdf.line_break.TextLine.number_of_spaces_between_words"><code class="name">var <span class="ident">number_of_spaces_between_words</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 2</p></div>
 </dd>
-<dt id="fpdf.line_break.TextLine.text_width"><code class="name">var <span class="ident">text_width</span></code></dt>
+<dt id="fpdf.line_break.TextLine.text_width"><code class="name">var <span class="ident">text_width</span> : float</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 1</p></div>
 </dd>

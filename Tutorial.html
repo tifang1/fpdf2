@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Tutorial.html">
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.4">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.5">
     
     
       
@@ -1037,10 +1037,10 @@ position and the width of the frame surrounding the title. Then colors are set
 to 1 mm (against 0.2 by default) with
 <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_line_width">set_line_width</a>. Finally, we output the cell (the
 last parameter to true indicates that the background must be filled).</p>
-<p>The method used to print the paragraphs is <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell">multi_cell</a>.
+<p>The method used to print the paragraphs is <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell">multi_cell</a>. Text is justified by default.
 Each time a line reaches the right extremity of the cell or a carriage return
 character is met, a line break is issued and a new cell automatically created
-under the current one. Text is justified by default.</p>
+under the current one. An automatic break is performed at the location of the nearest space or soft-hyphen (\u00ad) character before the right limit. A soft-hyphen will be replaced by a normal hyphen when triggering a line break, and ignored otherwise.</p>
 <p>Two document properties are defined: the title 
 (<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_title">set_title</a>) and the author 
 (<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_author">set_author</a>). Properties can be viewed by two means.
@@ -1386,7 +1386,7 @@ On the other hand, its main drawback is that we cannot justify the text like
     <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.bd0b6b67.min.js"}</script>
     
     
-      <script src="assets/javascripts/bundle.5413a266.min.js"></script>
+      <script src="assets/javascripts/bundle.467223ff.min.js"></script>
       
     
   </body>
