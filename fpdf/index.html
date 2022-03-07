@@ -2160,6 +2160,7 @@ Default to "mm".</dd>
 
             if self.fill_color != self.text_color:
                 s += f&#34;q {self.text_color} &#34;
+            style_changed = False
 
             prev_font_style, prev_underline = self.font_style, self.underline
             s += (
@@ -2167,9 +2168,8 @@ Default to "mm".</dd>
                 f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2f} Td&#34;
             )
 
-            word_spacing = (
-                0  # precursor to self.ws, or manual spacing of unicode fonts.
-            )
+            # precursor to self.ws, or manual spacing of unicode fonts/
+            word_spacing = 0
             if align == &#34;J&#34; and text_line.number_of_spaces_between_words:
                 word_spacing = (
                     w - self.c_margin - self.c_margin - styled_txt_width
@@ -2191,6 +2191,7 @@ Default to "mm".</dd>
                             self.font_family + self.font_style
                         ]
                         s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+                        style_changed = True
                     txt_frag_mapped = &#34;&#34;
                     for char in txt_frag:
                         uni = ord(char)
@@ -2234,6 +2235,7 @@ Default to "mm".</dd>
                             self.font_family + self.font_style
                         ]
                         s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
+                        style_changed = True
                     if self.unifontsubset:
                         txt_frag_mapped = &#34;&#34;
                         for char in txt_frag:
@@ -2271,6 +2273,8 @@ Default to "mm".</dd>
 
             if self.fill_color != self.text_color:
                 s += &#34; Q&#34;
+                if style_changed:
+                    s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
 
             if link:
                 self.link(

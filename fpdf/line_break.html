@@ -36,9 +36,12 @@ NEWLINE = &#34;\n&#34;
 
 class Fragment:
     def __init__(self, style: str, underlined: bool, characters: str = None):
-        self.characters = [] if characters is None else characters
         self.style = style
         self.underline = underlined
+        self.characters = [] if characters is None else characters
+
+    def __repr__(self):
+        return f&#34;Fragment(style={self.style}, underline={self.underline}, characters={self.characters})&#34;
 
     @classmethod
     def from_string(cls, string: str, style: str, underlined: bool):
@@ -606,9 +609,12 @@ normally, instead of triggering a line break. Default: False</p></div>
 </summary>
 <pre><code class="python">class Fragment:
     def __init__(self, style: str, underlined: bool, characters: str = None):
-        self.characters = [] if characters is None else characters
         self.style = style
         self.underline = underlined
+        self.characters = [] if characters is None else characters
+
+    def __repr__(self):
+        return f&#34;Fragment(style={self.style}, underline={self.underline}, characters={self.characters})&#34;
 
     @classmethod
     def from_string(cls, string: str, style: str, underlined: bool):
