@@ -56,6 +56,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/LineBreaks.html</loc>
+         <lastmod>2022-03-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/Links.html</loc>
          <lastmod>2022-03-07</lastmod>
          <changefreq>daily</changefreq>
@@ -167,6 +172,11 @@
     </url>
     <url>
          <loc>https://pyfpdf.github.io/fpdf2/Web2Py.html</loc>
+         <lastmod>2022-03-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://pyfpdf.github.io/fpdf2/borb.html</loc>
          <lastmod>2022-03-07</lastmod>
          <changefreq>daily</changefreq>
     </url>

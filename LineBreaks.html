@@ -10,14 +10,14 @@
       
       
       
-        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/Presentations.html">
+        <link rel="canonical" href="https://pyfpdf.github.io/fpdf2/LineBreaks.html">
       
       <link rel="icon" href="assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-8.2.5">
     
     
       
-        <title>Presentations - fpdf2</title>
+        <title>Line breaks - fpdf2</title>
       
     
     
@@ -50,9 +50,9 @@
     
   
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="fpdf2 - Presentations" />
+  <meta property="og:title" content="fpdf2 - Line breaks" />
   <meta property="og:description" content="fpdf2 - minimalist PDF creation library for Python" />
-  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/Presentations.html" />
+  <meta property="og:url" content="https://pyfpdf.github.io/fpdf2/LineBreaks.html" />
   <meta property="og:image" content="https://pyfpdf.github.io/fpdf2/fpdf2-logo.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="og:image:width" content="500" />
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#presentations" class="md-skip">
+        <a href="#line-breaks" class="md-skip">
           Skip to content
         </a>
       
@@ -109,7 +109,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Presentations
+              Line breaks
             
           </span>
         </div>
@@ -322,12 +322,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" checked>
       
       
       
@@ -376,11 +378,21 @@
               
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="LineBreaks.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="LineBreaks.html" class="md-nav__link md-nav__link--active">
         Line breaks
       </a>
+      
     </li>
   
 
@@ -442,59 +454,11 @@
 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Presentations
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="Presentations.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="Presentations.html" class="md-nav__link">
         Presentations
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#page-display-duration" class="md-nav__link">
-    Page display duration
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#transitions" class="md-nav__link">
-    Transitions
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -759,28 +723,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#page-display-duration" class="md-nav__link">
-    Page display duration
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#transitions" class="md-nav__link">
-    Transitions
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -791,68 +733,17 @@
             <article class="md-content__inner md-typeset">
               
                 
-<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/Presentations.md" title="Edit this page" class="md-content__button md-icon">
+<a href="https://github.com/PyFPDF/fpdf2/edit/master/docs/LineBreaks.md" title="Edit this page" class="md-content__button md-icon">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
 </a>
 
 
 
-<h1 id="presentations">Presentations</h1>
-<p><strong>Presentation mode</strong> can usually be enabled with the <code>CTRL + L</code> shortcut.</p>
-<p>As of june 2021, the features described below are onored by Adobe Acrobat reader,
-but ignored by Sumatra PDF reader.</p>
-<h2 id="page-display-duration">Page display duration</h2>
-<p>Pages can be associated with a "display duration"
-until when the viewer application automatically advances to the next page:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
-
-<span class="n">pdf</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">duration</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 1&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">page_duration</span> <span class="o">=</span> <span class="mf">.5</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 2&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 3&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;presentation.pdf&quot;</span><span class="p">)</span>
-</code></pre></div>
-<p>It can also be configured globally through the <code>page_duration</code> FPDF property.</p>
-<h2 id="transitions">Transitions</h2>
-<p>Pages can be associated with visual transitions to use when moving
-from another page to the given page during a presentation:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
-<span class="kn">from</span> <span class="nn">fpdf.transitions</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="n">pdf</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 0&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">SplitTransition</span><span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">,</span> <span class="s2">&quot;O&quot;</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 1&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">BlindsTransition</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 2&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">BoxTransition</span><span class="p">(</span><span class="s2">&quot;I&quot;</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 3&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">WipeTransition</span><span class="p">(</span><span class="mi">90</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 4&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">DissolveTransition</span><span class="p">())</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 5&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">GlitterTransition</span><span class="p">(</span><span class="mi">315</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 6&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">FlyTransition</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 7&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">PushTransition</span><span class="p">(</span><span class="mi">270</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 8&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">CoverTransition</span><span class="p">(</span><span class="mi">270</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 9&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">UncoverTransition</span><span class="p">(</span><span class="mi">270</span><span class="p">))</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 10&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">transition</span><span class="o">=</span><span class="n">FadeTransition</span><span class="p">())</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Page 11&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;transitions.pdf&quot;</span><span class="p">)</span>
-</code></pre></div>
-<p>It can also be configured globally through the <code>page_transition</code> FPDF property.</p>
+<h1 id="line-breaks">Line breaks</h1>
+<p>When using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell">multi_cell()</a>, each time a line reaches the right extremity of the cell
+or a carriage return character (<code>\n</code>) is met, a line break is issued and a new cell automatically created under the current one.</p>
+<p>An automatic break is performed at the location of the nearest space or soft-hyphen (<code>\u00ad</code>) character before the right limit.
+A soft-hyphen will be replaced by a normal hyphen when triggering a line break, and ignored otherwise.</p>
 
               
             </article>
@@ -866,7 +757,7 @@ from another page to the given page during a presentation:</p>
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="TextStyling.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Text styling" rel="prev">
+        <a href="Margins.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Margins" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -875,20 +766,20 @@ from another page to the given page during a presentation:</p>
               <span class="md-footer__direction">
                 Previous
               </span>
-              Text styling
+              Margins
             </div>
           </div>
         </a>
       
       
         
-        <a href="Annotations.html" class="md-footer__link md-footer__link--next" aria-label="Next: Annotations" rel="next">
+        <a href="PageBreaks.html" class="md-footer__link md-footer__link--next" aria-label="Next: Page breaks" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Annotations
+              Page breaks
             </div>
           </div>
           <div class="md-footer__button md-icon">
