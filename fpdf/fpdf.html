@@ -2333,6 +2333,7 @@ class FPDF(GraphicsStateMixin):
 
             if self.fill_color != self.text_color:
                 s += &#34; Q&#34;
+                # cf. issue 348 &amp; test_multi_cell_markdown_with_fill_color:
                 if style_changed:
                     s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
 
@@ -2358,7 +2359,7 @@ class FPDF(GraphicsStateMixin):
         elif new_x == XPos.WCONT:
             self.x = s_start + s_width - self.c_margin
         elif new_x == XPos.CENTER:
-            self.x = (s_start + s_start + s_width) / 2.0
+            self.x = s_start + s_width / 2.0
         elif new_x == XPos.LMARGIN:
             self.x = self.l_margin
         elif new_x == XPos.RMARGIN:
@@ -2614,6 +2615,15 @@ class FPDF(GraphicsStateMixin):
                 maximum_allowed_emwidth
             )
 
+        if not text_lines:  # ensure we display at least one cell - cf. issue #349
+            text_lines = [
+                TextLine(
+                    &#34;&#34;,
+                    text_width=0,
+                    number_of_spaces_between_words=0,
+                    justify=False,
+                )
+            ]
         for text_line_index, text_line in enumerate(text_lines):
             is_last_line = text_line_index == len(text_lines) - 1
 
@@ -6409,6 +6419,7 @@ Default to "mm".</dd>
 
             if self.fill_color != self.text_color:
                 s += &#34; Q&#34;
+                # cf. issue 348 &amp; test_multi_cell_markdown_with_fill_color:
                 if style_changed:
                     s += f&#34; /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;
 
@@ -6434,7 +6445,7 @@ Default to "mm".</dd>
         elif new_x == XPos.WCONT:
             self.x = s_start + s_width - self.c_margin
         elif new_x == XPos.CENTER:
-            self.x = (s_start + s_start + s_width) / 2.0
+            self.x = s_start + s_width / 2.0
         elif new_x == XPos.LMARGIN:
             self.x = self.l_margin
         elif new_x == XPos.RMARGIN:
@@ -6690,6 +6701,15 @@ Default to "mm".</dd>
                 maximum_allowed_emwidth
             )
 
+        if not text_lines:  # ensure we display at least one cell - cf. issue #349
+            text_lines = [
+                TextLine(
+                    &#34;&#34;,
+                    text_width=0,
+                    number_of_spaces_between_words=0,
+                    justify=False,
+                )
+            ]
         for text_line_index, text_line in enumerate(text_lines):
             is_last_line = text_line_index == len(text_lines) - 1
 
@@ -10300,6 +10320,15 @@ def multi_cell(
             maximum_allowed_emwidth
         )
 
+    if not text_lines:  # ensure we display at least one cell - cf. issue #349
+        text_lines = [
+            TextLine(
+                &#34;&#34;,
+                text_width=0,
+                number_of_spaces_between_words=0,
+                justify=False,
+            )
+        ]
     for text_line_index, text_line in enumerate(text_lines):
         is_last_line = text_line_index == len(text_lines) - 1
 
