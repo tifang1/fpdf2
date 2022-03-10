@@ -1606,6 +1606,8 @@ class GraphicsStyle:
             super().__setattr__(&#34;_stroke_color&#34;, color)
             if color.a is not None:
                 self.stroke_opacity = color.a
+            if self.stroke_width is self.INHERIT:
+                self.stroke_width = 1
 
         elif (color is None) or (color is self.INHERIT):
             super().__setattr__(&#34;_stroke_color&#34;, color)
@@ -3469,7 +3471,7 @@ class PaintedPath:
         self._closed = True
         self._close_context = self._graphics_context
 
-        self.move_to(x, y)
+        self._starter_move = Move(Point(x, y))
 
     def __deepcopy__(self, memo):
         # there&#39;s no real way to recover the matching current _graphics_context after
@@ -3561,7 +3563,6 @@ class PaintedPath:
         &#34;&#34;&#34;
         if self._starter_move is not None:
             self._closed = False
-
             self._graphics_context.add_item(self._starter_move, _copy=False)
             self._close_context = self._graphics_context
             self._starter_move = None
@@ -3669,8 +3670,11 @@ class PaintedPath:
             x (Number): abscissa of the (sub)path starting point relative to the.
             y (Number): ordinate of the (sub)path starting point relative to the.
         &#34;&#34;&#34;
-
         self._insert_implicit_close_if_open()
+        if self._starter_move is not None:
+            self._closed = False
+            self._graphics_context.add_item(self._starter_move, _copy=False)
+            self._close_context = self._graphics_context
         self._starter_move = RelativeMove(Point(x, y))
         return self
 
@@ -7333,6 +7337,8 @@ which use None as hints to the auto paint style detection code.</p></div>
             super().__setattr__(&#34;_stroke_color&#34;, color)
             if color.a is not None:
                 self.stroke_opacity = color.a
+            if self.stroke_width is self.INHERIT:
+                self.stroke_width = 1
 
         elif (color is None) or (color is self.INHERIT):
             super().__setattr__(&#34;_stroke_color&#34;, color)
@@ -8446,7 +8452,7 @@ primitive path elements and <code><a title="fpdf.drawing.GraphicsContext" href="
         self._closed = True
         self._close_context = self._graphics_context
 
-        self.move_to(x, y)
+        self._starter_move = Move(Point(x, y))
 
     def __deepcopy__(self, memo):
         # there&#39;s no real way to recover the matching current _graphics_context after
@@ -8538,7 +8544,6 @@ primitive path elements and <code><a title="fpdf.drawing.GraphicsContext" href="
         &#34;&#34;&#34;
         if self._starter_move is not None:
             self._closed = False
-
             self._graphics_context.add_item(self._starter_move, _copy=False)
             self._close_context = self._graphics_context
             self._starter_move = None
@@ -8646,8 +8651,11 @@ primitive path elements and <code><a title="fpdf.drawing.GraphicsContext" href="
             x (Number): abscissa of the (sub)path starting point relative to the.
             y (Number): ordinate of the (sub)path starting point relative to the.
         &#34;&#34;&#34;
-
         self._insert_implicit_close_if_open()
+        if self._starter_move is not None:
+            self._closed = False
+            self._graphics_context.add_item(self._starter_move, _copy=False)
+            self._close_context = self._graphics_context
         self._starter_move = RelativeMove(Point(x, y))
         return self
 
@@ -9089,7 +9097,6 @@ caution.</dd>
     &#34;&#34;&#34;
     if self._starter_move is not None:
         self._closed = False
-
         self._graphics_context.add_item(self._starter_move, _copy=False)
         self._close_context = self._graphics_context
         self._starter_move = None
@@ -9684,8 +9691,11 @@ the path is being rendered, or from 0, 0 if it is the first item.</p>
         x (Number): abscissa of the (sub)path starting point relative to the.
         y (Number): ordinate of the (sub)path starting point relative to the.
     &#34;&#34;&#34;
-
     self._insert_implicit_close_if_open()
+    if self._starter_move is not None:
+        self._closed = False
+        self._graphics_context.add_item(self._starter_move, _copy=False)
+        self._close_context = self._graphics_context
     self._starter_move = RelativeMove(Point(x, y))
     return self</code></pre>
 </details>
