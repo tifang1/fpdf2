@@ -2509,11 +2509,9 @@ Default to "mm".</dd>
 
         page_break_triggered = False
         if split_only:
-            _out, _add_page, _perform_page_break_if_need_be = (
-                self._out,
-                self.add_page,
-                self._perform_page_break_if_need_be,
-            )
+            _add_page = self.add_page
+            _out = self._out
+            _perform_page_break_if_need_be = self._perform_page_break_if_need_be
             self._out = lambda *args, **kwargs: None
             self.add_page = lambda *args, **kwargs: None
             self._perform_page_break_if_need_be = lambda *args, **kwargs: None
@@ -2602,11 +2600,9 @@ Default to "mm".</dd>
 
         if split_only:
             # restore writing functions
-            self._out, self.add_page, self._perform_page_break_if_need_be = (
-                _out,
-                _add_page,
-                _perform_page_break_if_need_be,
-            )
+            self.add_page = _add_page
+            self._out = _out
+            self._perform_page_break_if_need_be = _perform_page_break_if_need_be
             self.set_xy(prev_x, prev_y)  # restore location
             result = []
             for text_line in text_lines:
@@ -2949,6 +2945,10 @@ Default to "mm".</dd>
 
     @contextmanager
     def _marked_sequence(self, **kwargs):
+        &#34;&#34;&#34;
+        Can receive as named arguments any of the entries described in section 14.7.2 &#39;Structure Hierarchy&#39;
+        of the PDF spec: iD, a, c, r, lang, e, actualText
+        &#34;&#34;&#34;
         page_object_id = self._current_page_object_id()
         mcid = self.struct_builder.next_mcid_for_page(page_object_id)
         marked_content = self._add_marked_content(
@@ -2959,6 +2959,10 @@ Default to "mm".</dd>
         self._out(&#34;EMC&#34;)
 
     def _add_marked_content(self, page_object_id, **kwargs):
+        &#34;&#34;&#34;
+        Can receive as named arguments any of the entries described in section 14.7.2 &#39;Structure Hierarchy&#39;
+        of the PDF spec: iD, a, c, r, lang, e, actualText
+        &#34;&#34;&#34;
         struct_parents_id = self._struct_parents_id_per_page.get(page_object_id)
         if struct_parents_id is None:
             struct_parents_id = len(self._struct_parents_id_per_page)
@@ -6128,11 +6132,9 @@ def multi_cell(
 
     page_break_triggered = False
     if split_only:
-        _out, _add_page, _perform_page_break_if_need_be = (
-            self._out,
-            self.add_page,
-            self._perform_page_break_if_need_be,
-        )
+        _add_page = self.add_page
+        _out = self._out
+        _perform_page_break_if_need_be = self._perform_page_break_if_need_be
         self._out = lambda *args, **kwargs: None
         self.add_page = lambda *args, **kwargs: None
         self._perform_page_break_if_need_be = lambda *args, **kwargs: None
@@ -6221,11 +6223,9 @@ def multi_cell(
 
     if split_only:
         # restore writing functions
-        self._out, self.add_page, self._perform_page_break_if_need_be = (
-            _out,
-            _add_page,
-            _perform_page_break_if_need_be,
-        )
+        self.add_page = _add_page
+        self._out = _out
+        self._perform_page_break_if_need_be = _perform_page_break_if_need_be
         self.set_xy(prev_x, prev_y)  # restore location
         result = []
         for text_line in text_lines:
