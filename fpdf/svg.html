@@ -50,8 +50,10 @@ _HANDY_NAMESPACES = {
     &#34;xlink&#34;: &#34;http://www.w3.org/1999/xlink&#34;,
 }
 
-ALPHABET = re.compile(r&#34;([a-zA-Z])&#34;)
-NUMBER_SIGN = re.compile(r&#34;([+-])&#34;)
+# &#34;e&#34; is excluded as it is used to build numbers like -2e-3:
+ALPHABET = re.compile(r&#34;([a-df-zA-Z])&#34;)
+# We use a negative lookbehind to NOT split after &#34;e&#34; used as exponentiation:
+NUMBER_SIGN = re.compile(r&#34;(?&lt;!e)([+-])&#34;)
 NUMBER_SPLIT = re.compile(r&#34;(?:\s+,\s+|\s+,|,\s+|\s+|,)&#34;)
 DECIMAL_DISASTER = re.compile(r&#34;(\d+\.\d+|\d+\.|\.\d+)(\.)&#34;)
 TRANSFORM_GETTER = re.compile(
