@@ -1406,7 +1406,7 @@ in <code>.git/hooks/pre-commit</code> in order to always invoke <code>black</cod
 before every commit:</p>
 <div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
 git_cached_names<span class="o">()</span> <span class="o">{</span> git diff --cached --name-only --diff-filter<span class="o">=</span>ACM<span class="p">;</span> <span class="o">}</span>
-<span class="k">if</span> grep -IRF <span class="nv">generate</span><span class="o">=</span>True <span class="k">$(</span>git_cached_names <span class="p">|</span> grep <span class="s1">&#39;test.*\.py$&#39;</span><span class="k">)</span><span class="p">;</span> <span class="k">then</span>
+<span class="k">if</span> git_cached_names <span class="p">|</span> grep -q <span class="s1">&#39;test.*\.py$&#39;</span> <span class="o">&amp;&amp;</span> grep -IRF <span class="nv">generate</span><span class="o">=</span>True <span class="k">$(</span>git_cached_names <span class="p">|</span> grep <span class="s1">&#39;test.*\.py$&#39;</span><span class="k">)</span><span class="p">;</span> <span class="k">then</span>
     <span class="nb">echo</span> <span class="s1">&#39;`generate=True` left remaining in a call to assert_pdf_equal&#39;</span>
     <span class="nb">exit</span> <span class="m">1</span>
 <span class="k">fi</span>

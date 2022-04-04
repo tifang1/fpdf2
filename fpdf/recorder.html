@@ -26,7 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from copy import deepcopy
+<pre><code class="python">import types
+import warnings
+from copy import deepcopy
 
 from .errors import FPDFException
 
@@ -72,7 +74,11 @@ class FPDFRecorder:
         for call in self._calls:
             func, args, kwargs = call
             try:
-                func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                if isinstance(result, types.GeneratorType):
+                    warnings.warn(
+                        &#34;Detected usage of a context manager inside an unbreakable() section, which is not supported&#34;
+                    )
             except Exception as error:
                 raise FPDFException(
                     f&#34;Failed to replay FPDF call: {func}(*{args}, **{kwargs})&#34;
@@ -182,7 +188,11 @@ when generating large PDFs, doubling memory usage may be troublesome.</p></div>
         for call in self._calls:
             func, args, kwargs = call
             try:
-                func(*args, **kwargs)
+                result = func(*args, **kwargs)
+                if isinstance(result, types.GeneratorType):
+                    warnings.warn(
+                        &#34;Detected usage of a context manager inside an unbreakable() section, which is not supported&#34;
+                    )
             except Exception as error:
                 raise FPDFException(
                     f&#34;Failed to replay FPDF call: {func}(*{args}, **{kwargs})&#34;
@@ -204,7 +214,11 @@ when generating large PDFs, doubling memory usage may be troublesome.</p></div>
     for call in self._calls:
         func, args, kwargs = call
         try:
-            func(*args, **kwargs)
+            result = func(*args, **kwargs)
+            if isinstance(result, types.GeneratorType):
+                warnings.warn(
+                    &#34;Detected usage of a context manager inside an unbreakable() section, which is not supported&#34;
+                )
         except Exception as error:
             raise FPDFException(
                 f&#34;Failed to replay FPDF call: {func}(*{args}, **{kwargs})&#34;

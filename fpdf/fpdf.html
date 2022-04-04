@@ -4270,6 +4270,7 @@ class FPDF(GraphicsStateMixin):
         &#34;&#34;&#34;
         prev_page, prev_y = self.page, self.y
         recorder = FPDFRecorder(self, accept_page_break=False)
+        recorder.page_break_triggered = False
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
@@ -4280,7 +4281,24 @@ class FPDF(GraphicsStateMixin):
             # Performing this call through .pdf so that it does not get recorded &amp; replayed:
             recorder.pdf._perform_page_break()
             recorder.replay()
+            recorder.page_break_triggered = True
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
+
+    @contextmanager
+    def offset_rendering(self):
+        &#34;&#34;&#34;
+        All rendering performed in this context is made on a dummy FPDF object.
+        This allows to test the results of some operations on the global layout
+        before performing them &#34;for real&#34;.
+        &#34;&#34;&#34;
+        prev_page, prev_y = self.page, self.y
+        recorder = FPDFRecorder(self, accept_page_break=False)
+        recorder.page_break_triggered = False
+        yield recorder
+        y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
+        if prev_y + y_scroll &gt; self.page_break_trigger or recorder.page &gt; prev_page:
+            recorder.page_break_triggered = True
+        recorder.rewind()
 
     @check_page
     def insert_toc_placeholder(self, render_toc_function, pages=1):
@@ -4369,6 +4387,20 @@ class FPDF(GraphicsStateMixin):
         dest = DestinationXYZ(self.page, y=self.y)
         struct_elem = None
         if self.section_title_styles:
+            # We first check if adding this multi-cell will trigger a page break:
+            with self.offset_rendering() as pdf:
+                # pylint: disable=protected-access
+                with pdf._apply_style(pdf.section_title_styles[level]):
+                    pdf.multi_cell(
+                        w=pdf.epw,
+                        h=pdf.font_size,
+                        txt=name,
+                        new_x=XPos.LMARGIN,
+                        new_y=YPos.NEXT,
+                    )
+            if pdf.page_break_triggered:
+                # If so, we trigger a page break manually beforehand:
+                self.add_page()
             with self._marked_sequence(title=name) as marked_content:
                 struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
                 with self._apply_style(self.section_title_styles[level]):
@@ -8518,6 +8550,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         prev_page, prev_y = self.page, self.y
         recorder = FPDFRecorder(self, accept_page_break=False)
+        recorder.page_break_triggered = False
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
@@ -8528,7 +8561,24 @@ Default to "mm".</dd>
             # Performing this call through .pdf so that it does not get recorded &amp; replayed:
             recorder.pdf._perform_page_break()
             recorder.replay()
+            recorder.page_break_triggered = True
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
+
+    @contextmanager
+    def offset_rendering(self):
+        &#34;&#34;&#34;
+        All rendering performed in this context is made on a dummy FPDF object.
+        This allows to test the results of some operations on the global layout
+        before performing them &#34;for real&#34;.
+        &#34;&#34;&#34;
+        prev_page, prev_y = self.page, self.y
+        recorder = FPDFRecorder(self, accept_page_break=False)
+        recorder.page_break_triggered = False
+        yield recorder
+        y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
+        if prev_y + y_scroll &gt; self.page_break_trigger or recorder.page &gt; prev_page:
+            recorder.page_break_triggered = True
+        recorder.rewind()
 
     @check_page
     def insert_toc_placeholder(self, render_toc_function, pages=1):
@@ -8617,6 +8667,20 @@ Default to "mm".</dd>
         dest = DestinationXYZ(self.page, y=self.y)
         struct_elem = None
         if self.section_title_styles:
+            # We first check if adding this multi-cell will trigger a page break:
+            with self.offset_rendering() as pdf:
+                # pylint: disable=protected-access
+                with pdf._apply_style(pdf.section_title_styles[level]):
+                    pdf.multi_cell(
+                        w=pdf.epw,
+                        h=pdf.font_size,
+                        txt=name,
+                        new_x=XPos.LMARGIN,
+                        new_y=YPos.NEXT,
+                    )
+            if pdf.page_break_triggered:
+                # If so, we trigger a page break manually beforehand:
+                self.add_page()
             with self._marked_sequence(title=name) as marked_content:
                 struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
                 with self._apply_style(self.section_title_styles[level]):
@@ -11002,6 +11066,34 @@ def new_path(
     return txt</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.offset_rendering"><code class="name flex">
+<span>def <span class="ident">offset_rendering</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>All rendering performed in this context is made on a dummy FPDF object.
+This allows to test the results of some operations on the global layout
+before performing them "for real".</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def offset_rendering(self):
+    &#34;&#34;&#34;
+    All rendering performed in this context is made on a dummy FPDF object.
+    This allows to test the results of some operations on the global layout
+    before performing them &#34;for real&#34;.
+    &#34;&#34;&#34;
+    prev_page, prev_y = self.page, self.y
+    recorder = FPDFRecorder(self, accept_page_break=False)
+    recorder.page_break_triggered = False
+    yield recorder
+    y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
+    if prev_y + y_scroll &gt; self.page_break_trigger or recorder.page &gt; prev_page:
+        recorder.page_break_triggered = True
+    recorder.rewind()</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.open"><code class="name flex">
 <span>def <span class="ident">open</span></span>(<span>self)</span>
 </code></dt>
@@ -12655,6 +12747,20 @@ def start_section(self, name, level=0):
     dest = DestinationXYZ(self.page, y=self.y)
     struct_elem = None
     if self.section_title_styles:
+        # We first check if adding this multi-cell will trigger a page break:
+        with self.offset_rendering() as pdf:
+            # pylint: disable=protected-access
+            with pdf._apply_style(pdf.section_title_styles[level]):
+                pdf.multi_cell(
+                    w=pdf.epw,
+                    h=pdf.font_size,
+                    txt=name,
+                    new_x=XPos.LMARGIN,
+                    new_y=YPos.NEXT,
+                )
+        if pdf.page_break_triggered:
+            # If so, we trigger a page break manually beforehand:
+            self.add_page()
         with self._marked_sequence(title=name) as marked_content:
             struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
             with self._apply_style(self.section_title_styles[level]):
@@ -12814,6 +12920,7 @@ def unbreakable(self):
     &#34;&#34;&#34;
     prev_page, prev_y = self.page, self.y
     recorder = FPDFRecorder(self, accept_page_break=False)
+    recorder.page_break_triggered = False
     LOGGER.debug(&#34;Starting unbreakable block&#34;)
     yield recorder
     y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
@@ -12824,6 +12931,7 @@ def unbreakable(self):
         # Performing this call through .pdf so that it does not get recorded &amp; replayed:
         recorder.pdf._perform_page_break()
         recorder.replay()
+        recorder.page_break_triggered = True
     LOGGER.debug(&#34;Ending unbreakable block&#34;)</code></pre>
 </details>
 </dd>
@@ -13242,6 +13350,7 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <li><code><a title="fpdf.fpdf.FPDF.multi_cell" href="#fpdf.fpdf.FPDF.multi_cell">multi_cell</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.new_path" href="#fpdf.fpdf.FPDF.new_path">new_path</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.normalize_text" href="#fpdf.fpdf.FPDF.normalize_text">normalize_text</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.offset_rendering" href="#fpdf.fpdf.FPDF.offset_rendering">offset_rendering</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.open" href="#fpdf.fpdf.FPDF.open">open</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.output" href="#fpdf.fpdf.FPDF.output">output</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.page_no" href="#fpdf.fpdf.FPDF.page_no">page_no</a></code></li>

@@ -1152,8 +1152,23 @@ on the can use the <code>FPDF.unbreakable()</code> context-manager:</p>
             <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
                 <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">col_width</span><span class="p">,</span> <span class="n">line_height</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">datum</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="n">line_height</span><span class="p">)</span>
+     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;page_break_triggered:&#39;</span><span class="p">,</span> <span class="n">pdf</span><span class="o">.</span><span class="n">page_break_triggered</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="n">line_height</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="p">(</span><span class="s2">&quot;unbreakable_tables.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>An alternative approach is <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.offset_rendering"><code>offset_rendering()</code></a>
+that allows to test the results of some operations on the global layout
+before performing them "for real":</p>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">offset_rendering</span><span class="p">()</span> <span class="k">as</span> <span class="n">dummy</span><span class="p">:</span>
+    <span class="c1"># Dummy rendering:</span>
+    <span class="n">dummy</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">dummy</span><span class="o">.</span><span class="n">page_break_triggered</span><span class="p">:</span>
+    <span class="c1"># We trigger a page break manually beforehand:</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+    <span class="c1"># We duplicate the section header:</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Appendix C&quot;</span><span class="p">)</span>
+<span class="c1"># Now performing our rendering for real:</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 </code></pre></div>
 
               
