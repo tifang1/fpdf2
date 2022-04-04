@@ -29,10 +29,9 @@
 <pre><code class="python">#!/usr/bin/env python
 import sys
 
+from .util import XPos, YPos
 from .fpdf import (
     FPDF,
-    XPos,
-    YPos,
     FPDFException,
     TitleStyle,
     FPDF_FONT_DIR as _FPDF_FONT_DIR,
@@ -2054,18 +2053,20 @@ Default to "mm".</dd>
         h=None,
         txt=&#34;&#34;,
         border=0,
-        ln=0,
+        new_x=XPos.RIGHT,
+        new_y=YPos.TOP,
+        ln=&#34;DEPRECATED&#34;,
         align=&#34;&#34;,
         fill=False,
         link=&#34;&#34;,
-        center=False,
+        center=&#34;DEPRECATED&#34;,
         markdown=False,
     ):
         &#34;&#34;&#34;
         Prints a cell (rectangular area) with optional borders, background color and
         character string. The upper-left corner of the cell corresponds to the current
         position. The text can be aligned or centered. After the call, the current
-        position moves to the right or to the next line. It is possible to put a link
+        position moves to the selected `new_x`/`new_y` position. It is possible to put a link
         on the text.
 
         If automatic page breaking is enabled and the cell goes beyond the limit, a
@@ -2082,10 +2083,9 @@ Default to "mm".</dd>
                 or a string containing some or all of the following characters
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-            ln (int): Indicates where the current position should go after the call.
-                Possible values are: `0`: to the right ; `1`: to the beginning of the
-                next line ; `2`: below. Putting 1 is equivalent to putting 0 and calling
-                `ln` just after. Default value: 0.
+            new_x (Enum XPos): New current position in x after the call. Default: RIGHT
+            new_y (Enum YPos): New current position in y after the call. Default: TOP
+            ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
             align (str): Allows to center or align the text inside the cell.
                 Possible values are: `L` or empty string: left align (default value) ;
                 `C`: center ; `R`: right align
@@ -2093,7 +2093,7 @@ Default to "mm".</dd>
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            center (bool): center the cell horizontally in the page
+            center (bool): **DEPRECATED** 2.5.1: Use align=&#34;C&#34; instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
 
@@ -2112,14 +2112,46 @@ Default to "mm".</dd>
                 &#34;ignored&#34;
             )
             border = 1
-        new_x = XPos.RIGHT
-        new_y = YPos.TOP
-        if ln == 1:
-            new_x = XPos.LMARGIN
-            new_y = YPos.NEXT
-        elif ln == 2:
-            new_x = XPos.LEFT
-            new_y = YPos.NEXT
+        if not isinstance(new_x, XPos):
+            raise ValueError(
+                f&#39;Invalid value for parameter &#34;new_x&#34; ({new_x}),&#39;
+                &#34;must be instance of Enum XPos&#34;
+            )
+        if not isinstance(new_y, YPos):
+            raise ValueError(
+                f&#39;Invalid value for parameter &#34;new_y&#34; ({new_y}),&#39;
+                &#34;must be instance of Enum YPos&#34;
+            )
+        if center == &#34;DEPRECATED&#34;:
+            center = False
+        else:
+            warnings.warn(
+                (&#39;The parameter &#34;center&#34; is deprecated.&#39; &#39; Use align=&#34;C&#34; instead.&#39;),
+                DeprecationWarning,
+            )
+        if ln != &#34;DEPRECATED&#34;:
+            warnings.warn(
+                (
+                    &#39;The parameter &#34;ln&#34; is deprecated.&#39;
+                    &#39; Use &#34;new_x&#34; and &#34;new_y&#34; instead.&#39;
+                ),
+                DeprecationWarning,
+            )
+            # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
+            if ln == 0:
+                new_x = XPos.RIGHT
+                new_y = YPos.TOP
+            elif ln == 1:
+                new_x = XPos.LMARGIN
+                new_y = YPos.NEXT
+            elif ln == 2:
+                new_x = XPos.LEFT
+                new_y = YPos.NEXT
+            else:
+                raise ValueError(
+                    f&#39;Invalid value for parameter &#34;ln&#34; ({ln}),&#39;
+                    &#34; must be an int between 0 and 2.&#34;
+                )
         # Font styles preloading must be performed before any call to FPDF.get_string_width:
         txt = self.normalize_text(txt)
         styled_txt_frags = self._preload_font_styles(txt, markdown)
@@ -2185,7 +2217,7 @@ Default to "mm".</dd>
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            center (bool): center the cell horizontally in the page
+            center (bool): **DEPRECATED** 2.5.1: Use align=&#34;C&#34; instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
 
@@ -2218,12 +2250,14 @@ Default to "mm".</dd>
             w = styled_txt_width + self.c_margin + self.c_margin
         if h is None:
             h = self.font_size
-        # pylint: disable=invalid-unary-operand-type
         if center:
             self.x = self.l_margin + (self.epw - w) / 2
+            align = &#34;C&#34;
         page_break_triggered = self._perform_page_break_if_need_be(h)
         s = &#34;&#34;
         k = self.k
+        # pylint: disable=invalid-unary-operand-type
+        # &#34;h&#34; can&#39;t actually be None
         if fill:
             op = &#34;B&#34; if border == 1 else &#34;f&#34;
             s = (
@@ -2235,6 +2269,7 @@ Default to "mm".</dd>
                 f&#34;{self.x * k:.2f} {(self.h - self.y) * k:.2f} &#34;
                 f&#34;{w * k:.2f} {-h * k:.2f} re S &#34;
             )
+        # pylint: enable=invalid-unary-operand-type
 
         if isinstance(border, str):
             x = self.x
@@ -2299,7 +2334,7 @@ Default to "mm".</dd>
 
             # precursor to self.ws, or manual spacing of unicode fonts/
             word_spacing = 0
-            if align == &#34;J&#34; and text_line.number_of_spaces_between_words:
+            if text_line.justify:
                 word_spacing = (
                     w - self.c_margin - self.c_margin - styled_txt_width
                 ) / text_line.number_of_spaces_between_words
@@ -2570,7 +2605,9 @@ Default to "mm".</dd>
         fill=False,
         split_only=False,
         link=&#34;&#34;,
-        ln=0,
+        new_x=XPos.RIGHT,
+        new_y=YPos.NEXT,
+        ln=&#34;DEPRECATED&#34;,
         max_line_height=None,
         markdown=False,
         print_sh=False,
@@ -2586,7 +2623,7 @@ Default to "mm".</dd>
         Args:
             w (float): cell width. If 0, they extend up to the right margin of the page.
             h (float): cell height. Default value: None, meaning to use the current font size.
-            txt (str): strign to print.
+            txt (str): string to print.
             border: Indicates if borders must be drawn around the cell.
                 The value can be either a number (`0`: no border ; `1`: frame)
                 or a string containing some or all of the following characters
@@ -2601,18 +2638,17 @@ Default to "mm".</dd>
                 word-wrapping and return the resulting multi-lines array of strings.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            ln (int): Indicates where the current position should go after the call.
-                Possible values are: `0`: to the bottom right ; `1`: to the beginning
-                of the next line ; `2`: below with the same horizontal offset ;
-                `3`: to the right with the same vertical offset. Default value: 0.
+            new_x (Enum XPos): New current position in x after the call. Default: RIGHT
+            new_y (Enum YPos): New current position in y after the call. Default: NEXT
+            ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
             max_line_height (float): optional maximum height of each sub-cell generated
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
 
-        Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
-        with multiline text in cells.
+        Using `new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size` is
+        useful to build tables with multiline text in cells.
 
         Returns: a boolean indicating if page break was triggered,
             or if `split_only == True`: `txt` splitted into lines in an array
@@ -2622,14 +2658,42 @@ Default to "mm".</dd>
                 &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
                 &#34; You can omit them by passing string content with txt=&#34;
             )
-        new_x = XPos.RIGHT
-        new_y = YPos.NEXT
-        if ln == 1:
-            new_x = XPos.LMARGIN
-        elif ln == 2:
-            new_x = XPos.LEFT
-        elif ln == 3:
-            new_y = YPos.TOP
+        if not isinstance(new_x, XPos):
+            raise ValueError(
+                f&#39;Invalid value for parameter &#34;new_x&#34; ({new_x}),&#39;
+                &#34;must be instance of Enum XPos&#34;
+            )
+        if not isinstance(new_y, YPos):
+            raise ValueError(
+                f&#39;Invalid value for parameter &#34;new_y&#34; ({new_y}),&#39;
+                &#34;must be instance of Enum YPos&#34;
+            )
+        if ln != &#34;DEPRECATED&#34;:
+            warnings.warn(
+                (
+                    &#39;The parameter &#34;ln&#34; is deprecated.&#39;
+                    &#39; Use &#34;new_x&#34; and &#34;new_y&#34; instead.&#39;
+                ),
+                DeprecationWarning,
+            )
+            # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
+            if ln == 0:
+                new_x = XPos.RIGHT
+                new_y = YPos.NEXT
+            elif ln == 1:
+                new_x = XPos.LMARGIN
+                new_y = YPos.NEXT
+            elif ln == 2:
+                new_x = XPos.LEFT
+                new_y = YPos.NEXT
+            elif ln == 3:
+                new_x = XPos.RIGHT
+                new_y = YPos.TOP
+            else:
+                raise ValueError(
+                    f&#39;Invalid value for parameter &#34;ln&#34; ({ln}),&#39;
+                    &#34; must be an int between 0 and 3.&#34;
+                )
 
         page_break_triggered = False
         if split_only:
@@ -2684,7 +2748,6 @@ Default to "mm".</dd>
             ]
         for text_line_index, text_line in enumerate(text_lines):
             is_last_line = text_line_index == len(text_lines) - 1
-
             if max_line_height is not None and h &gt; max_line_height and not is_last_line:
                 current_cell_height = max_line_height
                 h -= current_cell_height
@@ -2705,6 +2768,7 @@ Default to "mm".</dd>
                 ),
                 new_x=new_x if is_last_line else XPos.LEFT,
                 new_y=new_y if is_last_line else YPos.NEXT,
+                # align=&#34;L&#34; if (align == &#34;J&#34; and is_last_line) else align,
                 align=&#34;L&#34; if (align == &#34;J&#34; and is_last_line) else align,
                 fill=fill,
                 link=link,
@@ -4222,7 +4286,13 @@ Default to "mm".</dd>
             with self._marked_sequence(title=name) as marked_content:
                 struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
                 with self._apply_style(self.section_title_styles[level]):
-                    self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
+                    self.multi_cell(
+                        w=self.epw,
+                        h=self.font_size,
+                        txt=name,
+                        new_x=XPos.LMARGIN,
+                        new_y=YPos.NEXT,
+                    )
         self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))
 
     @contextmanager
@@ -5066,13 +5136,13 @@ style (str): Style of rendering. Possible values are:
 </details>
 </dd>
 <dt id="fpdf.FPDF.cell"><code class="name flex">
-<span>def <span class="ident">cell</span></span>(<span>self, w=None, h=None, txt='', border=0, ln=0, align='', fill=False, link='', center=False, markdown=False)</span>
+<span>def <span class="ident">cell</span></span>(<span>self, w=None, h=None, txt='', border=0, new_x=XPos.RIGHT, new_y=YPos.TOP, ln='DEPRECATED', align='', fill=False, link='', center='DEPRECATED', markdown=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prints a cell (rectangular area) with optional borders, background color and
 character string. The upper-left corner of the cell corresponds to the current
 position. The text can be aligned or centered. After the call, the current
-position moves to the right or to the next line. It is possible to put a link
+position moves to the selected <code>new_x</code>/<code>new_y</code> position. It is possible to put a link
 on the text.</p>
 <p>If automatic page breaking is enabled and the cell goes beyond the limit, a
 page break is performed before outputting.</p>
@@ -5092,11 +5162,12 @@ The value can be either a number (<code>0</code>: no border ; <code>1</code>: fr
 or a string containing some or all of the following characters
 (in any order):
 <code>L</code>: left ; <code>T</code>: top ; <code>R</code>: right ; <code>B</code>: bottom. Default value: 0.</dd>
+<dt><strong><code>new_x</code></strong> :&ensp;<code>Enum <a title="fpdf.XPos" href="#fpdf.XPos">XPos</a></code></dt>
+<dd>New current position in x after the call. Default: RIGHT</dd>
+<dt><strong><code>new_y</code></strong> :&ensp;<code>Enum <a title="fpdf.YPos" href="#fpdf.YPos">YPos</a></code></dt>
+<dd>New current position in y after the call. Default: TOP</dd>
 <dt><strong><code>ln</code></strong> :&ensp;<code>int</code></dt>
-<dd>Indicates where the current position should go after the call.
-Possible values are: <code>0</code>: to the right ; <code>1</code>: to the beginning of the
-next line ; <code>2</code>: below. Putting 1 is equivalent to putting 0 and calling
-<code>ln</code> just after. Default value: 0.</dd>
+<dd><strong>DEPRECATED</strong> 2.5.1: Use new_x and new_y instead.</dd>
 <dt><strong><code>align</code></strong> :&ensp;<code>str</code></dt>
 <dd>Allows to center or align the text inside the cell.
 Possible values are: <code>L</code> or empty string: left align (default value) ;
@@ -5108,7 +5179,7 @@ or transparent (<code>False</code>). Default value: False.</dd>
 <dd>optional link to add on the cell, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
 <dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
-<dd>center the cell horizontally in the page</dd>
+<dd><strong>DEPRECATED</strong> 2.5.1: Use align="C" instead.</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable minimal markdown-like markup to render part
 of text as bold / italics / underlined. Default to False.</dd>
@@ -5125,18 +5196,20 @@ def cell(
     h=None,
     txt=&#34;&#34;,
     border=0,
-    ln=0,
+    new_x=XPos.RIGHT,
+    new_y=YPos.TOP,
+    ln=&#34;DEPRECATED&#34;,
     align=&#34;&#34;,
     fill=False,
     link=&#34;&#34;,
-    center=False,
+    center=&#34;DEPRECATED&#34;,
     markdown=False,
 ):
     &#34;&#34;&#34;
     Prints a cell (rectangular area) with optional borders, background color and
     character string. The upper-left corner of the cell corresponds to the current
     position. The text can be aligned or centered. After the call, the current
-    position moves to the right or to the next line. It is possible to put a link
+    position moves to the selected `new_x`/`new_y` position. It is possible to put a link
     on the text.
 
     If automatic page breaking is enabled and the cell goes beyond the limit, a
@@ -5153,10 +5226,9 @@ def cell(
             or a string containing some or all of the following characters
             (in any order):
             `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-        ln (int): Indicates where the current position should go after the call.
-            Possible values are: `0`: to the right ; `1`: to the beginning of the
-            next line ; `2`: below. Putting 1 is equivalent to putting 0 and calling
-            `ln` just after. Default value: 0.
+        new_x (Enum XPos): New current position in x after the call. Default: RIGHT
+        new_y (Enum YPos): New current position in y after the call. Default: TOP
+        ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
         align (str): Allows to center or align the text inside the cell.
             Possible values are: `L` or empty string: left align (default value) ;
             `C`: center ; `R`: right align
@@ -5164,7 +5236,7 @@ def cell(
             or transparent (`False`). Default value: False.
         link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
-        center (bool): center the cell horizontally in the page
+        center (bool): **DEPRECATED** 2.5.1: Use align=&#34;C&#34; instead.
         markdown (bool): enable minimal markdown-like markup to render part
             of text as bold / italics / underlined. Default to False.
 
@@ -5183,14 +5255,46 @@ def cell(
             &#34;ignored&#34;
         )
         border = 1
-    new_x = XPos.RIGHT
-    new_y = YPos.TOP
-    if ln == 1:
-        new_x = XPos.LMARGIN
-        new_y = YPos.NEXT
-    elif ln == 2:
-        new_x = XPos.LEFT
-        new_y = YPos.NEXT
+    if not isinstance(new_x, XPos):
+        raise ValueError(
+            f&#39;Invalid value for parameter &#34;new_x&#34; ({new_x}),&#39;
+            &#34;must be instance of Enum XPos&#34;
+        )
+    if not isinstance(new_y, YPos):
+        raise ValueError(
+            f&#39;Invalid value for parameter &#34;new_y&#34; ({new_y}),&#39;
+            &#34;must be instance of Enum YPos&#34;
+        )
+    if center == &#34;DEPRECATED&#34;:
+        center = False
+    else:
+        warnings.warn(
+            (&#39;The parameter &#34;center&#34; is deprecated.&#39; &#39; Use align=&#34;C&#34; instead.&#39;),
+            DeprecationWarning,
+        )
+    if ln != &#34;DEPRECATED&#34;:
+        warnings.warn(
+            (
+                &#39;The parameter &#34;ln&#34; is deprecated.&#39;
+                &#39; Use &#34;new_x&#34; and &#34;new_y&#34; instead.&#39;
+            ),
+            DeprecationWarning,
+        )
+        # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
+        if ln == 0:
+            new_x = XPos.RIGHT
+            new_y = YPos.TOP
+        elif ln == 1:
+            new_x = XPos.LMARGIN
+            new_y = YPos.NEXT
+        elif ln == 2:
+            new_x = XPos.LEFT
+            new_y = YPos.NEXT
+        else:
+            raise ValueError(
+                f&#39;Invalid value for parameter &#34;ln&#34; ({ln}),&#39;
+                &#34; must be an int between 0 and 2.&#34;
+            )
     # Font styles preloading must be performed before any call to FPDF.get_string_width:
     txt = self.normalize_text(txt)
     styled_txt_frags = self._preload_font_styles(txt, markdown)
@@ -6220,7 +6324,7 @@ def local_context(self):
 </details>
 </dd>
 <dt id="fpdf.FPDF.multi_cell"><code class="name flex">
-<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align='J', fill=False, split_only=False, link='', ln=0, max_line_height=None, markdown=False, print_sh=False)</span>
+<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align='J', fill=False, split_only=False, link='', new_x=XPos.RIGHT, new_y=YPos.NEXT, ln='DEPRECATED', max_line_height=None, markdown=False, print_sh=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This method allows printing text with line breaks. They can be automatic
@@ -6236,7 +6340,7 @@ the background painted.</p>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>cell height. Default value: None, meaning to use the current font size.</dd>
 <dt><strong><code>txt</code></strong> :&ensp;<code>str</code></dt>
-<dd>strign to print.</dd>
+<dd>string to print.</dd>
 <dt><strong><code>border</code></strong></dt>
 <dd>Indicates if borders must be drawn around the cell.
 The value can be either a number (<code>0</code>: no border ; <code>1</code>: frame)
@@ -6256,11 +6360,12 @@ word-wrapping and return the resulting multi-lines array of strings.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the cell, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
+<dt><strong><code>new_x</code></strong> :&ensp;<code>Enum <a title="fpdf.XPos" href="#fpdf.XPos">XPos</a></code></dt>
+<dd>New current position in x after the call. Default: RIGHT</dd>
+<dt><strong><code>new_y</code></strong> :&ensp;<code>Enum <a title="fpdf.YPos" href="#fpdf.YPos">YPos</a></code></dt>
+<dd>New current position in y after the call. Default: NEXT</dd>
 <dt><strong><code>ln</code></strong> :&ensp;<code>int</code></dt>
-<dd>Indicates where the current position should go after the call.
-Possible values are: <code>0</code>: to the bottom right ; <code>1</code>: to the beginning
-of the next line ; <code>2</code>: below with the same horizontal offset ;
-<code>3</code>: to the right with the same vertical offset. Default value: 0.</dd>
+<dd><strong>DEPRECATED</strong> 2.5.1: Use new_x and new_y instead.</dd>
 <dt><strong><code>max_line_height</code></strong> :&ensp;<code>float</code></dt>
 <dd>optional maximum height of each sub-cell generated</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
@@ -6270,8 +6375,8 @@ of text as bold / italics / underlined. Default to False.</dd>
 <dd>Treat a soft-hyphen (\u00ad) as a normal printable
 character, instead of a line breaking opportunity. Default value: False</dd>
 </dl>
-<p>Using <code>ln=3</code> and <code>maximum height=pdf.font_size</code> is useful to build tables
-with multiline text in cells.</p>
+<p>Using <code>new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size</code> is
+useful to build tables with multiline text in cells.</p>
 <p>Returns: a boolean indicating if page break was triggered,
 or if <code>split_only == True</code>: <code>txt</code> splitted into lines in an array</p></div>
 <details class="source">
@@ -6289,7 +6394,9 @@ def multi_cell(
     fill=False,
     split_only=False,
     link=&#34;&#34;,
-    ln=0,
+    new_x=XPos.RIGHT,
+    new_y=YPos.NEXT,
+    ln=&#34;DEPRECATED&#34;,
     max_line_height=None,
     markdown=False,
     print_sh=False,
@@ -6305,7 +6412,7 @@ def multi_cell(
     Args:
         w (float): cell width. If 0, they extend up to the right margin of the page.
         h (float): cell height. Default value: None, meaning to use the current font size.
-        txt (str): strign to print.
+        txt (str): string to print.
         border: Indicates if borders must be drawn around the cell.
             The value can be either a number (`0`: no border ; `1`: frame)
             or a string containing some or all of the following characters
@@ -6320,18 +6427,17 @@ def multi_cell(
             word-wrapping and return the resulting multi-lines array of strings.
         link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
-        ln (int): Indicates where the current position should go after the call.
-            Possible values are: `0`: to the bottom right ; `1`: to the beginning
-            of the next line ; `2`: below with the same horizontal offset ;
-            `3`: to the right with the same vertical offset. Default value: 0.
+        new_x (Enum XPos): New current position in x after the call. Default: RIGHT
+        new_y (Enum YPos): New current position in y after the call. Default: NEXT
+        ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
         max_line_height (float): optional maximum height of each sub-cell generated
         markdown (bool): enable minimal markdown-like markup to render part
             of text as bold / italics / underlined. Default to False.
         print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
             character, instead of a line breaking opportunity. Default value: False
 
-    Using `ln=3` and `maximum height=pdf.font_size` is useful to build tables
-    with multiline text in cells.
+    Using `new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size` is
+    useful to build tables with multiline text in cells.
 
     Returns: a boolean indicating if page break was triggered,
         or if `split_only == True`: `txt` splitted into lines in an array
@@ -6341,14 +6447,42 @@ def multi_cell(
             &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
             &#34; You can omit them by passing string content with txt=&#34;
         )
-    new_x = XPos.RIGHT
-    new_y = YPos.NEXT
-    if ln == 1:
-        new_x = XPos.LMARGIN
-    elif ln == 2:
-        new_x = XPos.LEFT
-    elif ln == 3:
-        new_y = YPos.TOP
+    if not isinstance(new_x, XPos):
+        raise ValueError(
+            f&#39;Invalid value for parameter &#34;new_x&#34; ({new_x}),&#39;
+            &#34;must be instance of Enum XPos&#34;
+        )
+    if not isinstance(new_y, YPos):
+        raise ValueError(
+            f&#39;Invalid value for parameter &#34;new_y&#34; ({new_y}),&#39;
+            &#34;must be instance of Enum YPos&#34;
+        )
+    if ln != &#34;DEPRECATED&#34;:
+        warnings.warn(
+            (
+                &#39;The parameter &#34;ln&#34; is deprecated.&#39;
+                &#39; Use &#34;new_x&#34; and &#34;new_y&#34; instead.&#39;
+            ),
+            DeprecationWarning,
+        )
+        # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
+        if ln == 0:
+            new_x = XPos.RIGHT
+            new_y = YPos.NEXT
+        elif ln == 1:
+            new_x = XPos.LMARGIN
+            new_y = YPos.NEXT
+        elif ln == 2:
+            new_x = XPos.LEFT
+            new_y = YPos.NEXT
+        elif ln == 3:
+            new_x = XPos.RIGHT
+            new_y = YPos.TOP
+        else:
+            raise ValueError(
+                f&#39;Invalid value for parameter &#34;ln&#34; ({ln}),&#39;
+                &#34; must be an int between 0 and 3.&#34;
+            )
 
     page_break_triggered = False
     if split_only:
@@ -6403,7 +6537,6 @@ def multi_cell(
         ]
     for text_line_index, text_line in enumerate(text_lines):
         is_last_line = text_line_index == len(text_lines) - 1
-
         if max_line_height is not None and h &gt; max_line_height and not is_last_line:
             current_cell_height = max_line_height
             h -= current_cell_height
@@ -6424,6 +6557,7 @@ def multi_cell(
             ),
             new_x=new_x if is_last_line else XPos.LEFT,
             new_y=new_y if is_last_line else YPos.NEXT,
+            # align=&#34;L&#34; if (align == &#34;J&#34; and is_last_line) else align,
             align=&#34;L&#34; if (align == &#34;J&#34; and is_last_line) else align,
             fill=fill,
             link=link,
@@ -8184,7 +8318,13 @@ def start_section(self, name, level=0):
         with self._marked_sequence(title=name) as marked_content:
             struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
             with self._apply_style(self.section_title_styles[level]):
-                self.multi_cell(w=self.epw, h=self.font_size, txt=name, ln=1)
+                self.multi_cell(
+                    w=self.epw,
+                    h=self.font_size,
+                    txt=name,
+                    new_x=XPos.LMARGIN,
+                    new_y=YPos.NEXT,
+                )
     self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))</code></pre>
 </details>
 </dd>
@@ -8837,9 +8977,7 @@ or parse_csv() before doing anything else.</p></div>
         pdf.set_xy(x1, y1)
         width, height = x2 - x1, y2 - y1
         if multiline is None:  # write without wrapping/trimming (default)
-            pdf.cell(
-                w=width, h=height, txt=text, border=0, ln=0, align=align, fill=fill
-            )
+            pdf.cell(w=width, h=height, txt=text, border=0, align=align, fill=fill)
         elif multiline:  # automatic word - warp
             pdf.multi_cell(
                 w=width, h=height, txt=text, border=0, align=align, fill=fill
@@ -8848,9 +8986,7 @@ or parse_csv() before doing anything else.</p></div>
             text = pdf.multi_cell(
                 w=width, h=height, txt=text, align=align, split_only=True
             )[0]
-            pdf.cell(
-                w=width, h=height, txt=text, border=0, ln=0, align=align, fill=fill
-            )
+            pdf.cell(w=width, h=height, txt=text, border=0, align=align, fill=fill)
 
     def _line(
         self,
@@ -9504,7 +9640,8 @@ to new image URLs</dd>
                 self.h,
                 data,
                 border=0,
-                ln=1,
+                new_x=XPos.LMARGIN,
+                new_y=YPos.NEXT,
                 align=self.align[0].upper(),
                 link=self.href,
             )
@@ -9537,12 +9674,38 @@ to new image URLs</dd>
         bgcolor = color_as_decimal(self.td.get(&#34;bgcolor&#34;, self.tr.get(&#34;bgcolor&#34;, &#34;&#34;)))
         # parsing table header/footer (drawn later):
         if self.thead is not None:
-            self.theader.append(((width, height, data, border, 0, align), bgcolor))
+            self.theader.append(
+                (
+                    dict(
+                        w=width,
+                        h=height,
+                        txt=data,
+                        border=border,
+                        new_x=XPos.RIGHT,
+                        new_y=YPos.TOP,
+                        align=align,
+                    ),
+                    bgcolor,
+                )
+            )
         if self.tfoot is not None:
-            self.tfooter.append(((width, height, data, border, 0, align), bgcolor))
+            self.tfooter.append(
+                (
+                    dict(
+                        w=width,
+                        h=height,
+                        txt=data,
+                        border=border,
+                        new_x=XPos.RIGHT,
+                        new_y=YPos.TOP,
+                        align=align,
+                    ),
+                    bgcolor,
+                )
+            )
         # check if reached end of page, add table footer and header:
         if self.tfooter:
-            height += self.tfooter[0][0][1]
+            height += self.tfooter[0][0][&#34;h&#34;]
         if self.pdf.y + height &gt; self.pdf.page_break_trigger and not self.th:
             self.output_table_footer()
             self.pdf.add_page(same=True)
@@ -9562,7 +9725,15 @@ to new image URLs</dd>
                 align,
                 data.replace(&#34;\n&#34;, &#34;\\n&#34;),
             )
-            self.pdf.cell(width, height, data, border=border, ln=0, align=align)
+            self.pdf.cell(
+                width,
+                height,
+                data,
+                border=border,
+                align=align,
+                new_x=XPos.RIGHT,
+                new_y=YPos.TOP,
+            )
 
     def _td_x(self):
         &#34;Return the current table cell left side horizontal position&#34;
@@ -9604,11 +9775,11 @@ to new image URLs</dd>
             b = self.style.get(&#34;b&#34;)
             self.pdf.set_x(self.table_offset)
             self.set_style(&#34;b&#34;, True)
-            for cell, bgcolor in self.theader:
-                self.box_shadow(cell[0], cell[1], bgcolor)
-                self.pdf.cell(*cell)  # includes the border
+            for celldict, bgcolor in self.theader:
+                self.box_shadow(celldict[&#34;w&#34;], celldict[&#34;h&#34;], bgcolor)
+                self.pdf.cell(**celldict)  # includes the border
             self.set_style(&#34;b&#34;, b)
-            self.pdf.ln(self.theader[0][0][1])
+            self.pdf.ln(self.theader[0][0][&#34;h&#34;])
             self.pdf.set_x(self.table_offset)
             # self.pdf.set_x(prev_x)
         self.theader_out = True
@@ -9617,10 +9788,10 @@ to new image URLs</dd>
         if self.tfooter:
             x = self.pdf.x
             self.pdf.set_x(self.table_offset)
-            for cell, bgcolor in self.tfooter:
-                self.box_shadow(cell[0], cell[1], bgcolor)
-                self.pdf.cell(*cell)
-            self.pdf.ln(self.tfooter[0][0][1])
+            for celldict, bgcolor in self.tfooter:
+                self.box_shadow(celldict[&#34;w&#34;], celldict[&#34;h&#34;], bgcolor)
+                self.pdf.cell(**celldict)
+            self.pdf.ln(self.tfooter[0][0][&#34;h&#34;])
             self.pdf.set_x(x)
         if self.table.get(&#34;border&#34;):
             self.output_table_sep()
@@ -9904,7 +10075,14 @@ to new image URLs</dd>
             pdf.set_link(link, page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
             text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
-            pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)
+            pdf.multi_cell(
+                w=pdf.epw,
+                h=pdf.font_size,
+                txt=text,
+                new_x=XPos.LMARGIN,
+                new_y=YPos.NEXT,
+                link=link,
+            )
 
     # Subclasses of _markupbase.ParserBase must implement this:
     def error(self, message):
@@ -9970,7 +10148,8 @@ to new image URLs</dd>
             self.h,
             data,
             border=0,
-            ln=1,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
             align=self.align[0].upper(),
             link=self.href,
         )
@@ -10249,10 +10428,10 @@ to new image URLs</dd>
     if self.tfooter:
         x = self.pdf.x
         self.pdf.set_x(self.table_offset)
-        for cell, bgcolor in self.tfooter:
-            self.box_shadow(cell[0], cell[1], bgcolor)
-            self.pdf.cell(*cell)
-        self.pdf.ln(self.tfooter[0][0][1])
+        for celldict, bgcolor in self.tfooter:
+            self.box_shadow(celldict[&#34;w&#34;], celldict[&#34;h&#34;], bgcolor)
+            self.pdf.cell(**celldict)
+        self.pdf.ln(self.tfooter[0][0][&#34;h&#34;])
         self.pdf.set_x(x)
     if self.table.get(&#34;border&#34;):
         self.output_table_sep()
@@ -10273,11 +10452,11 @@ to new image URLs</dd>
         b = self.style.get(&#34;b&#34;)
         self.pdf.set_x(self.table_offset)
         self.set_style(&#34;b&#34;, True)
-        for cell, bgcolor in self.theader:
-            self.box_shadow(cell[0], cell[1], bgcolor)
-            self.pdf.cell(*cell)  # includes the border
+        for celldict, bgcolor in self.theader:
+            self.box_shadow(celldict[&#34;w&#34;], celldict[&#34;h&#34;], bgcolor)
+            self.pdf.cell(**celldict)  # includes the border
         self.set_style(&#34;b&#34;, b)
-        self.pdf.ln(self.theader[0][0][1])
+        self.pdf.ln(self.theader[0][0][&#34;h&#34;])
         self.pdf.set_x(self.table_offset)
         # self.pdf.set_x(prev_x)
     self.theader_out = True</code></pre>
@@ -10334,7 +10513,14 @@ to new image URLs</dd>
         pdf.set_link(link, page=section.page_number)
         text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
         text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
-        pdf.multi_cell(w=pdf.epw, h=pdf.font_size, txt=text, ln=1, link=link)</code></pre>
+        pdf.multi_cell(
+            w=pdf.epw,
+            h=pdf.font_size,
+            txt=text,
+            new_x=XPos.LMARGIN,
+            new_y=YPos.NEXT,
+            link=link,
+        )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.HTML2FPDF.set_font"><code class="name flex">

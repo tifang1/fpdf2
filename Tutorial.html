@@ -916,7 +916,7 @@ below or to the beginning of the next line). To add a frame, we would do this:</
 </code></pre></div>
 <p>To add a new cell next to it with centered text and go to the next line, we
 would do:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Powered by FPDF.&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Powered by FPDF.&#39;</span><span class="p">,</span> <span class="n">new_x</span><span class="o">=</span><span class="n">XPos</span><span class="o">.</span><span class="n">LMARGIN</span><span class="p">,</span> <span class="n">new_y</span><span class="o">=</span><span class="n">YPos</span><span class="o">.</span><span class="n">NEXT</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Remark</strong>: the line break can also be done with <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.ln">ln</a>. This
 method allows to specify in addition the height of the break.</p>

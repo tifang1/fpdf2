@@ -835,7 +835,7 @@
 </code></pre></div>
 <p>केन्द्रित पाठ (centered text) के साथ इसके आगे एक नया सेल (cell) जोड़ने के लिए और अगली पंक्ति पर जाने के लिए, हम
 करेंगे:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Powered by FPDF.&#39;</span><span class="p">,</span> <span class="n">ln</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;Powered by FPDF.&#39;</span><span class="p">,</span> <span class="n">new_x</span><span class="o">=</span><span class="n">XPos</span><span class="o">.</span><span class="n">LMARGIN</span><span class="p">,</span> <span class="n">new_y</span><span class="o">=</span><span class="n">YPos</span><span class="o">.</span><span class="n">NEXT</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>टिप्पणी</strong>: लाइन ब्रेक <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.ln">ln</a> के साथ भी किया जा सकता हैं। इस
 विधि ब्रेक की ऊंचाई के अतिरिक्त निर्दिष्ट करने की अनुमति देती है।</p>
