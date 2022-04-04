@@ -121,6 +121,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/Text.html</loc>
+         <lastmod>2022-04-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/TextStyling.html</loc>
          <lastmod>2022-04-04</lastmod>
          <changefreq>daily</changefreq>
