@@ -1925,9 +1925,10 @@ class FPDF(GraphicsStateMixin):
         page=None,
     ):
         &#34;&#34;&#34;
-        Adds a text markup annotation on a rectangular area of the page.
+        Adds a text markup annotation on some quadrilateral areas of the page.
 
         Args:
+            type (str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
             text (str): text of the annotation
             quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
                 in default user space that comprise the region in which the link should be activated.
@@ -1938,6 +1939,7 @@ class FPDF(GraphicsStateMixin):
             color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
                 the title bar of the annotation’s pop-up window
             modification_time (datetime): date and time when the annotation was most recently modified
+            page (int): index of the page where this annotation is added
         &#34;&#34;&#34;
         if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
             raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
@@ -6171,9 +6173,10 @@ Default to "mm".</dd>
         page=None,
     ):
         &#34;&#34;&#34;
-        Adds a text markup annotation on a rectangular area of the page.
+        Adds a text markup annotation on some quadrilateral areas of the page.
 
         Args:
+            type (str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
             text (str): text of the annotation
             quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
                 in default user space that comprise the region in which the link should be activated.
@@ -6184,6 +6187,7 @@ Default to "mm".</dd>
             color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
                 the title bar of the annotation’s pop-up window
             modification_time (datetime): date and time when the annotation was most recently modified
+            page (int): index of the page where this annotation is added
         &#34;&#34;&#34;
         if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
             raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
@@ -9179,9 +9183,11 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 <span>def <span class="ident">add_text_markup_annotation</span></span>(<span>self, type, text, quad_points, title='', color=(1, 1, 0), modification_time=None, page=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Adds a text markup annotation on a rectangular area of the page.</p>
+<div class="desc"><p>Adds a text markup annotation on some quadrilateral areas of the page.</p>
 <h2 id="args">Args</h2>
 <dl>
+<dt><strong><code>type</code></strong> :&ensp;<code>str</code></dt>
+<dd>"Highlight", "Underline", "Squiggly" or "StrikeOut"</dd>
 <dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
 <dd>text of the annotation</dd>
 <dt><strong><code>quad_points</code></strong> :&ensp;<code>tuple</code></dt>
@@ -9197,6 +9203,8 @@ pop-up window when open and active. This entry shall identify the user who added
 the title bar of the annotation’s pop-up window</dd>
 <dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
 <dd>date and time when the annotation was most recently modified</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code></dt>
+<dd>index of the page where this annotation is added</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -9214,9 +9222,10 @@ def add_text_markup_annotation(
     page=None,
 ):
     &#34;&#34;&#34;
-    Adds a text markup annotation on a rectangular area of the page.
+    Adds a text markup annotation on some quadrilateral areas of the page.
 
     Args:
+        type (str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
         text (str): text of the annotation
         quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
             in default user space that comprise the region in which the link should be activated.
@@ -9227,6 +9236,7 @@ def add_text_markup_annotation(
         color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
             the title bar of the annotation’s pop-up window
         modification_time (datetime): date and time when the annotation was most recently modified
+        page (int): index of the page where this annotation is added
     &#34;&#34;&#34;
     if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
         raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
