@@ -358,6 +358,11 @@ Default to "mm".</dd>
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
         self._graphics_state_obj_refs = OrderedDict()
 
+        self.record_text_quad_points = False
+        self.text_quad_points = defaultdict(
+            list
+        )  # page number -&gt; array of 8 × n numbers
+
     @property
     def unifontsubset(self):
         return self.current_font.get(&#34;type&#34;) == &#34;TTF&#34;
@@ -1749,7 +1754,7 @@ Default to "mm".</dd>
         )
 
     @check_page
-    def text_annotation(self, x, y, text):
+    def text_annotation(self, x, y, text, w=1, h=1):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
 
@@ -1765,8 +1770,8 @@ Default to "mm".</dd>
                 &#34;Text&#34;,
                 x * self.k,
                 self.h_pt - y * self.k,
-                self.k,
-                self.k,
+                w * self.k,
+                h * self.k,
                 contents=text,
             )
         )
@@ -1791,6 +1796,89 @@ Default to "mm".</dd>
                 w * self.k,
                 h * self.k,
                 action=action,
+            )
+        )
+
+    @contextmanager
+    def add_highlight(self, text, title=&#34;&#34;, color=(1, 1, 0), modification_time=None):
+        &#34;&#34;&#34;
+        Context manager that adds a single highlight annotation based on the text lines inserted
+        inside its indented block.
+
+        Args:
+            text (str): text of the annotation
+            title (str): the text label that shall be displayed in the title bar of the annotation’s
+                pop-up window when open and active. This entry shall identify the user who added the annotation.
+            color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+                the title bar of the annotation’s pop-up window
+            modification_time (datetime): date and time when the annotation was most recently modified
+        &#34;&#34;&#34;
+        if self.record_text_quad_points:
+            raise FPDFException(&#34;add_highlight() cannot be nested&#34;)
+        self.record_text_quad_points = True
+        yield
+        for page, quad_points in self.text_quad_points.items():
+            self.add_text_markup_annotation(
+                &#34;Highlight&#34;,
+                text,
+                quad_points=quad_points,
+                title=title,
+                color=color,
+                modification_time=modification_time,
+                page=page,
+            )
+            self.text_quad_points = defaultdict(list)
+        self.record_text_quad_points = False
+
+    @check_page
+    def add_text_markup_annotation(
+        self,
+        type,
+        text,
+        quad_points,
+        title=&#34;&#34;,
+        color=(1, 1, 0),
+        modification_time=None,
+        page=None,
+    ):
+        &#34;&#34;&#34;
+        Adds a text markup annotation on a rectangular area of the page.
+
+        Args:
+            text (str): text of the annotation
+            quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
+                in default user space that comprise the region in which the link should be activated.
+                The coordinates for each quadrilateral are given in the order: x1 y1 x2 y2 x3 y3 x4 y4
+                specifying the four vertices of the quadrilateral in counterclockwise order
+            title (str): the text label that shall be displayed in the title bar of the annotation’s
+                pop-up window when open and active. This entry shall identify the user who added the annotation.
+            color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+                the title bar of the annotation’s pop-up window
+            modification_time (datetime): date and time when the annotation was most recently modified
+        &#34;&#34;&#34;
+        if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
+            raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
+        if modification_time is None:
+            modification_time = datetime.now()
+        if page is None:
+            page = self.page
+        x_min = min(quad_points[0::2])
+        y_min = min(quad_points[1::2])
+        x_max = max(quad_points[0::2])
+        y_max = max(quad_points[1::2])
+        self.annots[page].append(
+            Annotation(
+                type,
+                contents=text,
+                x=y_min,
+                y=y_max,
+                width=x_max - x_min,
+                height=y_max - y_min,
+                color=color,
+                modification_time=modification_time,
+                title=title,
+                quad_points=quad_points,
+                page=page,
             )
         )
 
@@ -1825,6 +1913,26 @@ Default to "mm".</dd>
         if self.fill_color != self.text_color:
             s = f&#34;q {self.text_color} {s} Q&#34;
         self._out(s)
+        if self.record_text_quad_points:
+            unscaled_width = self.get_normalized_string_width_with_style(
+                txt, self.font_style
+            )
+            if self.font_stretching != 100:
+                unscaled_width *= self.font_stretching / 100
+            w = unscaled_width * self.font_size / 1000
+            h = self.font_size
+            self.text_quad_points[self.page].extend(
+                [
+                    x * self.k,
+                    (self.h - y) * self.k,
+                    (x + w) * self.k,
+                    (self.h - y) * self.k,
+                    x * self.k,
+                    (self.h - y + h) * self.k,
+                    (x + w) * self.k,
+                    (self.h - y + h) * self.k,
+                ]
+            )
 
     @check_page
     def rotate(self, angle, x=None, y=None):
@@ -2151,6 +2259,22 @@ Default to "mm".</dd>
                     f&#34;{x * k:.2f} {(self.h - (y + h)) * k:.2f} m &#34;
                     f&#34;{(x + w) * k:.2f} {(self.h - (y + h)) * k:.2f} l S &#34;
                 )
+
+        if self.record_text_quad_points:
+            x = self.x
+            y = self.y
+            self.text_quad_points[self.page].extend(
+                [
+                    x * self.k,
+                    (self.h - y) * self.k,
+                    (x + w) * self.k,
+                    (self.h - y) * self.k,
+                    x * self.k,
+                    (self.h - y - h) * self.k,
+                    (x + w) * self.k,
+                    (self.h - y - h) * self.k,
+                ]
+            )
 
         s_start = self.x
         s_width, underlines = 0, []
@@ -3097,25 +3221,7 @@ Default to "mm".</dd>
             if page_annots:  # Annotations, e.g. links:
                 annots = &#34;&#34;
                 for annot in page_annots:
-                    # first four things in &#39;link&#39; list are coordinates?
-                    rect = (
-                        f&#34;{annot.x:.2f} {annot.y:.2f} &#34;
-                        f&#34;{annot.x + annot.width:.2f} {annot.y - annot.height:.2f}&#34;
-                    )
-
-                    # start the annotation entry
-                    annots += (
-                        f&#34;&lt;&lt;/Type /Annot /Subtype /{annot.type}&#34;
-                        f&#34; /Rect [{rect}] /Border [0 0 0]&#34;
-                        # Flag &#34;Print&#34; (bit position 3) specifies to print
-                        # the annotation when the page is printed.
-                        # cf. https://docs.verapdf.org/validation/pdfa-part1/#rule-653-2
-                        f&#34; /F 4&#34;
-                    )
-
-                    if annot.contents:
-                        annots += f&#34; /Contents {enclose_in_parens(annot.contents)}&#34;
-
+                    annots += annot.serialize(self)
                     if annot.alt_text is not None:
                         # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
                         # but tests with Adobe Acrobat Reader reveal that the page /StructParents inserted below
@@ -3123,24 +3229,6 @@ Default to "mm".</dd>
                         self._add_marked_content(
                             self.n, struct_type=&#34;/Link&#34;, alt_text=annot.alt_text
                         )
-
-                    if annot.action:
-                        annots += f&#34; /A &lt;&lt;{annot.action.dict_as_string()}&gt;&gt;&#34;
-
-                    if annot.link:
-                        if isinstance(annot.link, str):
-                            annots += (
-                                f&#34; /A &lt;&lt;/S /URI /URI {enclose_in_parens(annot.link)}&gt;&gt;&#34;
-                            )
-                        else:  # Dest type ending of annotation entry
-                            assert annot.link in self.links, (
-                                f&#34;Page {n} has a link with an invalid index: &#34;
-                                f&#34;{annot.link} (doc #links={len(self.links)})&#34;
-                            )
-                            dest = self.links[annot.link]
-                            annots += f&#34; /Dest {dest.as_str(self)}&#34;
-                    annots += &#34;&gt;&gt;&#34;
-                # End links list
                 self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency&#34; &#34;/CS /DeviceRGB&gt;&gt;&#34;)
@@ -4471,6 +4559,61 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
                 }</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.add_highlight"><code class="name flex">
+<span>def <span class="ident">add_highlight</span></span>(<span>self, text, title='', color=(1, 1, 0), modification_time=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Context manager that adds a single highlight annotation based on the text lines inserted
+inside its indented block.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
+<dd>text of the annotation</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>the text label that shall be displayed in the title bar of the annotation’s
+pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+the title bar of the annotation’s pop-up window</dd>
+<dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>date and time when the annotation was most recently modified</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def add_highlight(self, text, title=&#34;&#34;, color=(1, 1, 0), modification_time=None):
+    &#34;&#34;&#34;
+    Context manager that adds a single highlight annotation based on the text lines inserted
+    inside its indented block.
+
+    Args:
+        text (str): text of the annotation
+        title (str): the text label that shall be displayed in the title bar of the annotation’s
+            pop-up window when open and active. This entry shall identify the user who added the annotation.
+        color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+            the title bar of the annotation’s pop-up window
+        modification_time (datetime): date and time when the annotation was most recently modified
+    &#34;&#34;&#34;
+    if self.record_text_quad_points:
+        raise FPDFException(&#34;add_highlight() cannot be nested&#34;)
+    self.record_text_quad_points = True
+    yield
+    for page, quad_points in self.text_quad_points.items():
+        self.add_text_markup_annotation(
+            &#34;Highlight&#34;,
+            text,
+            quad_points=quad_points,
+            title=title,
+            color=color,
+            modification_time=modification_time,
+            page=page,
+        )
+        self.text_quad_points = defaultdict(list)
+    self.record_text_quad_points = False</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.add_link"><code class="name flex">
 <span>def <span class="ident">add_link</span></span>(<span>self)</span>
 </code></dt>
@@ -4630,6 +4773,86 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
     if stretching != 100:  # Restore stretching
         self.set_stretching(stretching)
     # END Page header</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.add_text_markup_annotation"><code class="name flex">
+<span>def <span class="ident">add_text_markup_annotation</span></span>(<span>self, type, text, quad_points, title='', color=(1, 1, 0), modification_time=None, page=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds a text markup annotation on a rectangular area of the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
+<dd>text of the annotation</dd>
+<dt><strong><code>quad_points</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>array of 8 × n numbers specifying the coordinates of n quadrilaterals
+in default user space that comprise the region in which the link should be activated.
+The coordinates for each quadrilateral are given in the order: x1 y1 x2 y2 x3 y3 x4 y4
+specifying the four vertices of the quadrilateral in counterclockwise order</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>the text label that shall be displayed in the title bar of the annotation’s
+pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+the title bar of the annotation’s pop-up window</dd>
+<dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>date and time when the annotation was most recently modified</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def add_text_markup_annotation(
+    self,
+    type,
+    text,
+    quad_points,
+    title=&#34;&#34;,
+    color=(1, 1, 0),
+    modification_time=None,
+    page=None,
+):
+    &#34;&#34;&#34;
+    Adds a text markup annotation on a rectangular area of the page.
+
+    Args:
+        text (str): text of the annotation
+        quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
+            in default user space that comprise the region in which the link should be activated.
+            The coordinates for each quadrilateral are given in the order: x1 y1 x2 y2 x3 y3 x4 y4
+            specifying the four vertices of the quadrilateral in counterclockwise order
+        title (str): the text label that shall be displayed in the title bar of the annotation’s
+            pop-up window when open and active. This entry shall identify the user who added the annotation.
+        color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+            the title bar of the annotation’s pop-up window
+        modification_time (datetime): date and time when the annotation was most recently modified
+    &#34;&#34;&#34;
+    if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
+        raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
+    if modification_time is None:
+        modification_time = datetime.now()
+    if page is None:
+        page = self.page
+    x_min = min(quad_points[0::2])
+    y_min = min(quad_points[1::2])
+    x_max = max(quad_points[0::2])
+    y_max = max(quad_points[1::2])
+    self.annots[page].append(
+        Annotation(
+            type,
+            contents=text,
+            x=y_min,
+            y=y_max,
+            width=x_max - x_min,
+            height=y_max - y_min,
+            color=color,
+            modification_time=modification_time,
+            title=title,
+            quad_points=quad_points,
+            page=page,
+        )
+    )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.alias_nb_pages"><code class="name flex">
@@ -8015,11 +8238,31 @@ def text(self, x, y, txt=&#34;&#34;):
         s += &#34; &#34; + self._do_underline(x, y, txt)
     if self.fill_color != self.text_color:
         s = f&#34;q {self.text_color} {s} Q&#34;
-    self._out(s)</code></pre>
+    self._out(s)
+    if self.record_text_quad_points:
+        unscaled_width = self.get_normalized_string_width_with_style(
+            txt, self.font_style
+        )
+        if self.font_stretching != 100:
+            unscaled_width *= self.font_stretching / 100
+        w = unscaled_width * self.font_size / 1000
+        h = self.font_size
+        self.text_quad_points[self.page].extend(
+            [
+                x * self.k,
+                (self.h - y) * self.k,
+                (x + w) * self.k,
+                (self.h - y) * self.k,
+                x * self.k,
+                (self.h - y + h) * self.k,
+                (x + w) * self.k,
+                (self.h - y + h) * self.k,
+            ]
+        )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.text_annotation"><code class="name flex">
-<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text)</span>
+<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a text annotation on a rectangular area of the page.</p>
@@ -8041,7 +8284,7 @@ def text(self, x, y, txt=&#34;&#34;):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
-def text_annotation(self, x, y, text):
+def text_annotation(self, x, y, text, w=1, h=1):
     &#34;&#34;&#34;
     Puts a text annotation on a rectangular area of the page.
 
@@ -8057,8 +8300,8 @@ def text_annotation(self, x, y, text):
             &#34;Text&#34;,
             x * self.k,
             self.h_pt - y * self.k,
-            self.k,
-            self.k,
+            w * self.k,
+            h * self.k,
             contents=text,
         )
     )</code></pre>
@@ -10694,8 +10937,10 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <li><code><a title="fpdf.FPDF.accept_page_break" href="#fpdf.FPDF.accept_page_break">accept_page_break</a></code></li>
 <li><code><a title="fpdf.FPDF.add_action" href="#fpdf.FPDF.add_action">add_action</a></code></li>
 <li><code><a title="fpdf.FPDF.add_font" href="#fpdf.FPDF.add_font">add_font</a></code></li>
+<li><code><a title="fpdf.FPDF.add_highlight" href="#fpdf.FPDF.add_highlight">add_highlight</a></code></li>
 <li><code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">add_link</a></code></li>
 <li><code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">add_page</a></code></li>
+<li><code><a title="fpdf.FPDF.add_text_markup_annotation" href="#fpdf.FPDF.add_text_markup_annotation">add_text_markup_annotation</a></code></li>
 <li><code><a title="fpdf.FPDF.alias_nb_pages" href="#fpdf.FPDF.alias_nb_pages">alias_nb_pages</a></code></li>
 <li><code><a title="fpdf.FPDF.arc" href="#fpdf.FPDF.arc">arc</a></code></li>
 <li><code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">cell</a></code></li>

@@ -500,6 +500,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    Highlights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#named-actions" class="md-nav__link">
     Named actions
   </a>
@@ -780,6 +787,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    Highlights
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#named-actions" class="md-nav__link">
     Named actions
   </a>
@@ -829,6 +843,23 @@
 <span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;text_annotation.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<p>Method documentation: <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.text_annotation"><code>FPDF.text_annotation</code></a></p>
+<h2 id="highlights">Highlights</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">add_highlight</span><span class="p">(</span><span class="s2">&quot;Highlight comment&quot;</span><span class="p">):</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;Line 1&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Line 2&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Not highlighted&quot;</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;highlighted.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Rendering by Sumatra PDF reader:
+<img alt="Screenshot of highlight annotation rendered by Sumatra PDF reader" src="highlighted.png" /></p>
+<p>Method documentation: <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.add_highlight"><code>FPDF.add_highlight</code></a></p>
 <h2 id="named-actions">Named actions</h2>
 <p>The four standard PDF named actions provide some basic navigation relative to the current page:
 <code>NextPage</code>, <code>PrevPage</code>, <code>FirstPage</code> and <code>LastPage</code>.</p>

@@ -75,7 +75,7 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
     if not isinstance(img, Image.Image):
         img = Image.open(img)
     if dims:
-        img = img.resize(dims, resample=Image.ANTIALIAS)
+        img = img.resize(dims, resample=Image.Resampling.LANCZOS)
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
@@ -196,7 +196,7 @@ def _has_alpha(img, alpha_channel):
     if not isinstance(img, Image.Image):
         img = Image.open(img)
     if dims:
-        img = img.resize(dims, resample=Image.ANTIALIAS)
+        img = img.resize(dims, resample=Image.Resampling.LANCZOS)
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
