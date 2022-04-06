@@ -269,6 +269,19 @@
     Installation
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#displaying-deprecation-warnings" class="md-nav__link">
+    Displaying deprecation warnings
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1157,6 +1170,19 @@
     Installation
   </a>
   
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#displaying-deprecation-warnings" class="md-nav__link">
+    Displaying deprecation warnings
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1284,6 +1310,12 @@
 </li>
 </ul>
 <p><strong>Developement</strong>: check the <a href="Development.html">dedicated documentation page</a>.</p>
+<h3 id="displaying-deprecation-warnings">Displaying deprecation warnings</h3>
+<p><code>DeprecationWarning</code>s are not displayed by Python by default.</p>
+<p>Hence, every time you use a newer version of <code>fpdf2</code>, we strongly encourage you to execute your scripts
+with the <code>-Wd</code> option (<em>cf.</em> <a href="https://docs.python.org/3/using/cmdline.html#cmdoption-W">documentation</a>) 
+in order to get warned about deprecated features used in your code.</p>
+<p>This can also be enabled programmatically with <code>warnings.simplefilter('default', DeprecationWarning)</code>.</p>
 <h2 id="community">Community</h2>
 <h3 id="support">Support</h3>
 <p>For community support, please feel free to file an <a href="https://github.com/PyFPDF/fpdf2/issues">issue</a>
