@@ -1739,7 +1739,7 @@ Default to "mm".</dd>
         )
 
     @check_page
-    def link(self, x, y, w, h, link, alt_text=None):
+    def link(self, x, y, w, h, link, alt_text=None, border_width=0):
         &#34;&#34;&#34;
         Puts a link annotation on a rectangular area of the page.
         Text or image links are generally put via [cell](#fpdf.FPDF.cell),
@@ -1753,16 +1753,19 @@ Default to "mm".</dd>
             h (float): width of the link rectangle
             link: either an URL or a integer returned by `add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
+            border_width (int): thickness of an optional black border surrounding the link.
+                Not all PDF readers honor this: Acrobat renders it but not Sumatra.
         &#34;&#34;&#34;
         self.annots[self.page].append(
             Annotation(
                 &#34;Link&#34;,
-                x * self.k,
-                self.h_pt - y * self.k,
-                w * self.k,
-                h * self.k,
+                x=x * self.k,
+                y=self.h_pt - y * self.k,
+                width=w * self.k,
+                height=h * self.k,
                 link=link,
                 alt_text=alt_text,
+                border_width=border_width,
             )
         )
 
@@ -6309,7 +6312,7 @@ def line(self, x1, y1, x2, y2):
 </details>
 </dd>
 <dt id="fpdf.FPDF.link"><code class="name flex">
-<span>def <span class="ident">link</span></span>(<span>self, x, y, w, h, link, alt_text=None)</span>
+<span>def <span class="ident">link</span></span>(<span>self, x, y, w, h, link, alt_text=None, border_width=0)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a link annotation on a rectangular area of the page.
@@ -6330,13 +6333,16 @@ but this method can be useful for instance to define a clickable area inside an 
 <dd>either an URL or a integer returned by <code>add_link</code>, defining an internal link to a page</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional textual description of the link, for accessibility purposes</dd>
+<dt><strong><code>border_width</code></strong> :&ensp;<code>int</code></dt>
+<dd>thickness of an optional black border surrounding the link.
+Not all PDF readers honor this: Acrobat renders it but not Sumatra.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
-def link(self, x, y, w, h, link, alt_text=None):
+def link(self, x, y, w, h, link, alt_text=None, border_width=0):
     &#34;&#34;&#34;
     Puts a link annotation on a rectangular area of the page.
     Text or image links are generally put via [cell](#fpdf.FPDF.cell),
@@ -6350,16 +6356,19 @@ def link(self, x, y, w, h, link, alt_text=None):
         h (float): width of the link rectangle
         link: either an URL or a integer returned by `add_link`, defining an internal link to a page
         alt_text (str): optional textual description of the link, for accessibility purposes
+        border_width (int): thickness of an optional black border surrounding the link.
+            Not all PDF readers honor this: Acrobat renders it but not Sumatra.
     &#34;&#34;&#34;
     self.annots[self.page].append(
         Annotation(
             &#34;Link&#34;,
-            x * self.k,
-            self.h_pt - y * self.k,
-            w * self.k,
-            h * self.k,
+            x=x * self.k,
+            y=self.h_pt - y * self.k,
+            width=w * self.k,
+            height=h * self.k,
             link=link,
             alt_text=alt_text,
+            border_width=border_width,
         )
     )</code></pre>
 </details>
