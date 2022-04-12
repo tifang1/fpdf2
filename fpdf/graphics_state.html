@@ -26,7 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class GraphicsStateMixin:
+<pre><code class="python">from .enums import TextMode
+
+
+class GraphicsStateMixin:
     &#34;&#34;&#34;Mixin class for managing a stack of graphics state variables.
 
     To the subclassing library and its users, the variables look like
@@ -52,6 +55,7 @@
                 font_size=0,
                 dash_pattern=dict(dash=0, gap=0, phase=0),
                 line_width=0,
+                text_mode=TextMode.FILL,
             ),
         ]
         super().__init__(*args, **kwargs)
@@ -148,7 +152,15 @@
 
     @line_width.setter
     def line_width(self, v):
-        self.__statestack[-1][&#34;line_width&#34;] = v</code></pre>
+        self.__statestack[-1][&#34;line_width&#34;] = v
+
+    @property
+    def text_mode(self):
+        return self.__statestack[-1][&#34;text_mode&#34;]
+
+    @text_mode.setter
+    def text_mode(self, v):
+        self.__statestack[-1][&#34;text_mode&#34;] = v</code></pre>
 </details>
 </section>
 <section>
@@ -202,6 +214,7 @@ directly by user code.</p></div>
                 font_size=0,
                 dash_pattern=dict(dash=0, gap=0, phase=0),
                 line_width=0,
+                text_mode=TextMode.FILL,
             ),
         ]
         super().__init__(*args, **kwargs)
@@ -298,7 +311,15 @@ directly by user code.</p></div>
 
     @line_width.setter
     def line_width(self, v):
-        self.__statestack[-1][&#34;line_width&#34;] = v</code></pre>
+        self.__statestack[-1][&#34;line_width&#34;] = v
+
+    @property
+    def text_mode(self):
+        return self.__statestack[-1][&#34;text_mode&#34;]
+
+    @text_mode.setter
+    def text_mode(self, v):
+        self.__statestack[-1][&#34;text_mode&#34;] = v</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -426,6 +447,18 @@ def text_color(self):
     return self.__statestack[-1][&#34;text_color&#34;]</code></pre>
 </details>
 </dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.text_mode"><code class="name">var <span class="ident">text_mode</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def text_mode(self):
+    return self.__statestack[-1][&#34;text_mode&#34;]</code></pre>
+</details>
+</dd>
 <dt id="fpdf.graphics_state.GraphicsStateMixin.underline"><code class="name">var <span class="ident">underline</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -469,6 +502,7 @@ def underline(self):
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.font_style" href="#fpdf.graphics_state.GraphicsStateMixin.font_style">font_style</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.line_width" href="#fpdf.graphics_state.GraphicsStateMixin.line_width">line_width</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.text_color" href="#fpdf.graphics_state.GraphicsStateMixin.text_color">text_color</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.text_mode" href="#fpdf.graphics_state.GraphicsStateMixin.text_mode">text_mode</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.underline" href="#fpdf.graphics_state.GraphicsStateMixin.underline">underline</a></code></li>
 </ul>
 </li>

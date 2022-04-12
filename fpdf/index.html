@@ -29,7 +29,7 @@
 <pre><code class="python">#!/usr/bin/env python
 import sys
 
-from .util import XPos, YPos
+from .enums import TextMode, XPos, YPos
 from .fpdf import (
     FPDF,
     FPDFException,
@@ -93,6 +93,10 @@ __all__ = [
 <div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="fpdf.drawing" href="drawing.html">fpdf.drawing</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="fpdf.enums" href="enums.html">fpdf.enums</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -228,6 +232,10 @@ Default to "mm".</dd>
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
 
+    DEFAULT_DRAW_COLOR = &#34;0 G&#34;
+    DEFAULT_FILL_COLOR = &#34;0 g&#34;
+    DEFAULT_TEXT_COLOR = &#34;0 g&#34;
+
     def __init__(
         self,
         orientation=&#34;portrait&#34;,
@@ -331,11 +339,12 @@ Default to "mm".</dd>
         self.font_size = self.font_size_pt / self.k
         self.font_stretching = 100  # current font stretching
         self.underline = 0  # underlining flag
-        self.draw_color = &#34;0 G&#34;
-        self.fill_color = &#34;0 g&#34;
-        self.text_color = &#34;0 g&#34;
+        self.draw_color = self.DEFAULT_DRAW_COLOR
+        self.fill_color = self.DEFAULT_FILL_COLOR
+        self.text_color = self.DEFAULT_TEXT_COLOR
         self.dash_pattern = dict(dash=0, gap=0, phase=0)
         self.line_width = 0.567 / self.k  # line width (0.2 mm)
+        self.text_mode = TextMode.FILL
         # end of grapics state variables
 
         self.dw_pt, self.dh_pt = get_page_format(format, self.k)
@@ -752,10 +761,10 @@ Default to "mm".</dd>
 
         # Set colors
         self.draw_color = dc
-        if dc != &#34;0 G&#34;:
+        if dc != self.DEFAULT_DRAW_COLOR:
             self._out(dc)
         self.fill_color = fc
-        if fc != &#34;0 g&#34;:
+        if fc != self.DEFAULT_FILL_COLOR:
             self._out(fc)
         self.text_color = tc
 
@@ -1913,7 +1922,10 @@ Default to "mm".</dd>
             txt2 = escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
         else:
             txt2 = escape_parens(txt)
-        s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
+        s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td&#34;
+        if self.text_mode != TextMode.FILL:
+            s += f&#34; {self.text_mode} Tr {self.line_width:.2f} w&#34;
+        s += f&#34; ({txt2}) Tj ET&#34;
         if self.underline and txt != &#34;&#34;:
             s += &#34; &#34; + self._do_underline(x, y, txt)
         if self.fill_color != self.text_color:
@@ -2015,7 +2027,16 @@ Default to "mm".</dd>
 
     @check_page
     @contextmanager
-    def local_context(self):
+    def local_context(
+        self,
+        draw_color=None,
+        fill_color=None,
+        text_color=None,
+        font_family=None,
+        font_style=None,
+        font_size=None,
+        **kwargs,
+    ):
         &#34;&#34;&#34;
         Create a local grapics state, which won&#39;t affect the surrounding code.
         This method must be used as a context manager using `with`:
@@ -2024,23 +2045,57 @@ Default to "mm".</dd>
                 set_some_state()
                 draw_some_stuff()
 
-        The affected settings are:
+        The affected settings are all those controlled by the GraphicsStateMixin:
             draw_color
             fill_color
             text_color
-            underline
+            font_family
+            font_size
             font_style
             font_stretching
-            font_family
-            font_size_pt
-            font_size
             dash_pattern
             line_width
+            text_mode
+            underline
+
+        Args:
+            **kwargs: key-values settings to set at the beggining of this context.
         &#34;&#34;&#34;
         self._push_local_stack()
-        self._out(&#34;\nq &#34;)
+        for key, value in kwargs.items():
+            if key not in (
+                &#34;dash_pattern&#34;,
+                &#34;font_stretching&#34;,
+                &#34;line_width&#34;,
+                &#34;text_mode&#34;,
+                &#34;underline&#34;,
+            ):
+                raise ValueError(f&#34;Unsupported setting: {key}&#34;)
+            setattr(self, key, value)
+        self._out(&#34;q\n&#34;)
+        if font_family is not None or font_style is not None:
+            self.set_font(
+                font_family or self.font_family, font_style or self.font_style
+            )
+        if font_size is not None:
+            self.set_font_size(font_size)
+        if draw_color is not None:
+            if isinstance(draw_color, Sequence):
+                self.set_draw_color(*draw_color)
+            else:
+                self.set_draw_color(draw_color)
+        if fill_color is not None:
+            if isinstance(fill_color, Sequence):
+                self.set_fill_color(*fill_color)
+            else:
+                self.set_fill_color(fill_color)
+        if text_color is not None:
+            if isinstance(text_color, Sequence):
+                self.set_text_color(*text_color)
+            else:
+                self.set_text_color(text_color)
         yield
-        self._out(&#34; Q\n&#34;)
+        self._out(&#34;\nQ&#34;)
         self._pop_local_stack()
 
     @property
@@ -2341,6 +2396,9 @@ Default to "mm".</dd>
                 f&#34;BT {(self.x + dx) * k:.2f} &#34;
                 f&#34;{(self.h - self.y - 0.5 * h - 0.3 * self.font_size) * k:.2f} Td&#34;
             )
+
+            if self.text_mode != TextMode.FILL:
+                s += f&#34; {self.text_mode} Tr {self.line_width:.2f} w&#34;
 
             # precursor to self.ws, or manual spacing of unicode fonts/
             word_spacing = 0
@@ -2785,7 +2843,7 @@ Default to "mm".</dd>
                 link=link,
             )
             if is_last_line and new_page and new_y == YPos.TOP:
-                # When a page jump is performed and the requested y is TOP (ln=3),
+                # When a page jump is performed and the requested y is TOP,
                 # pretend we started at the top of the text block on the new page.
                 # cf. test_multi_cell_table_with_automatic_page_break
                 prev_y = self.y
@@ -4374,6 +4432,18 @@ Default to "mm".</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="fpdf.FPDF.DEFAULT_DRAW_COLOR"><code class="name">var <span class="ident">DEFAULT_DRAW_COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.FPDF.DEFAULT_FILL_COLOR"><code class="name">var <span class="ident">DEFAULT_FILL_COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.FPDF.DEFAULT_TEXT_COLOR"><code class="name">var <span class="ident">DEFAULT_TEXT_COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="fpdf.FPDF.MARKDOWN_BOLD_MARKER"><code class="name">var <span class="ident">MARKDOWN_BOLD_MARKER</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -4865,10 +4935,10 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 
     # Set colors
     self.draw_color = dc
-    if dc != &#34;0 G&#34;:
+    if dc != self.DEFAULT_DRAW_COLOR:
         self._out(dc)
     self.fill_color = fc
-    if fc != &#34;0 g&#34;:
+    if fc != self.DEFAULT_FILL_COLOR:
         self._out(fc)
     self.text_color = tc
 
@@ -6327,7 +6397,7 @@ def ln(self, h=None):
 </details>
 </dd>
 <dt id="fpdf.FPDF.local_context"><code class="name flex">
-<span>def <span class="ident">local_context</span></span>(<span>self)</span>
+<span>def <span class="ident">local_context</span></span>(<span>self, draw_color=None, fill_color=None, text_color=None, font_family=None, font_style=None, font_size=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Create a local grapics state, which won't affect the surrounding code.
@@ -6336,25 +6406,39 @@ This method must be used as a context manager using <code>with</code>:</p>
     set_some_state()
     draw_some_stuff()
 </code></pre>
-<p>The affected settings are:
+<p>The affected settings are all those controlled by the GraphicsStateMixin:
 draw_color
 fill_color
 text_color
-underline
+font_family
+font_size
 font_style
 font_stretching
-font_family
-font_size_pt
-font_size
 dash_pattern
-line_width</p></div>
+line_width
+text_mode
+underline</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>key-values settings to set at the beggining of this context.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
 @contextmanager
-def local_context(self):
+def local_context(
+    self,
+    draw_color=None,
+    fill_color=None,
+    text_color=None,
+    font_family=None,
+    font_style=None,
+    font_size=None,
+    **kwargs,
+):
     &#34;&#34;&#34;
     Create a local grapics state, which won&#39;t affect the surrounding code.
     This method must be used as a context manager using `with`:
@@ -6363,23 +6447,57 @@ def local_context(self):
             set_some_state()
             draw_some_stuff()
 
-    The affected settings are:
+    The affected settings are all those controlled by the GraphicsStateMixin:
         draw_color
         fill_color
         text_color
-        underline
+        font_family
+        font_size
         font_style
         font_stretching
-        font_family
-        font_size_pt
-        font_size
         dash_pattern
         line_width
+        text_mode
+        underline
+
+    Args:
+        **kwargs: key-values settings to set at the beggining of this context.
     &#34;&#34;&#34;
     self._push_local_stack()
-    self._out(&#34;\nq &#34;)
+    for key, value in kwargs.items():
+        if key not in (
+            &#34;dash_pattern&#34;,
+            &#34;font_stretching&#34;,
+            &#34;line_width&#34;,
+            &#34;text_mode&#34;,
+            &#34;underline&#34;,
+        ):
+            raise ValueError(f&#34;Unsupported setting: {key}&#34;)
+        setattr(self, key, value)
+    self._out(&#34;q\n&#34;)
+    if font_family is not None or font_style is not None:
+        self.set_font(
+            font_family or self.font_family, font_style or self.font_style
+        )
+    if font_size is not None:
+        self.set_font_size(font_size)
+    if draw_color is not None:
+        if isinstance(draw_color, Sequence):
+            self.set_draw_color(*draw_color)
+        else:
+            self.set_draw_color(draw_color)
+    if fill_color is not None:
+        if isinstance(fill_color, Sequence):
+            self.set_fill_color(*fill_color)
+        else:
+            self.set_fill_color(fill_color)
+    if text_color is not None:
+        if isinstance(text_color, Sequence):
+            self.set_text_color(*text_color)
+        else:
+            self.set_text_color(text_color)
     yield
-    self._out(&#34; Q\n&#34;)
+    self._out(&#34;\nQ&#34;)
     self._pop_local_stack()</code></pre>
 </details>
 </dd>
@@ -6624,7 +6742,7 @@ def multi_cell(
             link=link,
         )
         if is_last_line and new_page and new_y == YPos.TOP:
-            # When a page jump is performed and the requested y is TOP (ln=3),
+            # When a page jump is performed and the requested y is TOP,
             # pretend we started at the top of the text block on the new page.
             # cf. test_multi_cell_table_with_automatic_page_break
             prev_y = self.y
@@ -8479,7 +8597,10 @@ def text(self, x, y, txt=&#34;&#34;):
         txt2 = escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
     else:
         txt2 = escape_parens(txt)
-    s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td ({txt2}) Tj ET&#34;
+    s = f&#34;BT {x * self.k:.2f} {(self.h - y) * self.k:.2f} Td&#34;
+    if self.text_mode != TextMode.FILL:
+        s += f&#34; {self.text_mode} Tr {self.line_width:.2f} w&#34;
+    s += f&#34; ({txt2}) Tj ET&#34;
     if self.underline and txt != &#34;&#34;:
         s += &#34; &#34; + self._do_underline(x, y, txt)
     if self.fill_color != self.text_color:
@@ -11200,6 +11321,7 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <li><code><a title="fpdf.actions" href="actions.html">fpdf.actions</a></code></li>
 <li><code><a title="fpdf.deprecation" href="deprecation.html">fpdf.deprecation</a></code></li>
 <li><code><a title="fpdf.drawing" href="drawing.html">fpdf.drawing</a></code></li>
+<li><code><a title="fpdf.enums" href="enums.html">fpdf.enums</a></code></li>
 <li><code><a title="fpdf.errors" href="errors.html">fpdf.errors</a></code></li>
 <li><code><a title="fpdf.fonts" href="fonts.html">fpdf.fonts</a></code></li>
 <li><code><a title="fpdf.fpdf" href="fpdf.html">fpdf.fpdf</a></code></li>
@@ -11229,6 +11351,9 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <li>
 <h4><code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code></h4>
 <ul class="">
+<li><code><a title="fpdf.FPDF.DEFAULT_DRAW_COLOR" href="#fpdf.FPDF.DEFAULT_DRAW_COLOR">DEFAULT_DRAW_COLOR</a></code></li>
+<li><code><a title="fpdf.FPDF.DEFAULT_FILL_COLOR" href="#fpdf.FPDF.DEFAULT_FILL_COLOR">DEFAULT_FILL_COLOR</a></code></li>
+<li><code><a title="fpdf.FPDF.DEFAULT_TEXT_COLOR" href="#fpdf.FPDF.DEFAULT_TEXT_COLOR">DEFAULT_TEXT_COLOR</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_BOLD_MARKER" href="#fpdf.FPDF.MARKDOWN_BOLD_MARKER">MARKDOWN_BOLD_MARKER</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER" href="#fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER">MARKDOWN_UNDERLINE_MARKER</a></code></li>
