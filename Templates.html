@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#templates" class="md-skip">
+        <a href="#introduction" class="md-skip">
           Skip to content
         </a>
       
@@ -445,81 +445,9 @@
         
       
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Templates
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
       <a href="Templates.html" class="md-nav__link md-nav__link--active">
         Templates
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#using-template" class="md-nav__link">
-    Using Template()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#using-flextemplate" class="md-nav__link">
-    Using FlexTemplate()
-  </a>
-  
-    <nav class="md-nav" aria-label="Using FlexTemplate()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#details-template-definition" class="md-nav__link">
-    Details - Template definition
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#how-to-create-a-template" class="md-nav__link">
-    How to create a template
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-hardcoded" class="md-nav__link">
-    Example - Hardcoded
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-elements-defined-in-csv-file" class="md-nav__link">
-    Example - Elements defined in CSV file
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
       
     </li>
   
@@ -1122,62 +1050,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#using-template" class="md-nav__link">
-    Using Template()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#using-flextemplate" class="md-nav__link">
-    Using FlexTemplate()
-  </a>
-  
-    <nav class="md-nav" aria-label="Using FlexTemplate()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#details-template-definition" class="md-nav__link">
-    Details - Template definition
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#how-to-create-a-template" class="md-nav__link">
-    How to create a template
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-hardcoded" class="md-nav__link">
-    Example - Hardcoded
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#example-elements-defined-in-csv-file" class="md-nav__link">
-    Example - Elements defined in CSV file
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1194,13 +1066,13 @@
 
 
 
-<h1 id="templates">Templates</h1>
+<h1 id="introduction">Introduction</h1>
 <p>Templates are predefined documents (like invoices, tax forms, etc.), or parts of such documents, where each element (text, lines, barcodes, etc.) has a fixed position (x1, y1, x2, y2), style (font, size, etc.) and a default text.</p>
 <p>These elements can act as placeholders, so the program can change the default text "filling in" the document.</p>
 <p>Besides being defined in code, the elements can also be defined in a CSV file or in a database, so the user can easily adapt the form to his printing needs.</p>
 <p>A template is used like a dict, setting its items' values.</p>
-<p><strong> How to use Templates? </strong></p>
-<p>There are two approaches to using templates, detailed in the sections below:</p>
+<h1 id="how-to-use-templates">How to use Templates</h1>
+<p>There are two approaches to using templates.</p>
 <h2 id="using-template">Using Template()</h2>
 <p>The traditional approach is to use the Template() class, This class accepts one template definition, and can apply it to each page of a document. The usage pattern here is:</p>
 <div class="highlight"><pre><span></span><code><span class="n">tmpl</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">elements</span><span class="o">=</span><span class="n">elements</span><span class="p">)</span>
@@ -1314,7 +1186,7 @@ In this case, you first need to create your own FPDF() instance. You can then pa
 <p>The dict syntax for setting text values is the same as above:</p>
 <div class="highlight"><pre><span></span><code><span class="n">FlexTemplate</span><span class="p">[</span><span class="s2">&quot;company_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Sample Company&quot;</span>
 </code></pre></div>
-<h3 id="details-template-definition">Details - Template definition</h3>
+<h1 id="details-template-definition">Details - Template definition</h1>
 <p>A template definition consists of a number of elements, which have the following properties (columns in a CSV, items in a dict, fields in a database).
 Dimensions (except font size, which always uses points) are given in user defined units (default: mm). Those are the units that can be specified when creating a <code>Template()</code> or a <code>FPDF()</code> instance.</p>
 <ul>
@@ -1400,14 +1272,14 @@ Dimensions (except font size, which always uses points) are given in user define
 </li>
 </ul>
 <p>Fields that are not relevant to a specific element type will be ignored there, but if not left empty, they must still adhere to the specified data type (in dicts, string fields may be None).</p>
-<h3 id="how-to-create-a-template">How to create a template</h3>
+<h1 id="how-to-create-a-template">How to create a template</h1>
 <p>A template can be created in 3 ways:</p>
 <ul>
 <li>By defining everything manually in a hardcoded way as a Python dictionary</li>
 <li>By using a template definition in a CSV document and parsing the CSV with Template.parse_dict()</li>
 <li>By defining the template in a database (this applies to [Web2Py] (Web2Py.md) integration)</li>
 </ul>
-<h3 id="example-hardcoded">Example - Hardcoded</h3>
+<h1 id="example-hardcoded">Example - Hardcoded</h1>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">Template</span>
 
 <span class="c1">#this will define the ELEMENTS that will compose the template. </span>
@@ -1435,7 +1307,7 @@ Dimensions (except font size, which always uses points) are given in user define
 <span class="n">f</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="s2">&quot;./template.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>See template.py or [Web2Py] (Web2Py.md) for a complete example.</p>
-<h3 id="example-elements-defined-in-csv-file">Example - Elements defined in CSV file</h3>
+<h1 id="example-elements-defined-in-csv-file">Example - Elements defined in CSV file</h1>
 <p>You define your elements in a CSV file "mycsvfile.csv"
 that will look like:
 <div class="highlight"><pre><span></span><code>line0;L;20.0;12.0;190.0;12.0;times;0.5;0;0;0;0;16777215;C;;0;0;0.0
