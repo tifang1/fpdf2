@@ -79,7 +79,7 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
-    if img.mode not in [&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;]:
+    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;):
         img = img.convert(&#34;RGBA&#34;)
     w, h = img.size
     info = {}
@@ -200,7 +200,7 @@ def _has_alpha(img, alpha_channel):
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
-    if img.mode not in [&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;]:
+    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;):
         img = img.convert(&#34;RGBA&#34;)
     w, h = img.size
     info = {}

@@ -29,13 +29,22 @@
 <pre><code class="python">from collections import OrderedDict
 from contextlib import contextmanager
 import copy
-import enum
 import decimal
 import math
 import re
 from typing import Optional, NamedTuple, Union
 
-from . import util
+from .enums import (
+    BlendMode,
+    ClippingPathIntersectionRule,
+    IntersectionRule,
+    PathPaintRule,
+    StrokeCapStyle,
+    StrokeJoinStyle,
+    PDFStyleKeys,
+)
+from .syntax import Name, Raw
+from .util import escape_parens
 
 __pdoc__ = {&#34;force_nodocument&#34;: False}
 
@@ -56,25 +65,6 @@ def force_document(item):
 # type alias:
 Number = Union[int, float, decimal.Decimal]
 NumberClass = (int, float, decimal.Decimal)
-
-
-# this maybe should live in fpdf.syntax
-class Raw(str):
-    &#34;&#34;&#34;str subclass signifying raw data to be directly emitted to PDF without transformation.&#34;&#34;&#34;
-
-
-class Name(str):
-    &#34;&#34;&#34;str subclass signifying a PDF name, which are emitted differently than normal strings.&#34;&#34;&#34;
-
-    NAME_ESC = re.compile(
-        b&#34;[^&#34; + bytes(v for v in range(33, 127) if v not in b&#34;()&lt;&gt;[]{}/%#\\&#34;) + b&#34;]&#34;
-    )
-
-    def pdf_repr(self) -&gt; str:
-        escaped = self.NAME_ESC.sub(
-            lambda m: b&#34;#%02X&#34; % m[0][0], self.encode()
-        ).decode()
-        return f&#34;/{escaped}&#34;
 
 
 WHITESPACE = frozenset(&#34;\0\t\n\f\r &#34;)
@@ -103,7 +93,7 @@ class GraphicsStateDictRegistry(OrderedDict):
     A container providing deduplication of graphics state dictionaries across a PDF.
     &#34;&#34;&#34;
 
-    def register_style(self, style):
+    def register_style(self, style: &#34;GraphicsStyle&#34;):
         sdict = style.to_pdf_dict()
 
         # empty style does not need a dictionary
@@ -178,7 +168,7 @@ def render_pdf_primitive(primitive):
     elif primitive is None:
         output = &#34;null&#34;
     elif isinstance(primitive, str):
-        output = f&#34;({util.escape_parens(primitive)})&#34;
+        output = f&#34;({escape_parens(primitive)})&#34;
     elif isinstance(primitive, bytes):
         output = f&#34;&lt;{primitive.hex()}&gt;&#34;
     elif isinstance(primitive, bool):  # has to come before number check
@@ -248,6 +238,9 @@ class DeviceRGB(
         &#34;&#34;&#34;The color components as a tuple in order `(r, g, b)` with alpha omitted.&#34;&#34;&#34;
         return self[:-1]
 
+    def pdf_repr(self) -&gt; str:
+        return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;
+
 
 __pdoc__[&#34;DeviceRGB.OPERATOR&#34;] = False
 __pdoc__[&#34;DeviceRGB.r&#34;] = &#34;The red color component. Must be in the interval [0, 1].&#34;
@@ -287,6 +280,9 @@ class DeviceGray(
     def colors(self):
         &#34;&#34;&#34;The color components as a tuple in order (g,) with alpha omitted.&#34;&#34;&#34;
         return self[:-1]
+
+    def pdf_repr(self) -&gt; str:
+        return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;
 
 
 __pdoc__[&#34;DeviceGray.OPERATOR&#34;] = False
@@ -340,6 +336,9 @@ class DeviceCMYK(
         &#34;&#34;&#34;The color components as a tuple in order (c, m, y, k) with alpha omitted.&#34;&#34;&#34;
 
         return self[:-1]
+
+    def pdf_repr(self) -&gt; str:
+        return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;
 
 
 __pdoc__[&#34;DeviceCMYK.OPERATOR&#34;] = False
@@ -1041,348 +1040,6 @@ __pdoc__[&#34;Transform.c&#34;] = False
 __pdoc__[&#34;Transform.d&#34;] = False
 __pdoc__[&#34;Transform.e&#34;] = False
 __pdoc__[&#34;Transform.f&#34;] = False
-
-
-class CoerciveEnum(enum.Enum):
-    &#34;&#34;&#34;
-    An enumeration that provides a helper to coerce strings into enumeration members.
-    &#34;&#34;&#34;
-
-    @classmethod
-    def coerce(cls, value):
-        &#34;&#34;&#34;
-        Attempt to coerce `value` into a member of this enumeration.
-
-        If value is already a member of this enumeration it is returned unchanged.
-        Otherwise, if it is a string, attempt to convert it as an enumeration value. If
-        that fails, attempt to convert it (case insensitively, by upcasing) as an
-        enumeration name.
-
-        If all different conversion attempts fail, an exception is raised.
-
-        Args:
-            value (enum.Enum, str): the value to be coerced.
-
-        Raises:
-            ValueError: if `value` is a string but neither a member by name nor value.
-            TypeError: if `value`&#39;s type is neither a member of the enumeration nor a
-                string.
-        &#34;&#34;&#34;
-
-        if isinstance(value, cls):
-            return value
-
-        if isinstance(value, str):
-            try:
-                return cls(value)
-            except ValueError:
-                pass
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                pass
-
-            raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;)
-
-        raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)
-
-
-class IntersectionRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration representing the two possible PDF intersection rules.
-
-    The intersection rule is used by the renderer to determine which points are
-    considered to be inside the path and which points are outside the path. This
-    primarily affects fill rendering and clipping paths.
-    &#34;&#34;&#34;
-
-    NONZERO = &#34;nonzero&#34;
-    &#34;&#34;&#34;
-    &#34;The nonzero winding number rule determines whether a given point is inside a path
-    by conceptually drawing a ray from that point to infinity in any direction and
-    then examining the places where a segment of the path crosses the ray. Starting
-    with a count of 0, the rule adds 1 each time a path segment crosses the ray from
-    left to right and subtracts 1 each time a segment crosses from right to left.
-    After counting all the crossings, if the result is 0, the point is outside the
-    path; otherwise, it is inside.&#34;
-    &#34;&#34;&#34;
-    EVENODD = &#34;evenodd&#34;
-    &#34;&#34;&#34;
-    &#34;An alternative to the nonzero winding number rule is the even-odd rule. This rule
-    determines whether a point is inside a path by drawing a ray from that point in
-    any direction and simply counting the number of path segments that cross the ray,
-    regardless of direction. If this number is odd, the point is inside; if even, the
-    point is outside. This yields the same results as the nonzero winding number rule
-    for paths with simple shapes, but produces different results for more complex
-    shapes.&#34;
-    &#34;&#34;&#34;
-
-
-class PathPaintRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the PDF drawing directives that determine how the renderer should
-    paint a given path.
-    &#34;&#34;&#34;
-
-    # the auto-close paint rules are omitted here because it&#39;s easier to just emit
-    # close operators when appropriate, programmatically
-    STROKE = &#34;S&#34;
-    &#39;&#39;&#39;&#34;Stroke the path.&#34;&#39;&#39;&#39;
-
-    FILL_NONZERO = &#34;f&#34;
-    &#34;&#34;&#34;
-    &#34;Fill the path, using the nonzero winding number rule to determine the region to
-    fill. Any subpaths that are open are implicitly closed before being filled.&#34;
-    &#34;&#34;&#34;
-
-    FILL_EVENODD = &#34;f*&#34;
-    &#34;&#34;&#34;
-    &#34;Fill the path, using the even-odd rule to determine the region to fill. Any
-    subpaths that are open are implicitly closed before being filled.&#34;
-    &#34;&#34;&#34;
-
-    STROKE_FILL_NONZERO = &#34;B&#34;
-    &#34;&#34;&#34;
-    &#34;Fill and then stroke the path, using the nonzero winding number rule to determine
-    the region to fill. This operator produces the same result as constructing two
-    identical path objects, painting the first with `FILL_NONZERO` and the second with
-    `STROKE`.&#34;
-    &#34;&#34;&#34;
-
-    STROKE_FILL_EVENODD = &#34;B*&#34;
-    &#34;&#34;&#34;
-    &#34;Fill and then stroke the path, using the even-odd rule to determine the region to
-    fill. This operator produces the same result as `STROKE_FILL_NONZERO`, except that
-    the path is filled as if with `FILL_EVENODD` instead of `FILL_NONZERO`.&#34;
-    &#34;&#34;&#34;
-
-    DONT_PAINT = &#34;n&#34;
-    &#34;&#34;&#34;
-    &#34;End the path object without filling or stroking it. This operator is a
-    path-painting no-op, used primarily for the side effect of changing the current
-    clipping path.&#34;
-    &#34;&#34;&#34;
-
-    AUTO = &#34;auto&#34;
-    &#34;&#34;&#34;
-    Automatically determine which `PathPaintRule` should be used.
-
-    PaintedPath will select one of the above `PathPaintRule`s based on the resolved
-    set/inherited values of its style property.
-    &#34;&#34;&#34;
-
-
-class ClippingPathIntersectionRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the PDF drawing directives that define a path as a clipping path.
-    &#34;&#34;&#34;
-
-    NONZERO = &#34;W&#34;
-    &#34;&#34;&#34;
-    &#34;The nonzero winding number rule determines whether a given point is inside a path
-    by conceptually drawing a ray from that point to infinity in any direction and
-    then examining the places where a segment of the path crosses the ray. Starting
-    with a count of 0, the rule adds 1 each time a path segment crosses the ray from
-    left to right and subtracts 1 each time a segment crosses from right to left.
-    After counting all the crossings, if the result is 0, the point is outside the
-    path; otherwise, it is inside.&#34;
-    &#34;&#34;&#34;
-    EVENODD = &#34;W*&#34;
-    &#34;&#34;&#34;
-    &#34;An alternative to the nonzero winding number rule is the even-odd rule. This rule
-    determines whether a point is inside a path by drawing a ray from that point in
-    any direction and simply counting the number of path segments that cross the ray,
-    regardless of direction. If this number is odd, the point is inside; if even, the
-    point is outside. This yields the same results as the nonzero winding number rule
-    for paths with simple shapes, but produces different results for more complex
-    shapes.&#34;
-    &#34;&#34;&#34;
-
-
-class CoerciveIntEnum(enum.IntEnum):
-    &#34;&#34;&#34;
-    An enumeration that provides a helper to coerce strings and integers into
-    enumeration members.
-    &#34;&#34;&#34;
-
-    @classmethod
-    def coerce(cls, value):
-        &#34;&#34;&#34;
-        Attempt to coerce `value` into a member of this enumeration.
-
-        If value is already a member of this enumeration it is returned unchanged.
-        Otherwise, if it is a string, attempt to convert it (case insensitively, by
-        upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
-        convert it as an enumeration value.
-
-        Otherwise, an exception is raised.
-
-        Args:
-            value (enum.IntEnum, str, int): the value to be coerced.
-
-        Raises:
-            ValueError: if `value` is an int but not a member of this enumeration.
-            ValueError: if `value` is a string but not a member by name.
-            TypeError: if `value`&#39;s type is neither a member of the enumeration nor an
-                int or a string.
-        &#34;&#34;&#34;
-        if isinstance(value, cls):
-            return value
-
-        if isinstance(value, str):
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;) from None
-
-        if isinstance(value, int):
-            return cls(value)
-
-        raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)
-
-
-class StrokeCapStyle(CoerciveIntEnum):
-    &#34;&#34;&#34;
-    An enumeration of values defining how the end of a stroke should be rendered.
-
-    This affects the ends of the segments of dashed strokes, as well.
-    &#34;&#34;&#34;
-
-    BUTT = 0
-    &#34;&#34;&#34;
-    &#34;The stroke is squared off at the endpoint of the path. There is no projection
-    beyond the end of the path.&#34;
-    &#34;&#34;&#34;
-    ROUND = 1
-    &#34;&#34;&#34;
-    &#34;A semicircular arc with a diameter equal to the line width is drawn around the
-    endpoint and filled in.&#34;
-    &#34;&#34;&#34;
-    SQUARE = 2
-    &#34;&#34;&#34;
-    &#34;The stroke continues beyond the endpoint of the path for a distance equal to half
-    the line width and is squared off.&#34;
-    &#34;&#34;&#34;
-
-
-class StrokeJoinStyle(CoerciveIntEnum):
-    &#34;&#34;&#34;
-    An enumeration of values defining how the corner joining two path components should
-    be rendered.
-    &#34;&#34;&#34;
-
-    MITER = 0
-    &#34;&#34;&#34;
-    &#34;The outer edges of the strokes for the two segments are extended until they meet at
-    an angle, as in a picture frame. If the segments meet at too sharp an angle
-    (as defined by the miter limit parameter), a bevel join is used instead.&#34;
-    &#34;&#34;&#34;
-    ROUND = 1
-    &#34;&#34;&#34;
-    &#34;An arc of a circle with a diameter equal to the line width is drawn around the
-    point where the two segments meet, connecting the outer edges of the strokes for
-    the two segments. This pieslice-shaped figure is filled in, pro- ducing a rounded
-    corner.&#34;
-    &#34;&#34;&#34;
-    BEVEL = 2
-    &#34;&#34;&#34;
-    &#34;The two segments are finished with butt caps and the resulting notch beyond the
-    ends of the segments is filled with a triangle.&#34;
-    &#34;&#34;&#34;
-
-
-class BlendMode(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the named standard named blend functions supported by PDF.
-    &#34;&#34;&#34;
-
-    NORMAL = Name(&#34;Normal&#34;)
-    &#39;&#39;&#39;&#34;Selects the source color, ignoring the backdrop.&#34;&#39;&#39;&#39;
-    MULTIPLY = Name(&#34;Multiply&#34;)
-    &#39;&#39;&#39;&#34;Multiplies the backdrop and source color values.&#34;&#39;&#39;&#39;
-    SCREEN = Name(&#34;Screen&#34;)
-    &#34;&#34;&#34;
-    &#34;Multiplies the complements of the backdrop and source color values, then
-    complements the result.&#34;
-    &#34;&#34;&#34;
-    OVERLAY = Name(&#34;Overlay&#34;)
-    &#34;&#34;&#34;
-    &#34;Multiplies or screens the colors, depending on the backdrop color value. Source
-    colors overlay the backdrop while preserving its highlights and shadows. The
-    backdrop color is not replaced but is mixed with the source color to reflect the
-    lightness or darkness of the backdrop.&#34;
-    &#34;&#34;&#34;
-    DARKEN = Name(&#34;Darken&#34;)
-    &#39;&#39;&#39;&#34;Selects the darker of the backdrop and source colors.&#34;&#39;&#39;&#39;
-    LIGHTEN = Name(&#34;Lighten&#34;)
-    &#39;&#39;&#39;&#34;Selects the lighter of the backdrop and source colors.&#34;&#39;&#39;&#39;
-    COLOR_DODGE = Name(&#34;ColorDodge&#34;)
-    &#34;&#34;&#34;
-    &#34;Brightens the backdrop color to reflect the source color. Painting with black
-     produces no changes.&#34;
-    &#34;&#34;&#34;
-    COLOR_BURN = Name(&#34;ColorBurn&#34;)
-    &#34;&#34;&#34;
-    &#34;Darkens the backdrop color to reflect the source color. Painting with white
-     produces no change.&#34;
-    &#34;&#34;&#34;
-    HARD_LIGHT = Name(&#34;HardLight&#34;)
-    &#34;&#34;&#34;
-    &#34;Multiplies or screens the colors, depending on the source color value. The effect
-    is similar to shining a harsh spotlight on the backdrop.&#34;
-    &#34;&#34;&#34;
-    SOFT_LIGHT = Name(&#34;SoftLight&#34;)
-    &#34;&#34;&#34;
-    &#34;Darkens or lightens the colors, depending on the source color value. The effect is
-    similar to shining a diffused spotlight on the backdrop.&#34;
-    &#34;&#34;&#34;
-    DIFFERENCE = Name(&#34;Difference&#34;)
-    &#39;&#39;&#39;&#34;Subtracts the darker of the two constituent colors from the lighter color.&#34;&#39;&#39;&#39;
-    EXCLUSION = Name(&#34;Exclusion&#34;)
-    &#34;&#34;&#34;
-    &#34;Produces an effect similar to that of the Difference mode but lower in contrast.
-    Painting with white inverts the backdrop color; painting with black produces no
-    change.&#34;
-    &#34;&#34;&#34;
-
-    HUE = Name(&#34;Hue&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the hue of the source color and the saturation and luminosity
-    of the backdrop color.&#34;
-    &#34;&#34;&#34;
-    SATURATION = Name(&#34;Saturation&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the saturation of the source color and the hue and luminosity
-    of the backdrop color. Painting with this mode in an area of the backdrop that is
-    a pure gray (no saturation) produces no change.&#34;
-    &#34;&#34;&#34;
-    COLOR = Name(&#34;Color&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the hue and saturation of the source color and the luminosity
-    of the backdrop color. This preserves the gray levels of the backdrop and is
-    useful for coloring monochrome images or tinting color images.&#34;
-    &#34;&#34;&#34;
-    LUMINOSITY = Name(&#34;Luminosity&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the luminosity of the source color and the hue and saturation
-    of the backdrop color. This produces an inverse effect to that of the Color mode.&#34;
-    &#34;&#34;&#34;
-
-
-class PDFStyleKeys(enum.Enum):
-    &#34;&#34;&#34;
-    An enumeration of the graphics state parameter dictionary keys.
-    &#34;&#34;&#34;
-
-    FILL_ALPHA = Name(&#34;ca&#34;)
-    BLEND_MODE = Name(&#34;BM&#34;)  # shared between stroke and fill
-    STROKE_ALPHA = Name(&#34;CA&#34;)
-    STROKE_ADJUSTMENT = Name(&#34;SA&#34;)
-    STROKE_WIDTH = Name(&#34;LW&#34;)
-    STROKE_CAP_STYLE = Name(&#34;LC&#34;)
-    STROKE_JOIN_STYLE = Name(&#34;LJ&#34;)
-    STROKE_MITER_LIMIT = Name(&#34;ML&#34;)
-    STROKE_DASH_PATTERN = Name(&#34;D&#34;)  # array of array, number, e.g. [[1 1] 0]
 
 
 class GraphicsStyle:
@@ -4412,16 +4069,10 @@ class GraphicsContext:
             stroke_color = self.style.stroke_color
 
             if fill_color not in NO_EMIT_SET:
-                render_list.append(
-                    &#34; &#34;.join(number_to_str(val) for val in fill_color.colors)
-                    + f&#34; {fill_color.OPERATOR.lower()}&#34;
-                )
+                render_list.append(fill_color.pdf_repr().lower())
 
             if stroke_color not in NO_EMIT_SET:
-                render_list.append(
-                    &#34; &#34;.join(number_to_str(val) for val in stroke_color.colors)
-                    + f&#34; {stroke_color.OPERATOR.upper()}&#34;
-                )
+                render_list.append(stroke_color.pdf_repr().upper())
 
             if emit_dash is not None:
                 render_list.append(
@@ -4499,7 +4150,7 @@ class GraphicsContext:
     def render(
         self,
         gsd_registry,
-        style,
+        style: DrawingContext,
         last_item,
         initial_point,
         debug_stream=None,
@@ -4521,7 +4172,7 @@ class GraphicsContext:
     def render_debug(
         self,
         gsd_registry,
-        style,
+        style: DrawingContext,
         last_item,
         initial_point,
         debug_stream,
@@ -4762,7 +4413,7 @@ interpreted as not specifying the opacity, so it will not be explicitly set.</p>
 values of the type Name, str, bytes, numbers, booleans, list/tuple, and dict.</p>
 <p>Any custom type can be passed in as long as it provides a <code>pdf_repr</code> method that
 takes no arguments and returns a string. The primitive object is returned directly
-if it is an instance of the <code><a title="fpdf.drawing.Raw" href="#fpdf.drawing.Raw">Raw</a></code> class. Otherwise, The existence of the <code>pdf_repr</code>
+if it is an instance of the <code>Raw</code> class. Otherwise, The existence of the <code>pdf_repr</code>
 method is checked before any other type checking is performed, so, for example, a
 <code>dict</code> subclass with a <code>pdf_repr</code> method would be converted using its <code>pdf_repr</code>
 method rather than the built-in <code>dict</code> conversion process.</p>
@@ -4819,7 +4470,7 @@ representation.</dd>
     elif primitive is None:
         output = &#34;null&#34;
     elif isinstance(primitive, str):
-        output = f&#34;({util.escape_parens(primitive)})&#34;
+        output = f&#34;({escape_parens(primitive)})&#34;
     elif isinstance(primitive, bytes):
         output = f&#34;&lt;{primitive.hex()}&gt;&#34;
     elif isinstance(primitive, bool):  # has to come before number check
@@ -5279,190 +4930,6 @@ def end_point(self):
 </dd>
 </dl>
 </dd>
-<dt id="fpdf.drawing.BlendMode"><code class="flex name class">
-<span>class <span class="ident">BlendMode</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration of the named standard named blend functions supported by PDF.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class BlendMode(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the named standard named blend functions supported by PDF.
-    &#34;&#34;&#34;
-
-    NORMAL = Name(&#34;Normal&#34;)
-    &#39;&#39;&#39;&#34;Selects the source color, ignoring the backdrop.&#34;&#39;&#39;&#39;
-    MULTIPLY = Name(&#34;Multiply&#34;)
-    &#39;&#39;&#39;&#34;Multiplies the backdrop and source color values.&#34;&#39;&#39;&#39;
-    SCREEN = Name(&#34;Screen&#34;)
-    &#34;&#34;&#34;
-    &#34;Multiplies the complements of the backdrop and source color values, then
-    complements the result.&#34;
-    &#34;&#34;&#34;
-    OVERLAY = Name(&#34;Overlay&#34;)
-    &#34;&#34;&#34;
-    &#34;Multiplies or screens the colors, depending on the backdrop color value. Source
-    colors overlay the backdrop while preserving its highlights and shadows. The
-    backdrop color is not replaced but is mixed with the source color to reflect the
-    lightness or darkness of the backdrop.&#34;
-    &#34;&#34;&#34;
-    DARKEN = Name(&#34;Darken&#34;)
-    &#39;&#39;&#39;&#34;Selects the darker of the backdrop and source colors.&#34;&#39;&#39;&#39;
-    LIGHTEN = Name(&#34;Lighten&#34;)
-    &#39;&#39;&#39;&#34;Selects the lighter of the backdrop and source colors.&#34;&#39;&#39;&#39;
-    COLOR_DODGE = Name(&#34;ColorDodge&#34;)
-    &#34;&#34;&#34;
-    &#34;Brightens the backdrop color to reflect the source color. Painting with black
-     produces no changes.&#34;
-    &#34;&#34;&#34;
-    COLOR_BURN = Name(&#34;ColorBurn&#34;)
-    &#34;&#34;&#34;
-    &#34;Darkens the backdrop color to reflect the source color. Painting with white
-     produces no change.&#34;
-    &#34;&#34;&#34;
-    HARD_LIGHT = Name(&#34;HardLight&#34;)
-    &#34;&#34;&#34;
-    &#34;Multiplies or screens the colors, depending on the source color value. The effect
-    is similar to shining a harsh spotlight on the backdrop.&#34;
-    &#34;&#34;&#34;
-    SOFT_LIGHT = Name(&#34;SoftLight&#34;)
-    &#34;&#34;&#34;
-    &#34;Darkens or lightens the colors, depending on the source color value. The effect is
-    similar to shining a diffused spotlight on the backdrop.&#34;
-    &#34;&#34;&#34;
-    DIFFERENCE = Name(&#34;Difference&#34;)
-    &#39;&#39;&#39;&#34;Subtracts the darker of the two constituent colors from the lighter color.&#34;&#39;&#39;&#39;
-    EXCLUSION = Name(&#34;Exclusion&#34;)
-    &#34;&#34;&#34;
-    &#34;Produces an effect similar to that of the Difference mode but lower in contrast.
-    Painting with white inverts the backdrop color; painting with black produces no
-    change.&#34;
-    &#34;&#34;&#34;
-
-    HUE = Name(&#34;Hue&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the hue of the source color and the saturation and luminosity
-    of the backdrop color.&#34;
-    &#34;&#34;&#34;
-    SATURATION = Name(&#34;Saturation&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the saturation of the source color and the hue and luminosity
-    of the backdrop color. Painting with this mode in an area of the backdrop that is
-    a pure gray (no saturation) produces no change.&#34;
-    &#34;&#34;&#34;
-    COLOR = Name(&#34;Color&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the hue and saturation of the source color and the luminosity
-    of the backdrop color. This preserves the gray levels of the backdrop and is
-    useful for coloring monochrome images or tinting color images.&#34;
-    &#34;&#34;&#34;
-    LUMINOSITY = Name(&#34;Luminosity&#34;)
-    &#34;&#34;&#34;
-    &#34;Creates a color with the luminosity of the source color and the hue and saturation
-    of the backdrop color. This produces an inverse effect to that of the Color mode.&#34;
-    &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></li>
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.BlendMode.COLOR"><code class="name">var <span class="ident">COLOR</span></code></dt>
-<dd>
-<div class="desc"><p>"Creates a color with the hue and saturation of the source color and the luminosity
-of the backdrop color. This preserves the gray levels of the backdrop and is
-useful for coloring monochrome images or tinting color images."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.COLOR_BURN"><code class="name">var <span class="ident">COLOR_BURN</span></code></dt>
-<dd>
-<div class="desc"><p>"Darkens the backdrop color to reflect the source color. Painting with white
-produces no change."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.COLOR_DODGE"><code class="name">var <span class="ident">COLOR_DODGE</span></code></dt>
-<dd>
-<div class="desc"><p>"Brightens the backdrop color to reflect the source color. Painting with black
-produces no changes."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.DARKEN"><code class="name">var <span class="ident">DARKEN</span></code></dt>
-<dd>
-<div class="desc"><p>"Selects the darker of the backdrop and source colors."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.DIFFERENCE"><code class="name">var <span class="ident">DIFFERENCE</span></code></dt>
-<dd>
-<div class="desc"><p>"Subtracts the darker of the two constituent colors from the lighter color."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.EXCLUSION"><code class="name">var <span class="ident">EXCLUSION</span></code></dt>
-<dd>
-<div class="desc"><p>"Produces an effect similar to that of the Difference mode but lower in contrast.
-Painting with white inverts the backdrop color; painting with black produces no
-change."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.HARD_LIGHT"><code class="name">var <span class="ident">HARD_LIGHT</span></code></dt>
-<dd>
-<div class="desc"><p>"Multiplies or screens the colors, depending on the source color value. The effect
-is similar to shining a harsh spotlight on the backdrop."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.HUE"><code class="name">var <span class="ident">HUE</span></code></dt>
-<dd>
-<div class="desc"><p>"Creates a color with the hue of the source color and the saturation and luminosity
-of the backdrop color."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.LIGHTEN"><code class="name">var <span class="ident">LIGHTEN</span></code></dt>
-<dd>
-<div class="desc"><p>"Selects the lighter of the backdrop and source colors."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.LUMINOSITY"><code class="name">var <span class="ident">LUMINOSITY</span></code></dt>
-<dd>
-<div class="desc"><p>"Creates a color with the luminosity of the source color and the hue and saturation
-of the backdrop color. This produces an inverse effect to that of the Color mode."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.MULTIPLY"><code class="name">var <span class="ident">MULTIPLY</span></code></dt>
-<dd>
-<div class="desc"><p>"Multiplies the backdrop and source color values."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.NORMAL"><code class="name">var <span class="ident">NORMAL</span></code></dt>
-<dd>
-<div class="desc"><p>"Selects the source color, ignoring the backdrop."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.OVERLAY"><code class="name">var <span class="ident">OVERLAY</span></code></dt>
-<dd>
-<div class="desc"><p>"Multiplies or screens the colors, depending on the backdrop color value. Source
-colors overlay the backdrop while preserving its highlights and shadows. The
-backdrop color is not replaced but is mixed with the source color to reflect the
-lightness or darkness of the backdrop."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.SATURATION"><code class="name">var <span class="ident">SATURATION</span></code></dt>
-<dd>
-<div class="desc"><p>"Creates a color with the saturation of the source color and the hue and luminosity
-of the backdrop color. Painting with this mode in an area of the backdrop that is
-a pure gray (no saturation) produces no change."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.SCREEN"><code class="name">var <span class="ident">SCREEN</span></code></dt>
-<dd>
-<div class="desc"><p>"Multiplies the complements of the backdrop and source color values, then
-complements the result."</p></div>
-</dd>
-<dt id="fpdf.drawing.BlendMode.SOFT_LIGHT"><code class="name">var <span class="ident">SOFT_LIGHT</span></code></dt>
-<dd>
-<div class="desc"><p>"Darkens or lightens the colors, depending on the source color value. The effect is
-similar to shining a diffused spotlight on the backdrop."</p></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.drawing.CoerciveEnum.coerce" href="#fpdf.drawing.CoerciveEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="fpdf.drawing.ClippingPath"><code class="flex name class">
 <span>class <span class="ident">ClippingPath</span></span>
 <span>(</span><span>x=0, y=0)</span>
@@ -5736,79 +5203,6 @@ more than one line).</dd>
 </li>
 </ul>
 </dd>
-<dt id="fpdf.drawing.ClippingPathIntersectionRule"><code class="flex name class">
-<span>class <span class="ident">ClippingPathIntersectionRule</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration of the PDF drawing directives that define a path as a clipping path.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class ClippingPathIntersectionRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the PDF drawing directives that define a path as a clipping path.
-    &#34;&#34;&#34;
-
-    NONZERO = &#34;W&#34;
-    &#34;&#34;&#34;
-    &#34;The nonzero winding number rule determines whether a given point is inside a path
-    by conceptually drawing a ray from that point to infinity in any direction and
-    then examining the places where a segment of the path crosses the ray. Starting
-    with a count of 0, the rule adds 1 each time a path segment crosses the ray from
-    left to right and subtracts 1 each time a segment crosses from right to left.
-    After counting all the crossings, if the result is 0, the point is outside the
-    path; otherwise, it is inside.&#34;
-    &#34;&#34;&#34;
-    EVENODD = &#34;W*&#34;
-    &#34;&#34;&#34;
-    &#34;An alternative to the nonzero winding number rule is the even-odd rule. This rule
-    determines whether a point is inside a path by drawing a ray from that point in
-    any direction and simply counting the number of path segments that cross the ray,
-    regardless of direction. If this number is odd, the point is inside; if even, the
-    point is outside. This yields the same results as the nonzero winding number rule
-    for paths with simple shapes, but produces different results for more complex
-    shapes.&#34;
-    &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></li>
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.ClippingPathIntersectionRule.EVENODD"><code class="name">var <span class="ident">EVENODD</span></code></dt>
-<dd>
-<div class="desc"><p>"An alternative to the nonzero winding number rule is the even-odd rule. This rule
-determines whether a point is inside a path by drawing a ray from that point in
-any direction and simply counting the number of path segments that cross the ray,
-regardless of direction. If this number is odd, the point is inside; if even, the
-point is outside. This yields the same results as the nonzero winding number rule
-for paths with simple shapes, but produces different results for more complex
-shapes."</p></div>
-</dd>
-<dt id="fpdf.drawing.ClippingPathIntersectionRule.NONZERO"><code class="name">var <span class="ident">NONZERO</span></code></dt>
-<dd>
-<div class="desc"><p>"The nonzero winding number rule determines whether a given point is inside a path
-by conceptually drawing a ray from that point to infinity in any direction and
-then examining the places where a segment of the path crosses the ray. Starting
-with a count of 0, the rule adds 1 each time a path segment crosses the ray from
-left to right and subtracts 1 each time a segment crosses from right to left.
-After counting all the crossings, if the result is 0, the point is outside the
-path; otherwise, it is inside."</p></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.drawing.CoerciveEnum.coerce" href="#fpdf.drawing.CoerciveEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="fpdf.drawing.Close"><code class="flex name class">
 <span>class <span class="ident">Close</span></span>
 </code></dt>
@@ -5886,272 +5280,6 @@ to the start of the current path.</p>
 <li>builtins.tuple</li>
 </ul>
 </dd>
-<dt id="fpdf.drawing.CoerciveEnum"><code class="flex name class">
-<span>class <span class="ident">CoerciveEnum</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration that provides a helper to coerce strings into enumeration members.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class CoerciveEnum(enum.Enum):
-    &#34;&#34;&#34;
-    An enumeration that provides a helper to coerce strings into enumeration members.
-    &#34;&#34;&#34;
-
-    @classmethod
-    def coerce(cls, value):
-        &#34;&#34;&#34;
-        Attempt to coerce `value` into a member of this enumeration.
-
-        If value is already a member of this enumeration it is returned unchanged.
-        Otherwise, if it is a string, attempt to convert it as an enumeration value. If
-        that fails, attempt to convert it (case insensitively, by upcasing) as an
-        enumeration name.
-
-        If all different conversion attempts fail, an exception is raised.
-
-        Args:
-            value (enum.Enum, str): the value to be coerced.
-
-        Raises:
-            ValueError: if `value` is a string but neither a member by name nor value.
-            TypeError: if `value`&#39;s type is neither a member of the enumeration nor a
-                string.
-        &#34;&#34;&#34;
-
-        if isinstance(value, cls):
-            return value
-
-        if isinstance(value, str):
-            try:
-                return cls(value)
-            except ValueError:
-                pass
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                pass
-
-            raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;)
-
-        raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>enum.Enum</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.BlendMode" href="#fpdf.drawing.BlendMode">BlendMode</a></li>
-<li><a title="fpdf.drawing.ClippingPathIntersectionRule" href="#fpdf.drawing.ClippingPathIntersectionRule">ClippingPathIntersectionRule</a></li>
-<li><a title="fpdf.drawing.IntersectionRule" href="#fpdf.drawing.IntersectionRule">IntersectionRule</a></li>
-<li><a title="fpdf.drawing.PathPaintRule" href="#fpdf.drawing.PathPaintRule">PathPaintRule</a></li>
-</ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="fpdf.drawing.CoerciveEnum.coerce"><code class="name flex">
-<span>def <span class="ident">coerce</span></span>(<span>value)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Attempt to coerce <code>value</code> into a member of this enumeration.</p>
-<p>If value is already a member of this enumeration it is returned unchanged.
-Otherwise, if it is a string, attempt to convert it as an enumeration value. If
-that fails, attempt to convert it (case insensitively, by upcasing) as an
-enumeration name.</p>
-<p>If all different conversion attempts fail, an exception is raised.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>value</code></strong> :&ensp;<code>enum.Enum, str</code></dt>
-<dd>the value to be coerced.</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>if <code>value</code> is a string but neither a member by name nor value.</dd>
-<dt><code>TypeError</code></dt>
-<dd>if <code>value</code>'s type is neither a member of the enumeration nor a
-string.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def coerce(cls, value):
-    &#34;&#34;&#34;
-    Attempt to coerce `value` into a member of this enumeration.
-
-    If value is already a member of this enumeration it is returned unchanged.
-    Otherwise, if it is a string, attempt to convert it as an enumeration value. If
-    that fails, attempt to convert it (case insensitively, by upcasing) as an
-    enumeration name.
-
-    If all different conversion attempts fail, an exception is raised.
-
-    Args:
-        value (enum.Enum, str): the value to be coerced.
-
-    Raises:
-        ValueError: if `value` is a string but neither a member by name nor value.
-        TypeError: if `value`&#39;s type is neither a member of the enumeration nor a
-            string.
-    &#34;&#34;&#34;
-
-    if isinstance(value, cls):
-        return value
-
-    if isinstance(value, str):
-        try:
-            return cls(value)
-        except ValueError:
-            pass
-        try:
-            return cls[value.upper()]
-        except KeyError:
-            pass
-
-        raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;)
-
-    raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="fpdf.drawing.CoerciveIntEnum"><code class="flex name class">
-<span>class <span class="ident">CoerciveIntEnum</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration that provides a helper to coerce strings and integers into
-enumeration members.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class CoerciveIntEnum(enum.IntEnum):
-    &#34;&#34;&#34;
-    An enumeration that provides a helper to coerce strings and integers into
-    enumeration members.
-    &#34;&#34;&#34;
-
-    @classmethod
-    def coerce(cls, value):
-        &#34;&#34;&#34;
-        Attempt to coerce `value` into a member of this enumeration.
-
-        If value is already a member of this enumeration it is returned unchanged.
-        Otherwise, if it is a string, attempt to convert it (case insensitively, by
-        upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
-        convert it as an enumeration value.
-
-        Otherwise, an exception is raised.
-
-        Args:
-            value (enum.IntEnum, str, int): the value to be coerced.
-
-        Raises:
-            ValueError: if `value` is an int but not a member of this enumeration.
-            ValueError: if `value` is a string but not a member by name.
-            TypeError: if `value`&#39;s type is neither a member of the enumeration nor an
-                int or a string.
-        &#34;&#34;&#34;
-        if isinstance(value, cls):
-            return value
-
-        if isinstance(value, str):
-            try:
-                return cls[value.upper()]
-            except KeyError:
-                raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;) from None
-
-        if isinstance(value, int):
-            return cls(value)
-
-        raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>enum.IntEnum</li>
-<li>builtins.int</li>
-<li>enum.Enum</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.StrokeCapStyle" href="#fpdf.drawing.StrokeCapStyle">StrokeCapStyle</a></li>
-<li><a title="fpdf.drawing.StrokeJoinStyle" href="#fpdf.drawing.StrokeJoinStyle">StrokeJoinStyle</a></li>
-</ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="fpdf.drawing.CoerciveIntEnum.coerce"><code class="name flex">
-<span>def <span class="ident">coerce</span></span>(<span>value)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Attempt to coerce <code>value</code> into a member of this enumeration.</p>
-<p>If value is already a member of this enumeration it is returned unchanged.
-Otherwise, if it is a string, attempt to convert it (case insensitively, by
-upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
-convert it as an enumeration value.</p>
-<p>Otherwise, an exception is raised.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>value</code></strong> :&ensp;<code>enum.IntEnum, str, int</code></dt>
-<dd>the value to be coerced.</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>if <code>value</code> is an int but not a member of this enumeration.</dd>
-<dt><code>ValueError</code></dt>
-<dd>if <code>value</code> is a string but not a member by name.</dd>
-<dt><code>TypeError</code></dt>
-<dd>if <code>value</code>'s type is neither a member of the enumeration nor an
-int or a string.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@classmethod
-def coerce(cls, value):
-    &#34;&#34;&#34;
-    Attempt to coerce `value` into a member of this enumeration.
-
-    If value is already a member of this enumeration it is returned unchanged.
-    Otherwise, if it is a string, attempt to convert it (case insensitively, by
-    upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
-    convert it as an enumeration value.
-
-    Otherwise, an exception is raised.
-
-    Args:
-        value (enum.IntEnum, str, int): the value to be coerced.
-
-    Raises:
-        ValueError: if `value` is an int but not a member of this enumeration.
-        ValueError: if `value` is a string but not a member by name.
-        TypeError: if `value`&#39;s type is neither a member of the enumeration nor an
-            int or a string.
-    &#34;&#34;&#34;
-    if isinstance(value, cls):
-        return value
-
-    if isinstance(value, str):
-        try:
-            return cls[value.upper()]
-        except KeyError:
-            raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;) from None
-
-    if isinstance(value, int):
-        return cls(value)
-
-    raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
 <dt id="fpdf.drawing.DeviceCMYK"><code class="flex name class">
 <span>class <span class="ident">DeviceCMYK</span></span>
 <span>(</span><span>c, m, y, k, a=None)</span>
@@ -6191,7 +5319,10 @@ def coerce(cls, value):
     def colors(self):
         &#34;&#34;&#34;The color components as a tuple in order (c, m, y, k) with alpha omitted.&#34;&#34;&#34;
 
-        return self[:-1]</code></pre>
+        return self[:-1]
+
+    def pdf_repr(self) -&gt; str:
+        return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6211,6 +5342,22 @@ def colors(self):
     &#34;&#34;&#34;The color components as a tuple in order (c, m, y, k) with alpha omitted.&#34;&#34;&#34;
 
     return self[:-1]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.drawing.DeviceCMYK.pdf_repr"><code class="name flex">
+<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pdf_repr(self) -&gt; str:
+    return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -6245,7 +5392,10 @@ def colors(self):
     @property
     def colors(self):
         &#34;&#34;&#34;The color components as a tuple in order (g,) with alpha omitted.&#34;&#34;&#34;
-        return self[:-1]</code></pre>
+        return self[:-1]
+
+    def pdf_repr(self) -&gt; str:
+        return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6264,6 +5414,22 @@ def colors(self):
 def colors(self):
     &#34;&#34;&#34;The color components as a tuple in order (g,) with alpha omitted.&#34;&#34;&#34;
     return self[:-1]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.drawing.DeviceGray.pdf_repr"><code class="name flex">
+<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pdf_repr(self) -&gt; str:
+    return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -6314,7 +5480,10 @@ def colors(self):
     @property
     def colors(self):
         &#34;&#34;&#34;The color components as a tuple in order `(r, g, b)` with alpha omitted.&#34;&#34;&#34;
-        return self[:-1]</code></pre>
+        return self[:-1]
+
+    def pdf_repr(self) -&gt; str:
+        return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -6333,6 +5502,22 @@ def colors(self):
 def colors(self):
     &#34;&#34;&#34;The color components as a tuple in order `(r, g, b)` with alpha omitted.&#34;&#34;&#34;
     return self[:-1]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.drawing.DeviceRGB.pdf_repr"><code class="name flex">
+<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pdf_repr(self) -&gt; str:
+    return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -7059,16 +6244,10 @@ this context (an empty string is returned if there are no paths or groups)</p></
             stroke_color = self.style.stroke_color
 
             if fill_color not in NO_EMIT_SET:
-                render_list.append(
-                    &#34; &#34;.join(number_to_str(val) for val in fill_color.colors)
-                    + f&#34; {fill_color.OPERATOR.lower()}&#34;
-                )
+                render_list.append(fill_color.pdf_repr().lower())
 
             if stroke_color not in NO_EMIT_SET:
-                render_list.append(
-                    &#34; &#34;.join(number_to_str(val) for val in stroke_color.colors)
-                    + f&#34; {stroke_color.OPERATOR.upper()}&#34;
-                )
+                render_list.append(stroke_color.pdf_repr().upper())
 
             if emit_dash is not None:
                 render_list.append(
@@ -7146,7 +6325,7 @@ this context (an empty string is returned if there are no paths or groups)</p></
     def render(
         self,
         gsd_registry,
-        style,
+        style: DrawingContext,
         last_item,
         initial_point,
         debug_stream=None,
@@ -7168,7 +6347,7 @@ this context (an empty string is returned if there are no paths or groups)</p></
     def render_debug(
         self,
         gsd_registry,
-        style,
+        style: DrawingContext,
         last_item,
         initial_point,
         debug_stream,
@@ -7268,7 +6447,7 @@ caution.</dd>
 </details>
 </dd>
 <dt id="fpdf.drawing.GraphicsContext.render"><code class="name flex">
-<span>def <span class="ident">render</span></span>(<span>self, gsd_registry, style, last_item, initial_point, debug_stream=None, pfx=None)</span>
+<span>def <span class="ident">render</span></span>(<span>self, gsd_registry, style: <a title="fpdf.drawing.DrawingContext" href="#fpdf.drawing.DrawingContext">DrawingContext</a>, last_item, initial_point, debug_stream=None, pfx=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -7279,7 +6458,7 @@ caution.</dd>
 <pre><code class="python">def render(
     self,
     gsd_registry,
-    style,
+    style: DrawingContext,
     last_item,
     initial_point,
     debug_stream=None,
@@ -7300,7 +6479,7 @@ caution.</dd>
 </details>
 </dd>
 <dt id="fpdf.drawing.GraphicsContext.render_debug"><code class="name flex">
-<span>def <span class="ident">render_debug</span></span>(<span>self, gsd_registry, style, last_item, initial_point, debug_stream, pfx)</span>
+<span>def <span class="ident">render_debug</span></span>(<span>self, gsd_registry, style: <a title="fpdf.drawing.DrawingContext" href="#fpdf.drawing.DrawingContext">DrawingContext</a>, last_item, initial_point, debug_stream, pfx)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -7311,7 +6490,7 @@ caution.</dd>
 <pre><code class="python">def render_debug(
     self,
     gsd_registry,
-    style,
+    style: DrawingContext,
     last_item,
     initial_point,
     debug_stream,
@@ -7346,7 +6525,7 @@ caution.</dd>
     A container providing deduplication of graphics state dictionaries across a PDF.
     &#34;&#34;&#34;
 
-    def register_style(self, style):
+    def register_style(self, style: &#34;GraphicsStyle&#34;):
         sdict = style.to_pdf_dict()
 
         # empty style does not need a dictionary
@@ -7371,7 +6550,7 @@ caution.</dd>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.drawing.GraphicsStateDictRegistry.register_style"><code class="name flex">
-<span>def <span class="ident">register_style</span></span>(<span>self, style)</span>
+<span>def <span class="ident">register_style</span></span>(<span>self, style: <a title="fpdf.drawing.GraphicsStyle" href="#fpdf.drawing.GraphicsStyle">GraphicsStyle</a>)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -7379,7 +6558,7 @@ caution.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def register_style(self, style):
+<pre><code class="python">def register_style(self, style: &#34;GraphicsStyle&#34;):
     sdict = style.to_pdf_dict()
 
     # empty style does not need a dictionary
@@ -8331,86 +7510,6 @@ def stroke_width(self):
 <li>builtins.tuple</li>
 </ul>
 </dd>
-<dt id="fpdf.drawing.IntersectionRule"><code class="flex name class">
-<span>class <span class="ident">IntersectionRule</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration representing the two possible PDF intersection rules.</p>
-<p>The intersection rule is used by the renderer to determine which points are
-considered to be inside the path and which points are outside the path. This
-primarily affects fill rendering and clipping paths.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class IntersectionRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration representing the two possible PDF intersection rules.
-
-    The intersection rule is used by the renderer to determine which points are
-    considered to be inside the path and which points are outside the path. This
-    primarily affects fill rendering and clipping paths.
-    &#34;&#34;&#34;
-
-    NONZERO = &#34;nonzero&#34;
-    &#34;&#34;&#34;
-    &#34;The nonzero winding number rule determines whether a given point is inside a path
-    by conceptually drawing a ray from that point to infinity in any direction and
-    then examining the places where a segment of the path crosses the ray. Starting
-    with a count of 0, the rule adds 1 each time a path segment crosses the ray from
-    left to right and subtracts 1 each time a segment crosses from right to left.
-    After counting all the crossings, if the result is 0, the point is outside the
-    path; otherwise, it is inside.&#34;
-    &#34;&#34;&#34;
-    EVENODD = &#34;evenodd&#34;
-    &#34;&#34;&#34;
-    &#34;An alternative to the nonzero winding number rule is the even-odd rule. This rule
-    determines whether a point is inside a path by drawing a ray from that point in
-    any direction and simply counting the number of path segments that cross the ray,
-    regardless of direction. If this number is odd, the point is inside; if even, the
-    point is outside. This yields the same results as the nonzero winding number rule
-    for paths with simple shapes, but produces different results for more complex
-    shapes.&#34;
-    &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></li>
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.IntersectionRule.EVENODD"><code class="name">var <span class="ident">EVENODD</span></code></dt>
-<dd>
-<div class="desc"><p>"An alternative to the nonzero winding number rule is the even-odd rule. This rule
-determines whether a point is inside a path by drawing a ray from that point in
-any direction and simply counting the number of path segments that cross the ray,
-regardless of direction. If this number is odd, the point is inside; if even, the
-point is outside. This yields the same results as the nonzero winding number rule
-for paths with simple shapes, but produces different results for more complex
-shapes."</p></div>
-</dd>
-<dt id="fpdf.drawing.IntersectionRule.NONZERO"><code class="name">var <span class="ident">NONZERO</span></code></dt>
-<dd>
-<div class="desc"><p>"The nonzero winding number rule determines whether a given point is inside a path
-by conceptually drawing a ray from that point to infinity in any direction and
-then examining the places where a segment of the path crosses the ray. Starting
-with a count of 0, the rule adds 1 each time a path segment crosses the ray from
-left to right and subtracts 1 each time a segment crosses from right to left.
-After counting all the crossings, if the result is 0, the point is outside the
-path; otherwise, it is inside."</p></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.drawing.CoerciveEnum.coerce" href="#fpdf.drawing.CoerciveEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="fpdf.drawing.Line"><code class="flex name class">
 <span>class <span class="ident">Line</span></span>
 <span>(</span><span>pt: <a title="fpdf.drawing.Point" href="#fpdf.drawing.Point">Point</a>)</span>
@@ -8616,129 +7715,6 @@ def end_point(self):
 <dt id="fpdf.drawing.Move.pt"><code class="name">var <span class="ident">pt</span> : <a title="fpdf.drawing.Point" href="#fpdf.drawing.Point">Point</a></code></dt>
 <dd>
 <div class="desc"><p>The point to which to move.</p></div>
-</dd>
-</dl>
-</dd>
-<dt id="fpdf.drawing.Name"><code class="flex name class">
-<span>class <span class="ident">Name</span></span>
-<span>(</span><span>...)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>str subclass signifying a PDF name, which are emitted differently than normal strings.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Name(str):
-    &#34;&#34;&#34;str subclass signifying a PDF name, which are emitted differently than normal strings.&#34;&#34;&#34;
-
-    NAME_ESC = re.compile(
-        b&#34;[^&#34; + bytes(v for v in range(33, 127) if v not in b&#34;()&lt;&gt;[]{}/%#\\&#34;) + b&#34;]&#34;
-    )
-
-    def pdf_repr(self) -&gt; str:
-        escaped = self.NAME_ESC.sub(
-            lambda m: b&#34;#%02X&#34; % m[0][0], self.encode()
-        ).decode()
-        return f&#34;/{escaped}&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.str</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.Name.NAME_ESC"><code class="name">var <span class="ident">NAME_ESC</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="fpdf.drawing.Name.pdf_repr"><code class="name flex">
-<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pdf_repr(self) -&gt; str:
-    escaped = self.NAME_ESC.sub(
-        lambda m: b&#34;#%02X&#34; % m[0][0], self.encode()
-    ).decode()
-    return f&#34;/{escaped}&#34;</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys"><code class="flex name class">
-<span>class <span class="ident">PDFStyleKeys</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration of the graphics state parameter dictionary keys.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class PDFStyleKeys(enum.Enum):
-    &#34;&#34;&#34;
-    An enumeration of the graphics state parameter dictionary keys.
-    &#34;&#34;&#34;
-
-    FILL_ALPHA = Name(&#34;ca&#34;)
-    BLEND_MODE = Name(&#34;BM&#34;)  # shared between stroke and fill
-    STROKE_ALPHA = Name(&#34;CA&#34;)
-    STROKE_ADJUSTMENT = Name(&#34;SA&#34;)
-    STROKE_WIDTH = Name(&#34;LW&#34;)
-    STROKE_CAP_STYLE = Name(&#34;LC&#34;)
-    STROKE_JOIN_STYLE = Name(&#34;LJ&#34;)
-    STROKE_MITER_LIMIT = Name(&#34;ML&#34;)
-    STROKE_DASH_PATTERN = Name(&#34;D&#34;)  # array of array, number, e.g. [[1 1] 0]</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.PDFStyleKeys.BLEND_MODE"><code class="name">var <span class="ident">BLEND_MODE</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.FILL_ALPHA"><code class="name">var <span class="ident">FILL_ALPHA</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_ADJUSTMENT"><code class="name">var <span class="ident">STROKE_ADJUSTMENT</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_ALPHA"><code class="name">var <span class="ident">STROKE_ALPHA</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_CAP_STYLE"><code class="name">var <span class="ident">STROKE_CAP_STYLE</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_DASH_PATTERN"><code class="name">var <span class="ident">STROKE_DASH_PATTERN</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_JOIN_STYLE"><code class="name">var <span class="ident">STROKE_JOIN_STYLE</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_MITER_LIMIT"><code class="name">var <span class="ident">STROKE_MITER_LIMIT</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="fpdf.drawing.PDFStyleKeys.STROKE_WIDTH"><code class="name">var <span class="ident">STROKE_WIDTH</span></code></dt>
-<dd>
-<div class="desc"></div>
 </dd>
 </dl>
 </dd>
@@ -9357,7 +8333,7 @@ def clipping_path(self):
 </dd>
 <dt id="fpdf.drawing.PaintedPath.paint_rule"><code class="name">var <span class="ident">paint_rule</span></code></dt>
 <dd>
-<div class="desc"><p>Manually specify the <code><a title="fpdf.drawing.PathPaintRule" href="#fpdf.drawing.PathPaintRule">PathPaintRule</a></code> to use for rendering the path.</p></div>
+<div class="desc"><p>Manually specify the <code>PathPaintRule</code> to use for rendering the path.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -10404,126 +9380,6 @@ retrieved from the end point of the previous path element.</p>
 </dd>
 </dl>
 </dd>
-<dt id="fpdf.drawing.PathPaintRule"><code class="flex name class">
-<span>class <span class="ident">PathPaintRule</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration of the PDF drawing directives that determine how the renderer should
-paint a given path.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class PathPaintRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the PDF drawing directives that determine how the renderer should
-    paint a given path.
-    &#34;&#34;&#34;
-
-    # the auto-close paint rules are omitted here because it&#39;s easier to just emit
-    # close operators when appropriate, programmatically
-    STROKE = &#34;S&#34;
-    &#39;&#39;&#39;&#34;Stroke the path.&#34;&#39;&#39;&#39;
-
-    FILL_NONZERO = &#34;f&#34;
-    &#34;&#34;&#34;
-    &#34;Fill the path, using the nonzero winding number rule to determine the region to
-    fill. Any subpaths that are open are implicitly closed before being filled.&#34;
-    &#34;&#34;&#34;
-
-    FILL_EVENODD = &#34;f*&#34;
-    &#34;&#34;&#34;
-    &#34;Fill the path, using the even-odd rule to determine the region to fill. Any
-    subpaths that are open are implicitly closed before being filled.&#34;
-    &#34;&#34;&#34;
-
-    STROKE_FILL_NONZERO = &#34;B&#34;
-    &#34;&#34;&#34;
-    &#34;Fill and then stroke the path, using the nonzero winding number rule to determine
-    the region to fill. This operator produces the same result as constructing two
-    identical path objects, painting the first with `FILL_NONZERO` and the second with
-    `STROKE`.&#34;
-    &#34;&#34;&#34;
-
-    STROKE_FILL_EVENODD = &#34;B*&#34;
-    &#34;&#34;&#34;
-    &#34;Fill and then stroke the path, using the even-odd rule to determine the region to
-    fill. This operator produces the same result as `STROKE_FILL_NONZERO`, except that
-    the path is filled as if with `FILL_EVENODD` instead of `FILL_NONZERO`.&#34;
-    &#34;&#34;&#34;
-
-    DONT_PAINT = &#34;n&#34;
-    &#34;&#34;&#34;
-    &#34;End the path object without filling or stroking it. This operator is a
-    path-painting no-op, used primarily for the side effect of changing the current
-    clipping path.&#34;
-    &#34;&#34;&#34;
-
-    AUTO = &#34;auto&#34;
-    &#34;&#34;&#34;
-    Automatically determine which `PathPaintRule` should be used.
-
-    PaintedPath will select one of the above `PathPaintRule`s based on the resolved
-    set/inherited values of its style property.
-    &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></li>
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.PathPaintRule.AUTO"><code class="name">var <span class="ident">AUTO</span></code></dt>
-<dd>
-<div class="desc"><p>Automatically determine which <code><a title="fpdf.drawing.PathPaintRule" href="#fpdf.drawing.PathPaintRule">PathPaintRule</a></code> should be used.</p>
-<p>PaintedPath will select one of the above <code><a title="fpdf.drawing.PathPaintRule" href="#fpdf.drawing.PathPaintRule">PathPaintRule</a></code>s based on the resolved
-set/inherited values of its style property.</p></div>
-</dd>
-<dt id="fpdf.drawing.PathPaintRule.DONT_PAINT"><code class="name">var <span class="ident">DONT_PAINT</span></code></dt>
-<dd>
-<div class="desc"><p>"End the path object without filling or stroking it. This operator is a
-path-painting no-op, used primarily for the side effect of changing the current
-clipping path."</p></div>
-</dd>
-<dt id="fpdf.drawing.PathPaintRule.FILL_EVENODD"><code class="name">var <span class="ident">FILL_EVENODD</span></code></dt>
-<dd>
-<div class="desc"><p>"Fill the path, using the even-odd rule to determine the region to fill. Any
-subpaths that are open are implicitly closed before being filled."</p></div>
-</dd>
-<dt id="fpdf.drawing.PathPaintRule.FILL_NONZERO"><code class="name">var <span class="ident">FILL_NONZERO</span></code></dt>
-<dd>
-<div class="desc"><p>"Fill the path, using the nonzero winding number rule to determine the region to
-fill. Any subpaths that are open are implicitly closed before being filled."</p></div>
-</dd>
-<dt id="fpdf.drawing.PathPaintRule.STROKE"><code class="name">var <span class="ident">STROKE</span></code></dt>
-<dd>
-<div class="desc"><p>"Stroke the path."</p></div>
-</dd>
-<dt id="fpdf.drawing.PathPaintRule.STROKE_FILL_EVENODD"><code class="name">var <span class="ident">STROKE_FILL_EVENODD</span></code></dt>
-<dd>
-<div class="desc"><p>"Fill and then stroke the path, using the even-odd rule to determine the region to
-fill. This operator produces the same result as <code>STROKE_FILL_NONZERO</code>, except that
-the path is filled as if with <code>FILL_EVENODD</code> instead of <code>FILL_NONZERO</code>."</p></div>
-</dd>
-<dt id="fpdf.drawing.PathPaintRule.STROKE_FILL_NONZERO"><code class="name">var <span class="ident">STROKE_FILL_NONZERO</span></code></dt>
-<dd>
-<div class="desc"><p>"Fill and then stroke the path, using the nonzero winding number rule to determine
-the region to fill. This operator produces the same result as constructing two
-identical path objects, painting the first with <code>FILL_NONZERO</code> and the second with
-<code>STROKE</code>."</p></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.drawing.CoerciveEnum.coerce" href="#fpdf.drawing.CoerciveEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="fpdf.drawing.Point"><code class="flex name class">
 <span>class <span class="ident">Point</span></span>
 <span>(</span><span>x: Union[int, float, decimal.Decimal], y: Union[int, float, decimal.Decimal])</span>
@@ -11334,24 +10190,6 @@ def end_point(self):
 </details>
 </dd>
 </dl>
-</dd>
-<dt id="fpdf.drawing.Raw"><code class="flex name class">
-<span>class <span class="ident">Raw</span></span>
-<span>(</span><span>...)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>str subclass signifying raw data to be directly emitted to PDF without transformation.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Raw(str):
-    &#34;&#34;&#34;str subclass signifying raw data to be directly emitted to PDF without transformation.&#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.str</li>
-</ul>
 </dd>
 <dt id="fpdf.drawing.Rectangle"><code class="flex name class">
 <span>class <span class="ident">Rectangle</span></span>
@@ -12300,147 +11138,6 @@ previous path element.</p></div>
 <div class="desc"><p>The width and height of the rectangle.</p></div>
 </dd>
 </dl>
-</dd>
-<dt id="fpdf.drawing.StrokeCapStyle"><code class="flex name class">
-<span>class <span class="ident">StrokeCapStyle</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration of values defining how the end of a stroke should be rendered.</p>
-<p>This affects the ends of the segments of dashed strokes, as well.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class StrokeCapStyle(CoerciveIntEnum):
-    &#34;&#34;&#34;
-    An enumeration of values defining how the end of a stroke should be rendered.
-
-    This affects the ends of the segments of dashed strokes, as well.
-    &#34;&#34;&#34;
-
-    BUTT = 0
-    &#34;&#34;&#34;
-    &#34;The stroke is squared off at the endpoint of the path. There is no projection
-    beyond the end of the path.&#34;
-    &#34;&#34;&#34;
-    ROUND = 1
-    &#34;&#34;&#34;
-    &#34;A semicircular arc with a diameter equal to the line width is drawn around the
-    endpoint and filled in.&#34;
-    &#34;&#34;&#34;
-    SQUARE = 2
-    &#34;&#34;&#34;
-    &#34;The stroke continues beyond the endpoint of the path for a distance equal to half
-    the line width and is squared off.&#34;
-    &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.CoerciveIntEnum" href="#fpdf.drawing.CoerciveIntEnum">CoerciveIntEnum</a></li>
-<li>enum.IntEnum</li>
-<li>builtins.int</li>
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.StrokeCapStyle.BUTT"><code class="name">var <span class="ident">BUTT</span></code></dt>
-<dd>
-<div class="desc"><p>"The stroke is squared off at the endpoint of the path. There is no projection
-beyond the end of the path."</p></div>
-</dd>
-<dt id="fpdf.drawing.StrokeCapStyle.ROUND"><code class="name">var <span class="ident">ROUND</span></code></dt>
-<dd>
-<div class="desc"><p>"A semicircular arc with a diameter equal to the line width is drawn around the
-endpoint and filled in."</p></div>
-</dd>
-<dt id="fpdf.drawing.StrokeCapStyle.SQUARE"><code class="name">var <span class="ident">SQUARE</span></code></dt>
-<dd>
-<div class="desc"><p>"The stroke continues beyond the endpoint of the path for a distance equal to half
-the line width and is squared off."</p></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.drawing.CoerciveIntEnum" href="#fpdf.drawing.CoerciveIntEnum">CoerciveIntEnum</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.drawing.CoerciveIntEnum.coerce" href="#fpdf.drawing.CoerciveIntEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="fpdf.drawing.StrokeJoinStyle"><code class="flex name class">
-<span>class <span class="ident">StrokeJoinStyle</span></span>
-<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>An enumeration of values defining how the corner joining two path components should
-be rendered.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class StrokeJoinStyle(CoerciveIntEnum):
-    &#34;&#34;&#34;
-    An enumeration of values defining how the corner joining two path components should
-    be rendered.
-    &#34;&#34;&#34;
-
-    MITER = 0
-    &#34;&#34;&#34;
-    &#34;The outer edges of the strokes for the two segments are extended until they meet at
-    an angle, as in a picture frame. If the segments meet at too sharp an angle
-    (as defined by the miter limit parameter), a bevel join is used instead.&#34;
-    &#34;&#34;&#34;
-    ROUND = 1
-    &#34;&#34;&#34;
-    &#34;An arc of a circle with a diameter equal to the line width is drawn around the
-    point where the two segments meet, connecting the outer edges of the strokes for
-    the two segments. This pieslice-shaped figure is filled in, pro- ducing a rounded
-    corner.&#34;
-    &#34;&#34;&#34;
-    BEVEL = 2
-    &#34;&#34;&#34;
-    &#34;The two segments are finished with butt caps and the resulting notch beyond the
-    ends of the segments is filled with a triangle.&#34;
-    &#34;&#34;&#34;</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.drawing.CoerciveIntEnum" href="#fpdf.drawing.CoerciveIntEnum">CoerciveIntEnum</a></li>
-<li>enum.IntEnum</li>
-<li>builtins.int</li>
-<li>enum.Enum</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.drawing.StrokeJoinStyle.BEVEL"><code class="name">var <span class="ident">BEVEL</span></code></dt>
-<dd>
-<div class="desc"><p>"The two segments are finished with butt caps and the resulting notch beyond the
-ends of the segments is filled with a triangle."</p></div>
-</dd>
-<dt id="fpdf.drawing.StrokeJoinStyle.MITER"><code class="name">var <span class="ident">MITER</span></code></dt>
-<dd>
-<div class="desc"><p>"The outer edges of the strokes for the two segments are extended until they meet at
-an angle, as in a picture frame. If the segments meet at too sharp an angle
-(as defined by the miter limit parameter), a bevel join is used instead."</p></div>
-</dd>
-<dt id="fpdf.drawing.StrokeJoinStyle.ROUND"><code class="name">var <span class="ident">ROUND</span></code></dt>
-<dd>
-<div class="desc"><p>"An arc of a circle with a diameter equal to the line width is drawn around the
-point where the two segments meet, connecting the outer edges of the strokes for
-the two segments. This pieslice-shaped figure is filled in, pro- ducing a rounded
-corner."</p></div>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.drawing.CoerciveIntEnum" href="#fpdf.drawing.CoerciveIntEnum">CoerciveIntEnum</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.drawing.CoerciveIntEnum.coerce" href="#fpdf.drawing.CoerciveIntEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="fpdf.drawing.Transform"><code class="flex name class">
 <span>class <span class="ident">Transform</span></span>
@@ -13565,27 +12262,6 @@ mutating self.</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="fpdf.drawing.BlendMode" href="#fpdf.drawing.BlendMode">BlendMode</a></code></h4>
-<ul class="two-column">
-<li><code><a title="fpdf.drawing.BlendMode.COLOR" href="#fpdf.drawing.BlendMode.COLOR">COLOR</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.COLOR_BURN" href="#fpdf.drawing.BlendMode.COLOR_BURN">COLOR_BURN</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.COLOR_DODGE" href="#fpdf.drawing.BlendMode.COLOR_DODGE">COLOR_DODGE</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.DARKEN" href="#fpdf.drawing.BlendMode.DARKEN">DARKEN</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.DIFFERENCE" href="#fpdf.drawing.BlendMode.DIFFERENCE">DIFFERENCE</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.EXCLUSION" href="#fpdf.drawing.BlendMode.EXCLUSION">EXCLUSION</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.HARD_LIGHT" href="#fpdf.drawing.BlendMode.HARD_LIGHT">HARD_LIGHT</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.HUE" href="#fpdf.drawing.BlendMode.HUE">HUE</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.LIGHTEN" href="#fpdf.drawing.BlendMode.LIGHTEN">LIGHTEN</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.LUMINOSITY" href="#fpdf.drawing.BlendMode.LUMINOSITY">LUMINOSITY</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.MULTIPLY" href="#fpdf.drawing.BlendMode.MULTIPLY">MULTIPLY</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.NORMAL" href="#fpdf.drawing.BlendMode.NORMAL">NORMAL</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.OVERLAY" href="#fpdf.drawing.BlendMode.OVERLAY">OVERLAY</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.SATURATION" href="#fpdf.drawing.BlendMode.SATURATION">SATURATION</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.SCREEN" href="#fpdf.drawing.BlendMode.SCREEN">SCREEN</a></code></li>
-<li><code><a title="fpdf.drawing.BlendMode.SOFT_LIGHT" href="#fpdf.drawing.BlendMode.SOFT_LIGHT">SOFT_LIGHT</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="fpdf.drawing.ClippingPath" href="#fpdf.drawing.ClippingPath">ClippingPath</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.ClippingPath.render" href="#fpdf.drawing.ClippingPath.render">render</a></code></li>
@@ -13593,43 +12269,27 @@ mutating self.</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="fpdf.drawing.ClippingPathIntersectionRule" href="#fpdf.drawing.ClippingPathIntersectionRule">ClippingPathIntersectionRule</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.ClippingPathIntersectionRule.EVENODD" href="#fpdf.drawing.ClippingPathIntersectionRule.EVENODD">EVENODD</a></code></li>
-<li><code><a title="fpdf.drawing.ClippingPathIntersectionRule.NONZERO" href="#fpdf.drawing.ClippingPathIntersectionRule.NONZERO">NONZERO</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="fpdf.drawing.Close" href="#fpdf.drawing.Close">Close</a></code></h4>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.CoerciveEnum" href="#fpdf.drawing.CoerciveEnum">CoerciveEnum</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.CoerciveEnum.coerce" href="#fpdf.drawing.CoerciveEnum.coerce">coerce</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.CoerciveIntEnum" href="#fpdf.drawing.CoerciveIntEnum">CoerciveIntEnum</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.CoerciveIntEnum.coerce" href="#fpdf.drawing.CoerciveIntEnum.coerce">coerce</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="fpdf.drawing.DeviceCMYK" href="#fpdf.drawing.DeviceCMYK">DeviceCMYK</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.DeviceCMYK.colors" href="#fpdf.drawing.DeviceCMYK.colors">colors</a></code></li>
+<li><code><a title="fpdf.drawing.DeviceCMYK.pdf_repr" href="#fpdf.drawing.DeviceCMYK.pdf_repr">pdf_repr</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="fpdf.drawing.DeviceGray" href="#fpdf.drawing.DeviceGray">DeviceGray</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.DeviceGray.colors" href="#fpdf.drawing.DeviceGray.colors">colors</a></code></li>
+<li><code><a title="fpdf.drawing.DeviceGray.pdf_repr" href="#fpdf.drawing.DeviceGray.pdf_repr">pdf_repr</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="fpdf.drawing.DeviceRGB" href="#fpdf.drawing.DeviceRGB">DeviceRGB</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.DeviceRGB.colors" href="#fpdf.drawing.DeviceRGB.colors">colors</a></code></li>
+<li><code><a title="fpdf.drawing.DeviceRGB.pdf_repr" href="#fpdf.drawing.DeviceRGB.pdf_repr">pdf_repr</a></code></li>
 </ul>
 </li>
 <li>
@@ -13700,13 +12360,6 @@ mutating self.</p>
 <h4><code><a title="fpdf.drawing.ImplicitClose" href="#fpdf.drawing.ImplicitClose">ImplicitClose</a></code></h4>
 </li>
 <li>
-<h4><code><a title="fpdf.drawing.IntersectionRule" href="#fpdf.drawing.IntersectionRule">IntersectionRule</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.IntersectionRule.EVENODD" href="#fpdf.drawing.IntersectionRule.EVENODD">EVENODD</a></code></li>
-<li><code><a title="fpdf.drawing.IntersectionRule.NONZERO" href="#fpdf.drawing.IntersectionRule.NONZERO">NONZERO</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="fpdf.drawing.Line" href="#fpdf.drawing.Line">Line</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.Line.end_point" href="#fpdf.drawing.Line.end_point">end_point</a></code></li>
@@ -13718,27 +12371,6 @@ mutating self.</p>
 <ul class="">
 <li><code><a title="fpdf.drawing.Move.end_point" href="#fpdf.drawing.Move.end_point">end_point</a></code></li>
 <li><code><a title="fpdf.drawing.Move.pt" href="#fpdf.drawing.Move.pt">pt</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.Name" href="#fpdf.drawing.Name">Name</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.Name.NAME_ESC" href="#fpdf.drawing.Name.NAME_ESC">NAME_ESC</a></code></li>
-<li><code><a title="fpdf.drawing.Name.pdf_repr" href="#fpdf.drawing.Name.pdf_repr">pdf_repr</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.PDFStyleKeys" href="#fpdf.drawing.PDFStyleKeys">PDFStyleKeys</a></code></h4>
-<ul class="two-column">
-<li><code><a title="fpdf.drawing.PDFStyleKeys.BLEND_MODE" href="#fpdf.drawing.PDFStyleKeys.BLEND_MODE">BLEND_MODE</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.FILL_ALPHA" href="#fpdf.drawing.PDFStyleKeys.FILL_ALPHA">FILL_ALPHA</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_ADJUSTMENT" href="#fpdf.drawing.PDFStyleKeys.STROKE_ADJUSTMENT">STROKE_ADJUSTMENT</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_ALPHA" href="#fpdf.drawing.PDFStyleKeys.STROKE_ALPHA">STROKE_ALPHA</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_CAP_STYLE" href="#fpdf.drawing.PDFStyleKeys.STROKE_CAP_STYLE">STROKE_CAP_STYLE</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_DASH_PATTERN" href="#fpdf.drawing.PDFStyleKeys.STROKE_DASH_PATTERN">STROKE_DASH_PATTERN</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_JOIN_STYLE" href="#fpdf.drawing.PDFStyleKeys.STROKE_JOIN_STYLE">STROKE_JOIN_STYLE</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_MITER_LIMIT" href="#fpdf.drawing.PDFStyleKeys.STROKE_MITER_LIMIT">STROKE_MITER_LIMIT</a></code></li>
-<li><code><a title="fpdf.drawing.PDFStyleKeys.STROKE_WIDTH" href="#fpdf.drawing.PDFStyleKeys.STROKE_WIDTH">STROKE_WIDTH</a></code></li>
 </ul>
 </li>
 <li>
@@ -13774,18 +12406,6 @@ mutating self.</p>
 </ul>
 </li>
 <li>
-<h4><code><a title="fpdf.drawing.PathPaintRule" href="#fpdf.drawing.PathPaintRule">PathPaintRule</a></code></h4>
-<ul class="two-column">
-<li><code><a title="fpdf.drawing.PathPaintRule.AUTO" href="#fpdf.drawing.PathPaintRule.AUTO">AUTO</a></code></li>
-<li><code><a title="fpdf.drawing.PathPaintRule.DONT_PAINT" href="#fpdf.drawing.PathPaintRule.DONT_PAINT">DONT_PAINT</a></code></li>
-<li><code><a title="fpdf.drawing.PathPaintRule.FILL_EVENODD" href="#fpdf.drawing.PathPaintRule.FILL_EVENODD">FILL_EVENODD</a></code></li>
-<li><code><a title="fpdf.drawing.PathPaintRule.FILL_NONZERO" href="#fpdf.drawing.PathPaintRule.FILL_NONZERO">FILL_NONZERO</a></code></li>
-<li><code><a title="fpdf.drawing.PathPaintRule.STROKE" href="#fpdf.drawing.PathPaintRule.STROKE">STROKE</a></code></li>
-<li><code><a title="fpdf.drawing.PathPaintRule.STROKE_FILL_EVENODD" href="#fpdf.drawing.PathPaintRule.STROKE_FILL_EVENODD">STROKE_FILL_EVENODD</a></code></li>
-<li><code><a title="fpdf.drawing.PathPaintRule.STROKE_FILL_NONZERO" href="#fpdf.drawing.PathPaintRule.STROKE_FILL_NONZERO">STROKE_FILL_NONZERO</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="fpdf.drawing.Point" href="#fpdf.drawing.Point">Point</a></code></h4>
 <ul class="two-column">
 <li><code><a title="fpdf.drawing.Point.__add__" href="#fpdf.drawing.Point.__add__">__add__</a></code></li>
@@ -13811,9 +12431,6 @@ mutating self.</p>
 <li><code><a title="fpdf.drawing.QuadraticBezierCurve.end_point" href="#fpdf.drawing.QuadraticBezierCurve.end_point">end_point</a></code></li>
 <li><code><a title="fpdf.drawing.QuadraticBezierCurve.to_cubic_curve" href="#fpdf.drawing.QuadraticBezierCurve.to_cubic_curve">to_cubic_curve</a></code></li>
 </ul>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.Raw" href="#fpdf.drawing.Raw">Raw</a></code></h4>
 </li>
 <li>
 <h4><code><a title="fpdf.drawing.Rectangle" href="#fpdf.drawing.Rectangle">Rectangle</a></code></h4>
@@ -13877,22 +12494,6 @@ mutating self.</p>
 <li><code><a title="fpdf.drawing.RoundedRectangle.corner_radii" href="#fpdf.drawing.RoundedRectangle.corner_radii">corner_radii</a></code></li>
 <li><code><a title="fpdf.drawing.RoundedRectangle.org" href="#fpdf.drawing.RoundedRectangle.org">org</a></code></li>
 <li><code><a title="fpdf.drawing.RoundedRectangle.size" href="#fpdf.drawing.RoundedRectangle.size">size</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.StrokeCapStyle" href="#fpdf.drawing.StrokeCapStyle">StrokeCapStyle</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.StrokeCapStyle.BUTT" href="#fpdf.drawing.StrokeCapStyle.BUTT">BUTT</a></code></li>
-<li><code><a title="fpdf.drawing.StrokeCapStyle.ROUND" href="#fpdf.drawing.StrokeCapStyle.ROUND">ROUND</a></code></li>
-<li><code><a title="fpdf.drawing.StrokeCapStyle.SQUARE" href="#fpdf.drawing.StrokeCapStyle.SQUARE">SQUARE</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="fpdf.drawing.StrokeJoinStyle" href="#fpdf.drawing.StrokeJoinStyle">StrokeJoinStyle</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.drawing.StrokeJoinStyle.BEVEL" href="#fpdf.drawing.StrokeJoinStyle.BEVEL">BEVEL</a></code></li>
-<li><code><a title="fpdf.drawing.StrokeJoinStyle.MITER" href="#fpdf.drawing.StrokeJoinStyle.MITER">MITER</a></code></li>
-<li><code><a title="fpdf.drawing.StrokeJoinStyle.ROUND" href="#fpdf.drawing.StrokeJoinStyle.ROUND">ROUND</a></code></li>
 </ul>
 </li>
 <li>
