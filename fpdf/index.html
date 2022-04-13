@@ -367,6 +367,9 @@ Default to "mm".</dd>
             list
         )  # page number -&gt; array of 8 × n numbers
 
+    def _set_min_pdf_version(self, version):
+        self.pdf_version = max(self.pdf_version, version)
+
     @property
     def unifontsubset(self):
         return self.current_font.get(&#34;type&#34;) == &#34;TTF&#34;
@@ -544,6 +547,8 @@ Default to "mm".</dd>
             lang (str): the document main language
         &#34;&#34;&#34;
         self.lang = lang
+        if lang:
+            self._set_min_pdf_version(&#34;1.4&#34;)
 
     def set_subject(self, subject):
         &#34;&#34;&#34;
@@ -596,6 +601,8 @@ Default to "mm".</dd>
                 &#34;fpdf2 already performs XMP metadata wrapping in a &lt;?xpacket&gt; tag&#34;
             )
         self.xmp_metadata = xmp_metadata
+        if xmp_metadata:
+            self._set_min_pdf_version(&#34;1.4&#34;)
 
     def set_doc_option(self, opt, value):
         &#34;&#34;&#34;
@@ -629,6 +636,8 @@ Default to "mm".</dd>
                 f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
             )
         self.image_filter = image_filter
+        if image_filter == &#34;JPXDecode&#34;:
+            self._set_min_pdf_version(&#34;1.5&#34;)
 
     def alias_nb_pages(self, alias=&#34;{nb}&#34;):
         &#34;&#34;&#34;
@@ -959,8 +968,8 @@ Default to "mm".</dd>
             rendered = context.render(*render_args)
 
         self._out(rendered)
-
-        self.pdf_version = max(self.pdf_version, &#34;1.4&#34;)
+        # The drawing API makes use of features (notably transparency and blending modes) that were introduced in PDF 1.4:
+        self._set_min_pdf_version(&#34;1.4&#34;)
 
     def _current_graphic_style(self):
         gs = drawing.GraphicsStyle()
@@ -2098,6 +2107,8 @@ Default to "mm".</dd>
                 if gs is None:
                     gs = drawing.GraphicsStyle()
                 setattr(gs, key, value)
+                if key == &#34;blend_mode&#34;:
+                    self._set_min_pdf_version(&#34;1.4&#34;)
             elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;):
                 setattr(self, key, value)
             else:
@@ -3063,6 +3074,8 @@ Default to "mm".</dd>
             info[&#34;i&#34;] = len(self.images) + 1
             info[&#34;usages&#34;] = 1
             self.images[name] = info
+        if &#34;smask&#34; in info:
+            self._set_min_pdf_version(&#34;1.4&#34;)
 
         # Automatic width and height calculation if needed
         if w == 0 and h == 0:  # Put image at 72 dpi
@@ -3256,6 +3269,7 @@ Default to "mm".</dd>
             self._struct_parents_id_per_page[page_object_id] = struct_parents_id
         marked_content = MarkedContent(page_object_id, struct_parents_id, **kwargs)
         self.struct_builder.add_marked_content(marked_content)
+        self._set_min_pdf_version(&#34;1.4&#34;)  # due to using /MarkInfo
         return marked_content
 
     def _current_page_object_id(self):
@@ -3396,9 +3410,11 @@ Default to "mm".</dd>
                         self._add_marked_content(
                             self.n, struct_type=&#34;/Link&#34;, alt_text=annot.alt_text
                         )
+                    if annot.quad_points:
+                        self._set_min_pdf_version(&#34;1.6&#34;)
                 self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
-                self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency&#34; &#34;/CS /DeviceRGB&gt;&gt;&#34;)
+                self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency /CS /DeviceRGB&gt;&gt;&#34;)
             spid = self._struct_parents_id_per_page.get(self.n)
             if spid is not None:
                 self._out(f&#34;/StructParents {spid}&#34;)
@@ -4075,6 +4091,8 @@ Default to "mm".</dd>
                 &#34;transition&#34;: transition,
             }
             self.pages[self.page] = page
+            if transition:
+                self._set_min_pdf_version(&#34;1.5&#34;)
         else:
             page = self.pages[self.page]
         self.state = DocumentState.GENERATING_PAGE
@@ -5759,8 +5777,8 @@ def drawing_context(self, debug_stream=None):
         rendered = context.render(*render_args)
 
     self._out(rendered)
-
-    self.pdf_version = max(self.pdf_version, &#34;1.4&#34;)</code></pre>
+    # The drawing API makes use of features (notably transparency and blending modes) that were introduced in PDF 1.4:
+    self._set_min_pdf_version(&#34;1.4&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.ellipse"><code class="name flex">
@@ -6127,6 +6145,8 @@ def image(
         info[&#34;i&#34;] = len(self.images) + 1
         info[&#34;usages&#34;] = 1
         self.images[name] = info
+    if &#34;smask&#34; in info:
+        self._set_min_pdf_version(&#34;1.4&#34;)
 
     # Automatic width and height calculation if needed
     if w == 0 and h == 0:  # Put image at 72 dpi
@@ -6516,6 +6536,8 @@ def local_context(
             if gs is None:
                 gs = drawing.GraphicsStyle()
             setattr(gs, key, value)
+            if key == &#34;blend_mode&#34;:
+                self._set_min_pdf_version(&#34;1.4&#34;)
         elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;):
             setattr(self, key, value)
         else:
@@ -7886,7 +7908,9 @@ meaning to use the best image filter given the images provided.</dd>
         raise ValueError(
             f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
         )
-    self.image_filter = image_filter</code></pre>
+    self.image_filter = image_filter
+    if image_filter == &#34;JPXDecode&#34;:
+        self._set_min_pdf_version(&#34;1.5&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_keywords"><code class="name flex">
@@ -7940,7 +7964,9 @@ or a Language-Tag as defined in RFC 3066, "Tags for the Identification of Langua
     Args:
         lang (str): the document main language
     &#34;&#34;&#34;
-    self.lang = lang</code></pre>
+    self.lang = lang
+    if lang:
+        self._set_min_pdf_version(&#34;1.4&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_left_margin"><code class="name flex">
@@ -8397,7 +8423,9 @@ If the value provided is negative, it is relative to the right of the page.</p>
         raise ValueError(
             &#34;fpdf2 already performs XMP metadata wrapping in a &lt;?xpacket&gt; tag&#34;
         )
-    self.xmp_metadata = xmp_metadata</code></pre>
+    self.xmp_metadata = xmp_metadata
+    if xmp_metadata:
+        self._set_min_pdf_version(&#34;1.4&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_xy"><code class="name flex">
