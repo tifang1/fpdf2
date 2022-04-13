@@ -2110,7 +2110,7 @@ class FPDF(GraphicsStateMixin):
         with self.local_context():
             self._out(
                 f&#34;{c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
-                f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
+                f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm&#34;
             )
             yield
 
@@ -6509,7 +6509,7 @@ Default to "mm".</dd>
         with self.local_context():
             self._out(
                 f&#34;{c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
-                f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
+                f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm&#34;
             )
             yield
 
@@ -11826,7 +11826,7 @@ def rotation(self, angle, x=None, y=None):
     with self.local_context():
         self._out(
             f&#34;{c:.5F} {s:.5F} {-s:.5F} {c:.5F} {cx:.2F} {cy:.2F} cm &#34;
-            f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm\n&#34;
+            f&#34;1 0 0 1 {-cx:.2F} {-cy:.2F} cm&#34;
         )
         yield</code></pre>
 </details>
