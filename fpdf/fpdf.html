@@ -4353,7 +4353,7 @@ class FPDF(GraphicsStateMixin):
         self._out(
             (
                 f&#34;q {x * self.k:.2f} {(self.h - y - h) * self.k:.2f} {w * self.k:.2f} &#34;
-                f&#34;{h * self.k:.2f} re W n\n&#34;
+                f&#34;{h * self.k:.2f} re W n&#34;
             )
         )
         yield
@@ -8752,7 +8752,7 @@ Default to "mm".</dd>
         self._out(
             (
                 f&#34;q {x * self.k:.2f} {(self.h - y - h) * self.k:.2f} {w * self.k:.2f} &#34;
-                f&#34;{h * self.k:.2f} re W n\n&#34;
+                f&#34;{h * self.k:.2f} re W n&#34;
             )
         )
         yield
@@ -11639,7 +11639,7 @@ def rect_clip(self, x, y, w, h):
     self._out(
         (
             f&#34;q {x * self.k:.2f} {(self.h - y - h) * self.k:.2f} {w * self.k:.2f} &#34;
-            f&#34;{h * self.k:.2f} re W n\n&#34;
+            f&#34;{h * self.k:.2f} re W n&#34;
         )
     )
     yield
