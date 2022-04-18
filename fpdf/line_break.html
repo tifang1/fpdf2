@@ -28,6 +28,8 @@
 </summary>
 <pre><code class="python">from typing import NamedTuple, Any, Union, Sequence
 
+from .errors import FPDFException
+
 SOFT_HYPHEN = &#34;\u00ad&#34;
 HYPHEN = &#34;\u002d&#34;
 SPACE = &#34; &#34;
@@ -236,6 +238,7 @@ class MultiLineBreak:
         self.print_sh = print_sh
         self.fragment_index = 0
         self.character_index = 0
+        self.char_index_for_last_forced_manual_break = None
 
     def _get_character_width(self, character: str, style: str = &#34;&#34;):
         if character == SOFT_HYPHEN and not self.print_sh:
@@ -245,6 +248,10 @@ class MultiLineBreak:
 
     # pylint: disable=too-many-return-statements
     def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
+        char_index_for_last_forced_manual_break = (
+            self.char_index_for_last_forced_manual_break
+        )
+        self.char_index_for_last_forced_manual_break = None
 
         if self.fragment_index == len(self.styled_text_fragments):
             return None
@@ -287,6 +294,11 @@ class MultiLineBreak:
                 if not wordsplit:
                     line_full = True
                     break
+                if char_index_for_last_forced_manual_break == self.character_index:
+                    raise FPDFException(
+                        &#34;Not enough horizontal space to render a single character&#34;
+                    )
+                self.char_index_for_last_forced_manual_break = self.character_index
                 return current_line.manual_break()
 
             current_line.add_character(
@@ -777,6 +789,7 @@ def string(self):
         self.print_sh = print_sh
         self.fragment_index = 0
         self.character_index = 0
+        self.char_index_for_last_forced_manual_break = None
 
     def _get_character_width(self, character: str, style: str = &#34;&#34;):
         if character == SOFT_HYPHEN and not self.print_sh:
@@ -786,6 +799,10 @@ def string(self):
 
     # pylint: disable=too-many-return-statements
     def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
+        char_index_for_last_forced_manual_break = (
+            self.char_index_for_last_forced_manual_break
+        )
+        self.char_index_for_last_forced_manual_break = None
 
         if self.fragment_index == len(self.styled_text_fragments):
             return None
@@ -828,6 +845,11 @@ def string(self):
                 if not wordsplit:
                     line_full = True
                     break
+                if char_index_for_last_forced_manual_break == self.character_index:
+                    raise FPDFException(
+                        &#34;Not enough horizontal space to render a single character&#34;
+                    )
+                self.char_index_for_last_forced_manual_break = self.character_index
                 return current_line.manual_break()
 
             current_line.add_character(
@@ -862,6 +884,10 @@ def string(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
+    char_index_for_last_forced_manual_break = (
+        self.char_index_for_last_forced_manual_break
+    )
+    self.char_index_for_last_forced_manual_break = None
 
     if self.fragment_index == len(self.styled_text_fragments):
         return None
@@ -904,6 +930,11 @@ def string(self):
             if not wordsplit:
                 line_full = True
                 break
+            if char_index_for_last_forced_manual_break == self.character_index:
+                raise FPDFException(
+                    &#34;Not enough horizontal space to render a single character&#34;
+                )
+            self.char_index_for_last_forced_manual_break = self.character_index
             return current_line.manual_break()
 
         current_line.add_character(
