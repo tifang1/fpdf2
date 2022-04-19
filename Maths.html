@@ -720,16 +720,49 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#charts" class="md-nav__link">
+    Charts
+  </a>
+  
+    <nav class="md-nav" aria-label="Charts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-matplotlib" class="md-nav__link">
+    Using Matplotlib
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mathematical-formulas" class="md-nav__link">
+    Mathematical formulas
+  </a>
+  
+    <nav class="md-nav" aria-label="Mathematical formulas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#using-google-charts-api" class="md-nav__link">
     Using Google Charts API
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#using-matplotlib" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#using-matplotlib_1" class="md-nav__link">
     Using Matplotlib
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1095,16 +1128,49 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#charts" class="md-nav__link">
+    Charts
+  </a>
+  
+    <nav class="md-nav" aria-label="Charts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-matplotlib" class="md-nav__link">
+    Using Matplotlib
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#mathematical-formulas" class="md-nav__link">
+    Mathematical formulas
+  </a>
+  
+    <nav class="md-nav" aria-label="Mathematical formulas">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#using-google-charts-api" class="md-nav__link">
     Using Google Charts API
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#using-matplotlib" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#using-matplotlib_1" class="md-nav__link">
     Using Matplotlib
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1127,11 +1193,51 @@
 
 
 <h1 id="charts-graphs">Charts &amp; graphs</h1>
+<h2 id="charts">Charts</h2>
+<h3 id="using-matplotlib">Using Matplotlib</h3>
+<p>Example taken from <a href="https://matplotlib.org/stable/tutorials/intermediate/artists.html">Matplotlib artist tutorial</a>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">matplotlib.backends.backend_agg</span> <span class="kn">import</span> <span class="n">FigureCanvasAgg</span> <span class="k">as</span> <span class="n">FigureCanvas</span>
+<span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="kn">import</span> <span class="n">Figure</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">top</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+<span class="n">ax1</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">211</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;volts&#39;</span><span class="p">)</span>
+<span class="n">ax1</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;a sine wave&#39;</span><span class="p">)</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+<span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+<span class="n">line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax1</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Fixing random state for reproducibility</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">19680801</span><span class="p">)</span>
+
+<span class="n">ax2</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="mf">0.15</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
+<span class="n">n</span><span class="p">,</span> <span class="n">bins</span><span class="p">,</span> <span class="n">patches</span> <span class="o">=</span> <span class="n">ax2</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1000</span><span class="p">),</span> <span class="mi">50</span><span class="p">,</span>
+                            <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">)</span>
+<span class="n">ax2</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;time (s)&#39;</span><span class="p">)</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">FigureCanvas</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+<span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">canvas</span><span class="o">.</span><span class="n">buffer_rgba</span><span class="p">()))</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="n">pdf</span><span class="o">.</span><span class="n">epw</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;matplotlib.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Result:</p>
+<p><img alt="" src="matplotlib.png" /></p>
+<h2 id="mathematical-formulas">Mathematical formulas</h2>
 <p><code>fpdf2</code> can only insert mathematical formula in the form of <strong>images</strong>.
 The following sections will explaing how to generate and embed such images.</p>
-<h2 id="using-google-charts-api">Using Google Charts API</h2>
-<p>Official documentation: <a href="https://developers.google.com/chart/infographics/docs/formulas">Google Charts Infographics - Mathematical Formulas</a>.
-Example:</p>
+<h3 id="using-google-charts-api">Using Google Charts API</h3>
+<p>Official documentation: <a href="https://developers.google.com/chart/infographics/docs/formulas">Google Charts Infographics - Mathematical Formulas</a>.</p>
+<p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">quote</span>
 <span class="kn">from</span> <span class="nn">urllib.request</span> <span class="kn">import</span> <span class="n">urlopen</span>
@@ -1150,26 +1256,28 @@ Example:</p>
 </code></pre></div>
 <p>Result:</p>
 <p><img alt="" src="equation-with-gcharts.png" /></p>
-<h2 id="using-matplotlib">Using Matplotlib</h2>
+<h3 id="using-matplotlib_1">Using Matplotlib</h3>
+<p>Matplotlib can render <strong>LaTeX</strong>: <a href="https://matplotlib.org/stable/tutorials/text/usetex.html">Text rendering With LaTeX</a>.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 <span class="kn">from</span> <span class="nn">matplotlib.backends.backend_agg</span> <span class="kn">import</span> <span class="n">FigureCanvasAgg</span> <span class="k">as</span> <span class="n">FigureCanvas</span>
 <span class="kn">from</span> <span class="nn">matplotlib.figure</span> <span class="kn">import</span> <span class="n">Figure</span>
-<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 
 
-<span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">canvas</span> <span class="o">=</span> <span class="n">FigureCanvas</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+<span class="n">fig</span> <span class="o">=</span> <span class="n">Figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
 <span class="n">axes</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
-<span class="n">axes</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$x^n + y^n = \frac</span><span class="si">{a}{b}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>  <span class="c1"># LaTeX syntax</span>
+<span class="n">axes</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">.5</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;$x^n + y^n = \frac</span><span class="si">{a}{b}</span><span class="s2">$&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="n">axes</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s2">&quot;off&quot;</span><span class="p">)</span>
+
+<span class="n">canvas</span> <span class="o">=</span> <span class="n">FigureCanvas</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
 <span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">canvas</span><span class="o">.</span><span class="n">buffer_rgba</span><span class="p">()))</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">canvas</span><span class="o">.</span><span class="n">buffer_rgba</span><span class="p">()))</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;equation-with-matplotlib.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Result:</p>
