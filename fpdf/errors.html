@@ -63,21 +63,21 @@ class FPDFPageFormatException(FPDFException):
 class FPDFUnicodeEncodingException(FPDFException):
     &#34;&#34;&#34;Error is thrown when a character that cannot be encoded by the chosen encoder is provided&#34;&#34;&#34;
 
-    def __init__(self, encoding, start, character):
+    def __init__(self, text_index, character, font_name):
         super().__init__()
-        self.encoding = encoding
-        self.start = start
+        self.text_index = text_index
         self.character = character
+        self.font_name = font_name
 
     def __repr__(self):
-        return (
-            f&#34;{self.__class__.__name__}&#34;
-            f&#34;{repr(self.encoding), repr(self.start), repr(self.character)}&#34;
-        )
+        return f&#34;{self.__class__.__name__}({repr(self.text_index), repr(self.character), repr(self.font_name)})&#34;
 
     def __str__(self):
-        return f&#34;&#34;&#34;Encoding used is {self.encoding}. Character {self.character} at position {self.start}
-        of text is out of encoding range. Please consider using font that supports UTF-8 encoding&#34;&#34;&#34;</code></pre>
+        return (
+            f&#39;Character &#34;{self.character}&#34; at index {self.text_index} in text is outside the range of characters&#39;
+            f&#39; supported by the font used: &#34;{self.font_name}&#34;.&#39;
+            &#34; Please consider using a font that supports UTF-8 encoding.&#34;
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -161,7 +161,7 @@ class FPDFUnicodeEncodingException(FPDFException):
 </dd>
 <dt id="fpdf.errors.FPDFUnicodeEncodingException"><code class="flex name class">
 <span>class <span class="ident">FPDFUnicodeEncodingException</span></span>
-<span>(</span><span>encoding, start, character)</span>
+<span>(</span><span>text_index, character, font_name)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Error is thrown when a character that cannot be encoded by the chosen encoder is provided</p></div>
@@ -172,21 +172,21 @@ class FPDFUnicodeEncodingException(FPDFException):
 <pre><code class="python">class FPDFUnicodeEncodingException(FPDFException):
     &#34;&#34;&#34;Error is thrown when a character that cannot be encoded by the chosen encoder is provided&#34;&#34;&#34;
 
-    def __init__(self, encoding, start, character):
+    def __init__(self, text_index, character, font_name):
         super().__init__()
-        self.encoding = encoding
-        self.start = start
+        self.text_index = text_index
         self.character = character
+        self.font_name = font_name
 
     def __repr__(self):
-        return (
-            f&#34;{self.__class__.__name__}&#34;
-            f&#34;{repr(self.encoding), repr(self.start), repr(self.character)}&#34;
-        )
+        return f&#34;{self.__class__.__name__}({repr(self.text_index), repr(self.character), repr(self.font_name)})&#34;
 
     def __str__(self):
-        return f&#34;&#34;&#34;Encoding used is {self.encoding}. Character {self.character} at position {self.start}
-        of text is out of encoding range. Please consider using font that supports UTF-8 encoding&#34;&#34;&#34;</code></pre>
+        return (
+            f&#39;Character &#34;{self.character}&#34; at index {self.text_index} in text is outside the range of characters&#39;
+            f&#39; supported by the font used: &#34;{self.font_name}&#34;.&#39;
+            &#34; Please consider using a font that supports UTF-8 encoding.&#34;
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
