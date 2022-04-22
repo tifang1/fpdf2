@@ -1274,7 +1274,6 @@ returns the PDF <code>bytearray</code> buffer.</p>
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
@@ -1294,8 +1293,8 @@ that the cell should extend up to the right margin of the page; it is handy to
 center text. The current page number is returned by
 the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no">page_no</a> method; as for
 the total number of pages, it is obtained by means of the special value <code>{nb}</code>
-which will be substituted on document closure (provided you first called 
-<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a>).
+which will be substituted on document closure (this special value can changed by 
+<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages()</a>).
 Note the use of the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a> method which allows to set
 position at an absolute location in the page, starting from the top or the
 bottom.</p>

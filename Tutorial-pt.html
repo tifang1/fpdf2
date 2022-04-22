@@ -1264,7 +1264,6 @@ As outras fontes integradas são <code>Times</code>,<code>Courier</code>, <code>
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
@@ -1274,7 +1273,7 @@ As outras fontes integradas são <code>Times</code>,<code>Courier</code>, <code>
 <p><a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">PDF resultante</a></p>
 <p>Este exemplo usa os <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.header">header</a> e o <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.footer">footer</a> para processar cabeçalhos e rodapés de página. Estes são chamados automaticamente. Eles já existem na classe FPDF, mas não fazem nada, portanto, temos que os estender a classe e substituí-los.</p>
 <p>O logótipo é impresso utilizando o método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.image">image</a>, especificando o seu canto superior esquerdo e sua largura. A altura é calculada automaticamente para respeitar as proporções da imagem.</p>
-<p>Para imprimir o número da página, um valor nulo é passado como a largura da célula. Isso significa que a célula deve se estender até a margem direita da página; é útil para centralizar texto. O número da página atual é retornado pelo método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no">page_no</a>; quanto ao número total de páginas, é obtido por meio do valor especial <code>{nb}</code> que será substituído quando se fecha o documento (desde que use primeiro o  <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a>).
+<p>Para imprimir o número da página, um valor nulo é passado como a largura da célula. Isso significa que a célula deve se estender até a margem direita da página; é útil para centralizar texto. O número da página atual é retornado pelo método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no">page_no</a>; quanto ao número total de páginas, é obtido por meio do valor especial <code>{nb}</code> que será substituído quando se fecha o documento.
 Observe que o uso do método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a> permite definir a posição em um local absoluto da página, começando do início ou do fim.</p>
 <p>Outro recurso interessante que se usa aqui é a quebra de página automática. Desde do momento em que uma célula cruza o limite da página (a 2 centímetros da parte inferior por
 padrão), uma pausa é executada e a fonte restaurada. Embora o cabeçalho e rodapés selecionam a sua própria fonte (<code>helvetica</code>), o corpo continua com<code>Times</code>.

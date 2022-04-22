@@ -567,6 +567,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#inserting-the-final-number-of-pages-of-the-document" class="md-nav__link">
+    Inserting the final number of pages of the document
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#will_page_break" class="md-nav__link">
     will_page_break
   </a>
@@ -1109,6 +1116,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#inserting-the-final-number-of-pages-of-the-document" class="md-nav__link">
+    Inserting the final number of pages of the document
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#will_page_break" class="md-nav__link">
     will_page_break
   </a>
@@ -1151,6 +1165,9 @@ and
 methods.</p>
 <h2 id="manually-trigger-a-page-break">Manually trigger a page break</h2>
 <p>Simply call <code>.add_page()</code>.</p>
+<h2 id="inserting-the-final-number-of-pages-of-the-document">Inserting the final number of pages of the document</h2>
+<p>The special string <code>{nb}</code> will be substituted by the total number of pages on document closure.
+This special value can changed by calling <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages()</a>.</p>
 <h2 id="will_page_break">will_page_break</h2>
 <p><code>will_page_break(height)</code> lets you know if adding an element will trigger a page break,
 based on its <code>height</code> and the current ordinate (<code>y</code> position).</p>
@@ -1173,7 +1190,7 @@ on the can use the <code>FPDF.unbreakable()</code> context-manager:</p>
     <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="n">line_height</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="p">(</span><span class="s2">&quot;unbreakable_tables.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>An alternative approach is <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.offset_rendering"><code>offset_rendering()</code></a>
+<p>An alternative approach is <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.offset_rendering"><code>offset_rendering()</code></a>
 that allows to test the results of some operations on the global layout
 before performing them "for real":</p>
 <div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">offset_rendering</span><span class="p">()</span> <span class="k">as</span> <span class="n">dummy</span><span class="p">:</span>

@@ -1265,7 +1265,6 @@ PDF <code>bytearray</code> बफ़र लौटाता है।</p>
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
@@ -1281,7 +1280,7 @@ PDF <code>bytearray</code> बफ़र लौटाता है।</p>
 <p>पृष्ठ संख्या (Page number) मुद्रित (print) करने के लिए, सेल चौड़ाई (cell width) के रूप में एक शून्य मान(null value) पास किया जाता है। </p>
 <p>इसका मतलब है कि सेल को पेज के दाहिने हाशिये (right margin) तक बढ़ाया जाना चाहिए; यह पाठ को केंद्र(center) में रखने के लिए आसान है। </p>
 <p>वर्तमान पृष्ठ संख्या <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no">page_no</a> विधि द्वारा वापस की जाती है; पृष्ठों की कुल संख्या के लिए, यह विशेष मूल्य <code>{nb}</code> के माध्यम से प्राप्त किया जाता है जिसे दस्तावेज़
-बंद होने पर प्रतिस्थापित किया जाएगा (बशर्ते आपको पहले <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a> कहा जाता है)।</p>
+बंद होने पर प्रतिस्थापित किया जाएगा कहा जाता है)।</p>
 <p><a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a> पद्धति के उपयोग पर ध्यान दें जो पृष्ठ में एक पूर्ण स्थान पर स्थिति सेट करने की अनुमति देता है, ऊपर या नीचे से शुरू होता है।</p>
 <p>यहाँ एक और दिलचस्प विशेषता का उपयोग किया गया है: the automatic page breaking. 
 जैसे ही कोई सेल पृष्ठ में एक सीमा को पार करेगा (डिफ़ॉल्ट रूप से नीचे से 2 सेंटीमीटर पर), एक ब्रेक किया जाता है और फ़ॉन्ट को पुनर्स्थापित किया जाता है। </p>

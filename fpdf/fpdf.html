@@ -3120,9 +3120,9 @@ class FPDF(GraphicsStateMixin):
             # disabling bandit rule as we just build a cache key, this is secure
             name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
         elif isinstance(name, io.BytesIO):
-            if _is_xml(name):
-                return self._vector_image(name, x, y, w, h, link, title, alt_text)
             bytes = name.getvalue()
+            if _is_svg(bytes):
+                return self._vector_image(name, x, y, w, h, link, title, alt_text)
             # disabling bandit rule as we just build a cache key, this is secure
             name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
         else:
@@ -4578,8 +4578,7 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
     return f&#34;{num:.1f}Yi{suffix}&#34;
 
 
-def _is_xml(img: io.BytesIO):
-    bytes = img.getvalue()
+def _is_svg(bytes):
     return bytes.startswith(b&#34;&lt;?xml &#34;) or bytes.startswith(b&#34;&lt;svg &#34;)
 
 
@@ -7526,9 +7525,9 @@ Default to "mm".</dd>
             # disabling bandit rule as we just build a cache key, this is secure
             name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
         elif isinstance(name, io.BytesIO):
-            if _is_xml(name):
-                return self._vector_image(name, x, y, w, h, link, title, alt_text)
             bytes = name.getvalue()
+            if _is_svg(bytes):
+                return self._vector_image(name, x, y, w, h, link, title, alt_text)
             # disabling bandit rule as we just build a cache key, this is secure
             name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
         else:
@@ -10604,9 +10603,9 @@ def image(
         # disabling bandit rule as we just build a cache key, this is secure
         name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
     elif isinstance(name, io.BytesIO):
-        if _is_xml(name):
-            return self._vector_image(name, x, y, w, h, link, title, alt_text)
         bytes = name.getvalue()
+        if _is_svg(bytes):
+            return self._vector_image(name, x, y, w, h, link, title, alt_text)
         # disabling bandit rule as we just build a cache key, this is secure
         name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
     else:

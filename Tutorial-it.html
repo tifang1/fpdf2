@@ -1264,7 +1264,6 @@ ritorna il PDF in un buffer <code>bytearray</code>.</p>
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
@@ -1277,8 +1276,7 @@ ritorna il PDF in un buffer <code>bytearray</code>.</p>
 quindi è necessario estendere la classe e sovrascriverli.</p>
 <p>Il logo è stampato con il metodo <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.image">image</a> specificando la posizione del suo angolo in alto a sinistra e la sua larghezza. L'altezza è calcolata automaticamente per rispettare le proporzioni dell'immagine.</p>
 <p>Per stampare il numero della pagina, un valore nullo può essere passato come larghezza della cella. Significa che la cella "crescerà" fino al margine destro della pagina; è utile per centrare il testo. Il numero di pagina è ritornato da <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no">page_no</a>; mentre per il numero totale di pagine, si ottiene attraverso il valore speciale <code>{nb}</code>
-che verrà sostituito quando le pagine saranno generate (assumendo che 
-<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages">alias_nb_pages</a> venga chiamato).
+che verrà sostituito quando le pagine saranno generate.
 Importante menzionare il metodo <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a> che permette di selezionare una posizione assoluta all'interno della pagina, incominciando dall'alto o dal basso.</p>
 <p>Un'altra feature interessante: l'interruzione di pagina automatica. Non appena una cella dovesse superare il limite nella pagina (a 2 centimetri dal fondo di default), ci sarebbe un'interruzione e un reset del font. Nonostante l'intestazione e il piè di pagina scelgano il proprio font (<code>helvetica</code>), il contenuto continua in <code>Times</code>.
 Questo meccanismo di reset automatico si applica anche ai colori e allo spessore della linea.

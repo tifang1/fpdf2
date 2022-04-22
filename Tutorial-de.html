@@ -1264,7 +1264,6 @@ Ohne Angabe eines Parameters liefert <code>output()</code> den PDF <code>bytearr
 
 <span class="c1"># Instantiation of inherited class</span>
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">PDF</span><span class="p">()</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">alias_nb_pages</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
@@ -1282,8 +1281,7 @@ dass die Zelle bis zum rechten Rand der Seite reichen soll. Das ist besonders pr
 Text zu zentrieren. Die aktuelle Seitenzahl wird durch
 die Methode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.page_no"><code>page_no</code></a> ermittelt und in die Zelle geschrieben.
 Die Gesamtseitenzahl wird mit Hilfe des speziellen Platzhalterwertes <code>{nb}</code> ermittelt,
-der beim Schließen des Dokuments ersetzt wird (vorausgesetzt, du hast vorher 
-<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.alias_nb_pages"><code>alias_nb_pages</code></a>) aufgerufen.
+der beim Schließen des Dokuments ersetzt wird aufgerufen.
 Beachte die Verwendung der Methode <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y"><code>set_y</code></a>, mit der du die
 vertikale Schreibposition an einer absoluten Stelle der Seite - von oben oder von
 unten aus - setzen kannst. </p>
