@@ -977,7 +977,7 @@
   
     <li class="md-nav__item">
       <a href="UsageInWebAPI.html" class="md-nav__link">
-        Usage in web API
+        Usage in web APIs
       </a>
     </li>
   
@@ -1294,8 +1294,9 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-with-image.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<p>By default an image is rendered with a resolution of 72 dpi,
+but you can control its dimension on the page using the <code>w=</code> &amp; <code>h=</code> parameters of the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.image"><code>image()</code></a> method.</p>
 <h2 id="assembling-images">Assembling images</h2>
-<p><code>fpdf2</code> can be an easy solution to assemble images into a PDF.</p>
 <p>The following code snippets provide examples of some basic layouts for assembling images into PDF files.</p>
 <h3 id="side-by-side-images-full-height-landscape-page">Side by side images, full height, landscape page</h3>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
@@ -1385,7 +1386,7 @@ no image conversion from / to PNG / JPEG is performed.</p>
 <span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-with-image.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>Beware that "flattening" images this way will convert alpha channels to black.</p>
+<p>Beware that "flattening" images this way will fill transparent areas of your images with color (usually black).</p>
 <h2 id="oversized-images-detection-downscaling">Oversized images detection &amp; downscaling</h2>
 <p>If the resulting PDF size is a concern,
 you may want to check if some inserted images are <em>oversized</em>,
@@ -1418,6 +1419,7 @@ This can be disabled by setting <code>.allow_images_transparency</code>,
 <span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-including-image-without-transparency.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<p>This will fill transparent areas of your images with color (usually black).</p>
 
               
             </article>
