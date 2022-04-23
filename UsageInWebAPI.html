@@ -1192,9 +1192,9 @@
 <h2 id="streamlit">streamlit</h2>
 <p><a href="https://streamlit.io">streamlit</a> is:</p>
 <blockquote>
-<p>a Python library that makes it easy to create and share custom web apps for data science. </p>
+<p>a Python library that makes it easy to create and share custom web apps for data science</p>
 </blockquote>
-<p>The following code inserts a button allowing to download a PDF file:</p>
+<p>The following code demonstrates how to display a PDF and add a button allowing to download it:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 <span class="kn">import</span> <span class="nn">streamlit</span> <span class="k">as</span> <span class="nn">st</span>
 
@@ -1208,6 +1208,12 @@
     <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;hello world&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">())</span>
 
+<span class="c1"># Embed PDF to display it:</span>
+<span class="n">base64_pdf</span> <span class="o">=</span> <span class="n">b64encode</span><span class="p">(</span><span class="n">gen_pdf</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+<span class="n">pdf_display</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&lt;embed src=&quot;data:application/pdf;base64,</span><span class="si">{</span><span class="n">base64_pdf</span><span class="si">}</span><span class="s1">&quot; width=&quot;700&quot; height=&quot;400&quot; type=&quot;application/pdf&quot;&gt;&#39;</span>
+<span class="n">st</span><span class="o">.</span><span class="n">markdown</span><span class="p">(</span><span class="n">pdf_display</span><span class="p">,</span> <span class="n">unsafe_allow_html</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Add a download button:</span>
 <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
     <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Download PDF&quot;</span><span class="p">,</span>
     <span class="n">data</span><span class="o">=</span><span class="n">gen_pdf</span><span class="p">(),</span>
