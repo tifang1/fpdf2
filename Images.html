@@ -684,6 +684,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#image-clipping" class="md-nav__link">
+    Image clipping
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#alternative-description" class="md-nav__link">
     Alternative description
   </a>
@@ -1198,6 +1205,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#image-clipping" class="md-nav__link">
+    Image clipping
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#alternative-description" class="md-nav__link">
     Alternative description
   </a>
@@ -1308,6 +1322,25 @@ Valid values for <code>blend_mode</code> are <code>Normal</code>, <code>Multiply
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;blended-images.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Demo of all color blend modes: <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/drawing/generated_pdf/blending_images.pdf">blending_images.pdf</a></p>
+<h2 id="image-clipping">Image clipping</h2>
+<p>You can select only a portion of the image to render using clipping methods:</p>
+<ul>
+<li><a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.rect_clip"><code>rect_clip()</code></a>:<ul>
+<li><a href="https://github.com/PyFPDF/fpdf2/blob/master/test/image/test_image_clipping.py#L10">example code</a></li>
+<li><a href="https://github.com/PyFPDF/fpdf2/blob/master/test/image/rect_clip.pdf">resulting PDF</a></li>
+</ul>
+</li>
+<li><a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.round_clip"><code>round_clip()</code></a>:<ul>
+<li><a href="https://github.com/PyFPDF/fpdf2/blob/master/test/image/test_image_clipping.py#L33">example code</a></li>
+<li><a href="https://github.com/PyFPDF/fpdf2/blob/master/test/image/round_clip.pdf">resulting PDF</a></li>
+</ul>
+</li>
+<li><a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.elliptic_clip"><code>elliptic_clip()</code></a>:<ul>
+<li><a href="https://github.com/PyFPDF/fpdf2/blob/master/test/image/test_image_clipping.py#L56">example code</a></li>
+<li><a href="https://github.com/PyFPDF/fpdf2/blob/master/test/image/elliptic_clip.pdf">resulting PDF</a></li>
+</ul>
+</li>
+</ul>
 <h2 id="alternative-description">Alternative description</h2>
 <p>A textual description of the image can be provided, for accessibility purposes:</p>
 <div class="highlight"><pre><span></span><code><span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">alt_text</span><span class="o">=</span><span class="s2">&quot;Snake logo of the fpdf2 library&quot;</span><span class="p">)</span>
