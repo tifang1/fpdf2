@@ -1017,6 +1017,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#installing-fpdf2-from-a-local-git-repository" class="md-nav__link">
+    Installing fpdf2 from a local git repository
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#code-auto-formatting" class="md-nav__link">
     Code auto-formatting
   </a>
@@ -1212,6 +1219,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#installing-fpdf2-from-a-local-git-repository" class="md-nav__link">
+    Installing fpdf2 from a local git repository
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#code-auto-formatting" class="md-nav__link">
     Code auto-formatting
   </a>
@@ -1326,6 +1340,7 @@
 <li><a href="#history">History</a></li>
 <li><a href="#usage">Usage</a></li>
 <li><a href="#repository-structure">Repository structure</a></li>
+<li><a href="#installing-fpdf2-from-a-local-git-repository">Installing fpdf2 from a local git repository</a></li>
 <li><a href="#code-auto-formatting">Code auto-formatting</a></li>
 <li><a href="#linting">Linting</a></li>
 <li><a href="#pre-commit-hook">Pre-commit hook</a></li>
@@ -1389,6 +1404,11 @@ Some are also listed on <a href="https://libraries.io/pypi/fpdf2">its libraries.
 <li><code>tox.ini</code> - configuration for <a href="https://tox.readthedocs.io/en/latest/">Tox</a></li>
 <li><code>.pylintrc</code> - configuration for <a href="http://pylint.pycqa.org/en/latest/">Pylint</a></li>
 </ul>
+<h2 id="installing-fpdf2-from-a-local-git-repository">Installing fpdf2 from a local git repository</h2>
+<div class="highlight"><pre><span></span><code>pip install --editable $path/to/fpdf/repo
+</code></pre></div>
+<p>This will link the installed Python package to the repository location,
+basically meaning any changes to the code package will get reflected directly in your environment.</p>
 <h2 id="code-auto-formatting">Code auto-formatting</h2>
 <p>We use <a href="https://github.com/psf/black">black</a> as a code prettifier.
 This <em>"uncomprimising Python code formatter"</em> must be installed
