@@ -1246,23 +1246,25 @@
 
 <h1 id="fpdf2">fpdf2</h1>
 <p><a href='https://github.com/PyFPDF/fpdf2'><img src='https://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png' alt='Fork me on GitHub' border='0' align='right' /></a></p>
-<p><code>fpdf2</code> is a library for PDF document generation in Python, forked from the unmaintained <a href="https://github.com/reingart/pyfpdf">pyfpdf</a>, itself ported from the PHP <a href="http://www.fpdf.org/">FPDF</a> library.</p>
+<p><code>fpdf2</code> is a library for simple &amp; fast PDF document generation in Python.
+It is a fork and the successor of <code>PyFPDF</code> (<em>cf.</em> <a href="https://pyfpdf.github.io/fpdf2/Development.html#history">history</a>).</p>
 <p><strong>Latest Released Version:</strong> <a href="https://pypi.python.org/pypi/fpdf2"><img alt="Pypi latest version" src="https://img.shields.io/pypi/v/fpdf2.svg" /></a></p>
 <p><img alt="fpdf2 logo" src="fpdf2-logo.png" /></p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s1">&#39;helvetica&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;hello world&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;hello_world.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
 <h2 id="main-features">Main features</h2>
 <ul>
-<li>Easy to use (and easy to extend)</li>
-<li>Small and compact code, useful for testing new features and teaching</li>
-<li>Many simple examples and scripts available in many languages</li>
-<li>PIL Integration for images (via Pillow)</li>
-<li>No installation, no compilation or other libraries (DLLs) required</li>
-</ul>
-<p>This repository is a fork of the library's <a href="http://www.fpdf.org/dl.php?id=94">original port by Max Pat</a>, with the following enhancements:</p>
-<ul>
+<li>Easy to use, with a user-friendly <a href="https://pyfpdf.github.io/fpdf2/fpdf/">API</a>, and easy to extend</li>
 <li>Python 3.6+ support</li>
 <li><a href="Unicode.html">Unicode</a> (UTF-8) TrueType font subset embedding (Central European, Cyrillic, Greek, Baltic, Thai, Chinese, Japanese, Korean, Hindi and almost any other language in the world)</li>
 <li>Internal / external <a href="Links.html">links</a></li>
-<li>Embedding images, including transparency and alpha channel</li>
+<li>Embedding images, including transparency and alpha channel, using <a href="https://pillow.readthedocs.io/en/stable/">Pillow (Python Imaging Library)</a></li>
 <li>Arbitrary path drawing and basic <a href="SVG.html">SVG</a> import</li>
 <li>Embedding <a href="Barcodes.html">barcodes</a>, <a href="Maths.html">charts &amp; graphs</a>, <a href="EmojisSymbolsDingbats.html">emojis, symbols &amp; dingbats</a></li>
 <li><a href="Text.html">Cell / multi-cell / plaintext writing</a>, <a href="PageBreaks.html">automatic page breaks</a></li>
@@ -1275,7 +1277,7 @@
 <li>Optional basic Markdown-like styling: <code>**bold**, __italics__, --underlined--</code></li>
 <li>Only has 2 dependencies: <a href="https://pillow.readthedocs.io/en/stable/">Pillow</a> &amp; <a href="https://pypi.org/project/defusedxml/">defusedxml</a></li>
 <li>Unit tests with <code>qpdf</code>-based PDF diffing</li>
-<li>Usage examples with <a href="https://www.djangoproject.com/">Django</a>, <a href="https://flask.palletsprojects.com">Flask</a>, <a href="https://streamlit.io/">streamlit</a>... : <a href="UsageInWebAPI.html">Usage in web APIs</a></li>
+<li>Many example scripts available throughout this documentation, including usage examples with <a href="https://www.djangoproject.com/">Django</a>, <a href="https://flask.palletsprojects.com">Flask</a>, <a href="https://streamlit.io/">streamlit</a>... : <a href="UsageInWebAPI.html">Usage in web APIs</a></li>
 <li>PDF samples validation using 3 different checkers:</li>
 </ul>
 <p><a href="https://github.com/qpdf/qpdf"><img alt="QPDF logo" src="qpdf-logo.svg" /></a>

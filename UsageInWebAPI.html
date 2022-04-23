@@ -1195,7 +1195,8 @@
 <p>a Python library that makes it easy to create and share custom web apps for data science</p>
 </blockquote>
 <p>The following code demonstrates how to display a PDF and add a button allowing to download it:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">base64</span> <span class="kn">import</span> <span class="n">b64encode</span>
+<span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 <span class="kn">import</span> <span class="nn">streamlit</span> <span class="k">as</span> <span class="nn">st</span>
 
 <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">&#39;Demo of fpdf2 usage with streamlit&#39;</span><span class="p">)</span>

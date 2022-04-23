@@ -1245,16 +1245,15 @@ Document Format as they are described in the Adobe PDF Reference Manual, this
 bypasses needless complexities for simpler use cases.</p>
 <p>It is small:
 <div class="highlight"><pre><span></span><code>$ du -sh fpdf
-272K    fpdf
+1,6M    fpdf
 
 $ scc fpdf
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
-───────────────────────────────────────────────────────────────────────────────
-Python                      14      8204      142       232     7830        192
+Python                      21     16879      480       571    15828        462
 </code></pre></div></p>
-<p>It includes <code>cell</code> and <code>multi_cell</code> primitives to draw fluid document like
-invoices, listings and reports, and includes basic support for HTML rendering.</p>
+<p>It includes <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.cell"><code>cell()</code></a> and <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell"><code>multi_cell()</code></a>
+primitives to draw fluid document like invoices, listings and reports, and includes basic support for HTML rendering.</p>
 <blockquote>
 <p>Compared to other solutions, this library should be easier to use and adapt
 for most common documents (no need to use a page layout engine, style
@@ -1324,7 +1323,7 @@ or downloaded as PDF.</p>
 <h2 id="what-is-the-development-status-of-this-library">What is the development status of this library?</h2>
 <p>This library was improved over the years since the initial port from PHP.
 As of 2021, it is <strong>stable</strong> and actively maintained, with bug fixes and new features developped regularly.</p>
-<p>In contrast, <code>write_html</code> support is not complete, so it must be considered in beta state.</p>
+<p>In contrast, <a href="HTML.html"><code>write_html</code></a> support is not complete, so it must be considered in beta state.</p>
 <h2 id="what-is-the-license-of-this-library-fpdf2">What is the license of this library (fpdf2)?</h2>
 <p>LGPL v3.0.</p>
 <p>Original FPDF uses a permissive license:
@@ -1343,8 +1342,8 @@ copies of the software, and to permit persons to whom the software is furnished
 to do so.</p>
 <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.</p>
 </blockquote>
-<p>The fpdf.py library is a revision of a port by Max Pat. The original source uses the same
-licence: <a href="http://www.fpdf.org/dl.php?id=94">http://www.fpdf.org/dl.php?id=94</a></p>
+<p>The original <code>fpdf.py</code> library was a revision of a port by Max Pat.
+The original source uses the same licence: <a href="http://www.fpdf.org/dl.php?id=94">http://www.fpdf.org/dl.php?id=94</a></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># * Software: FPDF</span>
 <span class="c1"># * Version:  1.53</span>
 <span class="c1"># * Date:     2004-12-31</span>
