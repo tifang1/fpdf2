@@ -595,13 +595,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#metric-files" class="md-nav__link">
-    Metric Files
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#free-font-pack-and-copyright-restrictions" class="md-nav__link">
     Free Font Pack and Copyright Restrictions
   </a>
@@ -1109,13 +1102,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#metric-files" class="md-nav__link">
-    Metric Files
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#free-font-pack-and-copyright-restrictions" class="md-nav__link">
     Free Font Pack and Copyright Restrictions
   </a>
@@ -1145,7 +1131,6 @@
 <ul>
 <li><a href="#unicode">Unicode</a><ul>
 <li><a href="#example">Example</a></li>
-<li><a href="#metric-files">Metric Files</a></li>
 <li><a href="#free-font-pack-and-copyright-restrictions">Free Font Pack and Copyright Restrictions</a></li>
 </ul>
 </li>
@@ -1267,25 +1252,6 @@ install the fonts in the <code>font</code> directory first.</p>
 </code></pre></div>
 <p>View the result here: 
 <a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/unicode.pdf">unicode.pdf</a></p>
-<h2 id="metric-files">Metric Files</h2>
-<p>FPDF will try to automatically generate metrics (i.e. character widths) about 
-TTF font files to speed up their processing.</p>
-<p>Such metrics are stored using the Python Pickle format (<code>.pkl</code> extension), by 
-default in the font directory (ensure read and write permission!). Additional 
-information about the caching mechanism is defined in the
-<a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.add_font"><code>add_font</code></a> method documentation.</p>
-<p>TTF metric files often weigh about 650K, so keep that in mind if you use many
-TTF fonts and have disk size or memory limitations.</p>
-<p>By design, metric files are not imported as they could cause a temporary memory
-leak if not managed properly (this could be an issue in a webserver environment
-with many processes or threads, so the current implementation discards metrics when
-FPDF objects are disposed).</p>
-<p>In most circumstances, you will not notice any difference about storing metric
-files vs. generating them in each run on-the-fly (according basic tests, elapsed
-time is equivalent; YMMV).</p>
-<p>Like the original PHP implementation, this library should work even if it could
-not store the metric file, and as no source code file is generated at runtime,
-it should work in restricted environments.</p>
 <h2 id="free-font-pack-and-copyright-restrictions">Free Font Pack and Copyright Restrictions</h2>
 <p>For your convenience, this library collected 96 TTF files in an optional 
 <a href="https://github.com/reingart/pyfpdf/releases/download/binary/fpdf_unicode_font_pack.zip">"Free Unicode TrueType Font Pack for FPDF"</a>,
