@@ -706,8 +706,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-simple-example" class="md-nav__link">
-    A simple example
+  <a href="#basic-usage" class="md-nav__link">
+    Basic usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-example" class="md-nav__link">
+    Detailed example
   </a>
   
 </li>
@@ -1102,8 +1109,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#a-simple-example" class="md-nav__link">
-    A simple example
+  <a href="#basic-usage" class="md-nav__link">
+    Basic usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detailed-example" class="md-nav__link">
+    Detailed example
   </a>
   
 </li>
@@ -1147,9 +1161,20 @@ document.</p>
 <p>Not all SVGs will convert correctly. Please see
 <a href="#currently-unsupported-notable-svg-features">the list of unsupported features</a>
 for more information about what to look out for.</p>
-<h2 id="a-simple-example">A simple example</h2>
+<h2 id="basic-usage">Basic usage</h2>
+<p>SVG files can be directly inserted inside a PDF file using the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.image">image()</a> method:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;vector.svg&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;doc-with-svg.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>Either the embedded <code>.svg</code> file must includes <code>width</code> and/or <code>height</code> attributes (absolute or relative),
+or some dimensions must be provided to <code>.image()</code> through its <code>w=</code> and/or <code>h=</code> parameters.</p>
+<h2 id="detailed-example">Detailed example</h2>
 <p>The following script will create a PDF that consists only of the graphics
-contents of the provided SVG file:</p>
+contents of the provided SVG file, filling the whole page:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">fpdf</span>
 
 <span class="n">svg</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">svg</span><span class="o">.</span><span class="n">SVGObject</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;my_file.svg&quot;</span><span class="p">)</span>
@@ -1164,8 +1189,8 @@ contents of the provided SVG file:</p>
 that the width/height of the SVG are specified in absolute units rather than
 relative ones (i.e. the top-level <code>&lt;svg&gt;</code> tag has something like <code>width="5cm"</code>
 and not <code>width=50%</code>). In this case, if the values are percentages, they will be
-interpreted as their literal numeric value (i.e. <code>100%</code> would be treated as
-<code>100 pt</code>). The next example uses <code>transform_to_page_viewport</code>, which will scale
+interpreted as their literal numeric value (i.e. <code>100%</code> would be treated as <code>100 pt</code>).
+The next example uses <code>transform_to_page_viewport</code>, which will scale
 an SVG with a percentage based <code>width</code> to the pre-defined PDF page size.</p>
 <p>The converted SVG object can be returned as an fpdf.drawing.GraphicsContext
 collection of drawing directives for more control over how it is rendered:</p>
@@ -1209,7 +1234,7 @@ a completely blank PDF). It is very likely that off-the-shelf SVGs will not be
 converted fully correctly without some preprocessing.</p>
 <p>The biggest unsupported feature is probably:</p>
 <ul>
-<li>CSS styling of SVG elements</li>
+<li>CSS styling of SVG elements (<em>cf.</em> <a href="https://github.com/PyFPDF/fpdf2/issues/404">issue #404</a>)</li>
 </ul>
 <p>In addition to that:</p>
 <ul>
