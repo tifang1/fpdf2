@@ -1210,6 +1210,36 @@ More information on those pages:</p>
 <li><a href="https://docs.aws.amazon.com/lambda/latest/dg/urls-tutorial.html">Tutorial: Creating a Lambda function with a function URL</a></li>
 <li><a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/lambda-proxy-binary-media.html">Return binary media from a Lambda</a></li>
 </ul>
+<p>For reference, the test lambda function was initiated using the following <a href="https://aws.amazon.com/cli/">AWS CLI</a> commands:</p>
+<details>
+  <summary>Creating &amp; uploading a lambda layer</summary>
+<div class="highlight"><pre><span></span><code><span class="nv">pyv</span><span class="o">=</span><span class="m">3</span>.8
+pip<span class="si">${</span><span class="nv">pyv</span><span class="si">}</span> install fpdf2 -t python/lib/python<span class="si">${</span><span class="nv">pyv</span><span class="si">}</span>/site-packages/
+<span class="c1"># We use a distinct layer for Pillow:</span>
+rm -r python/lib/python<span class="si">${</span><span class="nv">pyv</span><span class="si">}</span>/site-packages/<span class="o">{</span>PIL,Pillow<span class="o">}</span>*
+zip -r fpdf2-deps.zip python &gt; /dev/null
+aws lambda publish-layer-version --layer-name fpdf2-deps <span class="se">\</span>
+    --description <span class="s2">&quot;Dependencies for fpdf2 lambda&quot;</span> <span class="se">\</span>
+    --zip-file fileb://fpdf2-deps.zip --compatible-runtimes python<span class="si">${</span><span class="nv">pyv</span><span class="si">}</span>
+</code></pre></div>
+</details>
+
+<details>
+  <summary>Creating the lambda</summary>
+<div class="highlight"><pre><span></span><code><span class="nv">AWS_ACCOUNT_ID</span><span class="o">=</span>...
+<span class="nv">AWS_REGION</span><span class="o">=</span>eu-west-3
+zip -r fpdf2-test.zip lambda.py
+aws lambda create-function --function-name fpdf2-test --runtime python<span class="si">${</span><span class="nv">pyv</span><span class="si">}</span> <span class="se">\</span>
+    --zip-file fileb://fpdf2-test.zip --handler lambda.handler <span class="se">\</span>
+    --role arn:aws:iam::<span class="si">${</span><span class="nv">AWS_ACCOUNT_ID</span><span class="si">}</span>:role/lambda-fpdf2-role <span class="se">\</span>
+    --layers arn:aws:lambda:<span class="si">${</span><span class="nv">AWS_REGION</span><span class="si">}</span>:770693421928:layer:Klayers-python<span class="si">${</span><span class="nv">pyv</span><span class="p">/./</span><span class="si">}</span>-Pillow:15 <span class="se">\</span>
+             arn:aws:lambda:<span class="si">${</span><span class="nv">AWS_REGION</span><span class="si">}</span>:<span class="si">${</span><span class="nv">AWS_ACCOUNT_ID</span><span class="si">}</span>:layer:fpdf2-deps:1
+aws lambda create-function-url-config --function-name fpdf2-test --auth-type NONE
+</code></pre></div>
+</details>
+
+<p>Those commands do not cover the creation of the <code>lambda-fpdf2</code> role,
+nor configuring the lambda access permissions, for example with a <code>FunctionURLAllowPublicAccess</code> resource-based policy.</p>
 <h2 id="streamlit">streamlit</h2>
 <p><a href="https://streamlit.io">streamlit</a> is:</p>
 <blockquote>

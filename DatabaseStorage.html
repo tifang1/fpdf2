@@ -1126,6 +1126,8 @@ an then retrieve them, using <a href="https://www.sqlalchemy.org/">SQLAlchemy</a
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;user.pdf&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pdf_file</span><span class="p">:</span>
     <span class="n">pdf_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">pdf</span><span class="p">)</span>
 </code></pre></div>
+<p>Note that storing large binary data in a database is usually not recommended...
+You might be better off dynamically generating your PDFs from structured data in your database.</p>
 
               
             </article>
