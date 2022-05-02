@@ -108,6 +108,11 @@ def serialize_outline(sections, first_object_id=1, fpdf=None):
     Args:
         sections (sequence): list of OutlineSection
     &#34;&#34;&#34;
+    outline, outline_items = build_outline(sections, first_object_id, fpdf)
+    return outline_as_str(outline, outline_items, fpdf)
+
+
+def build_outline(sections, first_object_id, fpdf):
     outline = OutlineDictionary(id=first_object_id)
     n = first_object_id + 1
     outline_items = []
@@ -140,6 +145,10 @@ def serialize_outline(sections, first_object_id=1, fpdf=None):
             for level, oitem in last_outline_item_per_level.items()
             if level &lt;= section.level
         }
+    return outline, outline_items
+
+
+def outline_as_str(outline, outline_items, fpdf):
     output = []
     output.append(outline.serialize(fpdf))
     for outline_item in outline_items:
@@ -154,6 +163,68 @@ def serialize_outline(sections, first_object_id=1, fpdf=None):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="fpdf.outline.build_outline"><code class="name flex">
+<span>def <span class="ident">build_outline</span></span>(<span>sections, first_object_id, fpdf)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def build_outline(sections, first_object_id, fpdf):
+    outline = OutlineDictionary(id=first_object_id)
+    n = first_object_id + 1
+    outline_items = []
+    last_outline_item_per_level = {}
+    for section in sections:
+        outline_item = OutlineItemDictionary(
+            title=section.name,
+            dest=section.dest.as_str(fpdf),
+            struct_elem=section.struct_elem,
+            id=n,
+        )
+        n += 1
+        if section.level in last_outline_item_per_level:
+            last_outline_item_at_level = last_outline_item_per_level[section.level]
+            last_outline_item_at_level.next = outline_item
+            outline_item.prev = last_outline_item_at_level
+        if section.level - 1 in last_outline_item_per_level:
+            parent_outline_item = last_outline_item_per_level[section.level - 1]
+        else:
+            parent_outline_item = outline
+        outline_item.parent = parent_outline_item
+        if parent_outline_item.first is None:
+            parent_outline_item.first = outline_item
+        parent_outline_item.last = outline_item
+        parent_outline_item.count += 1
+        outline_items.append(outline_item)
+        last_outline_item_per_level[section.level] = outline_item
+        last_outline_item_per_level = {
+            level: oitem
+            for level, oitem in last_outline_item_per_level.items()
+            if level &lt;= section.level
+        }
+    return outline, outline_items</code></pre>
+</details>
+</dd>
+<dt id="fpdf.outline.outline_as_str"><code class="name flex">
+<span>def <span class="ident">outline_as_str</span></span>(<span>outline, outline_items, fpdf)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def outline_as_str(outline, outline_items, fpdf):
+    output = []
+    output.append(outline.serialize(fpdf))
+    for outline_item in outline_items:
+        output.append(outline_item.serialize(fpdf))
+    return &#34;\n&#34;.join(output)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.outline.serialize_outline"><code class="name flex">
 <span>def <span class="ident">serialize_outline</span></span>(<span>sections, first_object_id=1, fpdf=None)</span>
 </code></dt>
@@ -193,43 +264,8 @@ and this method output will be meaningless.</p>
     Args:
         sections (sequence): list of OutlineSection
     &#34;&#34;&#34;
-    outline = OutlineDictionary(id=first_object_id)
-    n = first_object_id + 1
-    outline_items = []
-    last_outline_item_per_level = {}
-    for section in sections:
-        outline_item = OutlineItemDictionary(
-            title=section.name,
-            dest=section.dest.as_str(fpdf),
-            struct_elem=section.struct_elem,
-            id=n,
-        )
-        n += 1
-        if section.level in last_outline_item_per_level:
-            last_outline_item_at_level = last_outline_item_per_level[section.level]
-            last_outline_item_at_level.next = outline_item
-            outline_item.prev = last_outline_item_at_level
-        if section.level - 1 in last_outline_item_per_level:
-            parent_outline_item = last_outline_item_per_level[section.level - 1]
-        else:
-            parent_outline_item = outline
-        outline_item.parent = parent_outline_item
-        if parent_outline_item.first is None:
-            parent_outline_item.first = outline_item
-        parent_outline_item.last = outline_item
-        parent_outline_item.count += 1
-        outline_items.append(outline_item)
-        last_outline_item_per_level[section.level] = outline_item
-        last_outline_item_per_level = {
-            level: oitem
-            for level, oitem in last_outline_item_per_level.items()
-            if level &lt;= section.level
-        }
-    output = []
-    output.append(outline.serialize(fpdf))
-    for outline_item in outline_items:
-        output.append(outline_item.serialize(fpdf))
-    return &#34;\n&#34;.join(output)</code></pre>
+    outline, outline_items = build_outline(sections, first_object_id, fpdf)
+    return outline_as_str(outline, outline_items, fpdf)</code></pre>
 </details>
 </dd>
 </dl>
@@ -432,6 +468,8 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="fpdf.outline.build_outline" href="#fpdf.outline.build_outline">build_outline</a></code></li>
+<li><code><a title="fpdf.outline.outline_as_str" href="#fpdf.outline.outline_as_str">outline_as_str</a></code></li>
 <li><code><a title="fpdf.outline.serialize_outline" href="#fpdf.outline.serialize_outline">serialize_outline</a></code></li>
 </ul>
 </li>

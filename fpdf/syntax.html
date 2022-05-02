@@ -151,6 +151,8 @@ remains something to be looked into.
 from abc import ABC
 import re
 
+from .util import object_id_for_page
+
 
 def clear_empty_fields(d):
     return {k: v for k, v in d.items() if v}
@@ -272,29 +274,37 @@ class PDFObject:
         &#34;&#34;&#34;
         Build the PDF Object associative map to serialize,
         based on this class instance properties.
-        The property names are converted to CamelCase,
+        The property names are converted from snake_case to CamelCase,
         and prefixed with a slash character &#34;/&#34;.
         &#34;&#34;&#34;
-        obj_dict = {}
-        for key in dir(self):
-            value = getattr(self, key)
-            if (
-                callable(value)
-                or key.startswith(&#34;_&#34;)
-                or key in (&#34;id&#34;, &#34;ref&#34;)
-                or value is None
-            ):
-                continue
-            if isinstance(value, PDFObject):  # indirect object reference
-                value = value.ref
-            elif hasattr(value, &#34;serialize&#34;):  # e.g. PDFArray &amp; PDFString
-                value = value.serialize()
-            obj_dict[f&#34;/{camel_case(key)}&#34;] = value
-        return obj_dict
+        return build_obj_dict({key: getattr(self, key) for key in dir(self)})
 
 
-def camel_case(property_name):
-    return &#34;&#34;.join(x for x in property_name.title() if x != &#34;_&#34;)
+def build_obj_dict(key_values):
+    &#34;&#34;&#34;
+    Build the PDF Object associative map to serialize, based on a key-values dict.
+    The property names are converted from snake_case to CamelCase,
+    and prefixed with a slash character &#34;/&#34;.
+    &#34;&#34;&#34;
+    obj_dict = {}
+    for key, value in key_values.items():
+        if (
+            callable(value)
+            or key.startswith(&#34;_&#34;)
+            or key in (&#34;id&#34;, &#34;ref&#34;)
+            or value is None
+        ):
+            continue
+        if isinstance(value, PDFObject):  # indirect object reference
+            value = value.ref
+        elif hasattr(value, &#34;serialize&#34;):  # e.g. PDFArray &amp; PDFString
+            value = value.serialize()
+        obj_dict[f&#34;/{camel_case(key)}&#34;] = value
+    return obj_dict
+
+
+def camel_case(snake_case):
+    return &#34;&#34;.join(x for x in snake_case.title() if x != &#34;_&#34;)
 
 
 class PDFString(str):
@@ -337,8 +347,11 @@ class DestinationXYZ(Destination):
         top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
         if isinstance(top, float):
             top = round(top, 2)
-        # The page object ID is predictable given that _putpages is invoked first in _enddoc:
-        page = iobj_ref(2 * self.page + 1) if self.page_as_obj_id else self.page
+        page = (
+            iobj_ref(object_id_for_page(self.page))
+            if self.page_as_obj_id
+            else self.page
+        )
         return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 </section>
@@ -349,8 +362,42 @@ class DestinationXYZ(Destination):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="fpdf.syntax.build_obj_dict"><code class="name flex">
+<span>def <span class="ident">build_obj_dict</span></span>(<span>key_values)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Build the PDF Object associative map to serialize, based on a key-values dict.
+The property names are converted from snake_case to CamelCase,
+and prefixed with a slash character "/".</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def build_obj_dict(key_values):
+    &#34;&#34;&#34;
+    Build the PDF Object associative map to serialize, based on a key-values dict.
+    The property names are converted from snake_case to CamelCase,
+    and prefixed with a slash character &#34;/&#34;.
+    &#34;&#34;&#34;
+    obj_dict = {}
+    for key, value in key_values.items():
+        if (
+            callable(value)
+            or key.startswith(&#34;_&#34;)
+            or key in (&#34;id&#34;, &#34;ref&#34;)
+            or value is None
+        ):
+            continue
+        if isinstance(value, PDFObject):  # indirect object reference
+            value = value.ref
+        elif hasattr(value, &#34;serialize&#34;):  # e.g. PDFArray &amp; PDFString
+            value = value.serialize()
+        obj_dict[f&#34;/{camel_case(key)}&#34;] = value
+    return obj_dict</code></pre>
+</details>
+</dd>
 <dt id="fpdf.syntax.camel_case"><code class="name flex">
-<span>def <span class="ident">camel_case</span></span>(<span>property_name)</span>
+<span>def <span class="ident">camel_case</span></span>(<span>snake_case)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -358,8 +405,8 @@ class DestinationXYZ(Destination):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def camel_case(property_name):
-    return &#34;&#34;.join(x for x in property_name.title() if x != &#34;_&#34;)</code></pre>
+<pre><code class="python">def camel_case(snake_case):
+    return &#34;&#34;.join(x for x in snake_case.title() if x != &#34;_&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.syntax.clear_empty_fields"><code class="name flex">
@@ -535,8 +582,11 @@ inheritance.</p></div>
         top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
         if isinstance(top, float):
             top = round(top, 2)
-        # The page object ID is predictable given that _putpages is invoked first in _enddoc:
-        page = iobj_ref(2 * self.page + 1) if self.page_as_obj_id else self.page
+        page = (
+            iobj_ref(object_id_for_page(self.page))
+            if self.page_as_obj_id
+            else self.page
+        )
         return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -562,8 +612,11 @@ inheritance.</p></div>
     top = (pdf.h_pt - self.y * pdf.k) if pdf else self.y
     if isinstance(top, float):
         top = round(top, 2)
-    # The page object ID is predictable given that _putpages is invoked first in _enddoc:
-    page = iobj_ref(2 * self.page + 1) if self.page_as_obj_id else self.page
+    page = (
+        iobj_ref(object_id_for_page(self.page))
+        if self.page_as_obj_id
+        else self.page
+    )
     return f&#34;[{page} /XYZ {left} {top} {self.zoom}]&#34;</code></pre>
 </details>
 </dd>
@@ -739,25 +792,10 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
         &#34;&#34;&#34;
         Build the PDF Object associative map to serialize,
         based on this class instance properties.
-        The property names are converted to CamelCase,
+        The property names are converted from snake_case to CamelCase,
         and prefixed with a slash character &#34;/&#34;.
         &#34;&#34;&#34;
-        obj_dict = {}
-        for key in dir(self):
-            value = getattr(self, key)
-            if (
-                callable(value)
-                or key.startswith(&#34;_&#34;)
-                or key in (&#34;id&#34;, &#34;ref&#34;)
-                or value is None
-            ):
-                continue
-            if isinstance(value, PDFObject):  # indirect object reference
-                value = value.ref
-            elif hasattr(value, &#34;serialize&#34;):  # e.g. PDFArray &amp; PDFString
-                value = value.serialize()
-            obj_dict[f&#34;/{camel_case(key)}&#34;] = value
-        return obj_dict</code></pre>
+        return build_obj_dict({key: getattr(self, key) for key in dir(self)})</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -908,6 +946,7 @@ errors defaults to 'strict'.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="fpdf.syntax.build_obj_dict" href="#fpdf.syntax.build_obj_dict">build_obj_dict</a></code></li>
 <li><code><a title="fpdf.syntax.camel_case" href="#fpdf.syntax.camel_case">camel_case</a></code></li>
 <li><code><a title="fpdf.syntax.clear_empty_fields" href="#fpdf.syntax.clear_empty_fields">clear_empty_fields</a></code></li>
 <li><code><a title="fpdf.syntax.create_dictionary_string" href="#fpdf.syntax.create_dictionary_string">create_dictionary_string</a></code></li>

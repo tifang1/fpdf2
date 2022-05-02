@@ -26,59 +26,85 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from abc import ABC
+<pre><code class="python"># pylint: disable=arguments-differ
+from abc import ABC
 import warnings
 
 from .util import enclose_in_parens
+from .syntax import build_obj_dict, create_dictionary_string
 
 
 class Action(ABC):
-    def dict_as_string(self):
-        raise NotImplementedError
+    def __init__(self, next_action=None):
+        &#34;&#34;&#34;
+        Args:
+            next (PDFObject | str): optional reference to another Action to trigger after this one
+        &#34;&#34;&#34;
+        self.next = next_action
+
+    def dict_as_string(self, key_values=None):
+        if key_values is None:
+            key_values = {}
+        if self.next:
+            key_values[&#34;Next&#34;] = self.next
+        obj_dict = build_obj_dict(key_values)
+        return create_dictionary_string(obj_dict, field_join=&#34; &#34;)
 
 
 class NamedAction(Action):
-    def __init__(self, action_name):
+    def __init__(self, action_name, next_action=None):
+        super().__init__(next)
         if action_name not in (&#34;NextPage&#34;, &#34;PrevPage&#34;, &#34;FirstPage&#34;, &#34;LastPage&#34;):
             warnings.warn(&#34;Non-standard named action added&#34;)
         self.action_name = action_name
 
     def dict_as_string(self):
-        return f&#34;/S /Named /N /{self.action_name}&#34;
+        return super().dict_as_string({&#34;S&#34;: &#34;/Named&#34;, &#34;N&#34;: f&#34;/{self.action_name}&#34;})
 
 
 class GoToAction(Action):
-    def __init__(self, dest):
+    &#34;As of 2022, this does not seem honored by neither Adobe Acrobat nor Sumatra readers.&#34;
+
+    def __init__(self, dest, next_action=None):
+        super().__init__(next_action)
         self.dest = dest
 
     def dict_as_string(self):
-        return f&#34;/S /GoTo /D {self.dest}&#34;
+        return super().dict_as_string({&#34;S&#34;: &#34;/GoTo&#34;, &#34;D&#34;: self.dest})
 
 
 class GoToRemoteAction(Action):
-    def __init__(self, file, dest):
+    def __init__(self, file, dest, next_action=None):
+        super().__init__(next_action)
         self.file = file
         self.dest = dest
 
     def dict_as_string(self):
-        return f&#34;/S /GoToR /F {enclose_in_parens(self.file)} /D {self.dest}&#34;
+        return super().dict_as_string(
+            {&#34;S&#34;: &#34;/GoToR&#34;, &#34;F&#34;: enclose_in_parens(self.file), &#34;D&#34;: self.dest}
+        )
 
 
 class LaunchAction(Action):
-    def __init__(self, file):
+    &#34;As of 2022, this does not seem honored by neither Adobe Acrobat nor Sumatra readers.&#34;
+
+    def __init__(self, file, next_action=None):
+        super().__init__(next_action)
         self.file = file
 
     def dict_as_string(self):
-        return f&#34;/S /Launch /F {enclose_in_parens(self.file)}&#34;
+        return super().dict_as_string(
+            {&#34;S&#34;: &#34;/Launch&#34;, &#34;F&#34;: enclose_in_parens(self.file)}
+        )
 
 
 # Annotation &amp; actions that we tested implementing,
 # but that revealed not be worth the effort:
 # * Popup annotation &amp; Hide action: as of june 2021,
-# do not seem support neither by Adobe Acrobat nor by Sumatra.
-# Moreover, they both use to indirect reference annotations,
-# and hence implementing them would need some consequent refactoring,
-# as annotations are currently defined &#34;inline&#34;, not as dedicated PDF objects.</code></pre>
+#   do not seem support neither by Adobe Acrobat nor by Sumatra.
+#   Moreover, they both use to indirect reference annotations,
+#   and hence implementing them would need some consequent refactoring,
+#   as annotations are currently defined &#34;inline&#34;, not as dedicated PDF objects.</code></pre>
 </details>
 </section>
 <section>
@@ -92,17 +118,32 @@ class LaunchAction(Action):
 <dl>
 <dt id="fpdf.actions.Action"><code class="flex name class">
 <span>class <span class="ident">Action</span></span>
+<span>(</span><span>next_action=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+inheritance.</p>
+<h2 id="args">Args</h2>
+<p>next (PDFObject | str): optional reference to another Action to trigger after this one</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Action(ABC):
-    def dict_as_string(self):
-        raise NotImplementedError</code></pre>
+    def __init__(self, next_action=None):
+        &#34;&#34;&#34;
+        Args:
+            next (PDFObject | str): optional reference to another Action to trigger after this one
+        &#34;&#34;&#34;
+        self.next = next_action
+
+    def dict_as_string(self, key_values=None):
+        if key_values is None:
+            key_values = {}
+        if self.next:
+            key_values[&#34;Next&#34;] = self.next
+        obj_dict = build_obj_dict(key_values)
+        return create_dictionary_string(obj_dict, field_join=&#34; &#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -118,7 +159,7 @@ inheritance.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.actions.Action.dict_as_string"><code class="name flex">
-<span>def <span class="ident">dict_as_string</span></span>(<span>self)</span>
+<span>def <span class="ident">dict_as_string</span></span>(<span>self, key_values=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -126,29 +167,38 @@ inheritance.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def dict_as_string(self):
-    raise NotImplementedError</code></pre>
+<pre><code class="python">def dict_as_string(self, key_values=None):
+    if key_values is None:
+        key_values = {}
+    if self.next:
+        key_values[&#34;Next&#34;] = self.next
+    obj_dict = build_obj_dict(key_values)
+    return create_dictionary_string(obj_dict, field_join=&#34; &#34;)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="fpdf.actions.GoToAction"><code class="flex name class">
 <span>class <span class="ident">GoToAction</span></span>
-<span>(</span><span>dest)</span>
+<span>(</span><span>dest, next_action=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+<div class="desc"><p>As of 2022, this does not seem honored by neither Adobe Acrobat nor Sumatra readers.</p>
+<h2 id="args">Args</h2>
+<p>next (PDFObject | str): optional reference to another Action to trigger after this one</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GoToAction(Action):
-    def __init__(self, dest):
+    &#34;As of 2022, this does not seem honored by neither Adobe Acrobat nor Sumatra readers.&#34;
+
+    def __init__(self, dest, next_action=None):
+        super().__init__(next_action)
         self.dest = dest
 
     def dict_as_string(self):
-        return f&#34;/S /GoTo /D {self.dest}&#34;</code></pre>
+        return super().dict_as_string({&#34;S&#34;: &#34;/GoTo&#34;, &#34;D&#34;: self.dest})</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -167,29 +217,34 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dict_as_string(self):
-    return f&#34;/S /GoTo /D {self.dest}&#34;</code></pre>
+    return super().dict_as_string({&#34;S&#34;: &#34;/GoTo&#34;, &#34;D&#34;: self.dest})</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="fpdf.actions.GoToRemoteAction"><code class="flex name class">
 <span>class <span class="ident">GoToRemoteAction</span></span>
-<span>(</span><span>file, dest)</span>
+<span>(</span><span>file, dest, next_action=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+inheritance.</p>
+<h2 id="args">Args</h2>
+<p>next (PDFObject | str): optional reference to another Action to trigger after this one</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class GoToRemoteAction(Action):
-    def __init__(self, file, dest):
+    def __init__(self, file, dest, next_action=None):
+        super().__init__(next_action)
         self.file = file
         self.dest = dest
 
     def dict_as_string(self):
-        return f&#34;/S /GoToR /F {enclose_in_parens(self.file)} /D {self.dest}&#34;</code></pre>
+        return super().dict_as_string(
+            {&#34;S&#34;: &#34;/GoToR&#34;, &#34;F&#34;: enclose_in_parens(self.file), &#34;D&#34;: self.dest}
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -208,28 +263,36 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dict_as_string(self):
-    return f&#34;/S /GoToR /F {enclose_in_parens(self.file)} /D {self.dest}&#34;</code></pre>
+    return super().dict_as_string(
+        {&#34;S&#34;: &#34;/GoToR&#34;, &#34;F&#34;: enclose_in_parens(self.file), &#34;D&#34;: self.dest}
+    )</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="fpdf.actions.LaunchAction"><code class="flex name class">
 <span>class <span class="ident">LaunchAction</span></span>
-<span>(</span><span>file)</span>
+<span>(</span><span>file, next_action=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+<div class="desc"><p>As of 2022, this does not seem honored by neither Adobe Acrobat nor Sumatra readers.</p>
+<h2 id="args">Args</h2>
+<p>next (PDFObject | str): optional reference to another Action to trigger after this one</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LaunchAction(Action):
-    def __init__(self, file):
+    &#34;As of 2022, this does not seem honored by neither Adobe Acrobat nor Sumatra readers.&#34;
+
+    def __init__(self, file, next_action=None):
+        super().__init__(next_action)
         self.file = file
 
     def dict_as_string(self):
-        return f&#34;/S /Launch /F {enclose_in_parens(self.file)}&#34;</code></pre>
+        return super().dict_as_string(
+            {&#34;S&#34;: &#34;/Launch&#34;, &#34;F&#34;: enclose_in_parens(self.file)}
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -248,30 +311,35 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dict_as_string(self):
-    return f&#34;/S /Launch /F {enclose_in_parens(self.file)}&#34;</code></pre>
+    return super().dict_as_string(
+        {&#34;S&#34;: &#34;/Launch&#34;, &#34;F&#34;: enclose_in_parens(self.file)}
+    )</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
 <dt id="fpdf.actions.NamedAction"><code class="flex name class">
 <span>class <span class="ident">NamedAction</span></span>
-<span>(</span><span>action_name)</span>
+<span>(</span><span>action_name, next_action=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+inheritance.</p>
+<h2 id="args">Args</h2>
+<p>next (PDFObject | str): optional reference to another Action to trigger after this one</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class NamedAction(Action):
-    def __init__(self, action_name):
+    def __init__(self, action_name, next_action=None):
+        super().__init__(next)
         if action_name not in (&#34;NextPage&#34;, &#34;PrevPage&#34;, &#34;FirstPage&#34;, &#34;LastPage&#34;):
             warnings.warn(&#34;Non-standard named action added&#34;)
         self.action_name = action_name
 
     def dict_as_string(self):
-        return f&#34;/S /Named /N /{self.action_name}&#34;</code></pre>
+        return super().dict_as_string({&#34;S&#34;: &#34;/Named&#34;, &#34;N&#34;: f&#34;/{self.action_name}&#34;})</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -290,7 +358,7 @@ inheritance.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dict_as_string(self):
-    return f&#34;/S /Named /N /{self.action_name}&#34;</code></pre>
+    return super().dict_as_string({&#34;S&#34;: &#34;/Named&#34;, &#34;N&#34;: f&#34;/{self.action_name}&#34;})</code></pre>
 </details>
 </dd>
 </dl>

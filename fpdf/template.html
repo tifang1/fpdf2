@@ -319,18 +319,18 @@ class FlexTemplate:
             self.splitting_pdf = FPDF()
             self.splitting_pdf.add_page()
         style = &#34;&#34;
-        if element[&#34;bold&#34;]:
+        if element.get(&#34;bold&#34;):
             style += &#34;B&#34;
-        if element[&#34;italic&#34;]:
+        if element.get(&#34;italic&#34;):
             style += &#34;I&#34;
-        if element[&#34;underline&#34;]:
+        if element.get(&#34;underline&#34;):
             style += &#34;U&#34;
         self.splitting_pdf.set_font(element[&#34;font&#34;], style, element[&#34;size&#34;])
         return self.splitting_pdf.multi_cell(
             w=element[&#34;x2&#34;] - element[&#34;x1&#34;],
             h=element[&#34;y2&#34;] - element[&#34;y1&#34;],
             txt=str(text),
-            align=element[&#34;align&#34;],
+            align=element.get(&#34;align&#34;, &#34;&#34;),
             split_only=True,
         )
 
@@ -1013,18 +1013,18 @@ or parse_csv() before doing anything else.</p></div>
             self.splitting_pdf = FPDF()
             self.splitting_pdf.add_page()
         style = &#34;&#34;
-        if element[&#34;bold&#34;]:
+        if element.get(&#34;bold&#34;):
             style += &#34;B&#34;
-        if element[&#34;italic&#34;]:
+        if element.get(&#34;italic&#34;):
             style += &#34;I&#34;
-        if element[&#34;underline&#34;]:
+        if element.get(&#34;underline&#34;):
             style += &#34;U&#34;
         self.splitting_pdf.set_font(element[&#34;font&#34;], style, element[&#34;size&#34;])
         return self.splitting_pdf.multi_cell(
             w=element[&#34;x2&#34;] - element[&#34;x1&#34;],
             h=element[&#34;y2&#34;] - element[&#34;y1&#34;],
             txt=str(text),
-            align=element[&#34;align&#34;],
+            align=element.get(&#34;align&#34;, &#34;&#34;),
             split_only=True,
         )
 
@@ -1619,18 +1619,18 @@ when rendered in the element font style and size.</p></div>
         self.splitting_pdf = FPDF()
         self.splitting_pdf.add_page()
     style = &#34;&#34;
-    if element[&#34;bold&#34;]:
+    if element.get(&#34;bold&#34;):
         style += &#34;B&#34;
-    if element[&#34;italic&#34;]:
+    if element.get(&#34;italic&#34;):
         style += &#34;I&#34;
-    if element[&#34;underline&#34;]:
+    if element.get(&#34;underline&#34;):
         style += &#34;U&#34;
     self.splitting_pdf.set_font(element[&#34;font&#34;], style, element[&#34;size&#34;])
     return self.splitting_pdf.multi_cell(
         w=element[&#34;x2&#34;] - element[&#34;x1&#34;],
         h=element[&#34;y2&#34;] - element[&#34;y1&#34;],
         txt=str(text),
-        align=element[&#34;align&#34;],
+        align=element.get(&#34;align&#34;, &#34;&#34;),
         split_only=True,
     )</code></pre>
 </details>

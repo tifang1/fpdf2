@@ -30,6 +30,11 @@
 from typing import Union, Iterable
 
 
+def object_id_for_page(page):
+    # Predictable given that FPDF._putpages is invoked first in FPDF._enddoc:
+    return 2 * page + 1
+
+
 def substr(s, start, length=-1):
     if length &lt; 0:
         length = len(s) - start
@@ -306,6 +311,20 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
     raise ValueError(f&#34;Incorrect unit: {unit}&#34;)</code></pre>
 </details>
 </dd>
+<dt id="fpdf.util.object_id_for_page"><code class="name flex">
+<span>def <span class="ident">object_id_for_page</span></span>(<span>page)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def object_id_for_page(page):
+    # Predictable given that FPDF._putpages is invoked first in FPDF._enddoc:
+    return 2 * page + 1</code></pre>
+</details>
+</dd>
 <dt id="fpdf.util.substr"><code class="name flex">
 <span>def <span class="ident">substr</span></span>(<span>s, start, length=-1)</span>
 </code></dt>
@@ -345,6 +364,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <li><code><a title="fpdf.util.enclose_in_parens" href="#fpdf.util.enclose_in_parens">enclose_in_parens</a></code></li>
 <li><code><a title="fpdf.util.escape_parens" href="#fpdf.util.escape_parens">escape_parens</a></code></li>
 <li><code><a title="fpdf.util.get_scale_factor" href="#fpdf.util.get_scale_factor">get_scale_factor</a></code></li>
+<li><code><a title="fpdf.util.object_id_for_page" href="#fpdf.util.object_id_for_page">object_id_for_page</a></code></li>
 <li><code><a title="fpdf.util.substr" href="#fpdf.util.substr">substr</a></code></li>
 </ul>
 </li>

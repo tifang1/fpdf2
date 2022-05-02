@@ -327,9 +327,7 @@ class TTFontFile:
             fsType = self.read_ushort()
             if fsType == 0x0002 or (fsType &amp; 0x0300) != 0:
                 raise RuntimeError(
-                    &#34;ERROR - Font file &#34;
-                    + self.filename
-                    + &#34; cannot be embedded due to copyright restrictions.&#34;
+                    f&#34;ERROR - Font file {self.filename} cannot be embedded due to copyright restrictions.&#34;
                 )
 
             self.skip(20)
@@ -1378,9 +1376,7 @@ class TTFontFile:
             fsType = self.read_ushort()
             if fsType == 0x0002 or (fsType &amp; 0x0300) != 0:
                 raise RuntimeError(
-                    &#34;ERROR - Font file &#34;
-                    + self.filename
-                    + &#34; cannot be embedded due to copyright restrictions.&#34;
+                    f&#34;ERROR - Font file {self.filename} cannot be embedded due to copyright restrictions.&#34;
                 )
 
             self.skip(20)
@@ -2341,9 +2337,7 @@ def splice(stream, offset, value):
         fsType = self.read_ushort()
         if fsType == 0x0002 or (fsType &amp; 0x0300) != 0:
             raise RuntimeError(
-                &#34;ERROR - Font file &#34;
-                + self.filename
-                + &#34; cannot be embedded due to copyright restrictions.&#34;
+                f&#34;ERROR - Font file {self.filename} cannot be embedded due to copyright restrictions.&#34;
             )
 
         self.skip(20)

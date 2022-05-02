@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from enum import Enum, IntEnum
+from sys import intern
 
 from .syntax import Name
 
@@ -36,58 +37,6 @@ class DocumentState(IntEnum):
     READY = 1  # page not started yet
     GENERATING_PAGE = 2
     CLOSED = 3  # EOF printed
-
-
-class TextMode(IntEnum):
-    &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
-    FILL = 0
-    STROKE = 1
-    FILL_STROKE = 2
-    INVISIBLE = 3
-    FILL_CLIP = 4
-    STROKE_CLIP = 5
-    FILL_STROKE_CLIP = 6
-    CLIP = 7
-
-
-class XPos(IntEnum):
-    &#34;&#34;&#34;
-    Positional values in horizontal direction for use after printing text.
-        LEFT    - left end of the cell
-        RIGHT   - right end of the cell (default)
-        START   - start of actual text
-        END     - end of actual text
-        WCONT   - for write() to continue next (slightly left of END)
-        CENTER  - center of actual text
-        LMARGIN - left page margin (start of printable area)
-        RMARGIN - right page margin (end of printable area)
-    &#34;&#34;&#34;
-
-    LEFT = 1  # self.x
-    RIGHT = 2  # self.x + w
-    START = 3  # left end of actual text
-    END = 4  # right end of actual text
-    WCONT = 5  # continuation point for write()
-    CENTER = 6  # center of actual text
-    LMARGIN = 7  # self.l_margin
-    RMARGIN = 8  # self.w - self.r_margin
-
-
-class YPos(IntEnum):
-    &#34;&#34;&#34;
-    Positional values in vertical direction for use after printing text.
-        TOP     - top of the first line (default)
-        LAST    - top of the last line (same as TOP for single-line text)
-        NEXT    - top of next line (bottom of current text)
-        TMARGIN - top page margin (start of printable area)
-        BMARGIN - bottom page margin (end of printable area)
-    &#34;&#34;&#34;
-
-    TOP = 1  # self.y
-    LAST = 2  # top of last line (TOP for single lines)
-    NEXT = 3  # LAST + h
-    TMARGIN = 4  # self.t_margin
-    BMARGIN = 5  # self.h - self.b_margin
 
 
 class CoerciveEnum(Enum):
@@ -174,6 +123,89 @@ class CoerciveIntEnum(IntEnum):
             return cls(value)
 
         raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)
+
+
+class Align(CoerciveEnum):
+    C = intern(&#34;CENTER&#34;)
+    L = intern(&#34;LEFT&#34;)
+    R = intern(&#34;RIGHT&#34;)
+    J = intern(&#34;JUSTIFY&#34;)
+
+    @classmethod
+    def coerce(cls, value):
+        if value == &#34;&#34;:
+            return cls.L
+        return super(cls, cls).coerce(value)
+
+
+class RenderStyle(CoerciveEnum):
+    D = intern(&#34;DRAW&#34;)
+    F = intern(&#34;FILL&#34;)
+    DF = intern(&#34;DRAW_FILL&#34;)
+
+    @property
+    def operator(self):
+        return {self.D: &#34;S&#34;, self.F: &#34;f&#34;, self.DF: &#34;B&#34;}[self]
+
+    @classmethod
+    def coerce(cls, value):
+        if not value:
+            return cls.D
+        if value == &#34;FD&#34;:
+            value = &#34;DF&#34;
+        return super(cls, cls).coerce(value)
+
+
+class TextMode(CoerciveIntEnum):
+    &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
+    FILL = 0
+    STROKE = 1
+    FILL_STROKE = 2
+    INVISIBLE = 3
+    FILL_CLIP = 4
+    STROKE_CLIP = 5
+    FILL_STROKE_CLIP = 6
+    CLIP = 7
+
+
+class XPos(CoerciveEnum):
+    &#34;&#34;&#34;
+    Positional values in horizontal direction for use after printing text.
+        LEFT    - left end of the cell
+        RIGHT   - right end of the cell (default)
+        START   - start of actual text
+        END     - end of actual text
+        WCONT   - for write() to continue next (slightly left of END)
+        CENTER  - center of actual text
+        LMARGIN - left page margin (start of printable area)
+        RMARGIN - right page margin (end of printable area)
+    &#34;&#34;&#34;
+
+    LEFT = intern(&#34;LEFT&#34;)  # self.x
+    RIGHT = intern(&#34;RIGHT&#34;)  # self.x + w
+    START = intern(&#34;START&#34;)  # left end of actual text
+    END = intern(&#34;END&#34;)  # right end of actual text
+    WCONT = intern(&#34;WCONT&#34;)  # continuation point for write()
+    CENTER = intern(&#34;CENTER&#34;)  # center of actual text
+    LMARGIN = intern(&#34;LMARGIN&#34;)  # self.l_margin
+    RMARGIN = intern(&#34;RMARGIN&#34;)  # self.w - self.r_margin
+
+
+class YPos(CoerciveEnum):
+    &#34;&#34;&#34;
+    Positional values in vertical direction for use after printing text.
+        TOP     - top of the first line (default)
+        LAST    - top of the last line (same as TOP for single-line text)
+        NEXT    - top of next line (bottom of current text)
+        TMARGIN - top page margin (start of printable area)
+        BMARGIN - bottom page margin (end of printable area)
+    &#34;&#34;&#34;
+
+    TOP = intern(&#34;TOP&#34;)  # self.y
+    LAST = intern(&#34;LAST&#34;)  # top of last line (TOP for single lines)
+    NEXT = intern(&#34;NEXT&#34;)  # LAST + h
+    TMARGIN = intern(&#34;TMARGIN&#34;)  # self.t_margin
+    BMARGIN = intern(&#34;BMARGIN&#34;)  # self.h - self.b_margin
 
 
 class BlendMode(CoerciveEnum):
@@ -439,6 +471,61 @@ class PDFStyleKeys(Enum):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="fpdf.enums.Align"><code class="flex name class">
+<span>class <span class="ident">Align</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Align(CoerciveEnum):
+    C = intern(&#34;CENTER&#34;)
+    L = intern(&#34;LEFT&#34;)
+    R = intern(&#34;RIGHT&#34;)
+    J = intern(&#34;JUSTIFY&#34;)
+
+    @classmethod
+    def coerce(cls, value):
+        if value == &#34;&#34;:
+            return cls.L
+        return super(cls, cls).coerce(value)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.Align.C"><code class="name">var <span class="ident">C</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.Align.J"><code class="name">var <span class="ident">J</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.Align.L"><code class="name">var <span class="ident">L</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.Align.R"><code class="name">var <span class="ident">R</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="fpdf.enums.BlendMode"><code class="flex name class">
 <span>class <span class="ident">BlendMode</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -753,10 +840,14 @@ path; otherwise, it is inside."</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="fpdf.enums.Align" href="#fpdf.enums.Align">Align</a></li>
 <li><a title="fpdf.enums.BlendMode" href="#fpdf.enums.BlendMode">BlendMode</a></li>
 <li><a title="fpdf.enums.ClippingPathIntersectionRule" href="#fpdf.enums.ClippingPathIntersectionRule">ClippingPathIntersectionRule</a></li>
 <li><a title="fpdf.enums.IntersectionRule" href="#fpdf.enums.IntersectionRule">IntersectionRule</a></li>
 <li><a title="fpdf.enums.PathPaintRule" href="#fpdf.enums.PathPaintRule">PathPaintRule</a></li>
+<li><a title="fpdf.enums.RenderStyle" href="#fpdf.enums.RenderStyle">RenderStyle</a></li>
+<li><a title="fpdf.enums.XPos" href="#fpdf.enums.XPos">XPos</a></li>
+<li><a title="fpdf.enums.YPos" href="#fpdf.enums.YPos">YPos</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
@@ -890,6 +981,7 @@ enumeration members.</p></div>
 <ul class="hlist">
 <li><a title="fpdf.enums.StrokeCapStyle" href="#fpdf.enums.StrokeCapStyle">StrokeCapStyle</a></li>
 <li><a title="fpdf.enums.StrokeJoinStyle" href="#fpdf.enums.StrokeJoinStyle">StrokeJoinStyle</a></li>
+<li><a title="fpdf.enums.TextMode" href="#fpdf.enums.TextMode">TextMode</a></li>
 </ul>
 <h3>Static methods</h3>
 <dl>
@@ -1271,6 +1363,77 @@ identical path objects, painting the first with <code>FILL_NONZERO</code> and th
 </li>
 </ul>
 </dd>
+<dt id="fpdf.enums.RenderStyle"><code class="flex name class">
+<span>class <span class="ident">RenderStyle</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RenderStyle(CoerciveEnum):
+    D = intern(&#34;DRAW&#34;)
+    F = intern(&#34;FILL&#34;)
+    DF = intern(&#34;DRAW_FILL&#34;)
+
+    @property
+    def operator(self):
+        return {self.D: &#34;S&#34;, self.F: &#34;f&#34;, self.DF: &#34;B&#34;}[self]
+
+    @classmethod
+    def coerce(cls, value):
+        if not value:
+            return cls.D
+        if value == &#34;FD&#34;:
+            value = &#34;DF&#34;
+        return super(cls, cls).coerce(value)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.RenderStyle.D"><code class="name">var <span class="ident">D</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.RenderStyle.DF"><code class="name">var <span class="ident">DF</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.RenderStyle.F"><code class="name">var <span class="ident">F</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.enums.RenderStyle.operator"><code class="name">var <span class="ident">operator</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def operator(self):
+    return {self.D: &#34;S&#34;, self.F: &#34;f&#34;, self.DF: &#34;B&#34;}[self]</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="fpdf.enums.StrokeCapStyle"><code class="flex name class">
 <span>class <span class="ident">StrokeCapStyle</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -1422,7 +1585,7 @@ corner."</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TextMode(IntEnum):
+<pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
     FILL = 0
     STROKE = 1
@@ -1435,6 +1598,7 @@ corner."</p></div>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="fpdf.enums.CoerciveIntEnum" href="#fpdf.enums.CoerciveIntEnum">CoerciveIntEnum</a></li>
 <li>enum.IntEnum</li>
 <li>builtins.int</li>
 <li>enum.Enum</li>
@@ -1474,6 +1638,14 @@ corner."</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveIntEnum" href="#fpdf.enums.CoerciveIntEnum">CoerciveIntEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveIntEnum.coerce" href="#fpdf.enums.CoerciveIntEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.enums.XPos"><code class="flex name class">
 <span>class <span class="ident">XPos</span></span>
@@ -1499,7 +1671,7 @@ RMARGIN - right page margin (end of printable area)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class XPos(IntEnum):
+<pre><code class="python">class XPos(CoerciveEnum):
     &#34;&#34;&#34;
     Positional values in horizontal direction for use after printing text.
         LEFT    - left end of the cell
@@ -1512,19 +1684,18 @@ RMARGIN - right page margin (end of printable area)</p></div>
         RMARGIN - right page margin (end of printable area)
     &#34;&#34;&#34;
 
-    LEFT = 1  # self.x
-    RIGHT = 2  # self.x + w
-    START = 3  # left end of actual text
-    END = 4  # right end of actual text
-    WCONT = 5  # continuation point for write()
-    CENTER = 6  # center of actual text
-    LMARGIN = 7  # self.l_margin
-    RMARGIN = 8  # self.w - self.r_margin</code></pre>
+    LEFT = intern(&#34;LEFT&#34;)  # self.x
+    RIGHT = intern(&#34;RIGHT&#34;)  # self.x + w
+    START = intern(&#34;START&#34;)  # left end of actual text
+    END = intern(&#34;END&#34;)  # right end of actual text
+    WCONT = intern(&#34;WCONT&#34;)  # continuation point for write()
+    CENTER = intern(&#34;CENTER&#34;)  # center of actual text
+    LMARGIN = intern(&#34;LMARGIN&#34;)  # self.l_margin
+    RMARGIN = intern(&#34;RMARGIN&#34;)  # self.w - self.r_margin</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>enum.IntEnum</li>
-<li>builtins.int</li>
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
 <li>enum.Enum</li>
 </ul>
 <h3>Class variables</h3>
@@ -1562,6 +1733,14 @@ RMARGIN - right page margin (end of printable area)</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.enums.YPos"><code class="flex name class">
 <span>class <span class="ident">YPos</span></span>
@@ -1581,7 +1760,7 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class YPos(IntEnum):
+<pre><code class="python">class YPos(CoerciveEnum):
     &#34;&#34;&#34;
     Positional values in vertical direction for use after printing text.
         TOP     - top of the first line (default)
@@ -1591,16 +1770,15 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
         BMARGIN - bottom page margin (end of printable area)
     &#34;&#34;&#34;
 
-    TOP = 1  # self.y
-    LAST = 2  # top of last line (TOP for single lines)
-    NEXT = 3  # LAST + h
-    TMARGIN = 4  # self.t_margin
-    BMARGIN = 5  # self.h - self.b_margin</code></pre>
+    TOP = intern(&#34;TOP&#34;)  # self.y
+    LAST = intern(&#34;LAST&#34;)  # top of last line (TOP for single lines)
+    NEXT = intern(&#34;NEXT&#34;)  # LAST + h
+    TMARGIN = intern(&#34;TMARGIN&#34;)  # self.t_margin
+    BMARGIN = intern(&#34;BMARGIN&#34;)  # self.h - self.b_margin</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>enum.IntEnum</li>
-<li>builtins.int</li>
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
 <li>enum.Enum</li>
 </ul>
 <h3>Class variables</h3>
@@ -1626,6 +1804,14 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <div class="desc"></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -1643,6 +1829,15 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="fpdf.enums.Align" href="#fpdf.enums.Align">Align</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.Align.C" href="#fpdf.enums.Align.C">C</a></code></li>
+<li><code><a title="fpdf.enums.Align.J" href="#fpdf.enums.Align.J">J</a></code></li>
+<li><code><a title="fpdf.enums.Align.L" href="#fpdf.enums.Align.L">L</a></code></li>
+<li><code><a title="fpdf.enums.Align.R" href="#fpdf.enums.Align.R">R</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="fpdf.enums.BlendMode" href="#fpdf.enums.BlendMode">BlendMode</a></code></h4>
 <ul class="two-column">
@@ -1723,6 +1918,15 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <li><code><a title="fpdf.enums.PathPaintRule.STROKE" href="#fpdf.enums.PathPaintRule.STROKE">STROKE</a></code></li>
 <li><code><a title="fpdf.enums.PathPaintRule.STROKE_FILL_EVENODD" href="#fpdf.enums.PathPaintRule.STROKE_FILL_EVENODD">STROKE_FILL_EVENODD</a></code></li>
 <li><code><a title="fpdf.enums.PathPaintRule.STROKE_FILL_NONZERO" href="#fpdf.enums.PathPaintRule.STROKE_FILL_NONZERO">STROKE_FILL_NONZERO</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.RenderStyle" href="#fpdf.enums.RenderStyle">RenderStyle</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.RenderStyle.D" href="#fpdf.enums.RenderStyle.D">D</a></code></li>
+<li><code><a title="fpdf.enums.RenderStyle.DF" href="#fpdf.enums.RenderStyle.DF">DF</a></code></li>
+<li><code><a title="fpdf.enums.RenderStyle.F" href="#fpdf.enums.RenderStyle.F">F</a></code></li>
+<li><code><a title="fpdf.enums.RenderStyle.operator" href="#fpdf.enums.RenderStyle.operator">operator</a></code></li>
 </ul>
 </li>
 <li>
