@@ -136,7 +136,7 @@ class Align(CoerciveEnum):
     &#34;Right-align text&#34;
 
     J = intern(&#34;JUSTIFY&#34;)
-    &#34;Justified text&#34;
+    &#34;Justify text&#34;
 
     @classmethod
     def coerce(cls, value):
@@ -158,6 +158,14 @@ class RenderStyle(CoerciveEnum):
     @property
     def operator(self):
         return {self.D: &#34;S&#34;, self.F: &#34;f&#34;, self.DF: &#34;B&#34;}[self]
+
+    @property
+    def is_draw(self):
+        return self in (self.D, self.DF)
+
+    @property
+    def is_fill(self):
+        return self in (self.F, self.DF)
 
     @classmethod
     def coerce(cls, value):
@@ -515,7 +523,7 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
     &#34;Right-align text&#34;
 
     J = intern(&#34;JUSTIFY&#34;)
-    &#34;Justified text&#34;
+    &#34;Justify text&#34;
 
     @classmethod
     def coerce(cls, value):
@@ -536,7 +544,7 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 </dd>
 <dt id="fpdf.enums.Align.J"><code class="name">var <span class="ident">J</span></code></dt>
 <dd>
-<div class="desc"><p>Justified text</p></div>
+<div class="desc"><p>Justify text</p></div>
 </dd>
 <dt id="fpdf.enums.Align.L"><code class="name">var <span class="ident">L</span></code></dt>
 <dd>
@@ -1375,6 +1383,14 @@ identical path objects, painting the first with <code>FILL_NONZERO</code> and th
     def operator(self):
         return {self.D: &#34;S&#34;, self.F: &#34;f&#34;, self.DF: &#34;B&#34;}[self]
 
+    @property
+    def is_draw(self):
+        return self in (self.D, self.DF)
+
+    @property
+    def is_fill(self):
+        return self in (self.F, self.DF)
+
     @classmethod
     def coerce(cls, value):
         if not value:
@@ -1405,6 +1421,30 @@ identical path objects, painting the first with <code>FILL_NONZERO</code> and th
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="fpdf.enums.RenderStyle.is_draw"><code class="name">var <span class="ident">is_draw</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_draw(self):
+    return self in (self.D, self.DF)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.enums.RenderStyle.is_fill"><code class="name">var <span class="ident">is_fill</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_fill(self):
+    return self in (self.F, self.DF)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.enums.RenderStyle.operator"><code class="name">var <span class="ident">operator</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1891,10 +1931,12 @@ corner."</p></div>
 </li>
 <li>
 <h4><code><a title="fpdf.enums.RenderStyle" href="#fpdf.enums.RenderStyle">RenderStyle</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="fpdf.enums.RenderStyle.D" href="#fpdf.enums.RenderStyle.D">D</a></code></li>
 <li><code><a title="fpdf.enums.RenderStyle.DF" href="#fpdf.enums.RenderStyle.DF">DF</a></code></li>
 <li><code><a title="fpdf.enums.RenderStyle.F" href="#fpdf.enums.RenderStyle.F">F</a></code></li>
+<li><code><a title="fpdf.enums.RenderStyle.is_draw" href="#fpdf.enums.RenderStyle.is_draw">is_draw</a></code></li>
+<li><code><a title="fpdf.enums.RenderStyle.is_fill" href="#fpdf.enums.RenderStyle.is_fill">is_fill</a></code></li>
 <li><code><a title="fpdf.enums.RenderStyle.operator" href="#fpdf.enums.RenderStyle.operator">operator</a></code></li>
 </ul>
 </li>

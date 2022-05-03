@@ -220,7 +220,7 @@ Default to "mm".</dd>
 <dd>possible values are "a3", "a4", "a5", "letter", "legal" or a tuple
 (width, height) expressed in the given unit. Default to "a4".</dd>
 <dt><strong><code>font_cache_dir</code></strong> :&ensp;<code>Path</code> or <code>str</code></dt>
-<dd>[<strong>DEPRECATED</strong>] unused</dd>
+<dd>[<strong>DEPRECATED since v2.5.1</strong>] unused</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -250,7 +250,7 @@ Default to "mm".</dd>
                 Default to &#34;mm&#34;.
             format (str): possible values are &#34;a3&#34;, &#34;a4&#34;, &#34;a5&#34;, &#34;letter&#34;, &#34;legal&#34; or a tuple
                 (width, height) expressed in the given unit. Default to &#34;a4&#34;.
-            font_cache_dir (Path or str): [**DEPRECATED**] unused
+            font_cache_dir (Path or str): [**DEPRECATED since v2.5.1**] unused
         &#34;&#34;&#34;
         if font_cache_dir != &#34;DEPRECATED&#34;:
             warnings.warn(
@@ -317,6 +317,7 @@ Default to "mm".</dd>
             &#34;zapfdingbats&#34;: &#34;ZapfDingbats&#34;,
         }
         self.core_fonts_encoding = &#34;latin-1&#34;
+        &#34;Font encoding, Latin-1 by default&#34;
         # Replace these fonts with these core fonts
         self.font_aliases = {
             &#34;arial&#34;: &#34;helvetica&#34;,
@@ -613,11 +614,11 @@ Default to "mm".</dd>
             value (str) option value
 
         .. deprecated:: 2.4.0
-            Simply set the `core_fonts_encoding` property as a replacement.
+            Simply set the `FPDF.core_fonts_encoding` property as a replacement.
         &#34;&#34;&#34;
         warnings.warn(
             &#34;set_doc_option() is deprecated. &#34;
-            &#34;Simply set the `core_fonts_encoding` property as a replacement.&#34;,
+            &#34;Simply set the `.core_fonts_encoding` property as a replacement.&#34;,
             DeprecationWarning,
             stacklevel=2,
         )
@@ -1086,16 +1087,35 @@ Default to "mm".</dd>
         )
 
     @check_page
-    def polyline(self, point_list, fill=False, polygon=False):
+    def polyline(self, point_list, fill=False, polygon=False, style=None):
         &#34;&#34;&#34;
         Draws lines between two or more points.
 
         Args:
             point_list (list of tuples): List of Abscissa and Ordinate of
                                         segments that should be drawn
-            fill (bool): If true then polyline should be filled
-            polygon (bool): If true, close path before stroking
+            fill (bool): [**DEPRECATED since v2.5.4**] Use `style=&#34;F&#34;` or `style=&#34;DF&#34;` instead
+            polygon (bool): If true, close path before stroking, to fill the inside of the polyline
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
+        if fill:
+            warnings.warn(
+                &#39;&#34;fill&#34; parameter is deprecated, use style=&#34;F&#34; or style=&#34;DF&#34; instead&#39;,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if fill and style is None:
+            style = RenderStyle.DF
+        else:
+            style = RenderStyle.coerce(style)
+            if fill and style == RenderStyle.D:
+                raise ValueError(
+                    f&#34;Conflicting values provided: fill={fill} &amp; style={style}&#34;
+                )
         operator = &#34;m&#34;
         for point in point_list:
             self._out(
@@ -1103,30 +1123,29 @@ Default to "mm".</dd>
             )
             operator = &#34;l&#34;
         if polygon:
-            self._out(&#34; h &#34;)
-        if fill:
-            self._out(&#34; B &#34;)
-        else:
-            self._out(&#34; S &#34;)
+            self._out(&#34; h&#34;)
+        self._out(f&#34; {style.operator}&#34;)
 
     @check_page
-    def polygon(self, point_list, fill=False):
+    def polygon(self, point_list, fill=False, style=None):
         &#34;&#34;&#34;
         Outputs a polygon defined by three or more points.
 
         Args:
-            point_list (list of tuples): List of Abscissa and Ordinate of
-                                        polygon that should be drawn
-            fill (bool): If true polygon will be filled
+            point_list (list of tuples): List of coordinates defining the polygon to draw
+            fill (bool): [**DEPRECATED since v2.5.4**] Use `style=&#34;F&#34;` or `style=&#34;DF&#34;` instead
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
-        self.polyline(point_list, fill=fill, polygon=True)
+        self.polyline(point_list, fill=fill, polygon=True, style=style)
 
     @check_page
     def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
         &#34;&#34;&#34;
         Draw a dashed line between two points.
-        **DEPRECATED** 2.4.6
-        - use set_dash_pattern() and the normal drawing operations instead
 
         Args:
             x1 (float): Abscissa of first point
@@ -1135,6 +1154,9 @@ Default to "mm".</dd>
             y2 (float): Ordinate of second point
             dash_length (float): Length of the dash
             space_length (float): Length of the space between 2 dashes
+
+        .. deprecated:: 2.4.6
+            Use `FPDF.set_dash_pattern()` and the normal drawing operations instead.
         &#34;&#34;&#34;
         warnings.warn(
             &#34;dashed_line() is deprecated, and will be removed in a future release. &#34;
@@ -1157,10 +1179,11 @@ Default to "mm".</dd>
             y (float): Ordinate of upper-left bounding box.
             w (float): Width.
             h (float): Height.
-            style (Enum RenderStyle | str): Style of rendering. Possible values are:
-                * `D` or empty string: draw border. This is the default value.
-                * `F`: fill
-                * `DF` or `FD`: draw and fill
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+            * `D` or empty string: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
         style = RenderStyle.coerce(style)
         self._out(
@@ -1179,10 +1202,11 @@ Default to "mm".</dd>
             y (float): Ordinate of upper-left bounding box.
             w (float): Width
             h (float): Height
-            style (Enum RenderStyle | str): Style of rendering. Possible values are:
-                * `D` or empty string: draw border. This is the default value.
-                * `F`: fill
-                * `DF` or `FD`: draw and fill
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+            * `D` or empty string: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
         style = RenderStyle.coerce(style)
         self._draw_ellipse(x, y, w, h, style.operator)
@@ -1237,9 +1261,10 @@ Default to "mm".</dd>
             y (float): Ordinate of upper-left bounding box.
             r (float): Radius of the circle.
             style (str): Style of rendering. Possible values are:
-                * `D` or None: draw border. This is the default value.
-                * `F`: fill
-                * `DF` or `FD`: draw and fill
+
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
         self.ellipse(x, y, r, r, style)
 
@@ -1254,13 +1279,13 @@ Default to "mm".</dd>
             x (float): Abscissa of upper-left bounding box.
             y (float): Ordinate of upper-left bounding box.
             numSides (int): Number of sides for polygon.
-            polyWidth (float): width of the polygon.
-            rotateDegrees (float): degree amount to rotate polygon. (can be left blank)
-            style (str): Style of rendering. Possible values are: (can be left blank)
-                * `D` or None: draw border. This is the default value.
-                * `F`: fill
-                * `DF` or `FD`: draw and fill
+            polyWidth (float): Width of the polygon.
+            rotateDegrees (float): Optional degree amount to rotate polygon.
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
 
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
         radius = polyWidth / 2
         centerX = x + radius
@@ -1278,7 +1303,7 @@ Default to "mm".</dd>
             i += 1
         # creates list of touples containing cordinate points of vertices
 
-        self.polygon(points, style)
+        self.polygon(points, style=style)
         # passes points through polygon function
 
     def arc(
@@ -1298,6 +1323,8 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Outputs an arc.
         It can be drawn (border only), filled (with no border) or both.
+
+        Args:
             a (float): Semi-major axis diameter.
             b (float): Semi-minor axis diameter, if None, equals to a (default: None).
             start_angle (float): Start angle of the arc (in degrees).
@@ -1306,10 +1333,11 @@ Default to "mm".</dd>
             clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
             start_from_center (bool): Start drawing from the center of the circle (default: False).
             end_at_center (bool): End drawing at the center of the circle (default: False).
-            style (Enum RenderStyle | str): Style of rendering. Possible values are:
-                * `D` or None: draw border. This is the default value.
-                * `F`: fill
-                * `DF` or `FD`: draw and fill
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Allowed values are:
+
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
         style = RenderStyle.coerce(style)
 
@@ -1448,9 +1476,10 @@ Default to "mm".</dd>
             inclination (float): Inclination of the arc in respect of the x-axis (default: 0).
             clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
             style (str): Style of rendering. Possible values are:
-                * `D` or None: draw border. This is the default value.
-                * `F`: fill
-                * `DF` or `FD`: draw and fill
+
+            * `D` or None: draw border. This is the default value.
+            * `F`: fill
+            * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
         self.arc(
             x,
@@ -1478,7 +1507,7 @@ Default to "mm".</dd>
             style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
             fname (str): font file name. You can specify a relative or full path.
                 If the file is not found, it will be searched in `FPDF_FONT_DIR`.
-            uni (bool): [**DEPRECATED**] unused
+            uni (bool): [**DEPRECATED since 2.5.1**] unused
         &#34;&#34;&#34;
         if not fname:
             raise ValueError(&#39;&#34;fname&#34; parameter is required&#39;)
@@ -1944,7 +1973,7 @@ Default to "mm".</dd>
     def rotate(self, angle, x=None, y=None):
         &#34;&#34;&#34;
         .. deprecated:: 2.1.0
-          Use `rotation` instead.
+            Use `FPDF.rotation()` instead.
         &#34;&#34;&#34;
         warnings.warn(
             &#34;rotate() can produces malformed PDFs and is deprecated. &#34;
@@ -2166,17 +2195,17 @@ Default to "mm".</dd>
                 or a string containing some or all of the following characters
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-            new_x (Enum XPos | str): New current position in x after the call. Default: RIGHT
-            new_y (Enum YPos | str): New current position in y after the call. Default: TOP
-            ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
-            align (Enum Align | str): Allows to center or align the text inside the cell.
+            new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
+            new_y (fpdf.enums.YPos, str): New current position in y after the call. Default: TOP
+            ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
+            align (fpdf.enums.Align, str): Allows to center or align the text inside the cell.
                 Possible values are: `L` or empty string: left align (default value) ;
                 `C`: center ; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            center (bool): **DEPRECATED** 2.5.1: Use align=&#34;C&#34; instead.
+            center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
 
@@ -2290,14 +2319,14 @@ Default to "mm".</dd>
                 or a string containing some or all of the following characters
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-            new_x (Enum XPos): New current position in x after the call.
-            new_y (Enum YPos): New current position in y after the call.
-            align (Enum Align): Allows to align the text inside the cell.
+            new_x (fpdf.enums.XPos): New current position in x after the call.
+            new_y (fpdf.enums.YPos): New current position in y after the call.
+            align (fpdf.enums.Align): Allows to align the text inside the cell.
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            center (bool): **DEPRECATED** 2.5.1: Use align=&#34;C&#34; instead.
+            center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
 
@@ -2705,7 +2734,7 @@ Default to "mm".</dd>
                 or a string containing some or all of the following characters
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-            align (Enum Align | str): Allows to center or align the text. Possible values are:
+            align (fpdf.enums.Align, str): Allows to center or align the text. Possible values are:
                 `J`: justify (default value); `L` or empty string: left align ;
                 `C`: center ; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
@@ -2714,9 +2743,9 @@ Default to "mm".</dd>
                 word-wrapping and return the resulting multi-lines array of strings.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            new_x (Enum XPos | str): New current position in x after the call. Default: RIGHT
-            new_y (Enum YPos | str): New current position in y after the call. Default: NEXT
-            ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
+            new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
+            new_y (fpdf.enums.XPos, str): New current position in y after the call. Default: NEXT
+            ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             max_line_height (float): optional maximum height of each sub-cell generated
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
@@ -2991,7 +3020,7 @@ Default to "mm".</dd>
             h (float): optional height of the image. If not specified or equal to zero,
                 it is automatically calculated from the image size.
                 Pass `pdf.eph` to scale horizontally to the full page height.
-            type (str): [**DEPRECATED**] unused, will be removed in a later version.
+            type (str): [**DEPRECATED since 2.2.0**] unused, will be removed in a later version.
             link (str): optional link to add on the image, internal
                 (identifier returned by `add_link`) or external URL.
             title (str): optional. Currently, never seem rendered by PDF readers.
@@ -3295,7 +3324,7 @@ Default to "mm".</dd>
 
         Args:
             name (str): optional File object or file path where to save the PDF under
-            dest (str): [**DEPRECATED**] unused, will be removed in a later version
+            dest (str): [**DEPRECATED since 2.3.0**] unused, will be removed in a later version
         &#34;&#34;&#34;
         if dest:
             warnings.warn(
@@ -4527,6 +4556,10 @@ def accept_page_break(self):
     return self.auto_page_break</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.core_fonts_encoding"><code class="name">var <span class="ident">core_fonts_encoding</span></code></dt>
+<dd>
+<div class="desc"><p>Font encoding, Latin-1 by default</p></div>
+</dd>
 <dt id="fpdf.FPDF.eph"><code class="name">var <span class="ident">eph</span></code></dt>
 <dd>
 <div class="desc"><p>Effective page height: the page height minus its vertical margins.</p></div>
@@ -4650,7 +4683,7 @@ for later calls to the <code>set_font()</code> method.</p>
 <dd>font file name. You can specify a relative or full path.
 If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_DIR" href="#fpdf.FPDF_FONT_DIR">FPDF_FONT_DIR</a></code>.</dd>
 <dt><strong><code>uni</code></strong> :&ensp;<code>bool</code></dt>
-<dd>[<strong>DEPRECATED</strong>] unused</dd>
+<dd>[<strong>DEPRECATED since 2.5.1</strong>] unused</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -4668,7 +4701,7 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
         style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
         fname (str): font file name. You can specify a relative or full path.
             If the file is not found, it will be searched in `FPDF_FONT_DIR`.
-        uni (bool): [**DEPRECATED**] unused
+        uni (bool): [**DEPRECATED since 2.5.1**] unused
     &#34;&#34;&#34;
     if not fname:
         raise ValueError(&#39;&#34;fname&#34; parameter is required&#39;)
@@ -5114,19 +5147,33 @@ which can causes slight positioning differences.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Outputs an arc.
-It can be drawn (border only), filled (with no border) or both.
-a (float): Semi-major axis diameter.
-b (float): Semi-minor axis diameter, if None, equals to a (default: None).
-start_angle (float): Start angle of the arc (in degrees).
-end_angle (float): End angle of the arc (in degrees).
-inclination (float): Inclination of the arc in respect of the x-axis (default: 0).
-clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
-start_from_center (bool): Start drawing from the center of the circle (default: False).
-end_at_center (bool): End drawing at the center of the circle (default: False).
-style (Enum RenderStyle | str): Style of rendering. Possible values are:
-* <code>D</code> or None: draw border. This is the default value.
-* <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</p></div>
+It can be drawn (border only), filled (with no border) or both.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>a</code></strong> :&ensp;<code>float</code></dt>
+<dd>Semi-major axis diameter.</dd>
+<dt><strong><code>b</code></strong> :&ensp;<code>float</code></dt>
+<dd>Semi-minor axis diameter, if None, equals to a (default: None).</dd>
+<dt><strong><code>start_angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>Start angle of the arc (in degrees).</dd>
+<dt><strong><code>end_angle</code></strong> :&ensp;<code>float</code></dt>
+<dd>End angle of the arc (in degrees).</dd>
+<dt><strong><code>inclination</code></strong> :&ensp;<code>float</code></dt>
+<dd>Inclination of the arc in respect of the x-axis (default: 0).</dd>
+<dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).</dd>
+<dt><strong><code>start_from_center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Start drawing from the center of the circle (default: False).</dd>
+<dt><strong><code>end_at_center</code></strong> :&ensp;<code>bool</code></dt>
+<dd>End drawing at the center of the circle (default: False).</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Allowed values are:</dd>
+</dl>
+<ul>
+<li><code>D</code> or None: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5148,6 +5195,8 @@ style (Enum RenderStyle | str): Style of rendering. Possible values are:
     &#34;&#34;&#34;
     Outputs an arc.
     It can be drawn (border only), filled (with no border) or both.
+
+    Args:
         a (float): Semi-major axis diameter.
         b (float): Semi-minor axis diameter, if None, equals to a (default: None).
         start_angle (float): Start angle of the arc (in degrees).
@@ -5156,10 +5205,11 @@ style (Enum RenderStyle | str): Style of rendering. Possible values are:
         clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
         start_from_center (bool): Start drawing from the center of the circle (default: False).
         end_at_center (bool): End drawing at the center of the circle (default: False).
-        style (Enum RenderStyle | str): Style of rendering. Possible values are:
-            * `D` or None: draw border. This is the default value.
-            * `F`: fill
-            * `DF` or `FD`: draw and fill
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Allowed values are:
+
+        * `D` or None: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
     style = RenderStyle.coerce(style)
 
@@ -5299,13 +5349,16 @@ The value can be either a number (<code>0</code>: no border ; <code>1</code>: fr
 or a string containing some or all of the following characters
 (in any order):
 <code>L</code>: left ; <code>T</code>: top ; <code>R</code>: right ; <code>B</code>: bottom. Default value: 0.</dd>
-<dt>new_x (Enum XPos | str): New current position in x after the call. Default: RIGHT</dt>
-<dt>new_y (Enum YPos | str): New current position in y after the call. Default: TOP</dt>
+<dt><strong><code>new_x</code></strong> :&ensp;<code><a title="fpdf.enums.XPos" href="enums.html#fpdf.enums.XPos">XPos</a>, str</code></dt>
+<dd>New current position in x after the call. Default: RIGHT</dd>
+<dt><strong><code>new_y</code></strong> :&ensp;<code><a title="fpdf.enums.YPos" href="enums.html#fpdf.enums.YPos">YPos</a>, str</code></dt>
+<dd>New current position in y after the call. Default: TOP</dd>
 <dt><strong><code>ln</code></strong> :&ensp;<code>int</code></dt>
-<dd><strong>DEPRECATED</strong> 2.5.1: Use new_x and new_y instead.</dd>
-<dt>align (Enum Align | str): Allows to center or align the text inside the cell.</dt>
-<dt>Possible values are: <code>L</code> or empty string: left align (default value) ;</dt>
-<dt><code>C</code>: center ; <code>R</code>: right align</dt>
+<dd><strong>DEPRECATED since 2.5.1</strong>: Use <code>new_x</code> and <code>new_y</code> instead.</dd>
+<dt><strong><code>align</code></strong> :&ensp;<code><a title="fpdf.enums.Align" href="enums.html#fpdf.enums.Align">Align</a>, str</code></dt>
+<dd>Allows to center or align the text inside the cell.
+Possible values are: <code>L</code> or empty string: left align (default value) ;
+<code>C</code>: center ; <code>R</code>: right align</dd>
 <dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates if the cell background must be painted (<code>True</code>)
 or transparent (<code>False</code>). Default value: False.</dd>
@@ -5313,7 +5366,7 @@ or transparent (<code>False</code>). Default value: False.</dd>
 <dd>optional link to add on the cell, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
 <dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
-<dd><strong>DEPRECATED</strong> 2.5.1: Use align="C" instead.</dd>
+<dd><strong>DEPRECATED since 2.5.1</strong>: Use <code>align="C"</code> instead.</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable minimal markdown-like markup to render part
 of text as bold / italics / underlined. Default to False.</dd>
@@ -5360,17 +5413,17 @@ def cell(
             or a string containing some or all of the following characters
             (in any order):
             `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-        new_x (Enum XPos | str): New current position in x after the call. Default: RIGHT
-        new_y (Enum YPos | str): New current position in y after the call. Default: TOP
-        ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
-        align (Enum Align | str): Allows to center or align the text inside the cell.
+        new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
+        new_y (fpdf.enums.YPos, str): New current position in y after the call. Default: TOP
+        ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
+        align (fpdf.enums.Align, str): Allows to center or align the text inside the cell.
             Possible values are: `L` or empty string: left align (default value) ;
             `C`: center ; `R`: right align
         fill (bool): Indicates if the cell background must be painted (`True`)
             or transparent (`False`). Default value: False.
         link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
-        center (bool): **DEPRECATED** 2.5.1: Use align=&#34;C&#34; instead.
+        center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
         markdown (bool): enable minimal markdown-like markup to render part
             of text as bold / italics / underlined. Default to False.
 
@@ -5465,11 +5518,13 @@ It can be drawn (border only), filled (with no border) or both.</p>
 <dt><strong><code>r</code></strong> :&ensp;<code>float</code></dt>
 <dd>Radius of the circle.</dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
-<dd>Style of rendering. Possible values are:
-* <code>D</code> or None: draw border. This is the default value.
-* <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</dd>
-</dl></div>
+<dd>Style of rendering. Possible values are:</dd>
+</dl>
+<ul>
+<li><code>D</code> or None: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5485,9 +5540,10 @@ def circle(self, x, y, r, style=None):
         y (float): Ordinate of upper-left bounding box.
         r (float): Radius of the circle.
         style (str): Style of rendering. Possible values are:
-            * `D` or None: draw border. This is the default value.
-            * `F`: fill
-            * `DF` or `FD`: draw and fill
+
+        * `D` or None: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
     self.ellipse(x, y, r, r, style)</code></pre>
 </details>
@@ -5604,9 +5660,7 @@ def code39(self, txt, x, y, w=1.5, h=5):
 <span>def <span class="ident">dashed_line</span></span>(<span>self, x1, y1, x2, y2, dash_length=1, space_length=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Draw a dashed line between two points.
-<strong>DEPRECATED</strong> 2.4.6
-- use set_dash_pattern() and the normal drawing operations instead</p>
+<div class="desc"><p>Draw a dashed line between two points.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>x1</code></strong> :&ensp;<code>float</code></dt>
@@ -5621,7 +5675,11 @@ def code39(self, txt, x, y, w=1.5, h=5):
 <dd>Length of the dash</dd>
 <dt><strong><code>space_length</code></strong> :&ensp;<code>float</code></dt>
 <dd>Length of the space between 2 dashes</dd>
-</dl></div>
+</dl>
+<div class="admonition deprecated">
+<p class="admonition-title">Deprecated since version:&ensp;2.4.6</p>
+<p>Use <code><a title="fpdf.FPDF.set_dash_pattern" href="#fpdf.FPDF.set_dash_pattern">FPDF.set_dash_pattern()</a></code> and the normal drawing operations instead.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5630,8 +5688,6 @@ def code39(self, txt, x, y, w=1.5, h=5):
 def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
     &#34;&#34;&#34;
     Draw a dashed line between two points.
-    **DEPRECATED** 2.4.6
-    - use set_dash_pattern() and the normal drawing operations instead
 
     Args:
         x1 (float): Abscissa of first point
@@ -5640,6 +5696,9 @@ def dashed_line(self, x1, y1, x2, y2, dash_length=1, space_length=1):
         y2 (float): Ordinate of second point
         dash_length (float): Length of the dash
         space_length (float): Length of the space between 2 dashes
+
+    .. deprecated:: 2.4.6
+        Use `FPDF.set_dash_pattern()` and the normal drawing operations instead.
     &#34;&#34;&#34;
     warnings.warn(
         &#34;dashed_line() is deprecated, and will be removed in a future release. &#34;
@@ -5764,11 +5823,14 @@ It can be drawn (border only), filled (with no border) or both.</p>
 <dd>Width</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>Height</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Possible values are:</dd>
 </dl>
-<p>style (Enum RenderStyle | str): Style of rendering. Possible values are:
-* <code>D</code> or empty string: draw border. This is the default value.
-* <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</p></div>
+<ul>
+<li><code>D</code> or empty string: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5784,10 +5846,11 @@ def ellipse(self, x, y, w, h, style=None):
         y (float): Ordinate of upper-left bounding box.
         w (float): Width
         h (float): Height
-        style (Enum RenderStyle | str): Style of rendering. Possible values are:
-            * `D` or empty string: draw border. This is the default value.
-            * `F`: fill
-            * `DF` or `FD`: draw and fill
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+        * `D` or empty string: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
     style = RenderStyle.coerce(style)
     self._draw_ellipse(x, y, w, h, style.operator)</code></pre>
@@ -6019,7 +6082,7 @@ Pass <code>pdf.epw</code> to scale horizontally to the full page width.</dd>
 it is automatically calculated from the image size.
 Pass <code>pdf.eph</code> to scale horizontally to the full page height.</dd>
 <dt><strong><code>type</code></strong> :&ensp;<code>str</code></dt>
-<dd>[<strong>DEPRECATED</strong>] unused, will be removed in a later version.</dd>
+<dd>[<strong>DEPRECATED since 2.2.0</strong>] unused, will be removed in a later version.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the image, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
@@ -6073,7 +6136,7 @@ def image(
         h (float): optional height of the image. If not specified or equal to zero,
             it is automatically calculated from the image size.
             Pass `pdf.eph` to scale horizontally to the full page height.
-        type (str): [**DEPRECATED**] unused, will be removed in a later version.
+        type (str): [**DEPRECATED since 2.2.0**] unused, will be removed in a later version.
         link (str): optional link to add on the image, internal
             (identifier returned by `add_link`) or external URL.
         title (str): optional. Currently, never seem rendered by PDF readers.
@@ -6571,9 +6634,10 @@ The value can be either a number (<code>0</code>: no border ; <code>1</code>: fr
 or a string containing some or all of the following characters
 (in any order):
 <code>L</code>: left ; <code>T</code>: top ; <code>R</code>: right ; <code>B</code>: bottom. Default value: 0.</dd>
-<dt>align (Enum Align | str): Allows to center or align the text. Possible values are:</dt>
-<dt><code>J</code>: justify (default value); <code>L</code> or empty string: left align ;</dt>
-<dt><code>C</code>: center ; <code>R</code>: right align</dt>
+<dt><strong><code>align</code></strong> :&ensp;<code><a title="fpdf.enums.Align" href="enums.html#fpdf.enums.Align">Align</a>, str</code></dt>
+<dd>Allows to center or align the text. Possible values are:
+<code>J</code>: justify (default value); <code>L</code> or empty string: left align ;
+<code>C</code>: center ; <code>R</code>: right align</dd>
 <dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates if the cell background must be painted (<code>True</code>)
 or transparent (<code>False</code>). Default value: False.</dd>
@@ -6583,10 +6647,12 @@ word-wrapping and return the resulting multi-lines array of strings.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the cell, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
-<dt>new_x (Enum XPos | str): New current position in x after the call. Default: RIGHT</dt>
-<dt>new_y (Enum YPos | str): New current position in y after the call. Default: NEXT</dt>
+<dt><strong><code>new_x</code></strong> :&ensp;<code><a title="fpdf.enums.XPos" href="enums.html#fpdf.enums.XPos">XPos</a>, str</code></dt>
+<dd>New current position in x after the call. Default: RIGHT</dd>
+<dt><strong><code>new_y</code></strong> :&ensp;<code><a title="fpdf.enums.XPos" href="enums.html#fpdf.enums.XPos">XPos</a>, str</code></dt>
+<dd>New current position in y after the call. Default: NEXT</dd>
 <dt><strong><code>ln</code></strong> :&ensp;<code>int</code></dt>
-<dd><strong>DEPRECATED</strong> 2.5.1: Use new_x and new_y instead.</dd>
+<dd><strong>DEPRECATED since 2.5.1</strong>: Use <code>new_x</code> and <code>new_y</code> instead.</dd>
 <dt><strong><code>max_line_height</code></strong> :&ensp;<code>float</code></dt>
 <dd>optional maximum height of each sub-cell generated</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
@@ -6639,7 +6705,7 @@ def multi_cell(
             or a string containing some or all of the following characters
             (in any order):
             `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-        align (Enum Align | str): Allows to center or align the text. Possible values are:
+        align (fpdf.enums.Align, str): Allows to center or align the text. Possible values are:
             `J`: justify (default value); `L` or empty string: left align ;
             `C`: center ; `R`: right align
         fill (bool): Indicates if the cell background must be painted (`True`)
@@ -6648,9 +6714,9 @@ def multi_cell(
             word-wrapping and return the resulting multi-lines array of strings.
         link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
-        new_x (Enum XPos | str): New current position in x after the call. Default: RIGHT
-        new_y (Enum YPos | str): New current position in y after the call. Default: NEXT
-        ln (int): **DEPRECATED** 2.5.1: Use new_x and new_y instead.
+        new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
+        new_y (fpdf.enums.XPos, str): New current position in y after the call. Default: NEXT
+        ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
         max_line_height (float): optional maximum height of each sub-cell generated
         markdown (bool): enable minimal markdown-like markup to render part
             of text as bold / italics / underlined. Default to False.
@@ -6945,7 +7011,7 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
 <dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional File object or file path where to save the PDF under</dd>
 <dt><strong><code>dest</code></strong> :&ensp;<code>str</code></dt>
-<dd>[<strong>DEPRECATED</strong>] unused, will be removed in a later version</dd>
+<dd>[<strong>DEPRECATED since 2.3.0</strong>] unused, will be removed in a later version</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -6961,7 +7027,7 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
 
     Args:
         name (str): optional File object or file path where to save the PDF under
-        dest (str): [**DEPRECATED**] unused, will be removed in a later version
+        dest (str): [**DEPRECATED since 2.3.0**] unused, will be removed in a later version
     &#34;&#34;&#34;
     if dest:
         warnings.warn(
@@ -6998,37 +7064,47 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
 </details>
 </dd>
 <dt id="fpdf.FPDF.polygon"><code class="name flex">
-<span>def <span class="ident">polygon</span></span>(<span>self, point_list, fill=False)</span>
+<span>def <span class="ident">polygon</span></span>(<span>self, point_list, fill=False, style=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Outputs a polygon defined by three or more points.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>point_list</code></strong> :&ensp;<code>list</code> of <code>tuples</code></dt>
-<dd>List of Abscissa and Ordinate of
-polygon that should be drawn</dd>
+<dd>List of coordinates defining the polygon to draw</dd>
 <dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
-<dd>If true polygon will be filled</dd>
-</dl></div>
+<dd>[<strong>DEPRECATED since v2.5.4</strong>] Use <code>style="F"</code> or <code>style="DF"</code> instead</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Possible values are:</dd>
+</dl>
+<ul>
+<li><code>D</code> or None: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
-def polygon(self, point_list, fill=False):
+def polygon(self, point_list, fill=False, style=None):
     &#34;&#34;&#34;
     Outputs a polygon defined by three or more points.
 
     Args:
-        point_list (list of tuples): List of Abscissa and Ordinate of
-                                    polygon that should be drawn
-        fill (bool): If true polygon will be filled
+        point_list (list of tuples): List of coordinates defining the polygon to draw
+        fill (bool): [**DEPRECATED since v2.5.4**] Use `style=&#34;F&#34;` or `style=&#34;DF&#34;` instead
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+        * `D` or None: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
-    self.polyline(point_list, fill=fill, polygon=True)</code></pre>
+    self.polyline(point_list, fill=fill, polygon=True, style=style)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.polyline"><code class="name flex">
-<span>def <span class="ident">polyline</span></span>(<span>self, point_list, fill=False, polygon=False)</span>
+<span>def <span class="ident">polyline</span></span>(<span>self, point_list, fill=False, polygon=False, style=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Draws lines between two or more points.</p>
@@ -7038,25 +7114,51 @@ def polygon(self, point_list, fill=False):
 <dd>List of Abscissa and Ordinate of
 segments that should be drawn</dd>
 <dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
-<dd>If true then polyline should be filled</dd>
+<dd>[<strong>DEPRECATED since v2.5.4</strong>] Use <code>style="F"</code> or <code>style="DF"</code> instead</dd>
 <dt><strong><code>polygon</code></strong> :&ensp;<code>bool</code></dt>
-<dd>If true, close path before stroking</dd>
-</dl></div>
+<dd>If true, close path before stroking, to fill the inside of the polyline</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Possible values are:</dd>
+</dl>
+<ul>
+<li><code>D</code> or None: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
-def polyline(self, point_list, fill=False, polygon=False):
+def polyline(self, point_list, fill=False, polygon=False, style=None):
     &#34;&#34;&#34;
     Draws lines between two or more points.
 
     Args:
         point_list (list of tuples): List of Abscissa and Ordinate of
                                     segments that should be drawn
-        fill (bool): If true then polyline should be filled
-        polygon (bool): If true, close path before stroking
+        fill (bool): [**DEPRECATED since v2.5.4**] Use `style=&#34;F&#34;` or `style=&#34;DF&#34;` instead
+        polygon (bool): If true, close path before stroking, to fill the inside of the polyline
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+        * `D` or None: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
+    if fill:
+        warnings.warn(
+            &#39;&#34;fill&#34; parameter is deprecated, use style=&#34;F&#34; or style=&#34;DF&#34; instead&#39;,
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    if fill and style is None:
+        style = RenderStyle.DF
+    else:
+        style = RenderStyle.coerce(style)
+        if fill and style == RenderStyle.D:
+            raise ValueError(
+                f&#34;Conflicting values provided: fill={fill} &amp; style={style}&#34;
+            )
     operator = &#34;m&#34;
     for point in point_list:
         self._out(
@@ -7064,11 +7166,8 @@ def polyline(self, point_list, fill=False, polygon=False):
         )
         operator = &#34;l&#34;
     if polygon:
-        self._out(&#34; h &#34;)
-    if fill:
-        self._out(&#34; B &#34;)
-    else:
-        self._out(&#34; S &#34;)</code></pre>
+        self._out(&#34; h&#34;)
+    self._out(f&#34; {style.operator}&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.rect"><code class="name flex">
@@ -7087,11 +7186,14 @@ It can be drawn (border only), filled (with no border) or both.</p>
 <dd>Width.</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>Height.</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Possible values are:</dd>
 </dl>
-<p>style (Enum RenderStyle | str): Style of rendering. Possible values are:
-* <code>D</code> or empty string: draw border. This is the default value.
-* <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</p></div>
+<ul>
+<li><code>D</code> or empty string: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -7107,10 +7209,11 @@ def rect(self, x, y, w, h, style=None):
         y (float): Ordinate of upper-left bounding box.
         w (float): Width.
         h (float): Height.
-        style (Enum RenderStyle | str): Style of rendering. Possible values are:
-            * `D` or empty string: draw border. This is the default value.
-            * `F`: fill
-            * `DF` or `FD`: draw and fill
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+
+        * `D` or empty string: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
     style = RenderStyle.coerce(style)
     self._out(
@@ -7179,15 +7282,17 @@ Style can also be applied (fill, border&hellip;)</p>
 <dt><strong><code>numSides</code></strong> :&ensp;<code>int</code></dt>
 <dd>Number of sides for polygon.</dd>
 <dt><strong><code>polyWidth</code></strong> :&ensp;<code>float</code></dt>
-<dd>width of the polygon.</dd>
+<dd>Width of the polygon.</dd>
 <dt><strong><code>rotateDegrees</code></strong> :&ensp;<code>float</code></dt>
-<dd>degree amount to rotate polygon. (can be left blank)</dd>
-<dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
-<dd>Style of rendering. Possible values are: (can be left blank)
-* <code>D</code> or None: draw border. This is the default value.
-* <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</dd>
-</dl></div>
+<dd>Optional degree amount to rotate polygon.</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Possible values are:</dd>
+</dl>
+<ul>
+<li><code>D</code> or None: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -7203,13 +7308,13 @@ def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None
         x (float): Abscissa of upper-left bounding box.
         y (float): Ordinate of upper-left bounding box.
         numSides (int): Number of sides for polygon.
-        polyWidth (float): width of the polygon.
-        rotateDegrees (float): degree amount to rotate polygon. (can be left blank)
-        style (str): Style of rendering. Possible values are: (can be left blank)
-            * `D` or None: draw border. This is the default value.
-            * `F`: fill
-            * `DF` or `FD`: draw and fill
+        polyWidth (float): Width of the polygon.
+        rotateDegrees (float): Optional degree amount to rotate polygon.
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
 
+        * `D` or None: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
     radius = polyWidth / 2
     centerX = x + radius
@@ -7227,7 +7332,7 @@ def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None
         i += 1
     # creates list of touples containing cordinate points of vertices
 
-    self.polygon(points, style)
+    self.polygon(points, style=style)
     # passes points through polygon function</code></pre>
 </details>
 </dd>
@@ -7237,7 +7342,7 @@ def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None
 <dd>
 <div class="desc"><div class="admonition deprecated">
 <p class="admonition-title">Deprecated since version:&ensp;2.1.0</p>
-<p>Use <code>rotation</code> instead.</p>
+<p>Use <code><a title="fpdf.FPDF.rotation" href="#fpdf.FPDF.rotation">FPDF.rotation()</a></code> instead.</p>
 </div></div>
 <details class="source">
 <summary>
@@ -7247,7 +7352,7 @@ def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None
 def rotate(self, angle, x=None, y=None):
     &#34;&#34;&#34;
     .. deprecated:: 2.1.0
-      Use `rotation` instead.
+        Use `FPDF.rotation()` instead.
     &#34;&#34;&#34;
     warnings.warn(
         &#34;rotate() can produces malformed PDFs and is deprecated. &#34;
@@ -7637,7 +7742,7 @@ and this method default value is "continuous".</dd>
 <p>value (str) option value</p>
 <div class="admonition deprecated">
 <p class="admonition-title">Deprecated since version:&ensp;2.4.0</p>
-<p>Simply set the <code>core_fonts_encoding</code> property as a replacement.</p>
+<p>Simply set the <code><a title="fpdf.FPDF.core_fonts_encoding" href="#fpdf.FPDF.core_fonts_encoding">FPDF.core_fonts_encoding</a></code> property as a replacement.</p>
 </div></div>
 <details class="source">
 <summary>
@@ -7652,11 +7757,11 @@ and this method default value is "continuous".</dd>
         value (str) option value
 
     .. deprecated:: 2.4.0
-        Simply set the `core_fonts_encoding` property as a replacement.
+        Simply set the `FPDF.core_fonts_encoding` property as a replacement.
     &#34;&#34;&#34;
     warnings.warn(
         &#34;set_doc_option() is deprecated. &#34;
-        &#34;Simply set the `core_fonts_encoding` property as a replacement.&#34;,
+        &#34;Simply set the `.core_fonts_encoding` property as a replacement.&#34;,
         DeprecationWarning,
         stacklevel=2,
     )
@@ -8532,11 +8637,13 @@ It can be drawn (border only), filled (with no border) or both.</p>
 <dt><strong><code>clockwise</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).</dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
-<dd>Style of rendering. Possible values are:
-* <code>D</code> or None: draw border. This is the default value.
-* <code>F</code>: fill
-* <code>DF</code> or <code>FD</code>: draw and fill</dd>
-</dl></div>
+<dd>Style of rendering. Possible values are:</dd>
+</dl>
+<ul>
+<li><code>D</code> or None: draw border. This is the default value.</li>
+<li><code>F</code>: fill</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill</li>
+</ul></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -8568,9 +8675,10 @@ def solid_arc(
         inclination (float): Inclination of the arc in respect of the x-axis (default: 0).
         clockwise (bool): Way of drawing the arc (True: clockwise, False: counterclockwise) (default: False).
         style (str): Style of rendering. Possible values are:
-            * `D` or None: draw border. This is the default value.
-            * `F`: fill
-            * `DF` or `FD`: draw and fill
+
+        * `D` or None: draw border. This is the default value.
+        * `F`: fill
+        * `DF` or `FD`: draw and fill
     &#34;&#34;&#34;
     self.arc(
         x,
@@ -10988,7 +11096,7 @@ to new image URLs</dd>
 <p>Allows to apply a single template definition to all pages of a document.</p>
 <h2 id="arguments">Arguments</h2>
 <p>infile (str):
-[<strong>DEPRECATED</strong>] unused, will be removed in a later version</p>
+[<strong>DEPRECATED since 2.2.0</strong>] unused, will be removed in a later version</p>
 <p>elements (list of dicts):
 A template definition in a list of dicts.
 If you omit this, then you need to call either load_elements()
@@ -11036,7 +11144,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
         Arguments:
 
             infile (str):
-                [**DEPRECATED**] unused, will be removed in a later version
+                [**DEPRECATED since 2.2.0**] unused, will be removed in a later version
 
             elements (list of dicts):
                 A template definition in a list of dicts.
@@ -11106,7 +11214,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
                 Alternatively, the `.pdf.output()` method can be manually called.
 
             dest (str):
-                [**DEPRECATED**] unused, will be removed in a later version.
+                [**DEPRECATED since 2.2.0**] unused, will be removed in a later version.
         &#34;&#34;&#34;
         if dest:
             warnings.warn(
@@ -11152,7 +11260,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
 If given, the PDF file will be written to this file name.
 Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <p>dest (str):
-[<strong>DEPRECATED</strong>] unused, will be removed in a later version.</p></div>
+[<strong>DEPRECATED since 2.2.0</strong>] unused, will be removed in a later version.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -11168,7 +11276,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
             Alternatively, the `.pdf.output()` method can be manually called.
 
         dest (str):
-            [**DEPRECATED**] unused, will be removed in a later version.
+            [**DEPRECATED since 2.2.0**] unused, will be removed in a later version.
     &#34;&#34;&#34;
     if dest:
         warnings.warn(
@@ -11466,6 +11574,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.FPDF.circle" href="#fpdf.FPDF.circle">circle</a></code></li>
 <li><code><a title="fpdf.FPDF.close" href="#fpdf.FPDF.close">close</a></code></li>
 <li><code><a title="fpdf.FPDF.code39" href="#fpdf.FPDF.code39">code39</a></code></li>
+<li><code><a title="fpdf.FPDF.core_fonts_encoding" href="#fpdf.FPDF.core_fonts_encoding">core_fonts_encoding</a></code></li>
 <li><code><a title="fpdf.FPDF.dashed_line" href="#fpdf.FPDF.dashed_line">dashed_line</a></code></li>
 <li><code><a title="fpdf.FPDF.draw_path" href="#fpdf.FPDF.draw_path">draw_path</a></code></li>
 <li><code><a title="fpdf.FPDF.drawing_context" href="#fpdf.FPDF.drawing_context">drawing_context</a></code></li>
