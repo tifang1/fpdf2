@@ -2306,6 +2306,10 @@ class FPDF(GraphicsStateMixin):
                 stacklevel=3,
             )
         align = Align.coerce(align)
+        if align == Align.J:
+            raise ValueError(
+                &#34;cell() only produces one text line, justified alignment is not possible&#34;
+            )
         # Font styles preloading must be performed before any call to FPDF.get_string_width:
         txt = self.normalize_text(txt)
         styled_txt_frags = self._preload_font_styles(txt, markdown)
@@ -6697,6 +6701,10 @@ Default to "mm".</dd>
                 stacklevel=3,
             )
         align = Align.coerce(align)
+        if align == Align.J:
+            raise ValueError(
+                &#34;cell() only produces one text line, justified alignment is not possible&#34;
+            )
         # Font styles preloading must be performed before any call to FPDF.get_string_width:
         txt = self.normalize_text(txt)
         styled_txt_frags = self._preload_font_styles(txt, markdown)
@@ -9887,6 +9895,10 @@ def cell(
             stacklevel=3,
         )
     align = Align.coerce(align)
+    if align == Align.J:
+        raise ValueError(
+            &#34;cell() only produces one text line, justified alignment is not possible&#34;
+        )
     # Font styles preloading must be performed before any call to FPDF.get_string_width:
     txt = self.normalize_text(txt)
     styled_txt_frags = self._preload_font_styles(txt, markdown)
@@ -13553,46 +13565,37 @@ def write(
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Positional values in horizontal direction for use after printing text.
-LEFT
-- left end of the cell
-RIGHT
-- right end of the cell (default)
-START
-- start of actual text
-END
-- end of actual text
-WCONT
-- for write() to continue next (slightly left of END)
-CENTER
-- center of actual text
-LMARGIN - left page margin (start of printable area)
-RMARGIN - right page margin (end of printable area)</p></div>
+<div class="desc"><p>Positional values in horizontal direction for use after printing text.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
-    &#34;&#34;&#34;
-    Positional values in horizontal direction for use after printing text.
-        LEFT    - left end of the cell
-        RIGHT   - right end of the cell (default)
-        START   - start of actual text
-        END     - end of actual text
-        WCONT   - for write() to continue next (slightly left of END)
-        CENTER  - center of actual text
-        LMARGIN - left page margin (start of printable area)
-        RMARGIN - right page margin (end of printable area)
-    &#34;&#34;&#34;
+    &#34;Positional values in horizontal direction for use after printing text.&#34;
 
     LEFT = intern(&#34;LEFT&#34;)  # self.x
+    &#34;left end of the cell&#34;
+
     RIGHT = intern(&#34;RIGHT&#34;)  # self.x + w
-    START = intern(&#34;START&#34;)  # left end of actual text
-    END = intern(&#34;END&#34;)  # right end of actual text
-    WCONT = intern(&#34;WCONT&#34;)  # continuation point for write()
-    CENTER = intern(&#34;CENTER&#34;)  # center of actual text
+    &#34;right end of the cell (default)&#34;
+
+    START = intern(&#34;START&#34;)
+    &#34;left start of actual text&#34;
+
+    END = intern(&#34;END&#34;)
+    &#34;right end of actual text&#34;
+
+    WCONT = intern(&#34;WCONT&#34;)
+    &#34;for write() to continue next (slightly left of END)&#34;
+
+    CENTER = intern(&#34;CENTER&#34;)
+    &#34;center of actual text&#34;
+
     LMARGIN = intern(&#34;LMARGIN&#34;)  # self.l_margin
-    RMARGIN = intern(&#34;RMARGIN&#34;)  # self.w - self.r_margin</code></pre>
+    &#34;left page margin (start of printable area)&#34;
+
+    RMARGIN = intern(&#34;RMARGIN&#34;)  # self.w - self.r_margin
+    &#34;right page margin (end of printable area)&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -13603,35 +13606,35 @@ RMARGIN - right page margin (end of printable area)</p></div>
 <dl>
 <dt id="fpdf.fpdf.XPos.CENTER"><code class="name">var <span class="ident">CENTER</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>center of actual text</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.END"><code class="name">var <span class="ident">END</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>right end of actual text</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.LEFT"><code class="name">var <span class="ident">LEFT</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>left end of the cell</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.LMARGIN"><code class="name">var <span class="ident">LMARGIN</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>left page margin (start of printable area)</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.RIGHT"><code class="name">var <span class="ident">RIGHT</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>right end of the cell (default)</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.RMARGIN"><code class="name">var <span class="ident">RMARGIN</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>right page margin (end of printable area)</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.START"><code class="name">var <span class="ident">START</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>left start of actual text</p></div>
 </dd>
 <dt id="fpdf.fpdf.XPos.WCONT"><code class="name">var <span class="ident">WCONT</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>for write() to continue next (slightly left of END)</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -13648,34 +13651,28 @@ RMARGIN - right page margin (end of printable area)</p></div>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Positional values in vertical direction for use after printing text.
-TOP
-- top of the first line (default)
-LAST
-- top of the last line (same as TOP for single-line text)
-NEXT
-- top of next line (bottom of current text)
-TMARGIN - top page margin (start of printable area)
-BMARGIN - bottom page margin (end of printable area)</p></div>
+<div class="desc"><p>Positional values in vertical direction for use after printing text</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
-    &#34;&#34;&#34;
-    Positional values in vertical direction for use after printing text.
-        TOP     - top of the first line (default)
-        LAST    - top of the last line (same as TOP for single-line text)
-        NEXT    - top of next line (bottom of current text)
-        TMARGIN - top page margin (start of printable area)
-        BMARGIN - bottom page margin (end of printable area)
-    &#34;&#34;&#34;
+    &#34;Positional values in vertical direction for use after printing text&#34;
 
     TOP = intern(&#34;TOP&#34;)  # self.y
-    LAST = intern(&#34;LAST&#34;)  # top of last line (TOP for single lines)
+    &#34;top of the first line (default)&#34;
+
+    LAST = intern(&#34;LAST&#34;)
+    &#34;top of the last line (same as TOP for single-line text)&#34;
+
     NEXT = intern(&#34;NEXT&#34;)  # LAST + h
+    &#34;top of next line (bottom of current text)&#34;
+
     TMARGIN = intern(&#34;TMARGIN&#34;)  # self.t_margin
-    BMARGIN = intern(&#34;BMARGIN&#34;)  # self.h - self.b_margin</code></pre>
+    &#34;top page margin (start of printable area)&#34;
+
+    BMARGIN = intern(&#34;BMARGIN&#34;)  # self.h - self.b_margin
+    &#34;bottom page margin (end of printable area)&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -13686,23 +13683,23 @@ BMARGIN - bottom page margin (end of printable area)</p></div>
 <dl>
 <dt id="fpdf.fpdf.YPos.BMARGIN"><code class="name">var <span class="ident">BMARGIN</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>bottom page margin (end of printable area)</p></div>
 </dd>
 <dt id="fpdf.fpdf.YPos.LAST"><code class="name">var <span class="ident">LAST</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>top of the last line (same as TOP for single-line text)</p></div>
 </dd>
 <dt id="fpdf.fpdf.YPos.NEXT"><code class="name">var <span class="ident">NEXT</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>top of next line (bottom of current text)</p></div>
 </dd>
 <dt id="fpdf.fpdf.YPos.TMARGIN"><code class="name">var <span class="ident">TMARGIN</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>top page margin (start of printable area)</p></div>
 </dd>
 <dt id="fpdf.fpdf.YPos.TOP"><code class="name">var <span class="ident">TOP</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>top of the first line (default)</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
