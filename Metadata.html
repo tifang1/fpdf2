@@ -771,9 +771,54 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Metadata
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="Metadata.html" class="md-nav__link md-nav__link--active">
         Metadata
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#full-screen" class="md-nav__link">
+    Full screen
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#page-layout-zoom-level" class="md-nav__link">
+    Page layout &amp; zoom level
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#viewer-preferences" class="md-nav__link">
+    Viewer preferences
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1030,6 +1075,35 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#full-screen" class="md-nav__link">
+    Full screen
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#page-layout-zoom-level" class="md-nav__link">
+    Page layout &amp; zoom level
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#viewer-preferences" class="md-nav__link">
+    Viewer preferences
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1081,6 +1155,49 @@ we recommend using <a href="https://github.com/pikepdf/pikepdf/"><code>pikepdf</
         <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;xmp:CreatorTool&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="vm">__file__</span>
         <span class="n">meta</span><span class="p">[</span><span class="s2">&quot;xmp:MetadataDate&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">astimezone</span><span class="p">()</span><span class="o">.</span><span class="n">tzinfo</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</code></pre></div>
+<h2 id="full-screen">Full screen</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">page_mode</span> <span class="o">=</span> <span class="s2">&quot;FULL_SCREEN&quot;</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;full-screen.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="page-layout-zoom-level">Page layout &amp; zoom level</h2>
+<p><a href="fpdf/fpdf.html#fpdf.FPDF.set_display_mode"><code>set_display_mode()</code></a> allows to set the <strong>zoom level</strong>:
+pages can be displayed entirely on screen, occupy the full width of the window, use the real size,
+be scaled by a specific zooming factor or use the viewer default (configured in its <em>Preferences</em> menu).</p>
+<p>The <strong>page layout</strong> can also be specified: single page at a time, continuous display, two columns or viewer default.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_display_mode</span><span class="p">(</span><span class="n">zoom</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s2">&quot;TWO_COLUMN_LEFT&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;page 1&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;page 2&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;two-column.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="viewer-preferences">Viewer preferences</h2>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">viewer_preferences</span> <span class="o">=</span> <span class="n">ViewerPreferences</span><span class="p">(</span>
+    <span class="n">hide_toolbar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">hide_menubar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">hide_window_u_i</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">fit_window</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">center_window</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">display_doc_title</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">non_full_screen_page_mode</span><span class="o">=</span><span class="s2">&quot;USE_OUTLINES&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;page 1&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;page 2&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;viewer-prefs.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 
               

@@ -1177,7 +1177,9 @@
 <h1 id="barcodes">Barcodes</h1>
 <h2 id="code-39">Code 39</h2>
 <p>Here is an example on how to generate a <a href="https://fr.wikipedia.org/wiki/Code_39">Code 39</a> barcode:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">code39</span><span class="p">(</span><span class="s2">&quot;*fpdf2*&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;code39.pdf&quot;</span><span class="p">)</span>
@@ -1186,7 +1188,9 @@
 <p><img alt="" src="code39.png" /></p>
 <h2 id="interleaved-2-of-5">Interleaved 2 of 5</h2>
 <p>Here is an example on how to generate an <a href="https://en.wikipedia.org/wiki/Interleaved_2_of_5">Interleaved 2 of 5</a> barcode:</p>
-<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">interleaved2of5</span><span class="p">(</span><span class="s2">&quot;1337&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;interleaved2of5.pdf&quot;</span><span class="p">)</span>
@@ -1196,7 +1200,8 @@
 <h2 id="pdf-417">PDF-417</h2>
 <p>Here is an example on how to generate a <a href="https://fr.wikipedia.org/wiki/PDF-417">PDF-417</a> barcode
 using the <a href="https://github.com/mosquito/pdf417"><code>pdf417</code></a> lib:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pdf417</span> <span class="kn">import</span> <span class="n">encode</span><span class="p">,</span> <span class="n">render_image</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">pdf417</span> <span class="kn">import</span> <span class="n">encode</span><span class="p">,</span> <span class="n">render_image</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
@@ -1209,7 +1214,8 @@ using the <a href="https://github.com/mosquito/pdf417"><code>pdf417</code></a> l
 <h2 id="qrcode">QRCode</h2>
 <p>Here is an example on how to generate a <a href="https://en.wikipedia.org/wiki/QR_code">QR Code</a>
 using the <a href="https://github.com/lincolnloop/python-qrcode"><code>python-qrcode</code></a> lib:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">qrcode</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">import</span> <span class="nn">qrcode</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>

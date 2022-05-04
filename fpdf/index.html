@@ -38,6 +38,7 @@ from .fpdf import (
     FPDF_VERSION as _FPDF_VERSION,
 )
 from .html import HTMLMixin, HTML2FPDF
+from .prefs import ViewerPreferences
 from .template import Template, FlexTemplate
 from . import svg
 from .deprecation import WarnOnDeprecatedModuleAttributes
@@ -73,6 +74,7 @@ __all__ = [
     &#34;Template&#34;,
     &#34;FlexTemplate&#34;,
     &#34;TitleStyle&#34;,
+    &#34;ViewerPreferences&#34;,
     &#34;HTMLMixin&#34;,
     &#34;HTML2FPDF&#34;,
     # FPDF Constants
@@ -134,6 +136,10 @@ __all__ = [
 <blockquote>
 <p>The document outline consists of a tree-structured hierarchy of outline items …</p>
 </blockquote></div>
+</dd>
+<dt><code class="name"><a title="fpdf.prefs" href="prefs.html">fpdf.prefs</a></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="fpdf.recorder" href="recorder.html">fpdf.recorder</a></code></dt>
 <dd>
@@ -356,10 +362,12 @@ Default to "mm".</dd>
         # sets self.auto_page_break, self.b_margin &amp; self.page_break_trigger:
         self.set_auto_page_break(True, 2 * margin)
         self.set_display_mode(&#34;fullwidth&#34;)  # Full width display mode
+        self._page_mode = None
+        self.viewer_preferences = None
         self.compress = True  # Enable compression by default
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
-        self._current_draw_context = None
 
+        self._current_draw_context = None
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
         self._graphics_state_obj_refs = OrderedDict()
 
@@ -374,6 +382,14 @@ Default to "mm".</dd>
     @property
     def unifontsubset(self):
         return self.current_font.get(&#34;type&#34;) == &#34;TTF&#34;
+
+    @property
+    def page_mode(self):
+        return self._page_mode
+
+    @page_mode.setter
+    def page_mode(self, page_mode):
+        self._page_mode = PageMode.coerce(page_mode)
 
     @property
     def epw(self):
@@ -488,7 +504,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Defines the way the document is to be displayed by the viewer.
 
-        It allows to set tje zoom level: pages can be displayed entirely on screen,
+        It allows to set the zoom level: pages can be displayed entirely on screen,
         occupy the full width of the window, use the real size,
         be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).
 
@@ -498,20 +514,19 @@ Default to "mm".</dd>
             zoom: either &#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;,
                 or a number indicating the zooming factor to use, interpreted as a percentage.
                 The zoom level set by default is &#34;default&#34;.
-            layout (str): either &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
+            layout (fpdf.enums.PageLayout, str): allowed layout aliases are &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
                 meaning to use the viewer default mode.
-                The layout set by default is &#34;default&#34;,
-                and this method default value is &#34;continuous&#34;.
+                The layout set by default is &#34;continuous&#34;.
         &#34;&#34;&#34;
         if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
             self.zoom_mode = zoom
         elif zoom != &#34;default&#34;:
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
-        if layout in LAYOUT_NAMES:
-            self.layout_mode = layout
-        elif layout != &#34;default&#34;:
-            raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)
+        if layout in LAYOUT_ALIASES:
+            self.page_layout = LAYOUT_ALIASES[layout]
+        else:
+            self.page_layout = PageLayout.coerce(layout)
 
     def set_compression(self, compress):
         &#34;&#34;&#34;
@@ -4006,8 +4021,12 @@ Default to "mm".</dd>
             zoom_config = [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, str(self.zoom_mode / 100)]
         catalog_d[&#34;/OpenAction&#34;] = pdf_l(zoom_config)
 
-        if self.layout_mode in LAYOUT_NAMES:
-            catalog_d[&#34;/PageLayout&#34;] = LAYOUT_NAMES[self.layout_mode]
+        if self.page_layout:
+            catalog_d[&#34;/PageLayout&#34;] = self.page_layout.value.pdf_repr()
+        if self.page_mode:
+            catalog_d[&#34;/PageMode&#34;] = self.page_mode.value.pdf_repr()
+        if self.viewer_preferences:
+            catalog_d[&#34;/ViewerPreferences&#34;] = self.viewer_preferences.serialize()
         if self._xmp_metadata_obj_id:
             catalog_d[&#34;/Metadata&#34;] = pdf_ref(self._xmp_metadata_obj_id)
         if self._struct_tree_root_obj_id:
@@ -4019,6 +4038,12 @@ Default to "mm".</dd>
         self._out(pdf_d(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
 
     def _putheader(self):
+        if self.page_layout in (PageLayout.TWO_PAGE_LEFT, PageLayout.TWO_PAGE_RIGHT):
+            self._set_min_pdf_version(&#34;1.5&#34;)
+        if self.page_mode == PageMode.USE_OC:
+            self._set_min_pdf_version(&#34;1.5&#34;)
+        if self.page_mode == PageMode.USE_ATTACHMENTS:
+            self._set_min_pdf_version(&#34;1.6&#34;)
         self._out(f&#34;%PDF-{self.pdf_version}&#34;)
 
     def _puttrailer(self):
@@ -4588,6 +4613,18 @@ def epw(self):
     Effective page width: the page width minus its horizontal margins.
     &#34;&#34;&#34;
     return self.w - self.l_margin - self.r_margin</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.page_mode"><code class="name">var <span class="ident">page_mode</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def page_mode(self):
+    return self._page_mode</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.pages_count"><code class="name">var <span class="ident">pages_count</span></code></dt>
@@ -7679,7 +7716,7 @@ Omitting 'dash' (= 0) resets the pattern to a solid line.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines the way the document is to be displayed by the viewer.</p>
-<p>It allows to set tje zoom level: pages can be displayed entirely on screen,
+<p>It allows to set the zoom level: pages can be displayed entirely on screen,
 occupy the full width of the window, use the real size,
 be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).</p>
 <p>The page layout can also be specified: single page at a time, continuous display, two columns or viewer default.</p>
@@ -7689,11 +7726,10 @@ be scaled by a specific zooming factor or use the viewer default (configured in 
 <dd>either "fullpage", "fullwidth", "real", "default",
 or a number indicating the zooming factor to use, interpreted as a percentage.
 The zoom level set by default is "default".</dd>
-<dt><strong><code>layout</code></strong> :&ensp;<code>str</code></dt>
-<dd>either "single", "continuous", "two" or "default",
+<dt><strong><code>layout</code></strong> :&ensp;<code><a title="fpdf.enums.PageLayout" href="enums.html#fpdf.enums.PageLayout">PageLayout</a>, str</code></dt>
+<dd>allowed layout aliases are "single", "continuous", "two" or "default",
 meaning to use the viewer default mode.
-The layout set by default is "default",
-and this method default value is "continuous".</dd>
+The layout set by default is "continuous".</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -7703,7 +7739,7 @@ and this method default value is "continuous".</dd>
     &#34;&#34;&#34;
     Defines the way the document is to be displayed by the viewer.
 
-    It allows to set tje zoom level: pages can be displayed entirely on screen,
+    It allows to set the zoom level: pages can be displayed entirely on screen,
     occupy the full width of the window, use the real size,
     be scaled by a specific zooming factor or use the viewer default (configured in its Preferences menu).
 
@@ -7713,20 +7749,19 @@ and this method default value is "continuous".</dd>
         zoom: either &#34;fullpage&#34;, &#34;fullwidth&#34;, &#34;real&#34;, &#34;default&#34;,
             or a number indicating the zooming factor to use, interpreted as a percentage.
             The zoom level set by default is &#34;default&#34;.
-        layout (str): either &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
+        layout (fpdf.enums.PageLayout, str): allowed layout aliases are &#34;single&#34;, &#34;continuous&#34;, &#34;two&#34; or &#34;default&#34;,
             meaning to use the viewer default mode.
-            The layout set by default is &#34;default&#34;,
-            and this method default value is &#34;continuous&#34;.
+            The layout set by default is &#34;continuous&#34;.
     &#34;&#34;&#34;
     if zoom in ZOOM_CONFIGS or not isinstance(zoom, str):
         self.zoom_mode = zoom
     elif zoom != &#34;default&#34;:
         raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
 
-    if layout in LAYOUT_NAMES:
-        self.layout_mode = layout
-    elif layout != &#34;default&#34;:
-        raise FPDFException(f&#34;Incorrect layout display mode: {layout}&#34;)</code></pre>
+    if layout in LAYOUT_ALIASES:
+        self.page_layout = LAYOUT_ALIASES[layout]
+    else:
+        self.page_layout = PageLayout.coerce(layout)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_doc_option"><code class="name flex">
@@ -11363,6 +11398,114 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.ViewerPreferences"><code class="flex name class">
+<span>class <span class="ident">ViewerPreferences</span></span>
+<span>(</span><span>hide_toolbar=False, hide_menubar=False, hide_window_u_i=False, fit_window=False, center_window=False, display_doc_title=False, non_full_screen_page_mode=PageMode.USE_NONE)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Specifies the way the document shall be displayed on the screen</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ViewerPreferences:
+    &#34;Specifies the way the document shall be displayed on the screen&#34;
+
+    def __init__(
+        self,
+        hide_toolbar=False,
+        hide_menubar=False,
+        hide_window_u_i=False,
+        fit_window=False,
+        center_window=False,
+        display_doc_title=False,
+        non_full_screen_page_mode=PageMode.USE_NONE,
+    ):
+        self.hide_toolbar = hide_toolbar
+        &#34;A flag specifying whether to hide the conforming reader’s tool bars when the document is active&#34;
+        self.hide_menubar = hide_menubar
+        &#34;A flag specifying whether to hide the conforming reader’s menu bar when the document is active&#34;
+        self.hide_window_u_i = hide_window_u_i
+        &#34;&#34;&#34;
+        A flag specifying whether to hide user interface elements in the document’s window
+        (such as scroll bars and navigation controls), leaving only the document’s contents displayed
+        &#34;&#34;&#34;
+        self.fit_window = fit_window
+        &#34;A flag specifying whether to resize the document’s window to fit the size of the first displayed page&#34;
+        self.center_window = center_window
+        &#34;A flag specifying whether to position the document’s window in the center of the screen&#34;
+        self.display_doc_title = display_doc_title
+        &#34;&#34;&#34;
+        A flag specifying whether the window’s title bar should display the document title
+        taken from the Title entry of the document information dictionary.
+        If false, the title bar should instead display the name of the PDF file containing the document.
+        &#34;&#34;&#34;
+        self.non_full_screen_page_mode = PageMode.coerce(non_full_screen_page_mode)
+        &#34;The document’s page mode, specifying how to display the document on exiting full-screen mode&#34;
+        if self.non_full_screen_page_mode in (
+            PageMode.FULL_SCREEN,
+            PageMode.USE_ATTACHMENTS,
+        ):
+            raise ValueError(
+                f&#34;{self.non_full_screen_page_mode} is not a support value for NonFullScreenPageMode&#34;
+            )
+
+    def serialize(self):
+        obj_dict = build_obj_dict({key: getattr(self, key) for key in dir(self)})
+        return create_dictionary_string(obj_dict)</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.ViewerPreferences.center_window"><code class="name">var <span class="ident">center_window</span></code></dt>
+<dd>
+<div class="desc"><p>A flag specifying whether to position the document’s window in the center of the screen</p></div>
+</dd>
+<dt id="fpdf.ViewerPreferences.display_doc_title"><code class="name">var <span class="ident">display_doc_title</span></code></dt>
+<dd>
+<div class="desc"><p>A flag specifying whether the window’s title bar should display the document title
+taken from the Title entry of the document information dictionary.
+If false, the title bar should instead display the name of the PDF file containing the document.</p></div>
+</dd>
+<dt id="fpdf.ViewerPreferences.fit_window"><code class="name">var <span class="ident">fit_window</span></code></dt>
+<dd>
+<div class="desc"><p>A flag specifying whether to resize the document’s window to fit the size of the first displayed page</p></div>
+</dd>
+<dt id="fpdf.ViewerPreferences.hide_menubar"><code class="name">var <span class="ident">hide_menubar</span></code></dt>
+<dd>
+<div class="desc"><p>A flag specifying whether to hide the conforming reader’s menu bar when the document is active</p></div>
+</dd>
+<dt id="fpdf.ViewerPreferences.hide_toolbar"><code class="name">var <span class="ident">hide_toolbar</span></code></dt>
+<dd>
+<div class="desc"><p>A flag specifying whether to hide the conforming reader’s tool bars when the document is active</p></div>
+</dd>
+<dt id="fpdf.ViewerPreferences.hide_window_u_i"><code class="name">var <span class="ident">hide_window_u_i</span></code></dt>
+<dd>
+<div class="desc"><p>A flag specifying whether to hide user interface elements in the document’s window
+(such as scroll bars and navigation controls), leaving only the document’s contents displayed</p></div>
+</dd>
+<dt id="fpdf.ViewerPreferences.non_full_screen_page_mode"><code class="name">var <span class="ident">non_full_screen_page_mode</span></code></dt>
+<dd>
+<div class="desc"><p>The document’s page mode, specifying how to display the document on exiting full-screen mode</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.ViewerPreferences.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serialize(self):
+    obj_dict = build_obj_dict({key: getattr(self, key) for key in dir(self)})
+    return create_dictionary_string(obj_dict)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.XPos"><code class="flex name class">
 <span>class <span class="ident">XPos</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -11537,6 +11680,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.image_parsing" href="image_parsing.html">fpdf.image_parsing</a></code></li>
 <li><code><a title="fpdf.line_break" href="line_break.html">fpdf.line_break</a></code></li>
 <li><code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></li>
+<li><code><a title="fpdf.prefs" href="prefs.html">fpdf.prefs</a></code></li>
 <li><code><a title="fpdf.recorder" href="recorder.html">fpdf.recorder</a></code></li>
 <li><code><a title="fpdf.structure_tree" href="structure_tree.html">fpdf.structure_tree</a></code></li>
 <li><code><a title="fpdf.svg" href="svg.html">fpdf.svg</a></code></li>
@@ -11601,6 +11745,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.FPDF.offset_rendering" href="#fpdf.FPDF.offset_rendering">offset_rendering</a></code></li>
 <li><code><a title="fpdf.FPDF.open" href="#fpdf.FPDF.open">open</a></code></li>
 <li><code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">output</a></code></li>
+<li><code><a title="fpdf.FPDF.page_mode" href="#fpdf.FPDF.page_mode">page_mode</a></code></li>
 <li><code><a title="fpdf.FPDF.page_no" href="#fpdf.FPDF.page_no">page_no</a></code></li>
 <li><code><a title="fpdf.FPDF.pages_count" href="#fpdf.FPDF.pages_count">pages_count</a></code></li>
 <li><code><a title="fpdf.FPDF.polygon" href="#fpdf.FPDF.polygon">polygon</a></code></li>
@@ -11707,6 +11852,19 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <li><code><a title="fpdf.TitleStyle.l_margin" href="#fpdf.TitleStyle.l_margin">l_margin</a></code></li>
 <li><code><a title="fpdf.TitleStyle.t_margin" href="#fpdf.TitleStyle.t_margin">t_margin</a></code></li>
 <li><code><a title="fpdf.TitleStyle.underline" href="#fpdf.TitleStyle.underline">underline</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.ViewerPreferences" href="#fpdf.ViewerPreferences">ViewerPreferences</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.ViewerPreferences.center_window" href="#fpdf.ViewerPreferences.center_window">center_window</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.display_doc_title" href="#fpdf.ViewerPreferences.display_doc_title">display_doc_title</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.fit_window" href="#fpdf.ViewerPreferences.fit_window">fit_window</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.hide_menubar" href="#fpdf.ViewerPreferences.hide_menubar">hide_menubar</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.hide_toolbar" href="#fpdf.ViewerPreferences.hide_toolbar">hide_toolbar</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.hide_window_u_i" href="#fpdf.ViewerPreferences.hide_window_u_i">hide_window_u_i</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.non_full_screen_page_mode" href="#fpdf.ViewerPreferences.non_full_screen_page_mode">non_full_screen_page_mode</a></code></li>
+<li><code><a title="fpdf.ViewerPreferences.serialize" href="#fpdf.ViewerPreferences.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li>
