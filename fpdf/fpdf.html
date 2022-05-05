@@ -2854,7 +2854,6 @@ class FPDF(GraphicsStateMixin):
             )
         new_x = XPos.coerce(new_x)
         new_y = YPos.coerce(new_y)
-        print(f&#34;multi_cell: new_x={new_x} new_y={new_y}&#34;)
         if ln != &#34;DEPRECATED&#34;:
             # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
             if ln == 0:
@@ -3527,16 +3526,14 @@ class FPDF(GraphicsStateMixin):
         # Replace number of pages in fonts using subsets (unicode)
         alias = self.str_alias_nb_pages.encode(&#34;utf-16-be&#34;)
         encoded_nb = str(nb).encode(&#34;utf-16-be&#34;)
-        for n in range(1, nb + 1):
-            page = self.pages[n]
+        for page in self.pages.values():
             new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
             substituted |= page[&#34;content&#34;] != new_content
             page[&#34;content&#34;] = new_content
         # Now repeat for no pages in non-subset fonts
         alias = self.str_alias_nb_pages.encode(&#34;latin-1&#34;)
         encoded_nb = str(nb).encode(&#34;latin-1&#34;)
-        for n in range(1, nb + 1):
-            page = self.pages[n]
+        for page in self.pages.values():
             new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
             substituted |= page[&#34;content&#34;] != new_content
             page[&#34;content&#34;] = new_content
@@ -7304,7 +7301,6 @@ Default to "mm".</dd>
             )
         new_x = XPos.coerce(new_x)
         new_y = YPos.coerce(new_y)
-        print(f&#34;multi_cell: new_x={new_x} new_y={new_y}&#34;)
         if ln != &#34;DEPRECATED&#34;:
             # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
             if ln == 0:
@@ -7977,16 +7973,14 @@ Default to "mm".</dd>
         # Replace number of pages in fonts using subsets (unicode)
         alias = self.str_alias_nb_pages.encode(&#34;utf-16-be&#34;)
         encoded_nb = str(nb).encode(&#34;utf-16-be&#34;)
-        for n in range(1, nb + 1):
-            page = self.pages[n]
+        for page in self.pages.values():
             new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
             substituted |= page[&#34;content&#34;] != new_content
             page[&#34;content&#34;] = new_content
         # Now repeat for no pages in non-subset fonts
         alias = self.str_alias_nb_pages.encode(&#34;latin-1&#34;)
         encoded_nb = str(nb).encode(&#34;latin-1&#34;)
-        for n in range(1, nb + 1):
-            page = self.pages[n]
+        for page in self.pages.values():
             new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
             substituted |= page[&#34;content&#34;] != new_content
             page[&#34;content&#34;] = new_content
@@ -11297,7 +11291,6 @@ def multi_cell(
         )
     new_x = XPos.coerce(new_x)
     new_y = YPos.coerce(new_y)
-    print(f&#34;multi_cell: new_x={new_x} new_y={new_y}&#34;)
     if ln != &#34;DEPRECATED&#34;:
         # For backwards compatibility, if &#34;ln&#34; is used we overwrite &#34;new_[xy]&#34;.
         if ln == 0:
