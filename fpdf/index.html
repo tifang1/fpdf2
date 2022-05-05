@@ -2180,14 +2180,14 @@ Default to "mm".</dd>
         h=None,
         txt=&#34;&#34;,
         border=0,
-        new_x=XPos.RIGHT,
-        new_y=YPos.TOP,
         ln=&#34;DEPRECATED&#34;,
         align=Align.L,
         fill=False,
         link=&#34;&#34;,
         center=&#34;DEPRECATED&#34;,
         markdown=False,
+        new_x=XPos.RIGHT,
+        new_y=YPos.TOP,
     ):
         &#34;&#34;&#34;
         Prints a cell (rectangular area) with optional borders, background color and
@@ -2725,12 +2725,12 @@ Default to "mm".</dd>
         fill=False,
         split_only=False,
         link=&#34;&#34;,
-        new_x=XPos.RIGHT,
-        new_y=YPos.NEXT,
         ln=&#34;DEPRECATED&#34;,
         max_line_height=None,
         markdown=False,
         print_sh=False,
+        new_x=XPos.RIGHT,
+        new_y=YPos.NEXT,
     ):
         &#34;&#34;&#34;
         This method allows printing text with line breaks. They can be automatic
@@ -5357,7 +5357,7 @@ It can be drawn (border only), filled (with no border) or both.</p>
 </details>
 </dd>
 <dt id="fpdf.FPDF.cell"><code class="name flex">
-<span>def <span class="ident">cell</span></span>(<span>self, w=None, h=None, txt='', border=0, new_x=XPos.RIGHT, new_y=YPos.TOP, ln='DEPRECATED', align=Align.L, fill=False, link='', center='DEPRECATED', markdown=False)</span>
+<span>def <span class="ident">cell</span></span>(<span>self, w=None, h=None, txt='', border=0, ln='DEPRECATED', align=Align.L, fill=False, link='', center='DEPRECATED', markdown=False, new_x=XPos.RIGHT, new_y=YPos.TOP)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prints a cell (rectangular area) with optional borders, background color and
@@ -5417,14 +5417,14 @@ def cell(
     h=None,
     txt=&#34;&#34;,
     border=0,
-    new_x=XPos.RIGHT,
-    new_y=YPos.TOP,
     ln=&#34;DEPRECATED&#34;,
     align=Align.L,
     fill=False,
     link=&#34;&#34;,
     center=&#34;DEPRECATED&#34;,
     markdown=False,
+    new_x=XPos.RIGHT,
+    new_y=YPos.TOP,
 ):
     &#34;&#34;&#34;
     Prints a cell (rectangular area) with optional borders, background color and
@@ -6645,7 +6645,7 @@ def local_context(
 </details>
 </dd>
 <dt id="fpdf.FPDF.multi_cell"><code class="name flex">
-<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align=Align.J, fill=False, split_only=False, link='', new_x=XPos.RIGHT, new_y=YPos.NEXT, ln='DEPRECATED', max_line_height=None, markdown=False, print_sh=False)</span>
+<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align=Align.J, fill=False, split_only=False, link='', ln='DEPRECATED', max_line_height=None, markdown=False, print_sh=False, new_x=XPos.RIGHT, new_y=YPos.NEXT)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This method allows printing text with line breaks. They can be automatic
@@ -6715,12 +6715,12 @@ def multi_cell(
     fill=False,
     split_only=False,
     link=&#34;&#34;,
-    new_x=XPos.RIGHT,
-    new_y=YPos.NEXT,
     ln=&#34;DEPRECATED&#34;,
     max_line_height=None,
     markdown=False,
     print_sh=False,
+    new_x=XPos.RIGHT,
+    new_y=YPos.NEXT,
 ):
     &#34;&#34;&#34;
     This method allows printing text with line breaks. They can be automatic

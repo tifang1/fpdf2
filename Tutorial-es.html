@@ -1167,7 +1167,7 @@
         <span class="c1"># Moving cursor to the right:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">80</span><span class="p">)</span>
         <span class="c1"># Printing title:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s2">&quot;Title&quot;</span><span class="p">,</span> <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
 
@@ -1177,7 +1177,7 @@
         <span class="c1"># Setting font: helvetica italic 8</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;I&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
         <span class="c1"># Printing page number:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">/</span><span class="se">{{</span><span class="s2">nb</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">/</span><span class="se">{{</span><span class="s2">nb</span><span class="se">}}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
 
 <span class="c1"># Instantiation of inherited class</span>
@@ -1185,8 +1185,8 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Times&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">41</span><span class="p">):</span>
-    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Printing line number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;tuto2.pdf&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Printing line number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LMARGIN&quot;</span><span class="p">,</span> <span class="n">new_y</span><span class="o">=</span><span class="s2">&quot;NEXT&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;new-tuto2.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <a href="https://github.com/PyFPDF/fpdf2/raw/master/tutorial/tuto2.pdf">Demo</a></p>
 <p>Este ejemplo hace uso de métodos  <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.header">header</a> y  <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.footer">footer</a> para procesar el encabezado y pie de página. Son llamados automáticamente. Ya existen en la clase FPDF pero no hacen nada por sí solos, por lo tanto tenemos que extender la clase y sobreescribirlos. </p>
@@ -1213,7 +1213,16 @@ Notar el uso del método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a>
         <span class="c1"># Setting thickness of the frame (1 mm)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
         <span class="c1"># Printing title:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span>
+            <span class="n">width</span><span class="p">,</span>
+            <span class="mi">9</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+            <span class="n">border</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LMARGIN&quot;</span><span class="p">,</span>
+            <span class="n">new_y</span><span class="o">=</span><span class="s2">&quot;NEXT&quot;</span><span class="p">,</span>
+            <span class="n">align</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">,</span>
+            <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
 
@@ -1225,7 +1234,7 @@ Notar el uso del método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a>
         <span class="c1"># Setting text color to gray:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_text_color</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
         <span class="c1"># Printing page number</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Page </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">page_no</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">align</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">chapter_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
         <span class="c1"># Setting font: helvetica 12</span>
@@ -1233,7 +1242,15 @@ Notar el uso del método <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_y">set_y</a>
         <span class="c1"># Setting background color</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
         <span class="c1"># Printing chapter name:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;L&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span>
+            <span class="mi">0</span><span class="p">,</span>
+            <span class="mi">6</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;Chapter </span><span class="si">{</span><span class="n">num</span><span class="si">}</span><span class="s2"> : </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LMARGIN&quot;</span><span class="p">,</span>
+            <span class="n">new_y</span><span class="o">=</span><span class="s2">&quot;NEXT&quot;</span><span class="p">,</span>
+            <span class="n">align</span><span class="o">=</span><span class="s2">&quot;L&quot;</span><span class="p">,</span>
+            <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
         <span class="c1"># Performing a line break:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ln</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 
