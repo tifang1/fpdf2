@@ -367,6 +367,49 @@ class BlendMode(CoerciveEnum):
     &#34;&#34;&#34;
 
 
+class AnnotationFlag(CoerciveIntEnum):
+    INVISIBLE = 1
+    &#34;&#34;&#34;
+    If set, do not display the annotation if it does not belong to one of the
+    standard annotation types and no annotation handler is available.
+    &#34;&#34;&#34;
+    HIDDEN = 2
+    &#34;If set, do not display or print the annotation or allow it to interact with the user&#34;
+    PRINT = 4
+    &#34;If set, print the annotation when the page is printed.&#34;
+    NO_ZOOM = 8
+    &#34;If set, do not scale the annotation’s appearance to match the magnification of the page.&#34;
+    NO_ROTATE = 16
+    &#34;If set, do not rotate the annotation’s appearance to match the rotation of the page.&#34;
+    NO_VIEW = 32
+    &#34;If set, do not display the annotation on the screen or allow it to interact with the user&#34;
+    READ_ONLY = 64
+    &#34;&#34;&#34;
+    If set, do not allow the annotation to interact with the user.
+    The annotation may be displayed or printed but should not respond to mouse clicks.
+    &#34;&#34;&#34;
+    LOCKED = 128
+    &#34;&#34;&#34;
+    If set, do not allow the annotation to be deleted or its properties
+    (including position and size) to be modified by the user.
+    &#34;&#34;&#34;
+    TOGGLE_NO_VIEW = 256
+    &#34;If set, invert the interpretation of the NoView flag for certain events.&#34;
+    LOCKED_CONTENTS = 512
+    &#34;If set, do not allow the contents of the annotation to be modified by the user.&#34;
+
+
+class AnnotationName(CoerciveEnum):
+    &#34;The name of an icon that shall be used in displaying the annotation&#34;
+
+    NOTE = Name(&#34;Note&#34;)
+    COMMENT = Name(&#34;Comment&#34;)
+    HELP = Name(&#34;Help&#34;)
+    PARAGRAPH = Name(&#34;Paragraph&#34;)
+    NEW_PARAGRAPH = Name(&#34;NewParagraph&#34;)
+    INSERT = Name(&#34;Insert&#34;)
+
+
 class IntersectionRule(CoerciveEnum):
     &#34;&#34;&#34;
     An enumeration representing the two possible PDF intersection rules.
@@ -610,6 +653,170 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 <dt id="fpdf.enums.Align.R"><code class="name">var <span class="ident">R</span></code></dt>
 <dd>
 <div class="desc"><p>Right-align text</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag"><code class="flex name class">
+<span>class <span class="ident">AnnotationFlag</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AnnotationFlag(CoerciveIntEnum):
+    INVISIBLE = 1
+    &#34;&#34;&#34;
+    If set, do not display the annotation if it does not belong to one of the
+    standard annotation types and no annotation handler is available.
+    &#34;&#34;&#34;
+    HIDDEN = 2
+    &#34;If set, do not display or print the annotation or allow it to interact with the user&#34;
+    PRINT = 4
+    &#34;If set, print the annotation when the page is printed.&#34;
+    NO_ZOOM = 8
+    &#34;If set, do not scale the annotation’s appearance to match the magnification of the page.&#34;
+    NO_ROTATE = 16
+    &#34;If set, do not rotate the annotation’s appearance to match the rotation of the page.&#34;
+    NO_VIEW = 32
+    &#34;If set, do not display the annotation on the screen or allow it to interact with the user&#34;
+    READ_ONLY = 64
+    &#34;&#34;&#34;
+    If set, do not allow the annotation to interact with the user.
+    The annotation may be displayed or printed but should not respond to mouse clicks.
+    &#34;&#34;&#34;
+    LOCKED = 128
+    &#34;&#34;&#34;
+    If set, do not allow the annotation to be deleted or its properties
+    (including position and size) to be modified by the user.
+    &#34;&#34;&#34;
+    TOGGLE_NO_VIEW = 256
+    &#34;If set, invert the interpretation of the NoView flag for certain events.&#34;
+    LOCKED_CONTENTS = 512
+    &#34;If set, do not allow the contents of the annotation to be modified by the user.&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveIntEnum" href="#fpdf.enums.CoerciveIntEnum">CoerciveIntEnum</a></li>
+<li>enum.IntEnum</li>
+<li>builtins.int</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.AnnotationFlag.HIDDEN"><code class="name">var <span class="ident">HIDDEN</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not display or print the annotation or allow it to interact with the user</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.INVISIBLE"><code class="name">var <span class="ident">INVISIBLE</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not display the annotation if it does not belong to one of the
+standard annotation types and no annotation handler is available.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.LOCKED"><code class="name">var <span class="ident">LOCKED</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not allow the annotation to be deleted or its properties
+(including position and size) to be modified by the user.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.LOCKED_CONTENTS"><code class="name">var <span class="ident">LOCKED_CONTENTS</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not allow the contents of the annotation to be modified by the user.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.NO_ROTATE"><code class="name">var <span class="ident">NO_ROTATE</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not rotate the annotation’s appearance to match the rotation of the page.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.NO_VIEW"><code class="name">var <span class="ident">NO_VIEW</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not display the annotation on the screen or allow it to interact with the user</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.NO_ZOOM"><code class="name">var <span class="ident">NO_ZOOM</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not scale the annotation’s appearance to match the magnification of the page.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.PRINT"><code class="name">var <span class="ident">PRINT</span></code></dt>
+<dd>
+<div class="desc"><p>If set, print the annotation when the page is printed.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.READ_ONLY"><code class="name">var <span class="ident">READ_ONLY</span></code></dt>
+<dd>
+<div class="desc"><p>If set, do not allow the annotation to interact with the user.
+The annotation may be displayed or printed but should not respond to mouse clicks.</p></div>
+</dd>
+<dt id="fpdf.enums.AnnotationFlag.TOGGLE_NO_VIEW"><code class="name">var <span class="ident">TOGGLE_NO_VIEW</span></code></dt>
+<dd>
+<div class="desc"><p>If set, invert the interpretation of the NoView flag for certain events.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveIntEnum" href="#fpdf.enums.CoerciveIntEnum">CoerciveIntEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveIntEnum.coerce" href="#fpdf.enums.CoerciveIntEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fpdf.enums.AnnotationName"><code class="flex name class">
+<span>class <span class="ident">AnnotationName</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>The name of an icon that shall be used in displaying the annotation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AnnotationName(CoerciveEnum):
+    &#34;The name of an icon that shall be used in displaying the annotation&#34;
+
+    NOTE = Name(&#34;Note&#34;)
+    COMMENT = Name(&#34;Comment&#34;)
+    HELP = Name(&#34;Help&#34;)
+    PARAGRAPH = Name(&#34;Paragraph&#34;)
+    NEW_PARAGRAPH = Name(&#34;NewParagraph&#34;)
+    INSERT = Name(&#34;Insert&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.AnnotationName.COMMENT"><code class="name">var <span class="ident">COMMENT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.AnnotationName.HELP"><code class="name">var <span class="ident">HELP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.AnnotationName.INSERT"><code class="name">var <span class="ident">INSERT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.AnnotationName.NEW_PARAGRAPH"><code class="name">var <span class="ident">NEW_PARAGRAPH</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.AnnotationName.NOTE"><code class="name">var <span class="ident">NOTE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.AnnotationName.PARAGRAPH"><code class="name">var <span class="ident">PARAGRAPH</span></code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -936,6 +1143,7 @@ path; otherwise, it is inside."</p></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="fpdf.enums.Align" href="#fpdf.enums.Align">Align</a></li>
+<li><a title="fpdf.enums.AnnotationName" href="#fpdf.enums.AnnotationName">AnnotationName</a></li>
 <li><a title="fpdf.enums.BlendMode" href="#fpdf.enums.BlendMode">BlendMode</a></li>
 <li><a title="fpdf.enums.ClippingPathIntersectionRule" href="#fpdf.enums.ClippingPathIntersectionRule">ClippingPathIntersectionRule</a></li>
 <li><a title="fpdf.enums.IntersectionRule" href="#fpdf.enums.IntersectionRule">IntersectionRule</a></li>
@@ -1076,6 +1284,7 @@ enumeration members.</p></div>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="fpdf.enums.AnnotationFlag" href="#fpdf.enums.AnnotationFlag">AnnotationFlag</a></li>
 <li><a title="fpdf.enums.StrokeCapStyle" href="#fpdf.enums.StrokeCapStyle">StrokeCapStyle</a></li>
 <li><a title="fpdf.enums.StrokeJoinStyle" href="#fpdf.enums.StrokeJoinStyle">StrokeJoinStyle</a></li>
 <li><a title="fpdf.enums.TextMode" href="#fpdf.enums.TextMode">TextMode</a></li>
@@ -2069,6 +2278,32 @@ corner."</p></div>
 <li><code><a title="fpdf.enums.Align.J" href="#fpdf.enums.Align.J">J</a></code></li>
 <li><code><a title="fpdf.enums.Align.L" href="#fpdf.enums.Align.L">L</a></code></li>
 <li><code><a title="fpdf.enums.Align.R" href="#fpdf.enums.Align.R">R</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.AnnotationFlag" href="#fpdf.enums.AnnotationFlag">AnnotationFlag</a></code></h4>
+<ul class="two-column">
+<li><code><a title="fpdf.enums.AnnotationFlag.HIDDEN" href="#fpdf.enums.AnnotationFlag.HIDDEN">HIDDEN</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.INVISIBLE" href="#fpdf.enums.AnnotationFlag.INVISIBLE">INVISIBLE</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.LOCKED" href="#fpdf.enums.AnnotationFlag.LOCKED">LOCKED</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.LOCKED_CONTENTS" href="#fpdf.enums.AnnotationFlag.LOCKED_CONTENTS">LOCKED_CONTENTS</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.NO_ROTATE" href="#fpdf.enums.AnnotationFlag.NO_ROTATE">NO_ROTATE</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.NO_VIEW" href="#fpdf.enums.AnnotationFlag.NO_VIEW">NO_VIEW</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.NO_ZOOM" href="#fpdf.enums.AnnotationFlag.NO_ZOOM">NO_ZOOM</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.PRINT" href="#fpdf.enums.AnnotationFlag.PRINT">PRINT</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.READ_ONLY" href="#fpdf.enums.AnnotationFlag.READ_ONLY">READ_ONLY</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationFlag.TOGGLE_NO_VIEW" href="#fpdf.enums.AnnotationFlag.TOGGLE_NO_VIEW">TOGGLE_NO_VIEW</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.AnnotationName" href="#fpdf.enums.AnnotationName">AnnotationName</a></code></h4>
+<ul class="two-column">
+<li><code><a title="fpdf.enums.AnnotationName.COMMENT" href="#fpdf.enums.AnnotationName.COMMENT">COMMENT</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationName.HELP" href="#fpdf.enums.AnnotationName.HELP">HELP</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationName.INSERT" href="#fpdf.enums.AnnotationName.INSERT">INSERT</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationName.NEW_PARAGRAPH" href="#fpdf.enums.AnnotationName.NEW_PARAGRAPH">NEW_PARAGRAPH</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationName.NOTE" href="#fpdf.enums.AnnotationName.NOTE">NOTE</a></code></li>
+<li><code><a title="fpdf.enums.AnnotationName.PARAGRAPH" href="#fpdf.enums.AnnotationName.PARAGRAPH">PARAGRAPH</a></code></li>
 </ul>
 </li>
 <li>

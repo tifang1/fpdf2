@@ -60,7 +60,7 @@ from datetime import datetime
 from functools import wraps
 from os.path import splitext
 from pathlib import Path
-from typing import Callable, List, NamedTuple, Optional, Union
+from typing import Callable, List, NamedTuple, Optional, Tuple, Union
 
 from PIL import Image
 
@@ -69,6 +69,8 @@ from .actions import Action
 from .deprecation import WarnOnDeprecatedModuleAttributes
 from .enums import (
     Align,
+    AnnotationName,
+    AnnotationFlag,
     DocumentState,
     PageLayout,
     PageMode,
@@ -128,6 +130,9 @@ ZOOM_CONFIGS = {  # cf. section 8.2.1 &#34;Destinations&#34; of the 2006 PDF spe
     &#34;real&#34;: (&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, &#34;1&#34;),
 }
 
+# cf. https://docs.verapdf.org/validation/pdfa-part1/#rule-653-2
+DEFAULT_ANNOT_FLAGS = (AnnotationFlag.PRINT,)
+
 
 class Annotation(NamedTuple):
     type: str
@@ -135,6 +140,7 @@ class Annotation(NamedTuple):
     y: int
     width: int
     height: int
+    flags: Tuple[AnnotationFlag] = DEFAULT_ANNOT_FLAGS
     contents: str = None
     link: Union[str, int] = None
     alt_text: Optional[str] = None
@@ -145,6 +151,7 @@ class Annotation(NamedTuple):
     quad_points: Optional[tuple] = None
     page: Optional[int] = None
     border_width: int = 0  # PDF readers support: displayed by Acrobat but not Sumatra
+    name: Optional[AnnotationName] = None  # for text annotations
 
     def serialize(self, fpdf):
         &#34;Convert this object dictionnary to a string&#34;
@@ -156,11 +163,10 @@ class Annotation(NamedTuple):
         out = (
             f&#34;&lt;&lt;/Type /Annot /Subtype /{self.type}&#34;
             f&#34; /Rect [{rect}] /Border [0 0 {self.border_width}]&#34;
-            # Flag &#34;Print&#34; (bit position 3) specifies to print
-            # the annotation when the page is printed.
-            # cf. https://docs.verapdf.org/validation/pdfa-part1/#rule-653-2
-            f&#34; /F 4&#34;
         )
+
+        if self.flags:
+            out += f&#34; /F {sum(self.flags)}&#34;
 
         if self.contents:
             out += f&#34; /Contents {enclose_in_parens(self.contents)}&#34;
@@ -196,6 +202,9 @@ class Annotation(NamedTuple):
 
         if self.page:
             out += f&#34; /P {pdf_ref(object_id_for_page(self.page))}&#34;
+
+        if self.name:
+            out += f&#34; /Name {self.name.value.pdf_repr()}&#34;
 
         return out + &#34;&gt;&gt;&#34;
 
@@ -1195,7 +1204,7 @@ class FPDF(GraphicsStateMixin):
             warnings.warn(
                 &#39;&#34;fill&#34; parameter is deprecated, use style=&#34;F&#34; or style=&#34;DF&#34; instead&#39;,
                 DeprecationWarning,
-                stacklevel=2,
+                stacklevel=5 if polygon else 3,
             )
         if fill and style is None:
             style = RenderStyle.DF
@@ -1873,16 +1882,19 @@ class FPDF(GraphicsStateMixin):
         return link
 
     @check_page
-    def text_annotation(self, x, y, text, w=1, h=1):
+    def text_annotation(
+        self, x, y, text, w=1, h=1, name=None, flags=DEFAULT_ANNOT_FLAGS
+    ):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
 
         Args:
             x (float): horizontal position (from the left) to the left side of the link rectangle
             y (float): vertical position (from the top) to the bottom side of the link rectangle
+            text (str): text to display
             w (float): width of the link rectangle
             h (float): width of the link rectangle
-            text (str): text to display
+            name (fpdf.enums.AnnotationName, str): icon that shall be used in displaying the annotation
         &#34;&#34;&#34;
         annotation = Annotation(
             &#34;Text&#34;,
@@ -1891,6 +1903,8 @@ class FPDF(GraphicsStateMixin):
             w * self.k,
             h * self.k,
             contents=text,
+            name=AnnotationName.coerce(name) if name else None,
+            flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
         )
         self.annots[self.page].append(annotation)
         return annotation
@@ -5642,7 +5656,7 @@ Default to "mm".</dd>
             warnings.warn(
                 &#39;&#34;fill&#34; parameter is deprecated, use style=&#34;F&#34; or style=&#34;DF&#34; instead&#39;,
                 DeprecationWarning,
-                stacklevel=2,
+                stacklevel=5 if polygon else 3,
             )
         if fill and style is None:
             style = RenderStyle.DF
@@ -6320,16 +6334,19 @@ Default to "mm".</dd>
         return link
 
     @check_page
-    def text_annotation(self, x, y, text, w=1, h=1):
+    def text_annotation(
+        self, x, y, text, w=1, h=1, name=None, flags=DEFAULT_ANNOT_FLAGS
+    ):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
 
         Args:
             x (float): horizontal position (from the left) to the left side of the link rectangle
             y (float): vertical position (from the top) to the bottom side of the link rectangle
+            text (str): text to display
             w (float): width of the link rectangle
             h (float): width of the link rectangle
-            text (str): text to display
+            name (fpdf.enums.AnnotationName, str): icon that shall be used in displaying the annotation
         &#34;&#34;&#34;
         annotation = Annotation(
             &#34;Text&#34;,
@@ -6338,6 +6355,8 @@ Default to "mm".</dd>
             w * self.k,
             h * self.k,
             contents=text,
+            name=AnnotationName.coerce(name) if name else None,
+            flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
         )
         self.annots[self.page].append(annotation)
         return annotation
@@ -11703,7 +11722,7 @@ def polyline(self, point_list, fill=False, polygon=False, style=None):
         warnings.warn(
             &#39;&#34;fill&#34; parameter is deprecated, use style=&#34;F&#34; or style=&#34;DF&#34; instead&#39;,
             DeprecationWarning,
-            stacklevel=2,
+            stacklevel=5 if polygon else 3,
         )
     if fill and style is None:
         style = RenderStyle.DF
@@ -13389,7 +13408,7 @@ def text(self, x, y, txt=&#34;&#34;):
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.text_annotation"><code class="name flex">
-<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1)</span>
+<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1, name=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;,))</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a text annotation on a rectangular area of the page.</p>
@@ -13399,28 +13418,33 @@ def text(self, x, y, txt=&#34;&#34;):
 <dd>horizontal position (from the left) to the left side of the link rectangle</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
 <dd>vertical position (from the top) to the bottom side of the link rectangle</dd>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
+<dd>text to display</dd>
 <dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
 <dd>width of the link rectangle</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>width of the link rectangle</dd>
-<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
-<dd>text to display</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code><a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, str</code></dt>
+<dd>icon that shall be used in displaying the annotation</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
-def text_annotation(self, x, y, text, w=1, h=1):
+def text_annotation(
+    self, x, y, text, w=1, h=1, name=None, flags=DEFAULT_ANNOT_FLAGS
+):
     &#34;&#34;&#34;
     Puts a text annotation on a rectangular area of the page.
 
     Args:
         x (float): horizontal position (from the left) to the left side of the link rectangle
         y (float): vertical position (from the top) to the bottom side of the link rectangle
+        text (str): text to display
         w (float): width of the link rectangle
         h (float): width of the link rectangle
-        text (str): text to display
+        name (fpdf.enums.AnnotationName, str): icon that shall be used in displaying the annotation
     &#34;&#34;&#34;
     annotation = Annotation(
         &#34;Text&#34;,
@@ -13429,6 +13453,8 @@ def text_annotation(self, x, y, text, w=1, h=1):
         w * self.k,
         h * self.k,
         contents=text,
+        name=AnnotationName.coerce(name) if name else None,
+        flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
     )
     self.annots[self.page].append(annotation)
     return annotation</code></pre>
