@@ -129,7 +129,10 @@ class Align(CoerciveEnum):
     &#34;Defines how to render text in a cell&#34;
 
     C = intern(&#34;CENTER&#34;)
-    &#34;Center text&#34;
+    &#34;Center text horizontally&#34;
+
+    X = intern(&#34;X_CENTER&#34;)
+    &#34;Center text horizontally around current x position&#34;
 
     L = intern(&#34;LEFT&#34;)
     &#34;Left-align text&#34;
@@ -614,7 +617,10 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
     &#34;Defines how to render text in a cell&#34;
 
     C = intern(&#34;CENTER&#34;)
-    &#34;Center text&#34;
+    &#34;Center text horizontally&#34;
+
+    X = intern(&#34;X_CENTER&#34;)
+    &#34;Center text horizontally around current x position&#34;
 
     L = intern(&#34;LEFT&#34;)
     &#34;Left-align text&#34;
@@ -640,7 +646,7 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 <dl>
 <dt id="fpdf.enums.Align.C"><code class="name">var <span class="ident">C</span></code></dt>
 <dd>
-<div class="desc"><p>Center text</p></div>
+<div class="desc"><p>Center text horizontally</p></div>
 </dd>
 <dt id="fpdf.enums.Align.J"><code class="name">var <span class="ident">J</span></code></dt>
 <dd>
@@ -653,6 +659,10 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 <dt id="fpdf.enums.Align.R"><code class="name">var <span class="ident">R</span></code></dt>
 <dd>
 <div class="desc"><p>Right-align text</p></div>
+</dd>
+<dt id="fpdf.enums.Align.X"><code class="name">var <span class="ident">X</span></code></dt>
+<dd>
+<div class="desc"><p>Center text horizontally around current x position</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -2278,6 +2288,7 @@ corner."</p></div>
 <li><code><a title="fpdf.enums.Align.J" href="#fpdf.enums.Align.J">J</a></code></li>
 <li><code><a title="fpdf.enums.Align.L" href="#fpdf.enums.Align.L">L</a></code></li>
 <li><code><a title="fpdf.enums.Align.R" href="#fpdf.enums.Align.R">R</a></code></li>
+<li><code><a title="fpdf.enums.Align.X" href="#fpdf.enums.Align.X">X</a></code></li>
 </ul>
 </li>
 <li>

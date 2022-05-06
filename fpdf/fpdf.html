@@ -2304,12 +2304,13 @@ class FPDF(GraphicsStateMixin):
             ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             align (fpdf.enums.Align, str): Allows to center or align the text inside the cell.
                 Possible values are: `L` or empty string: left align (default value) ;
-                `C`: center ; `R`: right align
+                `C`: center; `X`: center around current x; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
+            center (bool): **DEPRECATED** since 2.5.1:
+                Use align=&#34;C&#34; or align=&#34;X&#34; instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
 
@@ -2334,7 +2335,7 @@ class FPDF(GraphicsStateMixin):
             center = False
         else:
             warnings.warn(
-                (&#39;The parameter &#34;center&#34; is deprecated.&#39; &#39; Use align=&#34;C&#34; instead.&#39;),
+                &#39;The parameter &#34;center&#34; is deprecated. Use align=&#34;C&#34; or align=&#34;X&#34; instead.&#39;,
                 DeprecationWarning,
                 stacklevel=3,
             )
@@ -2426,6 +2427,10 @@ class FPDF(GraphicsStateMixin):
             new_x (fpdf.enums.XPos): New current position in x after the call.
             new_y (fpdf.enums.YPos): New current position in y after the call.
             align (fpdf.enums.Align): Allows to align the text inside the cell.
+                Possible values are:
+                `L` or empty string: left align (default value);
+                `C`: center; `X`: center around current x; `R`: right align;
+                `J`: justify (if more than one word)
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
@@ -2463,6 +2468,8 @@ class FPDF(GraphicsStateMixin):
             w = styled_txt_width + self.c_margin + self.c_margin
         if h is None:
             h = self.font_size
+        if align == Align.X:
+            self.x -= w / 2
         if center:
             self.x = self.l_margin + (self.epw - w) / 2
         page_break_triggered = self._perform_page_break_if_need_be(h)
@@ -2531,7 +2538,7 @@ class FPDF(GraphicsStateMixin):
         if text_line.fragments:
             if align == Align.R:
                 dx = w - self.c_margin - styled_txt_width
-            elif align == Align.C:
+            elif align in [Align.C, Align.X]:
                 dx = (w - styled_txt_width) / 2
             else:
                 dx = self.c_margin
@@ -2838,9 +2845,10 @@ class FPDF(GraphicsStateMixin):
                 or a string containing some or all of the following characters
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-            align (fpdf.enums.Align, str): Allows to center or align the text. Possible values are:
-                `J`: justify (default value); `L` or empty string: left align ;
-                `C`: center ; `R`: right align
+            align (fpdf.enums.Align, str): Allows to center or align the text.
+                Possible values are:
+                `J`: justify (default value); `L` or empty string: left align;
+                `C`: center; `X`: center around current x; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             split_only (bool): if `True`, does not output anything, only perform
@@ -2947,6 +2955,8 @@ class FPDF(GraphicsStateMixin):
                     justify=False,
                 )
             ]
+        if align == Align.X:
+            prev_x = self.x
         for text_line_index, text_line in enumerate(text_lines):
             is_last_line = text_line_index == len(text_lines) - 1
             if max_line_height is not None and h &gt; max_line_height and not is_last_line:
@@ -2979,6 +2989,9 @@ class FPDF(GraphicsStateMixin):
                 # cf. test_multi_cell_table_with_automatic_page_break
                 prev_y = self.y
             page_break_triggered = page_break_triggered or new_page
+            if not is_last_line and align == Align.X:
+                # prevent cumulative shift to the left
+                self.x = prev_x
 
         if new_y == YPos.TOP:  # We may have jumped a few lines -&gt; reset
             self.y = prev_y
@@ -6757,12 +6770,13 @@ Default to "mm".</dd>
             ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             align (fpdf.enums.Align, str): Allows to center or align the text inside the cell.
                 Possible values are: `L` or empty string: left align (default value) ;
-                `C`: center ; `R`: right align
+                `C`: center; `X`: center around current x; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
-            center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
+            center (bool): **DEPRECATED** since 2.5.1:
+                Use align=&#34;C&#34; or align=&#34;X&#34; instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
 
@@ -6787,7 +6801,7 @@ Default to "mm".</dd>
             center = False
         else:
             warnings.warn(
-                (&#39;The parameter &#34;center&#34; is deprecated.&#39; &#39; Use align=&#34;C&#34; instead.&#39;),
+                &#39;The parameter &#34;center&#34; is deprecated. Use align=&#34;C&#34; or align=&#34;X&#34; instead.&#39;,
                 DeprecationWarning,
                 stacklevel=3,
             )
@@ -6879,6 +6893,10 @@ Default to "mm".</dd>
             new_x (fpdf.enums.XPos): New current position in x after the call.
             new_y (fpdf.enums.YPos): New current position in y after the call.
             align (fpdf.enums.Align): Allows to align the text inside the cell.
+                Possible values are:
+                `L` or empty string: left align (default value);
+                `C`: center; `X`: center around current x; `R`: right align;
+                `J`: justify (if more than one word)
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
@@ -6916,6 +6934,8 @@ Default to "mm".</dd>
             w = styled_txt_width + self.c_margin + self.c_margin
         if h is None:
             h = self.font_size
+        if align == Align.X:
+            self.x -= w / 2
         if center:
             self.x = self.l_margin + (self.epw - w) / 2
         page_break_triggered = self._perform_page_break_if_need_be(h)
@@ -6984,7 +7004,7 @@ Default to "mm".</dd>
         if text_line.fragments:
             if align == Align.R:
                 dx = w - self.c_margin - styled_txt_width
-            elif align == Align.C:
+            elif align in [Align.C, Align.X]:
                 dx = (w - styled_txt_width) / 2
             else:
                 dx = self.c_margin
@@ -7291,9 +7311,10 @@ Default to "mm".</dd>
                 or a string containing some or all of the following characters
                 (in any order):
                 `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-            align (fpdf.enums.Align, str): Allows to center or align the text. Possible values are:
-                `J`: justify (default value); `L` or empty string: left align ;
-                `C`: center ; `R`: right align
+            align (fpdf.enums.Align, str): Allows to center or align the text.
+                Possible values are:
+                `J`: justify (default value); `L` or empty string: left align;
+                `C`: center; `X`: center around current x; `R`: right align
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             split_only (bool): if `True`, does not output anything, only perform
@@ -7400,6 +7421,8 @@ Default to "mm".</dd>
                     justify=False,
                 )
             ]
+        if align == Align.X:
+            prev_x = self.x
         for text_line_index, text_line in enumerate(text_lines):
             is_last_line = text_line_index == len(text_lines) - 1
             if max_line_height is not None and h &gt; max_line_height and not is_last_line:
@@ -7432,6 +7455,9 @@ Default to "mm".</dd>
                 # cf. test_multi_cell_table_with_automatic_page_break
                 prev_y = self.y
             page_break_triggered = page_break_triggered or new_page
+            if not is_last_line and align == Align.X:
+                # prevent cumulative shift to the left
+                self.x = prev_x
 
         if new_y == YPos.TOP:  # We may have jumped a few lines -&gt; reset
             self.y = prev_y
@@ -9934,7 +9960,7 @@ or a string containing some or all of the following characters
 <dt><strong><code>align</code></strong> :&ensp;<code><a title="fpdf.enums.Align" href="enums.html#fpdf.enums.Align">Align</a>, str</code></dt>
 <dd>Allows to center or align the text inside the cell.
 Possible values are: <code>L</code> or empty string: left align (default value) ;
-<code>C</code>: center ; <code>R</code>: right align</dd>
+<code>C</code>: center; <code>X</code>: center around current x; <code>R</code>: right align</dd>
 <dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates if the cell background must be painted (<code>True</code>)
 or transparent (<code>False</code>). Default value: False.</dd>
@@ -9942,7 +9968,8 @@ or transparent (<code>False</code>). Default value: False.</dd>
 <dd>optional link to add on the cell, internal
 (identifier returned by <code>add_link</code>) or external URL.</dd>
 <dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
-<dd><strong>DEPRECATED since 2.5.1</strong>: Use <code>align="C"</code> instead.</dd>
+<dd><strong>DEPRECATED</strong> since 2.5.1:
+Use align="C" or align="X" instead.</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable minimal markdown-like markup to render part
 of text as bold / italics / underlined. Default to False.</dd>
@@ -9994,12 +10021,13 @@ def cell(
         ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
         align (fpdf.enums.Align, str): Allows to center or align the text inside the cell.
             Possible values are: `L` or empty string: left align (default value) ;
-            `C`: center ; `R`: right align
+            `C`: center; `X`: center around current x; `R`: right align
         fill (bool): Indicates if the cell background must be painted (`True`)
             or transparent (`False`). Default value: False.
         link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
-        center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
+        center (bool): **DEPRECATED** since 2.5.1:
+            Use align=&#34;C&#34; or align=&#34;X&#34; instead.
         markdown (bool): enable minimal markdown-like markup to render part
             of text as bold / italics / underlined. Default to False.
 
@@ -10024,7 +10052,7 @@ def cell(
         center = False
     else:
         warnings.warn(
-            (&#39;The parameter &#34;center&#34; is deprecated.&#39; &#39; Use align=&#34;C&#34; instead.&#39;),
+            &#39;The parameter &#34;center&#34; is deprecated. Use align=&#34;C&#34; or align=&#34;X&#34; instead.&#39;,
             DeprecationWarning,
             stacklevel=3,
         )
@@ -11211,9 +11239,10 @@ or a string containing some or all of the following characters
 (in any order):
 <code>L</code>: left ; <code>T</code>: top ; <code>R</code>: right ; <code>B</code>: bottom. Default value: 0.</dd>
 <dt><strong><code>align</code></strong> :&ensp;<code><a title="fpdf.enums.Align" href="enums.html#fpdf.enums.Align">Align</a>, str</code></dt>
-<dd>Allows to center or align the text. Possible values are:
-<code>J</code>: justify (default value); <code>L</code> or empty string: left align ;
-<code>C</code>: center ; <code>R</code>: right align</dd>
+<dd>Allows to center or align the text.
+Possible values are:
+<code>J</code>: justify (default value); <code>L</code> or empty string: left align;
+<code>C</code>: center; <code>X</code>: center around current x; <code>R</code>: right align</dd>
 <dt><strong><code>fill</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Indicates if the cell background must be painted (<code>True</code>)
 or transparent (<code>False</code>). Default value: False.</dd>
@@ -11281,9 +11310,10 @@ def multi_cell(
             or a string containing some or all of the following characters
             (in any order):
             `L`: left ; `T`: top ; `R`: right ; `B`: bottom. Default value: 0.
-        align (fpdf.enums.Align, str): Allows to center or align the text. Possible values are:
-            `J`: justify (default value); `L` or empty string: left align ;
-            `C`: center ; `R`: right align
+        align (fpdf.enums.Align, str): Allows to center or align the text.
+            Possible values are:
+            `J`: justify (default value); `L` or empty string: left align;
+            `C`: center; `X`: center around current x; `R`: right align
         fill (bool): Indicates if the cell background must be painted (`True`)
             or transparent (`False`). Default value: False.
         split_only (bool): if `True`, does not output anything, only perform
@@ -11390,6 +11420,8 @@ def multi_cell(
                 justify=False,
             )
         ]
+    if align == Align.X:
+        prev_x = self.x
     for text_line_index, text_line in enumerate(text_lines):
         is_last_line = text_line_index == len(text_lines) - 1
         if max_line_height is not None and h &gt; max_line_height and not is_last_line:
@@ -11422,6 +11454,9 @@ def multi_cell(
             # cf. test_multi_cell_table_with_automatic_page_break
             prev_y = self.y
         page_break_triggered = page_break_triggered or new_page
+        if not is_last_line and align == Align.X:
+            # prevent cumulative shift to the left
+            self.x = prev_x
 
     if new_y == YPos.TOP:  # We may have jumped a few lines -&gt; reset
         self.y = prev_y
