@@ -1779,7 +1779,7 @@ Default to "mm".</dd>
             x (float): horizontal position (from the left) to the left side of the link rectangle
             y (float): vertical position (from the top) to the bottom side of the link rectangle
             w (float): width of the link rectangle
-            h (float): width of the link rectangle
+            h (float): height of the link rectangle
             link: either an URL or a integer returned by `add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
             border_width (int): thickness of an optional black border surrounding the link.
@@ -1809,9 +1809,10 @@ Default to "mm".</dd>
             x (float): horizontal position (from the left) to the left side of the link rectangle
             y (float): vertical position (from the top) to the bottom side of the link rectangle
             text (str): text to display
-            w (float): width of the link rectangle
-            h (float): width of the link rectangle
-            name (fpdf.enums.AnnotationName, str): icon that shall be used in displaying the annotation
+            w (float): optional width of the link rectangle
+            h (float): optional height of the link rectangle
+            name (fpdf.enums.AnnotationName, str): optional icon that shall be used in displaying the annotation
+            flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
         &#34;&#34;&#34;
         annotation = Annotation(
             &#34;Text&#34;,
@@ -1836,7 +1837,7 @@ Default to "mm".</dd>
             x (float): horizontal position (from the left) to the left side of the link rectangle
             y (float): vertical position (from the top) to the bottom side of the link rectangle
             w (float): width of the link rectangle
-            h (float): width of the link rectangle
+            h (float): height of the link rectangle
         &#34;&#34;&#34;
         annotation = Annotation(
             &#34;Action&#34;,
@@ -4675,7 +4676,7 @@ def unifontsubset(self):
 <dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
 <dd>width of the link rectangle</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
-<dd>width of the link rectangle</dd>
+<dd>height of the link rectangle</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -4691,7 +4692,7 @@ def add_action(self, action, x, y, w, h):
         x (float): horizontal position (from the left) to the left side of the link rectangle
         y (float): vertical position (from the top) to the bottom side of the link rectangle
         w (float): width of the link rectangle
-        h (float): width of the link rectangle
+        h (float): height of the link rectangle
     &#34;&#34;&#34;
     annotation = Annotation(
         &#34;Action&#34;,
@@ -6425,7 +6426,7 @@ but this method can be useful for instance to define a clickable area inside an 
 <dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
 <dd>width of the link rectangle</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
-<dd>width of the link rectangle</dd>
+<dd>height of the link rectangle</dd>
 <dt><strong><code>link</code></strong></dt>
 <dd>either an URL or a integer returned by <code>add_link</code>, defining an internal link to a page</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
@@ -6450,7 +6451,7 @@ def link(self, x, y, w, h, link, alt_text=None, border_width=0):
         x (float): horizontal position (from the left) to the left side of the link rectangle
         y (float): vertical position (from the top) to the bottom side of the link rectangle
         w (float): width of the link rectangle
-        h (float): width of the link rectangle
+        h (float): height of the link rectangle
         link: either an URL or a integer returned by `add_link`, defining an internal link to a page
         alt_text (str): optional textual description of the link, for accessibility purposes
         border_width (int): thickness of an optional black border surrounding the link.
@@ -8886,11 +8887,13 @@ def text(self, x, y, txt=&#34;&#34;):
 <dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
 <dd>text to display</dd>
 <dt><strong><code>w</code></strong> :&ensp;<code>float</code></dt>
-<dd>width of the link rectangle</dd>
+<dd>optional width of the link rectangle</dd>
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
-<dd>width of the link rectangle</dd>
+<dd>optional height of the link rectangle</dd>
 <dt><strong><code>name</code></strong> :&ensp;<code><a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, str</code></dt>
-<dd>icon that shall be used in displaying the annotation</dd>
+<dd>optional icon that shall be used in displaying the annotation</dd>
+<dt><strong><code>flags</code></strong> :&ensp;<code>Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]</code></dt>
+<dd>optional list of flags defining annotation properties</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -8907,9 +8910,10 @@ def text_annotation(
         x (float): horizontal position (from the left) to the left side of the link rectangle
         y (float): vertical position (from the top) to the bottom side of the link rectangle
         text (str): text to display
-        w (float): width of the link rectangle
-        h (float): width of the link rectangle
-        name (fpdf.enums.AnnotationName, str): icon that shall be used in displaying the annotation
+        w (float): optional width of the link rectangle
+        h (float): optional height of the link rectangle
+        name (fpdf.enums.AnnotationName, str): optional icon that shall be used in displaying the annotation
+        flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
     &#34;&#34;&#34;
     annotation = Annotation(
         &#34;Text&#34;,
