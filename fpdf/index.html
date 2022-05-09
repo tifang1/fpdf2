@@ -3072,7 +3072,7 @@ Default to "mm".</dd>
             return self._vector_image(img, x, y, w, h, link, title, alt_text)
         if isinstance(name, str):
             img = None
-        elif isinstance(name, Image.Image):
+        elif isinstance(name, Image):
             bytes = name.tobytes()
             # disabling bandit rule as we just build a cache key, this is secure
             name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
@@ -6210,7 +6210,7 @@ def image(
         return self._vector_image(img, x, y, w, h, link, title, alt_text)
     if isinstance(name, str):
         img = None
-    elif isinstance(name, Image.Image):
+    elif isinstance(name, Image):
         bytes = name.tobytes()
         # disabling bandit rule as we just build a cache key, this is secure
         name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324

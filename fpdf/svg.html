@@ -28,9 +28,16 @@
 </summary>
 <pre><code class="python">import math
 import re
+import warnings
 from typing import NamedTuple
 
-from defusedxml.ElementTree import fromstring as parse_xml_str
+try:
+    from defusedxml.ElementTree import fromstring as parse_xml_str
+except ImportError:
+    warnings.warn(
+        &#34;defusedxml could not be imported - fpdf2 will not be able to sanitize SVG images provided&#34;
+    )
+    from xml.etree.ElementTree import fromstring as parse_xml_str  # nosec
 
 from . import drawing, html
 
