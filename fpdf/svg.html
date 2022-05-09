@@ -286,8 +286,28 @@ svg_attr_map = {
 
 
 @force_nodocument
+def parse_style(svg_element):
+    &#34;&#34;&#34;Parse `style=&#34;...&#34;` making it&#39;s key-value pairs element&#39;s attributes&#34;&#34;&#34;
+    try:
+        style = svg_element.attrib[&#34;style&#34;]
+    except KeyError:
+        pass
+    else:
+        for element in style.split(&#34;;&#34;):
+            if not element:
+                continue
+
+            pair = element.split(&#34;:&#34;)
+            if len(pair) == 2 and pair[0] and pair[1]:
+                attr, value = pair
+
+                svg_element.attrib[attr.strip()] = value.strip()
+
+
+@force_nodocument
 def apply_styles(stylable, svg_element):
     &#34;&#34;&#34;Apply the known styles from `svg_element` to the pdf path/group `stylable`.&#34;&#34;&#34;
+    parse_style(svg_element)
 
     stylable.style.auto_close = False
 
