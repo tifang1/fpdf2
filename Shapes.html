@@ -685,6 +685,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#circle" class="md-nav__link">
+    Circle
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ellipse" class="md-nav__link">
     Ellipse
   </a>
@@ -1110,6 +1117,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#circle" class="md-nav__link">
+    Circle
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#ellipse" class="md-nav__link">
     Ellipse
   </a>
@@ -1165,7 +1179,7 @@
 <h1 id="shapes">Shapes</h1>
 <p>The following code snippets show examples of rendering various shapes.</p>
 <h2 id="lines">Lines</h2>
-<p>Draw a thin plain orange line:
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.line"><code>line()</code></a> to draw a thin plain orange line:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1175,7 +1189,7 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">x1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">x2</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;orange_plain_line.pdf&quot;</span><span class="p">)</span>
 </code></pre></div></p>
-<p>Draw a dashed light blue line:
+<p>Drawing a dashed light blue line:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1186,8 +1200,20 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">x1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">x2</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;blue_dashed_line.pdf&quot;</span><span class="p">)</span>
 </code></pre></div></p>
+<h2 id="circle">Circle</h2>
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.circle"><code>circle()</code></a> to draw a disc filled in pink with a grey outline:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="mi">240</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">180</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;circle.pdf&quot;</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="ellipse">Ellipse</h2>
-<p>Draw a circle filled in grey with a pink outline:
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.ellipse"><code>ellipse()</code></a>, filled in grey with a pink outline:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1195,11 +1221,11 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">180</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">240</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;circle.pdf&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;ellipse.pdf&quot;</span><span class="p">)</span>
 </code></pre></div></p>
 <h2 id="rectangle">Rectangle</h2>
-<p>Draw nested squares:
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.rect"><code>rect()</code></a> to draw nested squares:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1210,6 +1236,7 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;squares.pdf&quot;</span><span class="p">)</span>
 </code></pre></div></p>
 <h2 id="polygon">Polygon</h2>
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.polygon"><code>polygon()</code></a>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1221,6 +1248,7 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;polygon.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="arc">Arc</h2>
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.arc"><code>arc()</code></a>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1231,6 +1259,7 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;arc.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="solid-arc">Solid arc</h2>
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.solid_arc"><code>solid_arc()</code></a>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>

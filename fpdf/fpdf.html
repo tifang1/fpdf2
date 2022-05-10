@@ -3443,6 +3443,7 @@ class FPDF(GraphicsStateMixin):
         &#34;&#34;&#34;
         Output PDF to some destination.
         The method first calls [close](close.md) if necessary to terminate the document.
+        After calling this method, content cannot be added to the document anymore.
 
         By default the bytearray buffer is returned.
         If a `name` is given, the PDF is written to a new file.
@@ -7909,6 +7910,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Output PDF to some destination.
         The method first calls [close](close.md) if necessary to terminate the document.
+        After calling this method, content cannot be added to the document anymore.
 
         By default the bytearray buffer is returned.
         If a `name` is given, the PDF is written to a new file.
@@ -11622,7 +11624,8 @@ It is not necessary to call it explicitly because <code>add_page()</code> does i
 </code></dt>
 <dd>
 <div class="desc"><p>Output PDF to some destination.
-The method first calls <a href="close.md">close</a> if necessary to terminate the document.</p>
+The method first calls <a href="close.md">close</a> if necessary to terminate the document.
+After calling this method, content cannot be added to the document anymore.</p>
 <p>By default the bytearray buffer is returned.
 If a <code>name</code> is given, the PDF is written to a new file.</p>
 <h2 id="args">Args</h2>
@@ -11640,6 +11643,7 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
     &#34;&#34;&#34;
     Output PDF to some destination.
     The method first calls [close](close.md) if necessary to terminate the document.
+    After calling this method, content cannot be added to the document anymore.
 
     By default the bytearray buffer is returned.
     If a `name` is given, the PDF is written to a new file.
