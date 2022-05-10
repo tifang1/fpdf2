@@ -76,7 +76,7 @@ class FPDFUnicodeEncodingException(FPDFException):
         return (
             f&#39;Character &#34;{self.character}&#34; at index {self.text_index} in text is outside the range of characters&#39;
             f&#39; supported by the font used: &#34;{self.font_name}&#34;.&#39;
-            &#34; Please consider using a font that supports UTF-8 encoding.&#34;
+            &#34; Please consider using a Unicode font.&#34;
         )</code></pre>
 </details>
 </section>
@@ -185,7 +185,7 @@ class FPDFUnicodeEncodingException(FPDFException):
         return (
             f&#39;Character &#34;{self.character}&#34; at index {self.text_index} in text is outside the range of characters&#39;
             f&#39; supported by the font used: &#34;{self.font_name}&#34;.&#39;
-            &#34; Please consider using a font that supports UTF-8 encoding.&#34;
+            &#34; Please consider using a Unicode font.&#34;
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
