@@ -1261,7 +1261,8 @@ It is a fork and the successor of <code>PyFPDF</code> (<em>cf.</em> <a href="htt
 <li>Embedding images, including transparency and alpha channel, using <a href="https://pillow.readthedocs.io/en/stable/">Pillow (Python Imaging Library)</a></li>
 <li>Arbitrary path drawing and basic <a href="SVG.html">SVG</a> import</li>
 <li>Embedding <a href="Barcodes.html">barcodes</a>, <a href="Maths.html">charts &amp; graphs</a>, <a href="EmojisSymbolsDingbats.html">emojis, symbols &amp; dingbats</a></li>
-<li><a href="Text.html">Cell / multi-cell / plaintext writing</a>, <a href="PageBreaks.html">automatic page breaks</a></li>
+<li><a href="Text.html">Cell / multi-cell / plaintext writing</a>, with <a href="PageBreaks.html">automatic page breaks</a>, line break and text justification</li>
+<li>Choice of measurement unit, page format &amp; margins. Optional page header and footer</li>
 <li>Basic <a href="HTML.html">conversion from HTML to PDF</a></li>
 <li>A <a href="Templates.html">templating system</a> to render PDFs in batchs</li>
 <li>Images &amp; links alternative descriptions, for accessibility</li>
@@ -1270,21 +1271,13 @@ It is a fork and the successor of <code>PyFPDF</code> (<em>cf.</em> <a href="htt
 <li><a href="Presentations.html">Presentation mode</a> with control over page display duration &amp; transitions</li>
 <li>Optional basic Markdown-like styling: <code>**bold**, __italics__</code></li>
 <li>Only has 2 dependencies: <a href="https://pillow.readthedocs.io/en/stable/">Pillow</a> &amp; <a href="https://pypi.org/project/defusedxml/">defusedxml</a></li>
-<li>Unit tests with <code>qpdf</code>-based PDF diffing</li>
+<li>Can render <a href="https://pyfpdf.github.io/fpdf2/Maths.html">mathematical equations &amp; charts</a></li>
 <li>Many example scripts available throughout this documentation, including usage examples with <a href="https://www.djangoproject.com/">Django</a>, <a href="https://flask.palletsprojects.com">Flask</a>, <a href="https://streamlit.io/">streamlit</a>, AWS lambdas... : <a href="UsageInWebAPI.html">Usage in web APIs</a></li>
-<li>PDF samples validation using 3 different checkers:</li>
+<li>Unit tests with <code>qpdf</code>-based PDF diffing, and PDF samples validation using 3 different checkers:</li>
 </ul>
 <p><a href="https://github.com/qpdf/qpdf"><img alt="QPDF logo" src="qpdf-logo.svg" /></a>
 <a href="https://www.datalogics.com/products/pdf-tools/pdf-checker/"><img alt="PDF Checker logo" src="pdfchecker-logo.png" /></a>
 <a href="https://verapdf.org"><img alt="VeraPDF logo" src="vera-logo.jpg" /></a></p>
-<p>FPDF original features:</p>
-<ul>
-<li>Choice of measurement unit, page format and margins</li>
-<li>Page header and footer management</li>
-<li>Automatic page break, line break and text justification</li>
-<li>Image, colors and links support</li>
-<li>Page compression</li>
-</ul>
 <h2 id="tutorials">Tutorials</h2>
 <ul>
 <li><a href="Tutorial.html">English</a></li>
