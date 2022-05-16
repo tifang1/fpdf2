@@ -726,6 +726,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#regular-polygon" class="md-nav__link">
+    Regular Polygon
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regular-star" class="md-nav__link">
+    Regular Star
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1172,6 +1186,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#regular-polygon" class="md-nav__link">
+    Regular Polygon
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regular-star" class="md-nav__link">
+    Regular Star
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1202,7 +1230,8 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_draw_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">x1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">x2</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;orange_plain_line.pdf&quot;</span><span class="p">)</span>
-</code></pre></div></p>
+</code></pre></div>
+<img alt="" src="orange_plain_line.png" /></p>
 <p>Drawing a dashed light blue line:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
@@ -1213,7 +1242,8 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_dash_pattern</span><span class="p">(</span><span class="n">dash</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">gap</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">x1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">x2</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;blue_dashed_line.pdf&quot;</span><span class="p">)</span>
-</code></pre></div></p>
+</code></pre></div>
+<img alt="" src="blue_dashed_line.png" /></p>
 <h2 id="circle">Circle</h2>
 <p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.circle"><code>circle()</code></a> to draw a disc filled in pink with a grey outline:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
@@ -1225,7 +1255,8 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">230</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">180</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">circle</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;circle.pdf&quot;</span><span class="p">)</span>
-</code></pre></div></p>
+</code></pre></div>
+<img alt="" src="circle.png" /></p>
 <h2 id="ellipse">Ellipse</h2>
 <p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.ellipse"><code>ellipse()</code></a>, filled in grey with a pink outline:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
@@ -1237,7 +1268,8 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">240</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">ellipse</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;ellipse.pdf&quot;</span><span class="p">)</span>
-</code></pre></div></p>
+</code></pre></div>
+<img alt="" src="ellipse.png" /></p>
 <h2 id="rectangle">Rectangle</h2>
 <p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.rect"><code>rect()</code></a> to draw nested squares:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
@@ -1248,10 +1280,11 @@
     <span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">255</span> <span class="o">-</span> <span class="mi">15</span><span class="o">*</span><span class="n">i</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">rect</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">5</span><span class="o">+</span><span class="mi">5</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">5</span><span class="o">+</span><span class="mi">5</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="n">w</span><span class="o">=</span><span class="mi">200</span><span class="o">-</span><span class="mi">10</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="mi">200</span><span class="o">-</span><span class="mi">10</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;squares.pdf&quot;</span><span class="p">)</span>
-</code></pre></div></p>
+</code></pre></div>
+<img alt="" src="squares.png" /></p>
 <h2 id="polygon">Polygon</h2>
 <p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.polygon"><code>polygon()</code></a>:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
@@ -1261,28 +1294,89 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">polygon</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;DF&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;polygon.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<img alt="" src="polygon.png" /></p>
 <h2 id="arc">Arc</h2>
 <p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.arc"><code>arc()</code></a>:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">260</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">105</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">135</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;arc.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<img alt="" src="arc.png" /></p>
 <h2 id="solid-arc">Solid arc</h2>
 <p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.solid_arc"><code>solid_arc()</code></a>:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-<span class="n">pdf</span><span class="o">.</span><span class="n">solid_arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">solid_arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">260</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">solid_arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">105</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">solid_arc</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">135</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">start_angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_angle</span><span class="o">=</span><span class="mi">130</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;solid_arc.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<img alt="" src="solid_arc.png" /></p>
+<h2 id="regular-polygon">Regular Polygon</h2>
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.regular_polygon"><code>regular_polygon()</code></a>:</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">regular_polygon</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">poly_width</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">num_sides</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">regular_polygon</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">poly_width</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">135</span><span class="p">,</span> <span class="n">num_sides</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">165</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">regular_polygon</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">poly_width</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">198</span><span class="p">,</span> <span class="n">num_sides</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">125</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">regular_polygon</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">poly_width</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">num_sides</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;regular_polygon.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" src="regular_polygon.png" /></p>
+<h2 id="regular-star">Regular Star</h2>
+<p>Using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.star"><code>star()</code></a>:</p>
+<p><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">r_in</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">r_out</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">corners</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">r_in</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">r_out</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">90</span><span class="p">,</span> <span class="n">corners</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">r_in</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">r_out</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">corners</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">255</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">star</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">160</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">r_in</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">r_out</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">rotate_degrees</span><span class="o">=</span><span class="mi">270</span><span class="p">,</span> <span class="n">corners</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;star.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" src="star.png" /></p>
 
               
             </article>

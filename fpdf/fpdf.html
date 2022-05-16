@@ -1399,7 +1399,6 @@ class FPDF(GraphicsStateMixin):
         centerY = y - radius
         # center point is (centerX, centerY)
         points = []
-        i = 1
         for i in range(1, numSides + 1):
             point = centerX + radius * math.cos(
                 math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
@@ -1407,11 +1406,41 @@ class FPDF(GraphicsStateMixin):
                 math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
             )
             points.append(point)
-            i += 1
         # creates list of touples containing cordinate points of vertices
 
         self.polygon(points, style=style)
         # passes points through polygon function
+
+    @check_page
+    def star(self, x, y, r_in, r_out, corners, rotate_degrees=0, style=None):
+        &#34;&#34;&#34;
+        Outputs a regular star with n corners.
+        It can be rotated.
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (float): Abscissa of star&#39;s centre.
+            y (float): Ordinate of star&#39;s centre.
+            r_in (float): radius of internal circle.
+            r_out (float): radius of external circle.
+            corners (int): number of star&#39;s corners.
+            rotate_degrees (float): Optional degree amount to rotate star clockwise.
+
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+            * `D`: draw border. This is the default value.
+            * `F`: fill.
+            * `DF` or `FD`: draw and fill.
+        &#34;&#34;&#34;
+        th = math.radians(rotate_degrees)
+        point_list = []
+        for i in range(0, (corners * 2) + 1):
+            corner_x = x + (r_out if i % 2 == 0 else r_in) * math.sin(th)
+            corner_y = y + (r_out if i % 2 == 0 else r_in) * math.cos(th)
+            point_list.append((corner_x, corner_y))
+
+            th += math.radians(180 / corners)
+
+        self.polyline(point_list, polygon=True, style=style)
 
     def arc(
         self,
@@ -5866,7 +5895,6 @@ Default to "mm".</dd>
         centerY = y - radius
         # center point is (centerX, centerY)
         points = []
-        i = 1
         for i in range(1, numSides + 1):
             point = centerX + radius * math.cos(
                 math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
@@ -5874,11 +5902,41 @@ Default to "mm".</dd>
                 math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
             )
             points.append(point)
-            i += 1
         # creates list of touples containing cordinate points of vertices
 
         self.polygon(points, style=style)
         # passes points through polygon function
+
+    @check_page
+    def star(self, x, y, r_in, r_out, corners, rotate_degrees=0, style=None):
+        &#34;&#34;&#34;
+        Outputs a regular star with n corners.
+        It can be rotated.
+        It can be drawn (border only), filled (with no border) or both.
+
+        Args:
+            x (float): Abscissa of star&#39;s centre.
+            y (float): Ordinate of star&#39;s centre.
+            r_in (float): radius of internal circle.
+            r_out (float): radius of external circle.
+            corners (int): number of star&#39;s corners.
+            rotate_degrees (float): Optional degree amount to rotate star clockwise.
+
+            style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+            * `D`: draw border. This is the default value.
+            * `F`: fill.
+            * `DF` or `FD`: draw and fill.
+        &#34;&#34;&#34;
+        th = math.radians(rotate_degrees)
+        point_list = []
+        for i in range(0, (corners * 2) + 1):
+            corner_x = x + (r_out if i % 2 == 0 else r_in) * math.sin(th)
+            corner_y = y + (r_out if i % 2 == 0 else r_in) * math.cos(th)
+            point_list.append((corner_x, corner_y))
+
+            th += math.radians(180 / corners)
+
+        self.polyline(point_list, polygon=True, style=style)
 
     def arc(
         self,
@@ -11944,7 +12002,6 @@ def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None
     centerY = y - radius
     # center point is (centerX, centerY)
     points = []
-    i = 1
     for i in range(1, numSides + 1):
         point = centerX + radius * math.cos(
             math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
@@ -11952,7 +12009,6 @@ def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None
             math.radians((360 / numSides) * i) + math.radians(rotateDegrees)
         )
         points.append(point)
-        i += 1
     # creates list of touples containing cordinate points of vertices
 
     self.polygon(points, style=style)
@@ -13316,6 +13372,71 @@ def solid_arc(
     )</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.star"><code class="name flex">
+<span>def <span class="ident">star</span></span>(<span>self, x, y, r_in, r_out, corners, rotate_degrees=0, style=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Outputs a regular star with n corners.
+It can be rotated.
+It can be drawn (border only), filled (with no border) or both.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dd>Abscissa of star's centre.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
+<dd>Ordinate of star's centre.</dd>
+<dt><strong><code>r_in</code></strong> :&ensp;<code>float</code></dt>
+<dd>radius of internal circle.</dd>
+<dt><strong><code>r_out</code></strong> :&ensp;<code>float</code></dt>
+<dd>radius of external circle.</dd>
+<dt><strong><code>corners</code></strong> :&ensp;<code>int</code></dt>
+<dd>number of star's corners.</dd>
+<dt><strong><code>rotate_degrees</code></strong> :&ensp;<code>float</code></dt>
+<dd>Optional degree amount to rotate star clockwise.</dd>
+<dt><strong><code>style</code></strong> :&ensp;<code><a title="fpdf.enums.RenderStyle" href="enums.html#fpdf.enums.RenderStyle">RenderStyle</a>, str</code></dt>
+<dd>Optional style of rendering. Possible values are:</dd>
+</dl>
+<ul>
+<li><code>D</code>: draw border. This is the default value.</li>
+<li><code>F</code>: fill.</li>
+<li><code>DF</code> or <code>FD</code>: draw and fill.</li>
+</ul></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def star(self, x, y, r_in, r_out, corners, rotate_degrees=0, style=None):
+    &#34;&#34;&#34;
+    Outputs a regular star with n corners.
+    It can be rotated.
+    It can be drawn (border only), filled (with no border) or both.
+
+    Args:
+        x (float): Abscissa of star&#39;s centre.
+        y (float): Ordinate of star&#39;s centre.
+        r_in (float): radius of internal circle.
+        r_out (float): radius of external circle.
+        corners (int): number of star&#39;s corners.
+        rotate_degrees (float): Optional degree amount to rotate star clockwise.
+
+        style (fpdf.enums.RenderStyle, str): Optional style of rendering. Possible values are:
+        * `D`: draw border. This is the default value.
+        * `F`: fill.
+        * `DF` or `FD`: draw and fill.
+    &#34;&#34;&#34;
+    th = math.radians(rotate_degrees)
+    point_list = []
+    for i in range(0, (corners * 2) + 1):
+        corner_x = x + (r_out if i % 2 == 0 else r_in) * math.sin(th)
+        corner_y = y + (r_out if i % 2 == 0 else r_in) * math.cos(th)
+        point_list.append((corner_x, corner_y))
+
+        th += math.radians(180 / corners)
+
+    self.polyline(point_list, polygon=True, style=style)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.start_section"><code class="name flex">
 <span>def <span class="ident">start_section</span></span>(<span>self, name, level=0)</span>
 </code></dt>
@@ -14095,6 +14216,7 @@ def write(
 <li><code><a title="fpdf.fpdf.FPDF.set_xy" href="#fpdf.fpdf.FPDF.set_xy">set_xy</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_y" href="#fpdf.fpdf.FPDF.set_y">set_y</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.solid_arc" href="#fpdf.fpdf.FPDF.solid_arc">solid_arc</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.star" href="#fpdf.fpdf.FPDF.star">star</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.start_section" href="#fpdf.fpdf.FPDF.start_section">start_section</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.text" href="#fpdf.fpdf.FPDF.text">text</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.text_annotation" href="#fpdf.fpdf.FPDF.text_annotation">text_annotation</a></code></li>
