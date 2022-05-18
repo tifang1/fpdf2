@@ -44,14 +44,7 @@ from . import svg
 from .deprecation import WarnOnDeprecatedModuleAttributes
 
 FPDF_VERSION = _FPDF_VERSION
-&#34;&#34;&#34;Current FPDF Version, also available via `__version__` (which is read by `setup.py`):
-
-&lt;pre&gt;
-&gt;&gt;&gt; import fpdf
-&gt;&gt;&gt; fpdf.__version__
-&#39;2.2.0&#39;
-&lt;/pre&gt;
-&#34;&#34;&#34;
+&#34;Current FPDF Version, also available via `__version__`&#34;
 
 FPDF_FONT_DIR = _FPDF_FONT_DIR
 &#34;&#34;&#34;This is the location of where to look for fonts.&#34;&#34;&#34;
@@ -188,14 +181,7 @@ structural information about a document’s content …</p>
 </dd>
 <dt id="fpdf.FPDF_VERSION"><code class="name">var <span class="ident">FPDF_VERSION</span></code></dt>
 <dd>
-<div class="desc"><p>Current FPDF Version, also available via <code>__version__</code> (which is read by <code>setup.py</code>):</p>
-<pre>
-
-<pre><code class="language-python-repl">&gt;&gt;&gt; import fpdf
-&gt;&gt;&gt; fpdf.__version__
-'2.2.0'
-&lt;/pre&gt;
-</code></pre></div>
+<div class="desc"><p>Current FPDF Version, also available via <code>__version__</code></p></div>
 </dd>
 </dl>
 </section>
@@ -337,8 +323,7 @@ Default to "mm".</dd>
         # We set their default values here.
         self.font_family = &#34;&#34;  # current font family
         self.font_style = &#34;&#34;  # current font style
-        self.font_size_pt = 12  # current font size in points
-        self.font_size = self.font_size_pt / self.k
+        self.font_size = 12 / self.k
         self.font_stretching = 100  # current font stretching
         self.underline = 0  # underlining flag
         self.draw_color = self.DEFAULT_DRAW_COLOR
@@ -378,6 +363,10 @@ Default to "mm".</dd>
 
     def _set_min_pdf_version(self, version):
         self.pdf_version = max(self.pdf_version, version)
+
+    @property
+    def font_size_pt(self):
+        return self.font_size * self.k
 
     @property
     def unifontsubset(self):
@@ -1701,7 +1690,7 @@ Default to "mm".</dd>
         if (
             self.font_family == family
             and self.font_style == style
-            and self.font_size_pt == size
+            and isclose(self.font_size_pt, size)
         ):
             return
 
@@ -1727,7 +1716,6 @@ Default to "mm".</dd>
         # Select it
         self.font_family = family
         self.font_style = style
-        self.font_size_pt = size
         self.font_size = size / self.k
         self.current_font = self.fonts[fontkey]
         if self.page &gt; 0:
@@ -1740,9 +1728,8 @@ Default to "mm".</dd>
         Args:
             size (float): font size in points
         &#34;&#34;&#34;
-        if self.font_size_pt == size:
+        if isclose(self.font_size_pt, size):
             return
-        self.font_size_pt = size
         self.font_size = size / self.k
         if self.page &gt; 0:
             if not self.current_font:
@@ -1880,7 +1867,9 @@ Default to "mm".</dd>
         return annotation
 
     @contextmanager
-    def add_highlight(self, text, title=&#34;&#34;, color=(1, 1, 0), modification_time=None):
+    def add_highlight(
+        self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
+    ):
         &#34;&#34;&#34;
         Context manager that adds a single highlight annotation based on the text lines inserted
         inside its indented block.
@@ -1889,8 +1878,9 @@ Default to "mm".</dd>
             text (str): text of the annotation
             title (str): the text label that shall be displayed in the title bar of the annotation’s
                 pop-up window when open and active. This entry shall identify the user who added the annotation.
+            type (fpdf.enums.TextMarkupType, str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;.
             color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-                the title bar of the annotation’s pop-up window
+                the title bar of the annotation’s pop-up window. Defaults to yellow.
             modification_time (datetime): date and time when the annotation was most recently modified
         &#34;&#34;&#34;
         if self.record_text_quad_points:
@@ -1899,7 +1889,7 @@ Default to "mm".</dd>
         yield
         for page, quad_points in self.text_quad_points.items():
             self.add_text_markup_annotation(
-                &#34;Highlight&#34;,
+                type,
                 text,
                 quad_points=quad_points,
                 title=title,
@@ -1925,7 +1915,7 @@ Default to "mm".</dd>
         Adds a text markup annotation on some quadrilateral areas of the page.
 
         Args:
-            type (str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
+            type (fpdf.enums.TextMarkupType, str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
             text (str): text of the annotation
             quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
                 in default user space that comprise the region in which the link should be activated.
@@ -1934,12 +1924,11 @@ Default to "mm".</dd>
             title (str): the text label that shall be displayed in the title bar of the annotation’s
                 pop-up window when open and active. This entry shall identify the user who added the annotation.
             color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-                the title bar of the annotation’s pop-up window
+                the title bar of the annotation’s pop-up window. Defaults to yellow.
             modification_time (datetime): date and time when the annotation was most recently modified
             page (int): index of the page where this annotation is added
         &#34;&#34;&#34;
-        if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
-            raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
+        type = TextMarkupType.coerce(type).value
         if modification_time is None:
             modification_time = datetime.now()
         if page is None:
@@ -1999,13 +1988,15 @@ Default to "mm".</dd>
             s = f&#34;q {self.text_color.pdf_repr().lower()} {s} Q&#34;
         self._out(s)
         if self.record_text_quad_points:
-            unscaled_width = self.get_normalized_string_width_with_style(
-                txt, self.font_style
+            w = (
+                self.get_normalized_string_width_with_style(txt, self.font_style)
+                * self.font_stretching
+                / 100
+                * self.font_size
+                / 1000
             )
-            if self.font_stretching != 100:
-                unscaled_width *= self.font_stretching / 100
-            w = unscaled_width * self.font_size / 1000
             h = self.font_size
+            y -= 0.8 * h  # same coefficient as in _render_styled_text_line()
             self.text_quad_points[self.page].extend(
                 [
                     x * self.k,
@@ -2013,9 +2004,9 @@ Default to "mm".</dd>
                     (x + w) * self.k,
                     (self.h - y) * self.k,
                     x * self.k,
-                    (self.h - y + h) * self.k,
+                    (self.h - y - h) * self.k,
                     (x + w) * self.k,
-                    (self.h - y + h) * self.k,
+                    (self.h - y - h) * self.k,
                 ]
             )
 
@@ -4661,6 +4652,18 @@ def epw(self):
     return self.w - self.l_margin - self.r_margin</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.font_size_pt"><code class="name">var <span class="ident">font_size_pt</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def font_size_pt(self):
+    return self.font_size * self.k</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.page_mode"><code class="name">var <span class="ident">page_mode</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -4875,7 +4878,7 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
 </details>
 </dd>
 <dt id="fpdf.FPDF.add_highlight"><code class="name flex">
-<span>def <span class="ident">add_highlight</span></span>(<span>self, text, title='', color=(1, 1, 0), modification_time=None)</span>
+<span>def <span class="ident">add_highlight</span></span>(<span>self, text, title='', type='Highlight', color=(1, 1, 0), modification_time=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Context manager that adds a single highlight annotation based on the text lines inserted
@@ -4887,9 +4890,11 @@ inside its indented block.</p>
 <dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
 <dd>the text label that shall be displayed in the title bar of the annotation’s
 pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
+<dt><strong><code>type</code></strong> :&ensp;<code><a title="fpdf.enums.TextMarkupType" href="enums.html#fpdf.enums.TextMarkupType">TextMarkupType</a>, str</code></dt>
+<dd>"Highlight", "Underline", "Squiggly" or "StrikeOut".</dd>
 <dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
 <dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-the title bar of the annotation’s pop-up window</dd>
+the title bar of the annotation’s pop-up window. Defaults to yellow.</dd>
 <dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
 <dd>date and time when the annotation was most recently modified</dd>
 </dl></div>
@@ -4898,7 +4903,9 @@ the title bar of the annotation’s pop-up window</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@contextmanager
-def add_highlight(self, text, title=&#34;&#34;, color=(1, 1, 0), modification_time=None):
+def add_highlight(
+    self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
+):
     &#34;&#34;&#34;
     Context manager that adds a single highlight annotation based on the text lines inserted
     inside its indented block.
@@ -4907,8 +4914,9 @@ def add_highlight(self, text, title=&#34;&#34;, color=(1, 1, 0), modification_ti
         text (str): text of the annotation
         title (str): the text label that shall be displayed in the title bar of the annotation’s
             pop-up window when open and active. This entry shall identify the user who added the annotation.
+        type (fpdf.enums.TextMarkupType, str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;.
         color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-            the title bar of the annotation’s pop-up window
+            the title bar of the annotation’s pop-up window. Defaults to yellow.
         modification_time (datetime): date and time when the annotation was most recently modified
     &#34;&#34;&#34;
     if self.record_text_quad_points:
@@ -4917,7 +4925,7 @@ def add_highlight(self, text, title=&#34;&#34;, color=(1, 1, 0), modification_ti
     yield
     for page, quad_points in self.text_quad_points.items():
         self.add_text_markup_annotation(
-            &#34;Highlight&#34;,
+            type,
             text,
             quad_points=quad_points,
             title=title,
@@ -5097,7 +5105,7 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 <div class="desc"><p>Adds a text markup annotation on some quadrilateral areas of the page.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>type</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>type</code></strong> :&ensp;<code><a title="fpdf.enums.TextMarkupType" href="enums.html#fpdf.enums.TextMarkupType">TextMarkupType</a>, str</code></dt>
 <dd>"Highlight", "Underline", "Squiggly" or "StrikeOut"</dd>
 <dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
 <dd>text of the annotation</dd>
@@ -5111,7 +5119,7 @@ specifying the four vertices of the quadrilateral in counterclockwise order</dd>
 pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
 <dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
 <dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-the title bar of the annotation’s pop-up window</dd>
+the title bar of the annotation’s pop-up window. Defaults to yellow.</dd>
 <dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
 <dd>date and time when the annotation was most recently modified</dd>
 <dt><strong><code>page</code></strong> :&ensp;<code>int</code></dt>
@@ -5136,7 +5144,7 @@ def add_text_markup_annotation(
     Adds a text markup annotation on some quadrilateral areas of the page.
 
     Args:
-        type (str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
+        type (fpdf.enums.TextMarkupType, str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;
         text (str): text of the annotation
         quad_points (tuple): array of 8 × n numbers specifying the coordinates of n quadrilaterals
             in default user space that comprise the region in which the link should be activated.
@@ -5145,12 +5153,11 @@ def add_text_markup_annotation(
         title (str): the text label that shall be displayed in the title bar of the annotation’s
             pop-up window when open and active. This entry shall identify the user who added the annotation.
         color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-            the title bar of the annotation’s pop-up window
+            the title bar of the annotation’s pop-up window. Defaults to yellow.
         modification_time (datetime): date and time when the annotation was most recently modified
         page (int): index of the page where this annotation is added
     &#34;&#34;&#34;
-    if type not in (&#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34;, &#34;StrikeOut&#34;):
-        raise ValueError(f&#34;Invalid text markup annotation subtype: {type}&#34;)
+    type = TextMarkupType.coerce(type).value
     if modification_time is None:
         modification_time = datetime.now()
     if page is None:
@@ -8034,7 +8041,7 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     if (
         self.font_family == family
         and self.font_style == style
-        and self.font_size_pt == size
+        and isclose(self.font_size_pt, size)
     ):
         return
 
@@ -8060,7 +8067,6 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     # Select it
     self.font_family = family
     self.font_style = style
-    self.font_size_pt = size
     self.font_size = size / self.k
     self.current_font = self.fonts[fontkey]
     if self.page &gt; 0:
@@ -8088,9 +8094,8 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     Args:
         size (float): font size in points
     &#34;&#34;&#34;
-    if self.font_size_pt == size:
+    if isclose(self.font_size_pt, size):
         return
-    self.font_size_pt = size
     self.font_size = size / self.k
     if self.page &gt; 0:
         if not self.current_font:
@@ -8969,13 +8974,15 @@ def text(self, x, y, txt=&#34;&#34;):
         s = f&#34;q {self.text_color.pdf_repr().lower()} {s} Q&#34;
     self._out(s)
     if self.record_text_quad_points:
-        unscaled_width = self.get_normalized_string_width_with_style(
-            txt, self.font_style
+        w = (
+            self.get_normalized_string_width_with_style(txt, self.font_style)
+            * self.font_stretching
+            / 100
+            * self.font_size
+            / 1000
         )
-        if self.font_stretching != 100:
-            unscaled_width *= self.font_stretching / 100
-        w = unscaled_width * self.font_size / 1000
         h = self.font_size
+        y -= 0.8 * h  # same coefficient as in _render_styled_text_line()
         self.text_quad_points[self.page].extend(
             [
                 x * self.k,
@@ -8983,9 +8990,9 @@ def text(self, x, y, txt=&#34;&#34;):
                 (x + w) * self.k,
                 (self.h - y) * self.k,
                 x * self.k,
-                (self.h - y + h) * self.k,
+                (self.h - y - h) * self.k,
                 (x + w) * self.k,
-                (self.h - y + h) * self.k,
+                (self.h - y - h) * self.k,
             ]
         )</code></pre>
 </details>
@@ -11872,6 +11879,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.elliptic_clip" href="#fpdf.FPDF.elliptic_clip">elliptic_clip</a></code></li>
 <li><code><a title="fpdf.FPDF.eph" href="#fpdf.FPDF.eph">eph</a></code></li>
 <li><code><a title="fpdf.FPDF.epw" href="#fpdf.FPDF.epw">epw</a></code></li>
+<li><code><a title="fpdf.FPDF.font_size_pt" href="#fpdf.FPDF.font_size_pt">font_size_pt</a></code></li>
 <li><code><a title="fpdf.FPDF.footer" href="#fpdf.FPDF.footer">footer</a></code></li>
 <li><code><a title="fpdf.FPDF.get_normalized_string_width_with_style" href="#fpdf.FPDF.get_normalized_string_width_with_style">get_normalized_string_width_with_style</a></code></li>
 <li><code><a title="fpdf.FPDF.get_string_width" href="#fpdf.FPDF.get_string_width">get_string_width</a></code></li>

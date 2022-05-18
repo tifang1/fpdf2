@@ -1371,6 +1371,10 @@ Until 2015 the code was developed at <a href="https://code.google.com/p/pyfpdf/"
 you can still access the <a href="https://github.com/reingart/pyfpdf_googlecode/issues">old issues</a>,
 and <a href="https://github.com/reingart/pyfpdf_googlecode/tree/wiki">old wiki</a>.</p>
 </blockquote>
+<p>As of version <a href="https://github.com/PyFPDF/fpdf2/blob/master/CHANGELOG.md">2.5.4</a>,
+<code>fpdf2</code> is fully backward compatible with PyFPDF, with the exception of one minor point:
+for the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.cell"><code>cell()</code> method</a>, the default value of <code>h</code> has changed.
+It used to be <code>0</code> and is now set to the current value of <code>FPDF.font_size</code>.</p>
 <h2 id="usage">Usage</h2>
 <ul>
 <li><a href="https://pypistats.org/packages/fpdf2">PyPI download stats</a> - Downloads per release on <a href="https://pepy.tech/project/fpdf2">Pepy</a></li>

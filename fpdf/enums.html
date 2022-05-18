@@ -293,6 +293,18 @@ class PageMode(CoerciveEnum):
     &#34;Attachments panel visible&#34;
 
 
+class TextMarkupType(CoerciveEnum):
+    &#34;Subtype of a text markup annotation&#34;
+
+    HIGHLIGHT = Name(&#34;Highlight&#34;)
+
+    UNDERLINE = Name(&#34;Underline&#34;)
+
+    SQUIGGLY = Name(&#34;Squiggly&#34;)
+
+    STRIKE_OUT = Name(&#34;StrikeOut&#34;)
+
+
 class BlendMode(CoerciveEnum):
     &#34;&#34;&#34;
     An enumeration of the named standard named blend functions supported by PDF.
@@ -1161,6 +1173,7 @@ path; otherwise, it is inside."</p></div>
 <li><a title="fpdf.enums.PageMode" href="#fpdf.enums.PageMode">PageMode</a></li>
 <li><a title="fpdf.enums.PathPaintRule" href="#fpdf.enums.PathPaintRule">PathPaintRule</a></li>
 <li><a title="fpdf.enums.RenderStyle" href="#fpdf.enums.RenderStyle">RenderStyle</a></li>
+<li><a title="fpdf.enums.TextMarkupType" href="#fpdf.enums.TextMarkupType">TextMarkupType</a></li>
 <li><a title="fpdf.enums.XPos" href="#fpdf.enums.XPos">XPos</a></li>
 <li><a title="fpdf.enums.YPos" href="#fpdf.enums.YPos">YPos</a></li>
 </ul>
@@ -2042,6 +2055,60 @@ corner."</p></div>
 </li>
 </ul>
 </dd>
+<dt id="fpdf.enums.TextMarkupType"><code class="flex name class">
+<span>class <span class="ident">TextMarkupType</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Subtype of a text markup annotation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TextMarkupType(CoerciveEnum):
+    &#34;Subtype of a text markup annotation&#34;
+
+    HIGHLIGHT = Name(&#34;Highlight&#34;)
+
+    UNDERLINE = Name(&#34;Underline&#34;)
+
+    SQUIGGLY = Name(&#34;Squiggly&#34;)
+
+    STRIKE_OUT = Name(&#34;StrikeOut&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.TextMarkupType.HIGHLIGHT"><code class="name">var <span class="ident">HIGHLIGHT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.TextMarkupType.SQUIGGLY"><code class="name">var <span class="ident">SQUIGGLY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.TextMarkupType.STRIKE_OUT"><code class="name">var <span class="ident">STRIKE_OUT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.TextMarkupType.UNDERLINE"><code class="name">var <span class="ident">UNDERLINE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="fpdf.enums.TextMode"><code class="flex name class">
 <span>class <span class="ident">TextMode</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -2437,6 +2504,15 @@ corner."</p></div>
 <li><code><a title="fpdf.enums.StrokeJoinStyle.BEVEL" href="#fpdf.enums.StrokeJoinStyle.BEVEL">BEVEL</a></code></li>
 <li><code><a title="fpdf.enums.StrokeJoinStyle.MITER" href="#fpdf.enums.StrokeJoinStyle.MITER">MITER</a></code></li>
 <li><code><a title="fpdf.enums.StrokeJoinStyle.ROUND" href="#fpdf.enums.StrokeJoinStyle.ROUND">ROUND</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.TextMarkupType" href="#fpdf.enums.TextMarkupType">TextMarkupType</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.TextMarkupType.HIGHLIGHT" href="#fpdf.enums.TextMarkupType.HIGHLIGHT">HIGHLIGHT</a></code></li>
+<li><code><a title="fpdf.enums.TextMarkupType.SQUIGGLY" href="#fpdf.enums.TextMarkupType.SQUIGGLY">SQUIGGLY</a></code></li>
+<li><code><a title="fpdf.enums.TextMarkupType.STRIKE_OUT" href="#fpdf.enums.TextMarkupType.STRIKE_OUT">STRIKE_OUT</a></code></li>
+<li><code><a title="fpdf.enums.TextMarkupType.UNDERLINE" href="#fpdf.enums.TextMarkupType.UNDERLINE">UNDERLINE</a></code></li>
 </ul>
 </li>
 <li>
