@@ -838,6 +838,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ink-annotations" class="md-nav__link">
+    Ink annotations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#named-actions" class="md-nav__link">
     Named actions
   </a>
@@ -1117,6 +1124,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ink-annotations" class="md-nav__link">
+    Ink annotations
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#named-actions" class="md-nav__link">
     Named actions
   </a>
@@ -1173,7 +1187,7 @@
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">24</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">add_highlight</span><span class="p">(</span><span class="s2">&quot;Highlight comment&quot;</span><span class="p">):</span>
+<span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">highlight</span><span class="p">(</span><span class="s2">&quot;Highlight comment&quot;</span><span class="p">):</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="s2">&quot;Line 1&quot;</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">set_y</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="s2">&quot;Line 2&quot;</span><span class="p">)</span>
@@ -1182,9 +1196,21 @@
 </code></pre></div>
 <p>Rendering by Sumatra PDF reader:
 <img alt="Screenshot of highlight annotation rendered by Sumatra PDF reader" src="highlighted.png" /></p>
-<p>Method documentation: <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.add_highlight"><code>FPDF.add_highlight</code></a></p>
+<p>Method documentation: <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.highlight"><code>FPDF.highlight</code></a></p>
 <p>The appearance of the "highlight effect" can be controlled through the <code>type</code> argument:
 it can be <code>Highlight</code> (default), <code>Underline</code>, <code>Squiggly</code> or <code>StrikeOut</code>.</p>
+<h2 id="ink-annotations">Ink annotations</h2>
+<p>Those annotations allow to draw paths around parts of a document to highlight them:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">ink_annotation</span><span class="p">([(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="mi">200</span><span class="p">),</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span> <span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">)],</span>
+                   <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Lucas&quot;</span><span class="p">,</span> <span class="n">contents</span><span class="o">=</span><span class="s2">&quot;Hello world!&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;ink_annotation_demo.pdf&quot;</span><span class="p">)</span>
+</code></pre></div></p>
+<p>Rendering by Firefox internal PDF viewer:
+<img alt="Screenshot of ink annotation rendered by Firefox" src="ink_annotation.png" /></p>
+<p>Method documentation: <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.ink_annotation"><code>FPDF.ink_annotation</code></a></p>
 <h2 id="named-actions">Named actions</h2>
 <p>The four standard PDF named actions provide some basic navigation relative to the current page:
 <code>NextPage</code>, <code>PrevPage</code>, <code>FirstPage</code> and <code>LastPage</code>.</p>

@@ -101,8 +101,8 @@ from .recorder import FPDFRecorder
 from .structure_tree import MarkedContent, StructureTreeBuilder
 from .svg import Percent, SVGObject
 from .syntax import DestinationXYZ
-from .syntax import create_dictionary_string as pdf_d
-from .syntax import create_list_string as pdf_l
+from .syntax import create_dictionary_string as pdf_dict
+from .syntax import create_list_string as pdf_list
 from .syntax import create_stream as pdf_stream
 from .syntax import iobj_ref as pdf_ref
 from .ttfonts import TTFontFile
@@ -163,6 +163,7 @@ class Annotation(NamedTuple):
     page: Optional[int] = None
     border_width: int = 0  # PDF readers support: displayed by Acrobat but not Sumatra
     name: Optional[AnnotationName] = None  # for text annotations
+    ink_list: Tuple[int] = ()  # for ink annotations
 
     def serialize(self, fpdf):
         &#34;Convert this object dictionnary to a string&#34;
@@ -206,16 +207,20 @@ class Annotation(NamedTuple):
 
         if self.quad_points:
             # pylint: disable=not-an-iterable
-            quad_points = &#34; &#34;.join(
+            quad_points = pdf_list(
                 f&#34;{quad_point:.2f}&#34; for quad_point in self.quad_points
             )
-            out += f&#34; /QuadPoints [{quad_points}]&#34;
+            out += f&#34; /QuadPoints {quad_points}&#34;
 
         if self.page:
             out += f&#34; /P {pdf_ref(object_id_for_page(self.page))}&#34;
 
         if self.name:
             out += f&#34; /Name {self.name.value.pdf_repr()}&#34;
+
+        if self.ink_list:
+            ink_list = pdf_list(f&#34;{coord:.2f}&#34; for coord in self.ink_list)
+            out += f&#34; /InkList [{ink_list}]&#34;
 
         return out + &#34;&gt;&gt;&#34;
 
@@ -1975,7 +1980,7 @@ class FPDF(GraphicsStateMixin):
         return annotation
 
     @contextmanager
-    def add_highlight(
+    def highlight(
         self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
     ):
         &#34;&#34;&#34;
@@ -1992,7 +1997,7 @@ class FPDF(GraphicsStateMixin):
             modification_time (datetime): date and time when the annotation was most recently modified
         &#34;&#34;&#34;
         if self.record_text_quad_points:
-            raise FPDFException(&#34;add_highlight() cannot be nested&#34;)
+            raise FPDFException(&#34;highlight() cannot be nested&#34;)
         self.record_text_quad_points = True
         yield
         for page, quad_points in self.text_quad_points.items():
@@ -2007,6 +2012,8 @@ class FPDF(GraphicsStateMixin):
             )
             self.text_quad_points = defaultdict(list)
         self.record_text_quad_points = False
+
+    add_highlight = highlight  # For backward compatibilty
 
     @check_page
     def add_text_markup_annotation(
@@ -2059,6 +2066,43 @@ class FPDF(GraphicsStateMixin):
             page=page,
         )
         self.annots[page].append(annotation)
+        return annotation
+
+    @check_page
+    def ink_annotation(
+        self, coords, contents=&#34;&#34;, title=&#34;&#34;, color=(1, 1, 0), border_width=1
+    ):
+        &#34;&#34;&#34;
+        Adds add an ink annotation on the page.
+
+        Args:
+            coords (tuple): an iterable of coordinates (pairs of numbers) defining a path
+            contents (str): textual description
+            title (str): the text label that shall be displayed in the title bar of the annotation’s
+                pop-up window when open and active. This entry shall identify the user who added the annotation.
+            color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+                the title bar of the annotation’s pop-up window. Defaults to yellow.
+            border_width (int): thickness of the path stroke.
+        &#34;&#34;&#34;
+        ink_list = sum(((x * self.k, (self.h - y) * self.k) for (x, y) in coords), ())
+        x_min = min(ink_list[0::2])
+        y_min = min(ink_list[1::2])
+        x_max = max(ink_list[0::2])
+        y_max = max(ink_list[1::2])
+        annotation = Annotation(
+            &#34;Ink&#34;,
+            x=y_min,
+            y=y_max,
+            width=x_max - x_min,
+            height=y_max - y_min,
+            ink_list=ink_list,
+            color=color,
+            border_width=border_width,
+            page=self.page,
+            contents=contents,
+            title=title,
+        )
+        self.annots[self.page].append(annotation)
         return annotation
 
     @check_page
@@ -4145,7 +4189,7 @@ class FPDF(GraphicsStateMixin):
             date_string = f&#34;{datetime.now():%Y%m%d%H%M%S}&#34;
         info_d[&#34;/CreationDate&#34;] = enclose_in_parens(f&#34;D:{date_string}&#34;)
 
-        self._out(pdf_d(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
+        self._out(pdf_dict(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
     def _putcatalog(self):
         catalog_d = {
@@ -4164,7 +4208,7 @@ class FPDF(GraphicsStateMixin):
             ]
         else:  # zoom_mode is a number, not one of the allowed strings:
             zoom_config = [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, str(self.zoom_mode / 100)]
-        catalog_d[&#34;/OpenAction&#34;] = pdf_l(zoom_config)
+        catalog_d[&#34;/OpenAction&#34;] = pdf_list(zoom_config)
 
         if self.page_layout:
             catalog_d[&#34;/PageLayout&#34;] = self.page_layout.value.pdf_repr()
@@ -4175,12 +4219,12 @@ class FPDF(GraphicsStateMixin):
         if self._xmp_metadata_obj_id:
             catalog_d[&#34;/Metadata&#34;] = pdf_ref(self._xmp_metadata_obj_id)
         if self._struct_tree_root_obj_id:
-            catalog_d[&#34;/MarkInfo&#34;] = pdf_d({&#34;/Marked&#34;: &#34;true&#34;})
+            catalog_d[&#34;/MarkInfo&#34;] = pdf_dict({&#34;/Marked&#34;: &#34;true&#34;})
             catalog_d[&#34;/StructTreeRoot&#34;] = pdf_ref(self._struct_tree_root_obj_id)
         if self._outlines_obj_id:
             catalog_d[&#34;/Outlines&#34;] = pdf_ref(self._outlines_obj_id)
 
-        self._out(pdf_d(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
+        self._out(pdf_dict(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
 
     def _putheader(self):
         if self.page_layout in (PageLayout.TWO_PAGE_LEFT, PageLayout.TWO_PAGE_RIGHT):
@@ -4710,6 +4754,8 @@ def _is_svg(bytes):
 
 sys.modules[__name__].__class__ = WarnOnDeprecatedModuleAttributes
 
+
+__pdoc__ = {&#34;FPDF.add_highlight&#34;: False}  # Replaced by FPDF.highlight
 
 __all__ = [
     &#34;FPDF&#34;,
@@ -6476,7 +6522,7 @@ Default to "mm".</dd>
         return annotation
 
     @contextmanager
-    def add_highlight(
+    def highlight(
         self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
     ):
         &#34;&#34;&#34;
@@ -6493,7 +6539,7 @@ Default to "mm".</dd>
             modification_time (datetime): date and time when the annotation was most recently modified
         &#34;&#34;&#34;
         if self.record_text_quad_points:
-            raise FPDFException(&#34;add_highlight() cannot be nested&#34;)
+            raise FPDFException(&#34;highlight() cannot be nested&#34;)
         self.record_text_quad_points = True
         yield
         for page, quad_points in self.text_quad_points.items():
@@ -6508,6 +6554,8 @@ Default to "mm".</dd>
             )
             self.text_quad_points = defaultdict(list)
         self.record_text_quad_points = False
+
+    add_highlight = highlight  # For backward compatibilty
 
     @check_page
     def add_text_markup_annotation(
@@ -6560,6 +6608,43 @@ Default to "mm".</dd>
             page=page,
         )
         self.annots[page].append(annotation)
+        return annotation
+
+    @check_page
+    def ink_annotation(
+        self, coords, contents=&#34;&#34;, title=&#34;&#34;, color=(1, 1, 0), border_width=1
+    ):
+        &#34;&#34;&#34;
+        Adds add an ink annotation on the page.
+
+        Args:
+            coords (tuple): an iterable of coordinates (pairs of numbers) defining a path
+            contents (str): textual description
+            title (str): the text label that shall be displayed in the title bar of the annotation’s
+                pop-up window when open and active. This entry shall identify the user who added the annotation.
+            color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+                the title bar of the annotation’s pop-up window. Defaults to yellow.
+            border_width (int): thickness of the path stroke.
+        &#34;&#34;&#34;
+        ink_list = sum(((x * self.k, (self.h - y) * self.k) for (x, y) in coords), ())
+        x_min = min(ink_list[0::2])
+        y_min = min(ink_list[1::2])
+        x_max = max(ink_list[0::2])
+        y_max = max(ink_list[1::2])
+        annotation = Annotation(
+            &#34;Ink&#34;,
+            x=y_min,
+            y=y_max,
+            width=x_max - x_min,
+            height=y_max - y_min,
+            ink_list=ink_list,
+            color=color,
+            border_width=border_width,
+            page=self.page,
+            contents=contents,
+            title=title,
+        )
+        self.annots[self.page].append(annotation)
         return annotation
 
     @check_page
@@ -8646,7 +8731,7 @@ Default to "mm".</dd>
             date_string = f&#34;{datetime.now():%Y%m%d%H%M%S}&#34;
         info_d[&#34;/CreationDate&#34;] = enclose_in_parens(f&#34;D:{date_string}&#34;)
 
-        self._out(pdf_d(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
+        self._out(pdf_dict(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
     def _putcatalog(self):
         catalog_d = {
@@ -8665,7 +8750,7 @@ Default to "mm".</dd>
             ]
         else:  # zoom_mode is a number, not one of the allowed strings:
             zoom_config = [&#34;/XYZ&#34;, &#34;null&#34;, &#34;null&#34;, str(self.zoom_mode / 100)]
-        catalog_d[&#34;/OpenAction&#34;] = pdf_l(zoom_config)
+        catalog_d[&#34;/OpenAction&#34;] = pdf_list(zoom_config)
 
         if self.page_layout:
             catalog_d[&#34;/PageLayout&#34;] = self.page_layout.value.pdf_repr()
@@ -8676,12 +8761,12 @@ Default to "mm".</dd>
         if self._xmp_metadata_obj_id:
             catalog_d[&#34;/Metadata&#34;] = pdf_ref(self._xmp_metadata_obj_id)
         if self._struct_tree_root_obj_id:
-            catalog_d[&#34;/MarkInfo&#34;] = pdf_d({&#34;/Marked&#34;: &#34;true&#34;})
+            catalog_d[&#34;/MarkInfo&#34;] = pdf_dict({&#34;/Marked&#34;: &#34;true&#34;})
             catalog_d[&#34;/StructTreeRoot&#34;] = pdf_ref(self._struct_tree_root_obj_id)
         if self._outlines_obj_id:
             catalog_d[&#34;/Outlines&#34;] = pdf_ref(self._outlines_obj_id)
 
-        self._out(pdf_d(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
+        self._out(pdf_dict(catalog_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
 
     def _putheader(self):
         if self.page_layout in (PageLayout.TWO_PAGE_LEFT, PageLayout.TWO_PAGE_RIGHT):
@@ -9484,66 +9569,6 @@ If the file is not found, it will be searched in <code>FPDF_FONT_DIR</code>.</dd
         &#34;type&#34;: &#34;TTF&#34;,
         &#34;ttffile&#34;: ttffilename,
     }</code></pre>
-</details>
-</dd>
-<dt id="fpdf.fpdf.FPDF.add_highlight"><code class="name flex">
-<span>def <span class="ident">add_highlight</span></span>(<span>self, text, title='', type='Highlight', color=(1, 1, 0), modification_time=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Context manager that adds a single highlight annotation based on the text lines inserted
-inside its indented block.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
-<dd>text of the annotation</dd>
-<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
-<dd>the text label that shall be displayed in the title bar of the annotation’s
-pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
-<dt><strong><code>type</code></strong> :&ensp;<code><a title="fpdf.enums.TextMarkupType" href="enums.html#fpdf.enums.TextMarkupType">TextMarkupType</a>, str</code></dt>
-<dd>"Highlight", "Underline", "Squiggly" or "StrikeOut".</dd>
-<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
-<dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-the title bar of the annotation’s pop-up window. Defaults to yellow.</dd>
-<dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
-<dd>date and time when the annotation was most recently modified</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@contextmanager
-def add_highlight(
-    self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
-):
-    &#34;&#34;&#34;
-    Context manager that adds a single highlight annotation based on the text lines inserted
-    inside its indented block.
-
-    Args:
-        text (str): text of the annotation
-        title (str): the text label that shall be displayed in the title bar of the annotation’s
-            pop-up window when open and active. This entry shall identify the user who added the annotation.
-        type (fpdf.enums.TextMarkupType, str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;.
-        color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
-            the title bar of the annotation’s pop-up window. Defaults to yellow.
-        modification_time (datetime): date and time when the annotation was most recently modified
-    &#34;&#34;&#34;
-    if self.record_text_quad_points:
-        raise FPDFException(&#34;add_highlight() cannot be nested&#34;)
-    self.record_text_quad_points = True
-    yield
-    for page, quad_points in self.text_quad_points.items():
-        self.add_text_markup_annotation(
-            type,
-            text,
-            quad_points=quad_points,
-            title=title,
-            color=color,
-            modification_time=modification_time,
-            page=page,
-        )
-        self.text_quad_points = defaultdict(list)
-    self.record_text_quad_points = False</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.add_link"><code class="name flex">
@@ -10749,6 +10774,66 @@ in a subclass to implement your own rendering logic.</p></div>
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.highlight"><code class="name flex">
+<span>def <span class="ident">highlight</span></span>(<span>self, text, title='', type='Highlight', color=(1, 1, 0), modification_time=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Context manager that adds a single highlight annotation based on the text lines inserted
+inside its indented block.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
+<dd>text of the annotation</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>the text label that shall be displayed in the title bar of the annotation’s
+pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
+<dt><strong><code>type</code></strong> :&ensp;<code><a title="fpdf.enums.TextMarkupType" href="enums.html#fpdf.enums.TextMarkupType">TextMarkupType</a>, str</code></dt>
+<dd>"Highlight", "Underline", "Squiggly" or "StrikeOut".</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+the title bar of the annotation’s pop-up window. Defaults to yellow.</dd>
+<dt><strong><code>modification_time</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>date and time when the annotation was most recently modified</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@contextmanager
+def highlight(
+    self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
+):
+    &#34;&#34;&#34;
+    Context manager that adds a single highlight annotation based on the text lines inserted
+    inside its indented block.
+
+    Args:
+        text (str): text of the annotation
+        title (str): the text label that shall be displayed in the title bar of the annotation’s
+            pop-up window when open and active. This entry shall identify the user who added the annotation.
+        type (fpdf.enums.TextMarkupType, str): &#34;Highlight&#34;, &#34;Underline&#34;, &#34;Squiggly&#34; or &#34;StrikeOut&#34;.
+        color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+            the title bar of the annotation’s pop-up window. Defaults to yellow.
+        modification_time (datetime): date and time when the annotation was most recently modified
+    &#34;&#34;&#34;
+    if self.record_text_quad_points:
+        raise FPDFException(&#34;highlight() cannot be nested&#34;)
+    self.record_text_quad_points = True
+    yield
+    for page, quad_points in self.text_quad_points.items():
+        self.add_text_markup_annotation(
+            type,
+            text,
+            quad_points=quad_points,
+            title=title,
+            color=color,
+            modification_time=modification_time,
+            page=page,
+        )
+        self.text_quad_points = defaultdict(list)
+    self.record_text_quad_points = False</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.image"><code class="name flex">
 <span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='', title=None, alt_text=None)</span>
 </code></dt>
@@ -10914,6 +10999,68 @@ def image(
         self.link(x, y, w, h, link)
 
     return info</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.FPDF.ink_annotation"><code class="name flex">
+<span>def <span class="ident">ink_annotation</span></span>(<span>self, coords, contents='', title='', color=(1, 1, 0), border_width=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Adds add an ink annotation on the page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>coords</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>an iterable of coordinates (pairs of numbers) defining a path</dd>
+<dt><strong><code>contents</code></strong> :&ensp;<code>str</code></dt>
+<dd>textual description</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>the text label that shall be displayed in the title bar of the annotation’s
+pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+the title bar of the annotation’s pop-up window. Defaults to yellow.</dd>
+<dt><strong><code>border_width</code></strong> :&ensp;<code>int</code></dt>
+<dd>thickness of the path stroke.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def ink_annotation(
+    self, coords, contents=&#34;&#34;, title=&#34;&#34;, color=(1, 1, 0), border_width=1
+):
+    &#34;&#34;&#34;
+    Adds add an ink annotation on the page.
+
+    Args:
+        coords (tuple): an iterable of coordinates (pairs of numbers) defining a path
+        contents (str): textual description
+        title (str): the text label that shall be displayed in the title bar of the annotation’s
+            pop-up window when open and active. This entry shall identify the user who added the annotation.
+        color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
+            the title bar of the annotation’s pop-up window. Defaults to yellow.
+        border_width (int): thickness of the path stroke.
+    &#34;&#34;&#34;
+    ink_list = sum(((x * self.k, (self.h - y) * self.k) for (x, y) in coords), ())
+    x_min = min(ink_list[0::2])
+    y_min = min(ink_list[1::2])
+    x_max = max(ink_list[0::2])
+    y_max = max(ink_list[1::2])
+    annotation = Annotation(
+        &#34;Ink&#34;,
+        x=y_min,
+        y=y_max,
+        width=x_max - x_min,
+        height=y_max - y_min,
+        ink_list=ink_list,
+        color=color,
+        border_width=border_width,
+        page=self.page,
+        contents=contents,
+        title=title,
+    )
+    self.annots[self.page].append(annotation)
+    return annotation</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.insert_toc_placeholder"><code class="name flex">
@@ -14163,7 +14310,6 @@ def write(
 <li><code><a title="fpdf.fpdf.FPDF.accept_page_break" href="#fpdf.fpdf.FPDF.accept_page_break">accept_page_break</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_action" href="#fpdf.fpdf.FPDF.add_action">add_action</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_font" href="#fpdf.fpdf.FPDF.add_font">add_font</a></code></li>
-<li><code><a title="fpdf.fpdf.FPDF.add_highlight" href="#fpdf.fpdf.FPDF.add_highlight">add_highlight</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_link" href="#fpdf.fpdf.FPDF.add_link">add_link</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_page" href="#fpdf.fpdf.FPDF.add_page">add_page</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_text_markup_annotation" href="#fpdf.fpdf.FPDF.add_text_markup_annotation">add_text_markup_annotation</a></code></li>
@@ -14188,7 +14334,9 @@ def write(
 <li><code><a title="fpdf.fpdf.FPDF.get_x" href="#fpdf.fpdf.FPDF.get_x">get_x</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.get_y" href="#fpdf.fpdf.FPDF.get_y">get_y</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.header" href="#fpdf.fpdf.FPDF.header">header</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.highlight" href="#fpdf.fpdf.FPDF.highlight">highlight</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.image" href="#fpdf.fpdf.FPDF.image">image</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.ink_annotation" href="#fpdf.fpdf.FPDF.ink_annotation">ink_annotation</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.insert_toc_placeholder" href="#fpdf.fpdf.FPDF.insert_toc_placeholder">insert_toc_placeholder</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.interleaved2of5" href="#fpdf.fpdf.FPDF.interleaved2of5">interleaved2of5</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.line" href="#fpdf.fpdf.FPDF.line">line</a></code></li>
