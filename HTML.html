@@ -1123,10 +1123,12 @@
 <h1 id="html">HTML</h1>
 <p><code>fpdf2</code> supports basic rendering from HTML.</p>
 <p>This is implemented by using <code>html.parser.HTMLParser</code> from the Python standard library.
-The whole HTML 5 specification is very likely <strong>not</strong> supported, neither as CSS,
-but bug reports &amp; contributions are very welcome to improve this.</p>
+The whole HTML 5 specification is <strong>not</strong> supported, and neither is CSS,
+but bug reports &amp; contributions are very welcome to improve this.
+<em>cf.</em> <a href="#supported-html-features">Supported HTML features</a> below for details on its current limitations.</p>
 <p>For a more robust &amp; feature-full HTML-to-PDF converter in Python,
-you may want to check <a href="https://weasyprint.org">WeasyPrint</a> or <a href="https://github.com/jorisschellekens/borb-examples/#76-exporting-html-as-pdf">borb</a>.</p>
+you may want to check <a href="https://www.reportlab.com">Reportlab</a>, <a href="https://weasyprint.org">WeasyPrint</a>
+or <a href="https://github.com/jorisschellekens/borb-examples/#76-exporting-html-as-pdf">borb</a>.</p>
 <h2 id="write_html-usage-example">write_html usage example</h2>
 <p>HTML rendering require the use of <code>fpdf.HTMLMixin</code>,
 that provides a new <code>write_html</code> method:</p>
@@ -1204,8 +1206,8 @@ that provides a new <code>write_html</code> method:</p>
 <p><strong>Notes</strong>:</p>
 <ul>
 <li>tables should have at least a first <code>&lt;th&gt;</code> row with a <code>width</code> attribute.</li>
-<li>currently multi-line text in table cells is not supported, <em>cf.</em> <a href="https://github.com/PyFPDF/fpdf2/issues/91">issue 91</a>.
-  Contributions are welcome to add support for this feature! 😊</li>
+<li>currently <strong>table cells can only contain a single line</strong>, <em>cf.</em> <a href="https://github.com/PyFPDF/fpdf2/issues/91">issue 91</a>.
+  Contributions are welcome to add support for multi-line text in them! 😊</li>
 </ul>
 
               
