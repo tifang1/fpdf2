@@ -1048,8 +1048,8 @@ class SVGObject:
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 self.build_path(child)
 
-    # this assumes xrefs only reference already-defined ids. I don&#39;t know if this is
-    # required by the SVG spec.
+    # this assumes xrefs only reference already-defined ids.
+    # I don&#39;t know if this is required by the SVG spec.
     @force_nodocument
     def build_xref(self, xref):
         &#34;&#34;&#34;Resolve a cross-reference to an already-seen SVG element by ID.&#34;&#34;&#34;
@@ -1071,6 +1071,13 @@ class SVGObject:
             raise ValueError(
                 f&#34;use {xref} references nonexistent ref id {ref}&#34;
             ) from None
+
+        if &#34;x&#34; in xref.attrib or &#34;y&#34; in xref.attrib:
+            # Quoting the SVG spec - 5.6.2. Layout of re-used graphics:
+            # &gt; The x and y properties define an additional transformation translate(x,y)
+            x, y = float(xref.attrib.get(&#34;x&#34;, 0)), float(xref.attrib.get(&#34;y&#34;, 0))
+            pdf_group.transform = drawing.Transform.translation(x=x, y=y)
+        # Note that we currently do not support &#34;width&#34; &amp; &#34;height&#34; in &lt;use&gt;
 
         return pdf_group
 
@@ -1366,8 +1373,8 @@ class SVGObject:
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 self.build_path(child)
 
-    # this assumes xrefs only reference already-defined ids. I don&#39;t know if this is
-    # required by the SVG spec.
+    # this assumes xrefs only reference already-defined ids.
+    # I don&#39;t know if this is required by the SVG spec.
     @force_nodocument
     def build_xref(self, xref):
         &#34;&#34;&#34;Resolve a cross-reference to an already-seen SVG element by ID.&#34;&#34;&#34;
@@ -1389,6 +1396,13 @@ class SVGObject:
             raise ValueError(
                 f&#34;use {xref} references nonexistent ref id {ref}&#34;
             ) from None
+
+        if &#34;x&#34; in xref.attrib or &#34;y&#34; in xref.attrib:
+            # Quoting the SVG spec - 5.6.2. Layout of re-used graphics:
+            # &gt; The x and y properties define an additional transformation translate(x,y)
+            x, y = float(xref.attrib.get(&#34;x&#34;, 0)), float(xref.attrib.get(&#34;y&#34;, 0))
+            pdf_group.transform = drawing.Transform.translation(x=x, y=y)
+        # Note that we currently do not support &#34;width&#34; &amp; &#34;height&#34; in &lt;use&gt;
 
         return pdf_group
 

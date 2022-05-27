@@ -4011,6 +4011,9 @@ class GraphicsContext:
             merged_style = style.__class__.merge(style, self.style)
 
             if debug_stream is not None:
+                if self._transform:
+                    debug_stream.write(f&#34;({self._transform})&#34;)
+
                 styles_dbg = []
                 for attr in merged_style.MERGE_PROPERTIES:
                     val = getattr(merged_style, attr)
@@ -6186,6 +6189,9 @@ this context (an empty string is returned if there are no paths or groups)</p></
             merged_style = style.__class__.merge(style, self.style)
 
             if debug_stream is not None:
+                if self._transform:
+                    debug_stream.write(f&#34;({self._transform})&#34;)
+
                 styles_dbg = []
                 for attr in merged_style.MERGE_PROPERTIES:
                     val = getattr(merged_style, attr)
