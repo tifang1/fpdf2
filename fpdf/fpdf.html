@@ -4030,9 +4030,14 @@ class FPDF(GraphicsStateMixin):
         self._out(f&#34;/Height {info[&#39;h&#39;]}&#34;)
 
         if info[&#34;cs&#34;] == &#34;Indexed&#34;:
+            palette_ref = (
+                pdf_ref(self.n + 2)
+                if self.allow_images_transparency and &#34;smask&#34; in info
+                else pdf_ref(self.n + 1)
+            )
             self._out(
                 f&#34;/ColorSpace [/Indexed /DeviceRGB &#34;
-                f&#34;{len(info[&#39;pal&#39;]) // 3 - 1} {pdf_ref(self.n + 1)}]&#34;
+                f&#34;{len(info[&#39;pal&#39;]) // 3 - 1} {palette_ref}]&#34;
             )
         else:
             self._out(f&#34;/ColorSpace /{info[&#39;cs&#39;]}&#34;)
@@ -4074,11 +4079,10 @@ class FPDF(GraphicsStateMixin):
         # Palette
         if info[&#34;cs&#34;] == &#34;Indexed&#34;:
             self._newobj()
-            filter, pal = (
-                (&#34;/Filter /FlateDecode &#34;, zlib.compress(info[&#34;pal&#34;]))
-                if self.compress
-                else (&#34;&#34;, info[&#34;pal&#34;])
-            )
+            if self.compress:
+                filter, pal = (&#34;/Filter /FlateDecode &#34;, zlib.compress(info[&#34;pal&#34;]))
+            else:
+                filter, pal = (&#34;&#34;, info[&#34;pal&#34;])
             self._out(f&#34;&lt;&lt;{filter}/Length {len(pal)}&gt;&gt;&#34;)
             self._out(pdf_stream(pal))
             self._out(&#34;endobj&#34;)
@@ -8572,9 +8576,14 @@ Default to "mm".</dd>
         self._out(f&#34;/Height {info[&#39;h&#39;]}&#34;)
 
         if info[&#34;cs&#34;] == &#34;Indexed&#34;:
+            palette_ref = (
+                pdf_ref(self.n + 2)
+                if self.allow_images_transparency and &#34;smask&#34; in info
+                else pdf_ref(self.n + 1)
+            )
             self._out(
                 f&#34;/ColorSpace [/Indexed /DeviceRGB &#34;
-                f&#34;{len(info[&#39;pal&#39;]) // 3 - 1} {pdf_ref(self.n + 1)}]&#34;
+                f&#34;{len(info[&#39;pal&#39;]) // 3 - 1} {palette_ref}]&#34;
             )
         else:
             self._out(f&#34;/ColorSpace /{info[&#39;cs&#39;]}&#34;)
@@ -8616,11 +8625,10 @@ Default to "mm".</dd>
         # Palette
         if info[&#34;cs&#34;] == &#34;Indexed&#34;:
             self._newobj()
-            filter, pal = (
-                (&#34;/Filter /FlateDecode &#34;, zlib.compress(info[&#34;pal&#34;]))
-                if self.compress
-                else (&#34;&#34;, info[&#34;pal&#34;])
-            )
+            if self.compress:
+                filter, pal = (&#34;/Filter /FlateDecode &#34;, zlib.compress(info[&#34;pal&#34;]))
+            else:
+                filter, pal = (&#34;&#34;, info[&#34;pal&#34;])
             self._out(f&#34;&lt;&lt;{filter}/Length {len(pal)}&gt;&gt;&#34;)
             self._out(pdf_stream(pal))
             self._out(&#34;endobj&#34;)

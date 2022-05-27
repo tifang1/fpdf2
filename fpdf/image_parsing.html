@@ -84,15 +84,23 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
     if Image is None:
         raise EnvironmentError(&#34;Pillow not available - fpdf2 cannot insert images&#34;)
+
     if not isinstance(img, Image.Image):
         img = Image.open(img)
+
     if dims:
         img = img.resize(dims, resample=RESAMPLE)
+
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
-    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;):
+
+    if img.mode in (&#34;P&#34;, &#34;PA&#34;) and image_filter != &#34;FlateDecode&#34;:
         img = img.convert(&#34;RGBA&#34;)
+
+    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
+        img = img.convert(&#34;RGBA&#34;)
+
     w, h = img.size
     info = {}
     if img.mode == &#34;L&#34;:
@@ -100,6 +108,30 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
         info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;LA&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
+        alpha_channel = slice(1, None, 2)
+        info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
+        if _has_alpha(img, alpha_channel) and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
+            info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
+    elif img.mode == &#34;P&#34;:
+        dpn, bpc, colspace = 1, 8, &#34;Indexed&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
+        info[&#34;pal&#34;] = img.palette.palette
+
+        # check if the P image has transparency
+        if img.info.get(&#34;transparency&#34;, None) is not None and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
+            # convert to RGBA to get the alpha channel for creating the smask
+            info[&#34;smask&#34;] = _to_data(
+                img.convert(&#34;RGBA&#34;), image_filter, select_slice=slice(3, None, 4)
+            )
+    elif img.mode == &#34;PA&#34;:
+        dpn, bpc, colspace = 1, 8, &#34;Indexed&#34;
+        info[&#34;pal&#34;] = img.palette.palette
         alpha_channel = slice(1, None, 2)
         info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
         if _has_alpha(img, alpha_channel) and image_filter not in (
@@ -130,7 +162,6 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
             &#34;bpc&#34;: bpc,
             &#34;f&#34;: image_filter,
             &#34;dp&#34;: dp,
-            &#34;pal&#34;: &#34;&#34;,
             &#34;trns&#34;: &#34;&#34;,
         }
     )
@@ -141,18 +172,23 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
 def _to_data(img, image_filter, **kwargs):
     if image_filter == &#34;FlateDecode&#34;:
         return _to_zdata(img, **kwargs)
+
     if img.mode == &#34;LA&#34;:
         img = img.convert(&#34;L&#34;)
+
     if img.mode == &#34;RGBA&#34;:
         img = img.convert(&#34;RGB&#34;)
+
     if image_filter == &#34;DCTDecode&#34;:
         compressed_bytes = BytesIO()
         img.save(compressed_bytes, format=&#34;JPEG&#34;)
         return compressed_bytes.getvalue()
+
     if image_filter == &#34;JPXDecode&#34;:
         compressed_bytes = BytesIO()
         img.save(compressed_bytes, format=&#34;JPEG2000&#34;)
         return compressed_bytes.getvalue()
+
     raise FPDFException(f&#39;Unsupported image filter: &#34;{image_filter}&#34;&#39;)
 
 
@@ -207,15 +243,23 @@ def _has_alpha(img, alpha_channel):
     &#34;&#34;&#34;
     if Image is None:
         raise EnvironmentError(&#34;Pillow not available - fpdf2 cannot insert images&#34;)
+
     if not isinstance(img, Image.Image):
         img = Image.open(img)
+
     if dims:
         img = img.resize(dims, resample=RESAMPLE)
+
     if image_filter == &#34;AUTO&#34;:
         # Very simple logic for now:
         image_filter = &#34;DCTDecode&#34; if img.format == &#34;JPEG&#34; else &#34;FlateDecode&#34;
-    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;):
+
+    if img.mode in (&#34;P&#34;, &#34;PA&#34;) and image_filter != &#34;FlateDecode&#34;:
         img = img.convert(&#34;RGBA&#34;)
+
+    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
+        img = img.convert(&#34;RGBA&#34;)
+
     w, h = img.size
     info = {}
     if img.mode == &#34;L&#34;:
@@ -223,6 +267,30 @@ def _has_alpha(img, alpha_channel):
         info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;LA&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
+        alpha_channel = slice(1, None, 2)
+        info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
+        if _has_alpha(img, alpha_channel) and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
+            info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
+    elif img.mode == &#34;P&#34;:
+        dpn, bpc, colspace = 1, 8, &#34;Indexed&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
+        info[&#34;pal&#34;] = img.palette.palette
+
+        # check if the P image has transparency
+        if img.info.get(&#34;transparency&#34;, None) is not None and image_filter not in (
+            &#34;DCTDecode&#34;,
+            &#34;JPXDecode&#34;,
+        ):
+            # convert to RGBA to get the alpha channel for creating the smask
+            info[&#34;smask&#34;] = _to_data(
+                img.convert(&#34;RGBA&#34;), image_filter, select_slice=slice(3, None, 4)
+            )
+    elif img.mode == &#34;PA&#34;:
+        dpn, bpc, colspace = 1, 8, &#34;Indexed&#34;
+        info[&#34;pal&#34;] = img.palette.palette
         alpha_channel = slice(1, None, 2)
         info[&#34;data&#34;] = _to_data(img, image_filter, remove_slice=alpha_channel)
         if _has_alpha(img, alpha_channel) and image_filter not in (
@@ -253,7 +321,6 @@ def _has_alpha(img, alpha_channel):
             &#34;bpc&#34;: bpc,
             &#34;f&#34;: image_filter,
             &#34;dp&#34;: dp,
-            &#34;pal&#34;: &#34;&#34;,
             &#34;trns&#34;: &#34;&#34;,
         }
     )
