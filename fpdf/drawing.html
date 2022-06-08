@@ -2968,7 +2968,7 @@ class ImplicitClose(NamedTuple):
             a tuple of `(str, new_last_item)`, where `new_last_item` is whatever the old
             last_item was.
         &#34;&#34;&#34;
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         if style.auto_close:
             return &#34;h&#34;, last_item, initial_point
 
@@ -3032,7 +3032,7 @@ class Close(NamedTuple):
             a tuple of `(str, new_last_item)`, where `new_last_item` is whatever the old
             last_item was.
         &#34;&#34;&#34;
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         return &#34;h&#34;, Move(initial_point), initial_point
 
     @force_nodocument
@@ -5244,7 +5244,7 @@ to the start of the current path.</p>
             a tuple of `(str, new_last_item)`, where `new_last_item` is whatever the old
             last_item was.
         &#34;&#34;&#34;
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         return &#34;h&#34;, Move(initial_point), initial_point
 
     @force_nodocument
@@ -7474,7 +7474,7 @@ def stroke_width(self):
             a tuple of `(str, new_last_item)`, where `new_last_item` is whatever the old
             last_item was.
         &#34;&#34;&#34;
-        # pylint: disable=unused-argument,no-self-use
+        # pylint: disable=unused-argument
         if style.auto_close:
             return &#34;h&#34;, last_item, initial_point
 

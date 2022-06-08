@@ -351,15 +351,15 @@ Default to "mm".</dd>
         self.viewer_preferences = None
         self.compress = True  # Enable compression by default
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
+        self.creation_date = True
 
         self._current_draw_context = None
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
         self._graphics_state_obj_refs = OrderedDict()
 
         self.record_text_quad_points = False
-        self.text_quad_points = defaultdict(
-            list
-        )  # page number -&gt; array of 8 × n numbers
+        # page number -&gt; array of 8 × n numbers:
+        self.text_quad_points = defaultdict(list)
 
     def _set_min_pdf_version(self, version):
         self.pdf_version = max(self.pdf_version, version)
@@ -598,7 +598,7 @@ Default to "mm".</dd>
 
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-        self.creation_date = datetime.now() if date is None else date
+        self.creation_date = date
 
     def set_xmp_metadata(self, xmp_metadata):
         if &#34;&lt;?xpacket&#34; in xmp_metadata[:50]:
@@ -3136,7 +3136,7 @@ Default to "mm".</dd>
             # disabling bandit rule as we just build a cache key, this is secure
             name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
         elif isinstance(name, io.BytesIO):
-            bytes = name.getvalue()
+            bytes = name.getvalue().strip()
             if _is_svg(bytes):
                 return self._vector_image(name, x, y, w, h, link, title, alt_text)
             # disabling bandit rule as we just build a cache key, this is secure
@@ -4068,17 +4068,18 @@ Default to "mm".</dd>
             &#34;/Producer&#34;: enclose_in_parens(getattr(self, &#34;producer&#34;, None)),
         }
 
-        if hasattr(self, &#34;creation_date&#34;):
+        if self.creation_date is True:
+            # =&gt; no date has been specified, we use the current time by default:
+            self.creation_date = datetime.now(timezone.utc)
+        if self.creation_date:
             try:
-                creation_date = self.creation_date
-                date_string = f&#34;{creation_date:%Y%m%d%H%M%S}&#34;
+                info_d[&#34;/CreationDate&#34;] = enclose_in_parens(
+                    f&#34;D:{self.creation_date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;
+                )
             except Exception as error:
                 raise FPDFException(
-                    f&#34;Could not format date: {creation_date}&#34;
+                    f&#34;Could not format date: {self.creation_date}&#34;
                 ) from error
-        else:
-            date_string = f&#34;{datetime.now():%Y%m%d%H%M%S}&#34;
-        info_d[&#34;/CreationDate&#34;] = enclose_in_parens(f&#34;D:{date_string}&#34;)
 
         self._out(pdf_dict(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
@@ -6355,7 +6356,7 @@ def image(
         # disabling bandit rule as we just build a cache key, this is secure
         name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
     elif isinstance(name, io.BytesIO):
-        bytes = name.getvalue()
+        bytes = name.getvalue().strip()
         if _is_svg(bytes):
             return self._vector_image(name, x, y, w, h, link, title, alt_text)
         # disabling bandit rule as we just build a cache key, this is secure
@@ -7850,7 +7851,7 @@ of about 2 for the resulting document.</p>
 </summary>
 <pre><code class="python">def set_creation_date(self, date=None):
     &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-    self.creation_date = datetime.now() if date is None else date</code></pre>
+    self.creation_date = date</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_creator"><code class="name flex">
@@ -10840,7 +10841,6 @@ to new image URLs</dd>
         self.set_style(&#34;u&#34;, False)
         self.set_text_color(*self.font_color)
 
-    # pylint: disable=no-self-use
     def render_toc(self, pdf, outline):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()

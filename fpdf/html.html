@@ -726,7 +726,6 @@ class HTML2FPDF(HTMLParser):
         self.set_style(&#34;u&#34;, False)
         self.set_text_color(*self.font_color)
 
-    # pylint: disable=no-self-use
     def render_toc(self, pdf, outline):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
@@ -1344,7 +1343,6 @@ to new image URLs</dd>
         self.set_style(&#34;u&#34;, False)
         self.set_text_color(*self.font_color)
 
-    # pylint: disable=no-self-use
     def render_toc(self, pdf, outline):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
