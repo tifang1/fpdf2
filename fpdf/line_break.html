@@ -69,6 +69,7 @@ class TextLine(NamedTuple):
     text_width: float
     number_of_spaces_between_words: int
     justify: bool
+    trailing_nl: bool
 
 
 class SpaceHint(NamedTuple):
@@ -185,12 +186,13 @@ class CurrentLine:
         self.number_of_spaces = break_hint.number_of_spaces
         self.width = break_hint.width
 
-    def manual_break(self, justify: bool = False):
+    def manual_break(self, justify: bool = False, trailing_nl: bool = False):
         return TextLine(
             fragments=self.fragments,
             text_width=self.width,
             number_of_spaces_between_words=self.number_of_spaces,
             justify=(self.number_of_spaces &gt; 0) and justify,
+            trailing_nl=trailing_nl,
         )
 
     def automatic_break_possible(self):
@@ -277,7 +279,7 @@ class MultiLineBreak:
 
             if character == NEWLINE:
                 self.character_index += 1
-                return current_line.manual_break()
+                return current_line.manual_break(trailing_nl=True)
 
             if current_line.width + character_width &gt; maximum_width:
                 if character == SPACE:
@@ -436,12 +438,13 @@ normally, instead of triggering a line break. Default: False</p></div>
         self.number_of_spaces = break_hint.number_of_spaces
         self.width = break_hint.width
 
-    def manual_break(self, justify: bool = False):
+    def manual_break(self, justify: bool = False, trailing_nl: bool = False):
         return TextLine(
             fragments=self.fragments,
             text_width=self.width,
             number_of_spaces_between_words=self.number_of_spaces,
             justify=(self.number_of_spaces &gt; 0) and justify,
+            trailing_nl=trailing_nl,
         )
 
     def automatic_break_possible(self):
@@ -590,7 +593,7 @@ normally, instead of triggering a line break. Default: False</p></div>
 </details>
 </dd>
 <dt id="fpdf.line_break.CurrentLine.manual_break"><code class="name flex">
-<span>def <span class="ident">manual_break</span></span>(<span>self, justify: bool = False)</span>
+<span>def <span class="ident">manual_break</span></span>(<span>self, justify: bool = False, trailing_nl: bool = False)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -598,12 +601,13 @@ normally, instead of triggering a line break. Default: False</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def manual_break(self, justify: bool = False):
+<pre><code class="python">def manual_break(self, justify: bool = False, trailing_nl: bool = False):
     return TextLine(
         fragments=self.fragments,
         text_width=self.width,
         number_of_spaces_between_words=self.number_of_spaces,
         justify=(self.number_of_spaces &gt; 0) and justify,
+        trailing_nl=trailing_nl,
     )</code></pre>
 </details>
 </dd>
@@ -828,7 +832,7 @@ def string(self):
 
             if character == NEWLINE:
                 self.character_index += 1
-                return current_line.manual_break()
+                return current_line.manual_break(trailing_nl=True)
 
             if current_line.width + character_width &gt; maximum_width:
                 if character == SPACE:
@@ -913,7 +917,7 @@ def string(self):
 
         if character == NEWLINE:
             self.character_index += 1
-            return current_line.manual_break()
+            return current_line.manual_break(trailing_nl=True)
 
         if current_line.width + character_width &gt; maximum_width:
             if character == SPACE:
@@ -1012,10 +1016,10 @@ def string(self):
 </dd>
 <dt id="fpdf.line_break.TextLine"><code class="flex name class">
 <span>class <span class="ident">TextLine</span></span>
-<span>(</span><span>fragments: tuple, text_width: float, number_of_spaces_between_words: int, justify: bool)</span>
+<span>(</span><span>fragments: tuple, text_width: float, number_of_spaces_between_words: int, justify: bool, trailing_nl: bool)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TextLine(fragments, text_width, number_of_spaces_between_words, justify)</p></div>
+<div class="desc"><p>TextLine(fragments, text_width, number_of_spaces_between_words, justify, trailing_nl)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1024,7 +1028,8 @@ def string(self):
     fragments: tuple
     text_width: float
     number_of_spaces_between_words: int
-    justify: bool</code></pre>
+    justify: bool
+    trailing_nl: bool</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1047,6 +1052,10 @@ def string(self):
 <dt id="fpdf.line_break.TextLine.text_width"><code class="name">var <span class="ident">text_width</span> : float</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 1</p></div>
+</dd>
+<dt id="fpdf.line_break.TextLine.trailing_nl"><code class="name">var <span class="ident">trailing_nl</span> : bool</code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 4</p></div>
 </dd>
 </dl>
 </dd>
@@ -1122,6 +1131,7 @@ def string(self):
 <li><code><a title="fpdf.line_break.TextLine.justify" href="#fpdf.line_break.TextLine.justify">justify</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.number_of_spaces_between_words" href="#fpdf.line_break.TextLine.number_of_spaces_between_words">number_of_spaces_between_words</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.text_width" href="#fpdf.line_break.TextLine.text_width">text_width</a></code></li>
+<li><code><a title="fpdf.line_break.TextLine.trailing_nl" href="#fpdf.line_break.TextLine.trailing_nl">trailing_nl</a></code></li>
 </ul>
 </li>
 </ul>
