@@ -602,6 +602,13 @@ class PDFStyleKeys(Enum):
     STROKE_DASH_PATTERN = Name(&#34;D&#34;)  # array of array, number, e.g. [[1 1] 0]
 
 
+class Corner(CoerciveEnum):
+    TOP_RIGHT = &#34;TOP_RIGHT&#34;
+    TOP_LEFT = &#34;TOP_LEFT&#34;
+    BOTTOM_RIGHT = &#34;BOTTOM_RIGHT&#34;
+    BOTTOM_LEFT = &#34;BOTTOM_LEFT&#34;
+
+
 # This enum is only used internally:
 __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 </details>
@@ -1168,6 +1175,7 @@ path; otherwise, it is inside."</p></div>
 <li><a title="fpdf.enums.AnnotationName" href="#fpdf.enums.AnnotationName">AnnotationName</a></li>
 <li><a title="fpdf.enums.BlendMode" href="#fpdf.enums.BlendMode">BlendMode</a></li>
 <li><a title="fpdf.enums.ClippingPathIntersectionRule" href="#fpdf.enums.ClippingPathIntersectionRule">ClippingPathIntersectionRule</a></li>
+<li><a title="fpdf.enums.Corner" href="#fpdf.enums.Corner">Corner</a></li>
 <li><a title="fpdf.enums.IntersectionRule" href="#fpdf.enums.IntersectionRule">IntersectionRule</a></li>
 <li><a title="fpdf.enums.PageLayout" href="#fpdf.enums.PageLayout">PageLayout</a></li>
 <li><a title="fpdf.enums.PageMode" href="#fpdf.enums.PageMode">PageMode</a></li>
@@ -1380,6 +1388,55 @@ def coerce(cls, value):
 </details>
 </dd>
 </dl>
+</dd>
+<dt id="fpdf.enums.Corner"><code class="flex name class">
+<span>class <span class="ident">Corner</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>An enumeration.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Corner(CoerciveEnum):
+    TOP_RIGHT = &#34;TOP_RIGHT&#34;
+    TOP_LEFT = &#34;TOP_LEFT&#34;
+    BOTTOM_RIGHT = &#34;BOTTOM_RIGHT&#34;
+    BOTTOM_LEFT = &#34;BOTTOM_LEFT&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.Corner.BOTTOM_LEFT"><code class="name">var <span class="ident">BOTTOM_LEFT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.Corner.BOTTOM_RIGHT"><code class="name">var <span class="ident">BOTTOM_RIGHT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.Corner.TOP_LEFT"><code class="name">var <span class="ident">TOP_LEFT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.Corner.TOP_RIGHT"><code class="name">var <span class="ident">TOP_RIGHT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.enums.IntersectionRule"><code class="flex name class">
 <span>class <span class="ident">IntersectionRule</span></span>
@@ -2422,6 +2479,15 @@ corner."</p></div>
 <h4><code><a title="fpdf.enums.CoerciveIntEnum" href="#fpdf.enums.CoerciveIntEnum">CoerciveIntEnum</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.enums.CoerciveIntEnum.coerce" href="#fpdf.enums.CoerciveIntEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.Corner" href="#fpdf.enums.Corner">Corner</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.Corner.BOTTOM_LEFT" href="#fpdf.enums.Corner.BOTTOM_LEFT">BOTTOM_LEFT</a></code></li>
+<li><code><a title="fpdf.enums.Corner.BOTTOM_RIGHT" href="#fpdf.enums.Corner.BOTTOM_RIGHT">BOTTOM_RIGHT</a></code></li>
+<li><code><a title="fpdf.enums.Corner.TOP_LEFT" href="#fpdf.enums.Corner.TOP_LEFT">TOP_LEFT</a></code></li>
+<li><code><a title="fpdf.enums.Corner.TOP_RIGHT" href="#fpdf.enums.Corner.TOP_RIGHT">TOP_RIGHT</a></code></li>
 </ul>
 </li>
 <li>
