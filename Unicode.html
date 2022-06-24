@@ -1175,6 +1175,13 @@ ThaiFonts-Scalable)</p>
 more information.</p>
 <p>Then, to use a Unicode font in your script, pass <code>True</code> as the fourth parameter 
 of <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.add_font"><code>add_font</code></a>.</p>
+<p><strong>Notes on non-latin languages</strong></p>
+<p>Some users may encounter a problem where some characters displayed incorrectly. For example, using Thai language in the picture below</p>
+<p><img alt="thai-font-problem" src="https://raw.githubusercontent.com/PyFPDF/fpdf2/master/tutorial/thai-accent-error.png" /></p>
+<p>The solution is to find and use a font that covers the characters of your language.
+From the error in the image above, Thai characters can be fixed using fonts from  <a href="http://linux.thai.net/projects/fonts-tlwg/">Fonts-TLWG</a> which can be downloaded from
+<a href="https://linux.thai.net/pub/thailinux/software/fonts-tlwg/fonts/">this link</a>. The example shown below.</p>
+<p><img alt="thai-font-working" src="https://raw.githubusercontent.com/PyFPDF/fpdf2/master/tutorial/thai-accent-working.png" /></p>
 <h2 id="example">Example</h2>
 <p>This example uses several free fonts to display some Unicode strings. Be sure to
 install the fonts in the <code>font</code> directory first.</p>
