@@ -3034,7 +3034,7 @@ class FPDF(GraphicsStateMixin):
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
             new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
-            new_y (fpdf.enums.XPos, str): New current position in y after the call. Default: NEXT
+            new_y (fpdf.enums.YPos, str): New current position in y after the call. Default: NEXT
             ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             max_line_height (float): optional maximum height of each sub-cell generated
             markdown (bool): enable minimal markdown-like markup to render part
@@ -7679,7 +7679,7 @@ Default to "mm".</dd>
             link (str): optional link to add on the cell, internal
                 (identifier returned by `add_link`) or external URL.
             new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
-            new_y (fpdf.enums.XPos, str): New current position in y after the call. Default: NEXT
+            new_y (fpdf.enums.YPos, str): New current position in y after the call. Default: NEXT
             ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             max_line_height (float): optional maximum height of each sub-cell generated
             markdown (bool): enable minimal markdown-like markup to render part
@@ -11706,7 +11706,7 @@ word-wrapping and return the resulting multi-lines array of strings.</dd>
 (identifier returned by <code>add_link</code>) or external URL.</dd>
 <dt><strong><code>new_x</code></strong> :&ensp;<code><a title="fpdf.enums.XPos" href="enums.html#fpdf.enums.XPos">XPos</a>, str</code></dt>
 <dd>New current position in x after the call. Default: RIGHT</dd>
-<dt><strong><code>new_y</code></strong> :&ensp;<code><a title="fpdf.enums.XPos" href="enums.html#fpdf.enums.XPos">XPos</a>, str</code></dt>
+<dt><strong><code>new_y</code></strong> :&ensp;<code><a title="fpdf.enums.YPos" href="enums.html#fpdf.enums.YPos">YPos</a>, str</code></dt>
 <dd>New current position in y after the call. Default: NEXT</dd>
 <dt><strong><code>ln</code></strong> :&ensp;<code>int</code></dt>
 <dd><strong>DEPRECATED since 2.5.1</strong>: Use <code>new_x</code> and <code>new_y</code> instead.</dd>
@@ -11773,7 +11773,7 @@ def multi_cell(
         link (str): optional link to add on the cell, internal
             (identifier returned by `add_link`) or external URL.
         new_x (fpdf.enums.XPos, str): New current position in x after the call. Default: RIGHT
-        new_y (fpdf.enums.XPos, str): New current position in y after the call. Default: NEXT
+        new_y (fpdf.enums.YPos, str): New current position in y after the call. Default: NEXT
         ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
         max_line_height (float): optional maximum height of each sub-cell generated
         markdown (bool): enable minimal markdown-like markup to render part
