@@ -4107,6 +4107,7 @@ Default to "mm".</dd>
             self._out(f&#34;/F{idx} {pdf_ref(n)}&#34;)
         self._out(&#34;&gt;&gt;&#34;)
 
+        # if self.images: [TODO] uncomment this &amp; indent the next 3 lines in order to save 15 bytes / page without image
         self._out(&#34;/XObject &lt;&lt;&#34;)
         self._putxobjectdict()
         self._out(&#34;&gt;&gt;&#34;)
