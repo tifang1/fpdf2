@@ -3231,14 +3231,16 @@ Default to "mm".</dd>
             img = None
         elif isinstance(name, Image):
             bytes = name.tobytes()
-            # disabling bandit rule as we just build a cache key, this is secure
-            name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
+            hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+            hash.update(bytes)
+            name, img = hash.hexdigest(), name
         elif isinstance(name, io.BytesIO):
             bytes = name.getvalue().strip()
             if _is_svg(bytes):
                 return self._vector_image(name, x, y, w, h, link, title, alt_text)
-            # disabling bandit rule as we just build a cache key, this is secure
-            name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
+            hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+            hash.update(bytes)
+            name, img = hash.hexdigest(), name
         else:
             name, img = str(name), name
         info = self.images.get(name)
@@ -4230,6 +4232,31 @@ Default to "mm".</dd>
         self._out(f&#34;/Size {self.n + 1}&#34;)
         self._out(f&#34;/Root {pdf_ref(self.n)}&#34;)  # Catalog object index
         self._out(f&#34;/Info {pdf_ref(self.n - 1)}&#34;)  # Info object index
+        file_id = self.file_id()
+        if file_id:
+            self._out(f&#34;/ID [{file_id}]&#34;)
+
+    def file_id(self):
+        &#34;&#34;&#34;
+        This method can be overridden in inherited classes
+        in order to define a custom file identifier.
+        Its output must have the format &#34;&lt;hex_string1&gt;&lt;hex_string2&gt;&#34;.
+        If this method returns a falsy value (None, empty string),
+        no /ID will be inserted in the generated PDF document.
+        &#34;&#34;&#34;
+        # Quoting the PDF 1.7 spec, section 14.4 File Identifiers:
+        # &gt; The value of this entry shall be an array of two byte strings.
+        # &gt; The first byte string shall be a permanent identifier
+        # &gt; based on the contents of the file at the time it was originally created
+        # &gt; and shall not change when the file is incrementally updated.
+        # &gt; The second byte string shall be a changing identifier
+        # &gt; based on the file’s contents at the time it was last updated.
+        # &gt; When a file is first written, both identifiers shall be set to the same value.
+        bytes = self.buffer + self.creation_date.strftime(&#34;%Y%m%d%H%M%S&#34;).encode(&#34;utf8&#34;)
+        hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        hash.update(bytes)
+        hash_hex = hash.hexdigest().upper()
+        return f&#34;&lt;{hash_hex}&gt;&lt;{hash_hex}&gt;&#34;
 
     def _enddoc(self):
         LOGGER.debug(&#34;Final doc sections size summary:&#34;)
@@ -6132,6 +6159,42 @@ def elliptic_clip(self, x, y, w, h):
     self._out(&#34;Q&#34;)</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.file_id"><code class="name flex">
+<span>def <span class="ident">file_id</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method can be overridden in inherited classes
+in order to define a custom file identifier.
+Its output must have the format "<hex_string1><hex_string2>".
+If this method returns a falsy value (None, empty string),
+no /ID will be inserted in the generated PDF document.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def file_id(self):
+    &#34;&#34;&#34;
+    This method can be overridden in inherited classes
+    in order to define a custom file identifier.
+    Its output must have the format &#34;&lt;hex_string1&gt;&lt;hex_string2&gt;&#34;.
+    If this method returns a falsy value (None, empty string),
+    no /ID will be inserted in the generated PDF document.
+    &#34;&#34;&#34;
+    # Quoting the PDF 1.7 spec, section 14.4 File Identifiers:
+    # &gt; The value of this entry shall be an array of two byte strings.
+    # &gt; The first byte string shall be a permanent identifier
+    # &gt; based on the contents of the file at the time it was originally created
+    # &gt; and shall not change when the file is incrementally updated.
+    # &gt; The second byte string shall be a changing identifier
+    # &gt; based on the file’s contents at the time it was last updated.
+    # &gt; When a file is first written, both identifiers shall be set to the same value.
+    bytes = self.buffer + self.creation_date.strftime(&#34;%Y%m%d%H%M%S&#34;).encode(&#34;utf8&#34;)
+    hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+    hash.update(bytes)
+    hash_hex = hash.hexdigest().upper()
+    return f&#34;&lt;{hash_hex}&gt;&lt;{hash_hex}&gt;&#34;</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.footer"><code class="name flex">
 <span>def <span class="ident">footer</span></span>(<span>self)</span>
 </code></dt>
@@ -6453,14 +6516,16 @@ def image(
         img = None
     elif isinstance(name, Image):
         bytes = name.tobytes()
-        # disabling bandit rule as we just build a cache key, this is secure
-        name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
+        hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        hash.update(bytes)
+        name, img = hash.hexdigest(), name
     elif isinstance(name, io.BytesIO):
         bytes = name.getvalue().strip()
         if _is_svg(bytes):
             return self._vector_image(name, x, y, w, h, link, title, alt_text)
-        # disabling bandit rule as we just build a cache key, this is secure
-        name, img = hashlib.md5(bytes).hexdigest(), name  # nosec B303 B324
+        hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        hash.update(bytes)
+        name, img = hash.hexdigest(), name
     else:
         name, img = str(name), name
     info = self.images.get(name)
@@ -12186,6 +12251,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.elliptic_clip" href="#fpdf.FPDF.elliptic_clip">elliptic_clip</a></code></li>
 <li><code><a title="fpdf.FPDF.eph" href="#fpdf.FPDF.eph">eph</a></code></li>
 <li><code><a title="fpdf.FPDF.epw" href="#fpdf.FPDF.epw">epw</a></code></li>
+<li><code><a title="fpdf.FPDF.file_id" href="#fpdf.FPDF.file_id">file_id</a></code></li>
 <li><code><a title="fpdf.FPDF.font_size_pt" href="#fpdf.FPDF.font_size_pt">font_size_pt</a></code></li>
 <li><code><a title="fpdf.FPDF.footer" href="#fpdf.FPDF.footer">footer</a></code></li>
 <li><code><a title="fpdf.FPDF.get_normalized_string_width_with_style" href="#fpdf.FPDF.get_normalized_string_width_with_style">get_normalized_string_width_with_style</a></code></li>
