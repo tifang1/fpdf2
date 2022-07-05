@@ -68,6 +68,8 @@ def sign_content(signer, buffer, key, cert, extra_certs, hashalgo, sign_time):
     content_range = (0, start_index - 1, end_index + 1, len(buffer) - end_index - 1)
     br_placeholder = _SIGNATURE_BYTERANGE_PLACEHOLDER.encode()
     byte_range = b&#34;[%010d %010d %010d %010d]&#34; % content_range
+    # Sanity check, otherwise we will break the xref table:
+    assert len(br_placeholder) == len(byte_range)
     buffer = buffer.replace(br_placeholder, byte_range, 1)
 
     # We compute the ByteRange hash, of everything before &amp; after the placeholder:
@@ -94,6 +96,8 @@ def sign_content(signer, buffer, key, cert, extra_certs, hashalgo, sign_time):
         signed_value=content_hash.digest(),
     )
     contents = _pkcs11_aligned(contents).encode(&#34;latin1&#34;)
+    # Sanity check, otherwise we will break the xref table:
+    assert len(sig_placeholder) == len(contents)
     return buffer.replace(sig_placeholder, contents, 1)
 
 
@@ -133,6 +137,8 @@ _SIGNATURE_CONTENTS_PLACEHOLDER = _pkcs11_aligned((0,))</code></pre>
     content_range = (0, start_index - 1, end_index + 1, len(buffer) - end_index - 1)
     br_placeholder = _SIGNATURE_BYTERANGE_PLACEHOLDER.encode()
     byte_range = b&#34;[%010d %010d %010d %010d]&#34; % content_range
+    # Sanity check, otherwise we will break the xref table:
+    assert len(br_placeholder) == len(byte_range)
     buffer = buffer.replace(br_placeholder, byte_range, 1)
 
     # We compute the ByteRange hash, of everything before &amp; after the placeholder:
@@ -159,6 +165,8 @@ _SIGNATURE_CONTENTS_PLACEHOLDER = _pkcs11_aligned((0,))</code></pre>
         signed_value=content_hash.digest(),
     )
     contents = _pkcs11_aligned(contents).encode(&#34;latin1&#34;)
+    # Sanity check, otherwise we will break the xref table:
+    assert len(sig_placeholder) == len(contents)
     return buffer.replace(sig_placeholder, contents, 1)</code></pre>
 </details>
 </dd>

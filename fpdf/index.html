@@ -293,7 +293,8 @@ Default to "mm".</dd>
         self._outlines_obj_id = None
         self._toc_placeholder = None  # ToCPlaceholder
         self._outline = []  # list of OutlineSection
-        self._sign_key = None
+        self._sig_annotation = None
+        self._sig_annotation_obj_id = None
         self.section_title_styles = {}  # level -&gt; TitleStyle
 
         # Standard fonts
@@ -603,7 +604,7 @@ Default to "mm".</dd>
 
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-        if self._sign_key:
+        if self._sig_annotation:
             raise FPDFException(
                 &#34;.set_creation_date() must always be called before .sign*() methods&#34;
             )
@@ -3633,7 +3634,7 @@ Default to "mm".</dd>
             raise EnvironmentError(
                 &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
             )
-        if self._sign_key:
+        if self._sig_annotation:
             raise FPDFException(&#34;.sign* methods should be called only once&#34;)
 
         self._sign_key = key
@@ -3642,23 +3643,21 @@ Default to "mm".</dd>
         self._sign_hashalgo = hashalgo
         self._sign_time = signing_time or self.creation_date
 
-        self.annots[self.page].append(
-            Annotation(
-                &#34;Widget&#34;,
-                field_type=&#34;Sig&#34;,
-                x=0,
-                y=0,
-                width=0,
-                height=0,
-                flags=flags,
-                title=&#34;signature&#34;,
-                value=Signature(
-                    contact_info=contact_info,
-                    location=location,
-                    m=format_date(self._sign_time),
-                    reason=reason,
-                ),
-            )
+        self._sig_annotation = Annotation(
+            &#34;Widget&#34;,
+            field_type=&#34;Sig&#34;,
+            x=0,
+            y=0,
+            width=0,
+            height=0,
+            flags=flags,
+            title=&#34;signature&#34;,
+            value=Signature(
+                contact_info=contact_info,
+                location=location,
+                m=format_date(self._sign_time),
+                reason=reason,
+            ),
         )
 
     def _putpages(self):
@@ -3690,7 +3689,9 @@ Default to "mm".</dd>
             self._out(f&#34;/Resources {pdf_ref(2)}&#34;)
 
             page_annots = self.annots[n]
-            if page_annots:  # Annotations, e.g. links:
+            should_insert_sig_annotation = n == 1 and self._sig_annotation
+            if page_annots or should_insert_sig_annotation:
+                # Annotations, e.g. links:
                 annots = &#34;&#34;
                 for annot in page_annots:
                     annots += annot.serialize(self)
@@ -3703,6 +3704,10 @@ Default to "mm".</dd>
                         )
                     if annot.quad_points:
                         self._set_min_pdf_version(&#34;1.6&#34;)
+                if should_insert_sig_annotation:
+                    annots += (
+                        &#34; &#34; if annots else &#34;&#34;
+                    ) + &#34;5 0 R&#34;  # cf. _put_signature_annotation
                 self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency /CS /DeviceRGB&gt;&gt;&#34;)
@@ -4252,6 +4257,14 @@ Default to "mm".</dd>
             first_object_id=self._struct_tree_root_obj_id, fpdf=self
         )
 
+    def _put_signature_annotation(self):
+        self._newobj()
+        self._out(self._sig_annotation.serialize(self))
+        self._out(&#34;endobj&#34;)
+        self._sig_annotation_obj_id = self.n
+        # For now, this constant is fixed in _putpages:
+        assert self._sig_annotation_obj_id == 5
+
     def _put_document_outline(self):
         # This property is later used by _putcatalog to insert a reference to the Outlines:
         self._outlines_obj_id = self.n + 1
@@ -4296,6 +4309,11 @@ Default to "mm".</dd>
         lang = enclose_in_parens(getattr(self, &#34;lang&#34;, None))
         if lang:
             catalog_d[&#34;/Lang&#34;] = lang
+        if self._sig_annotation_obj_id:
+            flags = SignatureFlag.SIGNATURES_EXIST + SignatureFlag.APPEND_ONLY
+            self._out(
+                f&#34;/AcroForm &lt;&lt;/Fields [{self._sig_annotation_obj_id} 0 R] /SigFlags {flags}&gt;&gt;&#34;
+            )
 
         if self.zoom_mode in ZOOM_CONFIGS:
             zoom_config = [
@@ -4367,6 +4385,8 @@ Default to "mm".</dd>
             self._putheader()
         with self._trace_size(&#34;pages&#34;):
             self._putpages()
+        if self._sig_annotation:
+            self._put_signature_annotation()
         self._putresources()  # trace_size is performed inside
         if not self.struct_builder.empty():
             with self._trace_size(&#34;structure_tree&#34;):
@@ -4407,7 +4427,7 @@ Default to "mm".</dd>
             self._out(&#34;startxref&#34;)
             self._out(o)
         self._out(&#34;%%EOF&#34;)
-        if self._sign_key:
+        if self._sig_annotation:
             self.buffer = sign_content(
                 signer,
                 self.buffer,
@@ -8169,7 +8189,7 @@ of about 2 for the resulting document.</p>
 </summary>
 <pre><code class="python">def set_creation_date(self, date=None):
     &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-    if self._sign_key:
+    if self._sig_annotation:
         raise FPDFException(
             &#34;.set_creation_date() must always be called before .sign*() methods&#34;
         )
@@ -9254,7 +9274,7 @@ def sign(
         raise EnvironmentError(
             &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
         )
-    if self._sign_key:
+    if self._sig_annotation:
         raise FPDFException(&#34;.sign* methods should be called only once&#34;)
 
     self._sign_key = key
@@ -9263,23 +9283,21 @@ def sign(
     self._sign_hashalgo = hashalgo
     self._sign_time = signing_time or self.creation_date
 
-    self.annots[self.page].append(
-        Annotation(
-            &#34;Widget&#34;,
-            field_type=&#34;Sig&#34;,
-            x=0,
-            y=0,
-            width=0,
-            height=0,
-            flags=flags,
-            title=&#34;signature&#34;,
-            value=Signature(
-                contact_info=contact_info,
-                location=location,
-                m=format_date(self._sign_time),
-                reason=reason,
-            ),
-        )
+    self._sig_annotation = Annotation(
+        &#34;Widget&#34;,
+        field_type=&#34;Sig&#34;,
+        x=0,
+        y=0,
+        width=0,
+        height=0,
+        flags=flags,
+        title=&#34;signature&#34;,
+        value=Signature(
+            contact_info=contact_info,
+            location=location,
+            m=format_date(self._sign_time),
+            reason=reason,
+        ),
     )</code></pre>
 </details>
 </dd>

@@ -1087,6 +1087,7 @@ It stores information about the signer and the state of the document when it was
 <span class="n">pdf</span><span class="o">.</span><span class="n">sign_pkcs12</span><span class="p">(</span><span class="s2">&quot;certs.p12&quot;</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="sa">b</span><span class="s2">&quot;1234&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;signed_doc.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<p><img alt="" src="signature-valid-in-acrobat.png" /></p>
 <p>The lower-level <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.sign">sign()</a> method
 allows to add a signature based on arbitrary key &amp; certificates, not necessarily from a PKCS#12 file.</p>
 <p><code>endesive</code> also provides code to check PDFs signatures.
