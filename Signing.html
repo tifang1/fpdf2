@@ -1089,6 +1089,10 @@ It stores information about the signer and the state of the document when it was
 </code></pre></div>
 <p>The lower-level <a href="https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.sign">sign()</a> method
 allows to add a signature based on arbitrary key &amp; certificates, not necessarily from a PKCS#12 file.</p>
+<p><code>endesive</code> also provides code to check PDFs signatures.
+<a href="https://github.com/m32/endesive/blob/master/examples/pdf-verify.py">examples/pdf-verify.py</a>
+or the <a href="https://github.com/PyFPDF/fpdf2/blob/master/test/conftest.py#L111"><code>check_signature()</code></a> function
+used in <code>fpdf2</code> unit tests can be good starting points for you, if you want to perform PDF signature control.</p>
 
               
             </article>
