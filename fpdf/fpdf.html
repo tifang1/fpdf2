@@ -74,6 +74,12 @@ except ImportError:
         pass
 
 
+try:
+    from endesive import signer
+    from cryptography.hazmat.primitives.serialization import pkcs12
+except ImportError:
+    signer = False
+
 from . import drawing
 from .actions import Action
 from .deprecation import WarnOnDeprecatedModuleAttributes
@@ -102,6 +108,7 @@ from .recorder import FPDFRecorder
 from .structure_tree import MarkedContent, StructureTreeBuilder
 from .svg import Percent, SVGObject
 from .syntax import DestinationXYZ
+from .syntax import build_obj_dict
 from .syntax import create_dictionary_string as pdf_dict
 from .syntax import create_list_string as pdf_list
 from .syntax import create_stream as pdf_stream
@@ -110,6 +117,7 @@ from .ttfonts import TTFontFile
 from .util import (
     enclose_in_parens,
     escape_parens,
+    format_date,
     get_scale_factor,
     object_id_for_page,
     substr,
@@ -165,6 +173,8 @@ class Annotation(NamedTuple):
     border_width: int = 0  # PDF readers support: displayed by Acrobat but not Sumatra
     name: Optional[AnnotationName] = None  # for text annotations
     ink_list: Tuple[int] = ()  # for ink annotations
+    field_type: Optional[str] = None
+    value: Optional[str] = None
 
     def serialize(self, fpdf):
         &#34;Convert this object dictionnary to a string&#34;
@@ -177,6 +187,12 @@ class Annotation(NamedTuple):
             f&#34;&lt;&lt;/Type /Annot /Subtype /{self.type}&#34;
             f&#34; /Rect [{rect}] /Border [0 0 {self.border_width}]&#34;
         )
+
+        if self.field_type:
+            out += f&#34; /FT /{self.field_type}&#34;
+
+        if self.value:
+            out += f&#34; /V {self.value.serialize()}&#34;
 
         if self.flags:
             out += f&#34; /F {sum(self.flags)}&#34;
@@ -204,7 +220,7 @@ class Annotation(NamedTuple):
             out += f&#34; /T ({escape_parens(self.title)})&#34;
 
         if self.modification_time:
-            out += f&#34; /M (D:{self.modification_time:%Y%m%d%H%M%S})&#34;
+            out += f&#34; /M {format_date(self.modification_time)}&#34;
 
         if self.quad_points:
             # pylint: disable=not-an-iterable
@@ -224,6 +240,28 @@ class Annotation(NamedTuple):
             out += f&#34; /InkList [{ink_list}]&#34;
 
         return out + &#34;&gt;&gt;&#34;
+
+
+class Signature:
+    def __init__(self, contact_info=None, location=None, m=None, reason=None, **kwargs):
+        super().__init__(**kwargs)
+        self.type = &#34;/Sig&#34;
+        self.filter = &#34;/Adobe.PPKLite&#34;
+        self.sub_filter = &#34;/adbe.pkcs7.detached&#34;
+        self.contact_info = contact_info
+        &#34;Information provided by the signer to enable a recipient to contact the signer to verify the signature&#34;
+        self.location = location
+        &#34;The CPU host name or physical location of the signing&#34;
+        self.m = m
+        &#34;The time of signing&#34;
+        self.reason = reason
+        &#34;The reason for the signing&#34;
+        self.byte_range = _SIGNATURE_BYTERANGE_PLACEHOLDER
+        self.contents = &#34;&lt;&#34; + _SIGNATURE_CONTENTS_PLACEHOLDER + &#34;&gt;&#34;
+
+    def serialize(self):
+        obj_dict = build_obj_dict({key: getattr(self, key) for key in dir(self)})
+        return pdf_dict(obj_dict)
 
 
 class TitleStyle(NamedTuple):
@@ -403,6 +441,7 @@ class FPDF(GraphicsStateMixin):
         self._outlines_obj_id = None
         self._toc_placeholder = None  # ToCPlaceholder
         self._outline = []  # list of OutlineSection
+        self._sign_key = None
         self.section_title_styles = {}  # level -&gt; TitleStyle
 
         # Standard fonts
@@ -465,7 +504,7 @@ class FPDF(GraphicsStateMixin):
         self.viewer_preferences = None
         self.compress = True  # Enable compression by default
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
-        self.creation_date = True
+        self.creation_date = datetime.now(timezone.utc)
 
         self._current_draw_context = None
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
@@ -712,6 +751,10 @@ class FPDF(GraphicsStateMixin):
 
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
+        if self._sign_key:
+            raise FPDFException(
+                &#34;.set_creation_date() must always be called before .sign*() methods&#34;
+            )
         self.creation_date = date
 
     def set_xmp_metadata(self, xmp_metadata):
@@ -2133,7 +2176,7 @@ class FPDF(GraphicsStateMixin):
         &#34;&#34;&#34;
         type = TextMarkupType.coerce(type).value
         if modification_time is None:
-            modification_time = datetime.now()
+            modification_time = self.creation_date
         if page is None:
             page = self.page
         x_min = min(quad_points[0::2])
@@ -3667,6 +3710,130 @@ class FPDF(GraphicsStateMixin):
                 ) from error
         return txt
 
+    def sign_pkcs12(
+        self,
+        pkcs_filepath,
+        password=None,
+        hashalgo=&#34;sha256&#34;,
+        contact_info=None,
+        location=None,
+        signing_time=None,
+        reason=None,
+        flags=(AnnotationFlag.PRINT, AnnotationFlag.LOCKED),
+    ):
+        &#34;&#34;&#34;
+        Args:
+            pkcs_filepath (str): file path to a .pfx or .p12 PKCS12,
+                in the binary format described by RFC 7292
+            password (bytes-like): the password to use to decrypt the data.
+                `None` if the PKCS12 is not encrypted.
+            hashalgo (str): hashing algorithm used, passed to `hashlib.new`
+            contact_info (str): optional information provided by the signer to enable
+                a recipient to contact the signer to verify the signature
+            location (str): optional CPU host name or physical location of the signing
+            signing_time (datetime): optional time of signing
+            reason (str): optional signing reason
+            flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+        &#34;&#34;&#34;
+        with open(pkcs_filepath, &#34;rb&#34;) as pkcs_file:
+            key, cert, extra_certs = pkcs12.load_key_and_certificates(
+                pkcs_file.read(), password
+            )
+        self.sign(
+            key=key,
+            cert=cert,
+            extra_certs=extra_certs,
+            hashalgo=hashalgo,
+            contact_info=contact_info,
+            location=location,
+            signing_time=signing_time,
+            reason=reason,
+            flags=flags,
+        )
+
+    @check_page
+    def sign(
+        self,
+        key,
+        cert,
+        extra_certs=(),
+        hashalgo=&#34;sha256&#34;,
+        contact_info=None,
+        location=None,
+        signing_time=None,
+        reason=None,
+        flags=(AnnotationFlag.PRINT, AnnotationFlag.LOCKED),
+    ):
+        &#34;&#34;&#34;
+        Args:
+            key: certificate private key
+            cert (cryptography.x509.Certificate): certificate
+            extra_certs (list[cryptography.x509.Certificate]): list of additional PKCS12 certificates
+            hashalgo (str): hashing algorithm used, passed to `hashlib.new`
+            contact_info (str): optional information provided by the signer to enable
+                a recipient to contact the signer to verify the signature
+            location (str): optional CPU host name or physical location of the signing
+            signing_time (datetime): optional time of signing
+            reason (str): optional signing reason
+            flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+        &#34;&#34;&#34;
+        if not signer:
+            raise EnvironmentError(
+                &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
+            )
+
+        self._sign_key = key
+        self._sign_cert = cert
+        self._sign_extra_certs = extra_certs
+        self._sign_hashalgo = hashalgo
+
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Widget&#34;,
+                field_type=&#34;Sig&#34;,
+                x=0,
+                y=0,
+                width=0,
+                height=0,
+                flags=flags,
+                title=&#34;signature&#34;,
+                value=Signature(
+                    contact_info=contact_info,
+                    location=location,
+                    m=format_date(signing_time) if signing_time else None,
+                    reason=reason,
+                ),
+            )
+        )
+
+    def _sign_content(self):
+        &#34;&#34;&#34;
+        Perform PDF signing based on ._sign_* properties
+        and the content of the .buffer, performing substitutions in it.
+        &#34;&#34;&#34;
+        contents_placeholder = _SIGNATURE_CONTENTS_PLACEHOLDER.encode(&#34;latin1&#34;)
+        start_index = self.buffer.find(contents_placeholder)
+        end_index = start_index + len(contents_placeholder)
+        range = (0, start_index - 1, end_index + 1, len(self.buffer) - end_index - 1)
+        br_placeholder = _SIGNATURE_BYTERANGE_PLACEHOLDER.encode()
+        byte_range = b&#34;[%010d %010d %010d %010d]&#34; % range
+        self.buffer = self.buffer.replace(br_placeholder, byte_range, 1)
+        # We compute the ByteRange hash, of everything before &amp; after the placeholder:
+        hash = hashlib.new(self._sign_hashalgo)
+        hash.update(self.buffer[: range[1]])  # before
+        hash.update(self.buffer[range[2] :])  # after
+        contents = signer.sign(
+            datau=None,
+            key=self._sign_key,
+            cert=self._sign_cert,
+            othercerts=self._sign_extra_certs,
+            hashalgo=self._sign_hashalgo,
+            attrs=True,
+            signed_value=hash.digest(),
+        )
+        contents = _pkcs11_aligned(contents).encode(&#34;latin1&#34;)
+        self.buffer = self.buffer.replace(contents_placeholder, contents, 1)
+
     def _putpages(self):
         nb = self.pages_count  # total number of pages
         if self.str_alias_nb_pages:
@@ -4283,14 +4450,9 @@ class FPDF(GraphicsStateMixin):
             &#34;/Producer&#34;: enclose_in_parens(getattr(self, &#34;producer&#34;, None)),
         }
 
-        if self.creation_date is True:
-            # =&gt; no date has been specified, we use the current time by default:
-            self.creation_date = datetime.now(timezone.utc)
         if self.creation_date:
             try:
-                info_d[&#34;/CreationDate&#34;] = enclose_in_parens(
-                    f&#34;D:{self.creation_date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;
-                )
+                info_d[&#34;/CreationDate&#34;] = format_date(self.creation_date, with_tz=True)
             except Exception as error:
                 raise FPDFException(
                     f&#34;Could not format date: {self.creation_date}&#34;
@@ -4418,6 +4580,8 @@ class FPDF(GraphicsStateMixin):
             self._out(&#34;startxref&#34;)
             self._out(o)
         self._out(&#34;%%EOF&#34;)
+        if self._sign_key:
+            self._sign_content()
         self.state = DocumentState.CLOSED
 
     def _beginpage(
@@ -4884,6 +5048,15 @@ def _is_svg(bytes):
     return bytes.startswith(b&#34;&lt;?xml &#34;) or bytes.startswith(b&#34;&lt;svg &#34;)
 
 
+def _pkcs11_aligned(data):
+    data = &#34;&#34;.join(f&#34;{i:02x}&#34; for i in data)
+    return data + &#34;0&#34; * (0x4000 - len(data))
+
+
+_SIGNATURE_BYTERANGE_PLACEHOLDER = &#34;[0000000000 0000000000 0000000000 0000000000]&#34;
+_SIGNATURE_CONTENTS_PLACEHOLDER = _pkcs11_aligned((0,))
+
+
 sys.modules[__name__].__class__ = WarnOnDeprecatedModuleAttributes
 
 
@@ -5076,6 +5249,7 @@ Default to "mm".</dd>
         self._outlines_obj_id = None
         self._toc_placeholder = None  # ToCPlaceholder
         self._outline = []  # list of OutlineSection
+        self._sign_key = None
         self.section_title_styles = {}  # level -&gt; TitleStyle
 
         # Standard fonts
@@ -5138,7 +5312,7 @@ Default to "mm".</dd>
         self.viewer_preferences = None
         self.compress = True  # Enable compression by default
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
-        self.creation_date = True
+        self.creation_date = datetime.now(timezone.utc)
 
         self._current_draw_context = None
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
@@ -5385,6 +5559,10 @@ Default to "mm".</dd>
 
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
+        if self._sign_key:
+            raise FPDFException(
+                &#34;.set_creation_date() must always be called before .sign*() methods&#34;
+            )
         self.creation_date = date
 
     def set_xmp_metadata(self, xmp_metadata):
@@ -6806,7 +6984,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         type = TextMarkupType.coerce(type).value
         if modification_time is None:
-            modification_time = datetime.now()
+            modification_time = self.creation_date
         if page is None:
             page = self.page
         x_min = min(quad_points[0::2])
@@ -8340,6 +8518,130 @@ Default to "mm".</dd>
                 ) from error
         return txt
 
+    def sign_pkcs12(
+        self,
+        pkcs_filepath,
+        password=None,
+        hashalgo=&#34;sha256&#34;,
+        contact_info=None,
+        location=None,
+        signing_time=None,
+        reason=None,
+        flags=(AnnotationFlag.PRINT, AnnotationFlag.LOCKED),
+    ):
+        &#34;&#34;&#34;
+        Args:
+            pkcs_filepath (str): file path to a .pfx or .p12 PKCS12,
+                in the binary format described by RFC 7292
+            password (bytes-like): the password to use to decrypt the data.
+                `None` if the PKCS12 is not encrypted.
+            hashalgo (str): hashing algorithm used, passed to `hashlib.new`
+            contact_info (str): optional information provided by the signer to enable
+                a recipient to contact the signer to verify the signature
+            location (str): optional CPU host name or physical location of the signing
+            signing_time (datetime): optional time of signing
+            reason (str): optional signing reason
+            flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+        &#34;&#34;&#34;
+        with open(pkcs_filepath, &#34;rb&#34;) as pkcs_file:
+            key, cert, extra_certs = pkcs12.load_key_and_certificates(
+                pkcs_file.read(), password
+            )
+        self.sign(
+            key=key,
+            cert=cert,
+            extra_certs=extra_certs,
+            hashalgo=hashalgo,
+            contact_info=contact_info,
+            location=location,
+            signing_time=signing_time,
+            reason=reason,
+            flags=flags,
+        )
+
+    @check_page
+    def sign(
+        self,
+        key,
+        cert,
+        extra_certs=(),
+        hashalgo=&#34;sha256&#34;,
+        contact_info=None,
+        location=None,
+        signing_time=None,
+        reason=None,
+        flags=(AnnotationFlag.PRINT, AnnotationFlag.LOCKED),
+    ):
+        &#34;&#34;&#34;
+        Args:
+            key: certificate private key
+            cert (cryptography.x509.Certificate): certificate
+            extra_certs (list[cryptography.x509.Certificate]): list of additional PKCS12 certificates
+            hashalgo (str): hashing algorithm used, passed to `hashlib.new`
+            contact_info (str): optional information provided by the signer to enable
+                a recipient to contact the signer to verify the signature
+            location (str): optional CPU host name or physical location of the signing
+            signing_time (datetime): optional time of signing
+            reason (str): optional signing reason
+            flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+        &#34;&#34;&#34;
+        if not signer:
+            raise EnvironmentError(
+                &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
+            )
+
+        self._sign_key = key
+        self._sign_cert = cert
+        self._sign_extra_certs = extra_certs
+        self._sign_hashalgo = hashalgo
+
+        self.annots[self.page].append(
+            Annotation(
+                &#34;Widget&#34;,
+                field_type=&#34;Sig&#34;,
+                x=0,
+                y=0,
+                width=0,
+                height=0,
+                flags=flags,
+                title=&#34;signature&#34;,
+                value=Signature(
+                    contact_info=contact_info,
+                    location=location,
+                    m=format_date(signing_time) if signing_time else None,
+                    reason=reason,
+                ),
+            )
+        )
+
+    def _sign_content(self):
+        &#34;&#34;&#34;
+        Perform PDF signing based on ._sign_* properties
+        and the content of the .buffer, performing substitutions in it.
+        &#34;&#34;&#34;
+        contents_placeholder = _SIGNATURE_CONTENTS_PLACEHOLDER.encode(&#34;latin1&#34;)
+        start_index = self.buffer.find(contents_placeholder)
+        end_index = start_index + len(contents_placeholder)
+        range = (0, start_index - 1, end_index + 1, len(self.buffer) - end_index - 1)
+        br_placeholder = _SIGNATURE_BYTERANGE_PLACEHOLDER.encode()
+        byte_range = b&#34;[%010d %010d %010d %010d]&#34; % range
+        self.buffer = self.buffer.replace(br_placeholder, byte_range, 1)
+        # We compute the ByteRange hash, of everything before &amp; after the placeholder:
+        hash = hashlib.new(self._sign_hashalgo)
+        hash.update(self.buffer[: range[1]])  # before
+        hash.update(self.buffer[range[2] :])  # after
+        contents = signer.sign(
+            datau=None,
+            key=self._sign_key,
+            cert=self._sign_cert,
+            othercerts=self._sign_extra_certs,
+            hashalgo=self._sign_hashalgo,
+            attrs=True,
+            signed_value=hash.digest(),
+        )
+        contents = _pkcs11_aligned(contents).encode(&#34;latin1&#34;)
+        self.buffer = self.buffer.replace(contents_placeholder, contents, 1)
+
     def _putpages(self):
         nb = self.pages_count  # total number of pages
         if self.str_alias_nb_pages:
@@ -8956,14 +9258,9 @@ Default to "mm".</dd>
             &#34;/Producer&#34;: enclose_in_parens(getattr(self, &#34;producer&#34;, None)),
         }
 
-        if self.creation_date is True:
-            # =&gt; no date has been specified, we use the current time by default:
-            self.creation_date = datetime.now(timezone.utc)
         if self.creation_date:
             try:
-                info_d[&#34;/CreationDate&#34;] = enclose_in_parens(
-                    f&#34;D:{self.creation_date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;
-                )
+                info_d[&#34;/CreationDate&#34;] = format_date(self.creation_date, with_tz=True)
             except Exception as error:
                 raise FPDFException(
                     f&#34;Could not format date: {self.creation_date}&#34;
@@ -9091,6 +9388,8 @@ Default to "mm".</dd>
             self._out(&#34;startxref&#34;)
             self._out(o)
         self._out(&#34;%%EOF&#34;)
+        if self._sign_key:
+            self._sign_content()
         self.state = DocumentState.CLOSED
 
     def _beginpage(
@@ -10056,7 +10355,7 @@ def add_text_markup_annotation(
     &#34;&#34;&#34;
     type = TextMarkupType.coerce(type).value
     if modification_time is None:
-        modification_time = datetime.now()
+        modification_time = self.creation_date
     if page is None:
         page = self.page
     x_min = min(quad_points[0::2])
@@ -12783,6 +13082,10 @@ of about 2 for the resulting document.</p>
 </summary>
 <pre><code class="python">def set_creation_date(self, date=None):
     &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
+    if self._sign_key:
+        raise FPDFException(
+            &#34;.set_creation_date() must always be called before .sign*() methods&#34;
+        )
     self.creation_date = date</code></pre>
 </details>
 </dd>
@@ -13804,6 +14107,164 @@ If the value provided is negative, it is relative to the bottom of the page.</p>
     self.y = y if y &gt;= 0 else self.h + y</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.sign"><code class="name flex">
+<span>def <span class="ident">sign</span></span>(<span>self, key, cert, extra_certs=(), hashalgo='sha256', contact_info=None, location=None, signing_time=None, reason=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;, &lt;AnnotationFlag.LOCKED: 128&gt;))</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>key</code></strong></dt>
+<dd>certificate private key</dd>
+<dt><strong><code>cert</code></strong> :&ensp;<code>cryptography.x509.Certificate</code></dt>
+<dd>certificate</dd>
+<dt><strong><code>extra_certs</code></strong> :&ensp;<code>list[cryptography.x509.Certificate]</code></dt>
+<dd>list of additional PKCS12 certificates</dd>
+<dt><strong><code>hashalgo</code></strong> :&ensp;<code>str</code></dt>
+<dd>hashing algorithm used, passed to <code>hashlib.new</code></dd>
+<dt><strong><code>contact_info</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional information provided by the signer to enable
+a recipient to contact the signer to verify the signature</dd>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional CPU host name or physical location of the signing</dd>
+<dt><strong><code>signing_time</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>optional time of signing</dd>
+<dt><strong><code>reason</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional signing reason</dd>
+<dt><strong><code>flags</code></strong> :&ensp;<code>Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]</code></dt>
+<dd>optional list of flags defining annotation properties</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+def sign(
+    self,
+    key,
+    cert,
+    extra_certs=(),
+    hashalgo=&#34;sha256&#34;,
+    contact_info=None,
+    location=None,
+    signing_time=None,
+    reason=None,
+    flags=(AnnotationFlag.PRINT, AnnotationFlag.LOCKED),
+):
+    &#34;&#34;&#34;
+    Args:
+        key: certificate private key
+        cert (cryptography.x509.Certificate): certificate
+        extra_certs (list[cryptography.x509.Certificate]): list of additional PKCS12 certificates
+        hashalgo (str): hashing algorithm used, passed to `hashlib.new`
+        contact_info (str): optional information provided by the signer to enable
+            a recipient to contact the signer to verify the signature
+        location (str): optional CPU host name or physical location of the signing
+        signing_time (datetime): optional time of signing
+        reason (str): optional signing reason
+        flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+    &#34;&#34;&#34;
+    if not signer:
+        raise EnvironmentError(
+            &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
+        )
+
+    self._sign_key = key
+    self._sign_cert = cert
+    self._sign_extra_certs = extra_certs
+    self._sign_hashalgo = hashalgo
+
+    self.annots[self.page].append(
+        Annotation(
+            &#34;Widget&#34;,
+            field_type=&#34;Sig&#34;,
+            x=0,
+            y=0,
+            width=0,
+            height=0,
+            flags=flags,
+            title=&#34;signature&#34;,
+            value=Signature(
+                contact_info=contact_info,
+                location=location,
+                m=format_date(signing_time) if signing_time else None,
+                reason=reason,
+            ),
+        )
+    )</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.FPDF.sign_pkcs12"><code class="name flex">
+<span>def <span class="ident">sign_pkcs12</span></span>(<span>self, pkcs_filepath, password=None, hashalgo='sha256', contact_info=None, location=None, signing_time=None, reason=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;, &lt;AnnotationFlag.LOCKED: 128&gt;))</span>
+</code></dt>
+<dd>
+<div class="desc"><h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>pkcs_filepath</code></strong> :&ensp;<code>str</code></dt>
+<dd>file path to a .pfx or .p12 PKCS12,
+in the binary format described by RFC 7292</dd>
+<dt><strong><code>password</code></strong> :&ensp;<code>bytes-like</code></dt>
+<dd>the password to use to decrypt the data.
+<code>None</code> if the PKCS12 is not encrypted.</dd>
+<dt><strong><code>hashalgo</code></strong> :&ensp;<code>str</code></dt>
+<dd>hashing algorithm used, passed to <code>hashlib.new</code></dd>
+<dt><strong><code>contact_info</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional information provided by the signer to enable
+a recipient to contact the signer to verify the signature</dd>
+<dt><strong><code>location</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional CPU host name or physical location of the signing</dd>
+<dt><strong><code>signing_time</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>optional time of signing</dd>
+<dt><strong><code>reason</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional signing reason</dd>
+<dt><strong><code>flags</code></strong> :&ensp;<code>Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]</code></dt>
+<dd>optional list of flags defining annotation properties</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sign_pkcs12(
+    self,
+    pkcs_filepath,
+    password=None,
+    hashalgo=&#34;sha256&#34;,
+    contact_info=None,
+    location=None,
+    signing_time=None,
+    reason=None,
+    flags=(AnnotationFlag.PRINT, AnnotationFlag.LOCKED),
+):
+    &#34;&#34;&#34;
+    Args:
+        pkcs_filepath (str): file path to a .pfx or .p12 PKCS12,
+            in the binary format described by RFC 7292
+        password (bytes-like): the password to use to decrypt the data.
+            `None` if the PKCS12 is not encrypted.
+        hashalgo (str): hashing algorithm used, passed to `hashlib.new`
+        contact_info (str): optional information provided by the signer to enable
+            a recipient to contact the signer to verify the signature
+        location (str): optional CPU host name or physical location of the signing
+        signing_time (datetime): optional time of signing
+        reason (str): optional signing reason
+        flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+    &#34;&#34;&#34;
+    with open(pkcs_filepath, &#34;rb&#34;) as pkcs_file:
+        key, cert, extra_certs = pkcs12.load_key_and_certificates(
+            pkcs_file.read(), password
+        )
+    self.sign(
+        key=key,
+        cert=cert,
+        extra_certs=extra_certs,
+        hashalgo=hashalgo,
+        contact_info=contact_info,
+        location=location,
+        signing_time=signing_time,
+        reason=reason,
+        flags=flags,
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.solid_arc"><code class="name flex">
 <span>def <span class="ident">solid_arc</span></span>(<span>self, x, y, a, start_angle, end_angle, b=None, inclination=0, clockwise=False, style=None)</span>
 </code></dt>
@@ -14737,6 +15198,8 @@ def write(
 <li><code><a title="fpdf.fpdf.FPDF.set_xmp_metadata" href="#fpdf.fpdf.FPDF.set_xmp_metadata">set_xmp_metadata</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_xy" href="#fpdf.fpdf.FPDF.set_xy">set_xy</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.set_y" href="#fpdf.fpdf.FPDF.set_y">set_y</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.sign" href="#fpdf.fpdf.FPDF.sign">sign</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.sign_pkcs12" href="#fpdf.fpdf.FPDF.sign_pkcs12">sign_pkcs12</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.solid_arc" href="#fpdf.fpdf.FPDF.solid_arc">solid_arc</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.star" href="#fpdf.fpdf.FPDF.star">star</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.start_section" href="#fpdf.fpdf.FPDF.start_section">start_section</a></code></li>

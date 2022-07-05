@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import locale
+from datetime import datetime
 from typing import Union, Iterable
 
 
@@ -39,6 +40,12 @@ def substr(s, start, length=-1):
     if length &lt; 0:
         length = len(s) - start
     return s[start : start + length]
+
+
+def format_date(date: datetime, with_tz=False) -&gt; str:
+    if with_tz:
+        return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;)
+    return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%S}&#34;)
 
 
 def enclose_in_parens(s):
@@ -265,6 +272,21 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
     )</code></pre>
 </details>
 </dd>
+<dt id="fpdf.util.format_date"><code class="name flex">
+<span>def <span class="ident">format_date</span></span>(<span>date: datetime.datetime, with_tz=False) ‑> str</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def format_date(date: datetime, with_tz=False) -&gt; str:
+    if with_tz:
+        return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;)
+    return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%S}&#34;)</code></pre>
+</details>
+</dd>
 <dt id="fpdf.util.get_scale_factor"><code class="name flex">
 <span>def <span class="ident">get_scale_factor</span></span>(<span>unit: Union[str, float, int]) ‑> float</span>
 </code></dt>
@@ -363,6 +385,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <li><code><a title="fpdf.util.dochecks" href="#fpdf.util.dochecks">dochecks</a></code></li>
 <li><code><a title="fpdf.util.enclose_in_parens" href="#fpdf.util.enclose_in_parens">enclose_in_parens</a></code></li>
 <li><code><a title="fpdf.util.escape_parens" href="#fpdf.util.escape_parens">escape_parens</a></code></li>
+<li><code><a title="fpdf.util.format_date" href="#fpdf.util.format_date">format_date</a></code></li>
 <li><code><a title="fpdf.util.get_scale_factor" href="#fpdf.util.get_scale_factor">get_scale_factor</a></code></li>
 <li><code><a title="fpdf.util.object_id_for_page" href="#fpdf.util.object_id_for_page">object_id_for_page</a></code></li>
 <li><code><a title="fpdf.util.substr" href="#fpdf.util.substr">substr</a></code></li>
