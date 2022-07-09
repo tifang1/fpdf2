@@ -394,7 +394,12 @@ class FPDF(GraphicsStateMixin):
         self.font_files = {}  # array of font files
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
-        self.annots = defaultdict(list)  # map page numbers to arrays of Annotations
+        self.annots = defaultdict(
+            list
+        )  # map page numbers to a list of Annotations; they will be inlined in the Page object
+        self.annots_as_obj = defaultdict(
+            list
+        )  # map page numbers to a list of pairs (Annotations, obj_id); they will be embedded in the doc as separated objects
         self.links = {}  # array of Destination
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
@@ -420,8 +425,7 @@ class FPDF(GraphicsStateMixin):
         self._outlines_obj_id = None
         self._toc_placeholder = None  # ToCPlaceholder
         self._outline = []  # list of OutlineSection
-        self._sig_annotation = None
-        self._sig_annotation_obj_id = None
+        self._sign_key = None
         self.section_title_styles = {}  # level -&gt; TitleStyle
 
         # Standard fonts
@@ -731,7 +735,7 @@ class FPDF(GraphicsStateMixin):
 
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-        if self._sig_annotation:
+        if self._sign_key:
             raise FPDFException(
                 &#34;.set_creation_date() must always be called before .sign*() methods&#34;
             )
@@ -3715,6 +3719,10 @@ class FPDF(GraphicsStateMixin):
             reason (str): optional signing reason
             flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
         &#34;&#34;&#34;
+        if not signer:
+            raise EnvironmentError(
+                &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
+            )
         with open(pkcs_filepath, &#34;rb&#34;) as pkcs_file:
             key, cert, extra_certs = pkcs12.load_key_and_certificates(
                 pkcs_file.read(), password
@@ -3761,7 +3769,7 @@ class FPDF(GraphicsStateMixin):
             raise EnvironmentError(
                 &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
             )
-        if self._sig_annotation:
+        if self._sign_key:
             raise FPDFException(&#34;.sign* methods should be called only once&#34;)
 
         self._sign_key = key
@@ -3770,7 +3778,7 @@ class FPDF(GraphicsStateMixin):
         self._sign_hashalgo = hashalgo
         self._sign_time = signing_time or self.creation_date
 
-        self._sig_annotation = Annotation(
+        annotation = Annotation(
             &#34;Widget&#34;,
             field_type=&#34;Sig&#34;,
             x=0,
@@ -3786,6 +3794,7 @@ class FPDF(GraphicsStateMixin):
                 reason=reason,
             ),
         )
+        self.annots_as_obj[self.page].append(annotation)
 
     def _putpages(self):
         nb = self.pages_count  # total number of pages
@@ -3800,6 +3809,12 @@ class FPDF(GraphicsStateMixin):
             dw_pt = self.dh_pt
             dh_pt = self.dw_pt
         filter = &#34;/Filter /FlateDecode &#34; if self.compress else &#34;&#34;
+
+        # The Annotations embedded as PDF objects
+        # are added to the document just after all the pages,
+        # hence we can deduce their object IDs:
+        annot_obj_id = object_id_for_page(nb) + 2
+
         for n in range(1, nb + 1):
             # Page
             self._newobj()
@@ -3816,8 +3831,8 @@ class FPDF(GraphicsStateMixin):
             self._out(f&#34;/Resources {pdf_ref(2)}&#34;)
 
             page_annots = self.annots[n]
-            should_insert_sig_annotation = n == 1 and self._sig_annotation
-            if page_annots or should_insert_sig_annotation:
+            page_annots_as_obj = self.annots_as_obj[n]
+            if page_annots or page_annots_as_obj:
                 # Annotations, e.g. links:
                 annots = &#34;&#34;
                 for annot in page_annots:
@@ -3831,10 +3846,12 @@ class FPDF(GraphicsStateMixin):
                         )
                     if annot.quad_points:
                         self._set_min_pdf_version(&#34;1.6&#34;)
-                if should_insert_sig_annotation:
-                    annots += (
-                        &#34; &#34; if annots else &#34;&#34;
-                    ) + &#34;5 0 R&#34;  # cf. _put_signature_annotation
+                if page_annots and page_annots_as_obj:
+                    annots += &#34; &#34;
+                annots += &#34; &#34;.join(
+                    f&#34;{annot_obj_id + i} 0 R&#34; for i in range(len(page_annots_as_obj))
+                )
+                annot_obj_id += len(page_annots_as_obj)
                 self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency /CS /DeviceRGB&gt;&gt;&#34;)
@@ -4384,13 +4401,19 @@ class FPDF(GraphicsStateMixin):
             first_object_id=self._struct_tree_root_obj_id, fpdf=self
         )
 
-    def _put_signature_annotation(self):
-        self._newobj()
-        self._out(self._sig_annotation.serialize(self))
-        self._out(&#34;endobj&#34;)
-        self._sig_annotation_obj_id = self.n
-        # For now, this constant is fixed in _putpages:
-        assert self._sig_annotation_obj_id == 5
+    def _put_annotations_as_objects(self):
+        sig_annotation_obj_id = None
+        # The following code inserts annotations in the order
+        # they have been inserted in the pages / .annots_as_obj dict;
+        # this relies on a property of Python dicts since v3.7:
+        for page_annots_as_obj in self.annots_as_obj.values():
+            for annot in page_annots_as_obj:
+                self._newobj()
+                self._out(annot.serialize(self))
+                self._out(&#34;endobj&#34;)
+                if isinstance(annot.value, Signature):
+                    sig_annotation_obj_id = self.n
+        return sig_annotation_obj_id
 
     def _put_document_outline(self):
         # This property is later used by _putcatalog to insert a reference to the Outlines:
@@ -4427,7 +4450,7 @@ class FPDF(GraphicsStateMixin):
 
         self._out(pdf_dict(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
-    def _putcatalog(self):
+    def _putcatalog(self, sig_annotation_obj_id=None):
         catalog_d = {
             &#34;/Type&#34;: &#34;/Catalog&#34;,
             # Pages is always the 1st object of the document, cf. the end of _putpages:
@@ -4436,10 +4459,10 @@ class FPDF(GraphicsStateMixin):
         lang = enclose_in_parens(getattr(self, &#34;lang&#34;, None))
         if lang:
             catalog_d[&#34;/Lang&#34;] = lang
-        if self._sig_annotation_obj_id:
+        if sig_annotation_obj_id:
             flags = SignatureFlag.SIGNATURES_EXIST + SignatureFlag.APPEND_ONLY
             self._out(
-                f&#34;/AcroForm &lt;&lt;/Fields [{self._sig_annotation_obj_id} 0 R] /SigFlags {flags}&gt;&gt;&#34;
+                f&#34;/AcroForm &lt;&lt;/Fields [{sig_annotation_obj_id} 0 R] /SigFlags {flags}&gt;&gt;&#34;
             )
 
         if self.zoom_mode in ZOOM_CONFIGS:
@@ -4510,10 +4533,12 @@ class FPDF(GraphicsStateMixin):
         LOGGER.debug(&#34;Final doc sections size summary:&#34;)
         with self._trace_size(&#34;header&#34;):
             self._putheader()
+        # It is important that pages are the first PDF objects inserted in the document,
+        # followed immediately by annotations: some parts of fpdf2 currently relies on that
+        # order of insertion (e.g. util.object_id_for_page):
         with self._trace_size(&#34;pages&#34;):
             self._putpages()
-        if self._sig_annotation:
-            self._put_signature_annotation()
+        sig_annotation_obj_id = self._put_annotations_as_objects()
         self._putresources()  # trace_size is performed inside
         if not self.struct_builder.empty():
             with self._trace_size(&#34;structure_tree&#34;):
@@ -4534,7 +4559,7 @@ class FPDF(GraphicsStateMixin):
         with self._trace_size(&#34;catalog&#34;):
             self._newobj()
             self._out(&#34;&lt;&lt;&#34;)
-            self._putcatalog()
+            self._putcatalog(sig_annotation_obj_id)
             self._out(&#34;&gt;&gt;&#34;)
             self._out(&#34;endobj&#34;)
         # Cross-ref
@@ -4554,7 +4579,7 @@ class FPDF(GraphicsStateMixin):
             self._out(&#34;startxref&#34;)
             self._out(o)
         self._out(&#34;%%EOF&#34;)
-        if self._sig_annotation:
+        if self._sign_key:
             self.buffer = sign_content(
                 signer,
                 self.buffer,
@@ -5196,7 +5221,12 @@ Default to "mm".</dd>
         self.font_files = {}  # array of font files
         self.diffs = {}  # array of encoding differences
         self.images = {}  # array of used images
-        self.annots = defaultdict(list)  # map page numbers to arrays of Annotations
+        self.annots = defaultdict(
+            list
+        )  # map page numbers to a list of Annotations; they will be inlined in the Page object
+        self.annots_as_obj = defaultdict(
+            list
+        )  # map page numbers to a list of pairs (Annotations, obj_id); they will be embedded in the doc as separated objects
         self.links = {}  # array of Destination
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
@@ -5222,8 +5252,7 @@ Default to "mm".</dd>
         self._outlines_obj_id = None
         self._toc_placeholder = None  # ToCPlaceholder
         self._outline = []  # list of OutlineSection
-        self._sig_annotation = None
-        self._sig_annotation_obj_id = None
+        self._sign_key = None
         self.section_title_styles = {}  # level -&gt; TitleStyle
 
         # Standard fonts
@@ -5533,7 +5562,7 @@ Default to "mm".</dd>
 
     def set_creation_date(self, date=None):
         &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-        if self._sig_annotation:
+        if self._sign_key:
             raise FPDFException(
                 &#34;.set_creation_date() must always be called before .sign*() methods&#34;
             )
@@ -8517,6 +8546,10 @@ Default to "mm".</dd>
             reason (str): optional signing reason
             flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
         &#34;&#34;&#34;
+        if not signer:
+            raise EnvironmentError(
+                &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
+            )
         with open(pkcs_filepath, &#34;rb&#34;) as pkcs_file:
             key, cert, extra_certs = pkcs12.load_key_and_certificates(
                 pkcs_file.read(), password
@@ -8563,7 +8596,7 @@ Default to "mm".</dd>
             raise EnvironmentError(
                 &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
             )
-        if self._sig_annotation:
+        if self._sign_key:
             raise FPDFException(&#34;.sign* methods should be called only once&#34;)
 
         self._sign_key = key
@@ -8572,7 +8605,7 @@ Default to "mm".</dd>
         self._sign_hashalgo = hashalgo
         self._sign_time = signing_time or self.creation_date
 
-        self._sig_annotation = Annotation(
+        annotation = Annotation(
             &#34;Widget&#34;,
             field_type=&#34;Sig&#34;,
             x=0,
@@ -8588,6 +8621,7 @@ Default to "mm".</dd>
                 reason=reason,
             ),
         )
+        self.annots_as_obj[self.page].append(annotation)
 
     def _putpages(self):
         nb = self.pages_count  # total number of pages
@@ -8602,6 +8636,12 @@ Default to "mm".</dd>
             dw_pt = self.dh_pt
             dh_pt = self.dw_pt
         filter = &#34;/Filter /FlateDecode &#34; if self.compress else &#34;&#34;
+
+        # The Annotations embedded as PDF objects
+        # are added to the document just after all the pages,
+        # hence we can deduce their object IDs:
+        annot_obj_id = object_id_for_page(nb) + 2
+
         for n in range(1, nb + 1):
             # Page
             self._newobj()
@@ -8618,8 +8658,8 @@ Default to "mm".</dd>
             self._out(f&#34;/Resources {pdf_ref(2)}&#34;)
 
             page_annots = self.annots[n]
-            should_insert_sig_annotation = n == 1 and self._sig_annotation
-            if page_annots or should_insert_sig_annotation:
+            page_annots_as_obj = self.annots_as_obj[n]
+            if page_annots or page_annots_as_obj:
                 # Annotations, e.g. links:
                 annots = &#34;&#34;
                 for annot in page_annots:
@@ -8633,10 +8673,12 @@ Default to "mm".</dd>
                         )
                     if annot.quad_points:
                         self._set_min_pdf_version(&#34;1.6&#34;)
-                if should_insert_sig_annotation:
-                    annots += (
-                        &#34; &#34; if annots else &#34;&#34;
-                    ) + &#34;5 0 R&#34;  # cf. _put_signature_annotation
+                if page_annots and page_annots_as_obj:
+                    annots += &#34; &#34;
+                annots += &#34; &#34;.join(
+                    f&#34;{annot_obj_id + i} 0 R&#34; for i in range(len(page_annots_as_obj))
+                )
+                annot_obj_id += len(page_annots_as_obj)
                 self._out(f&#34;/Annots [{annots}]&#34;)
             if self.pdf_version &gt; &#34;1.3&#34;:
                 self._out(&#34;/Group &lt;&lt;/Type /Group /S /Transparency /CS /DeviceRGB&gt;&gt;&#34;)
@@ -9186,13 +9228,19 @@ Default to "mm".</dd>
             first_object_id=self._struct_tree_root_obj_id, fpdf=self
         )
 
-    def _put_signature_annotation(self):
-        self._newobj()
-        self._out(self._sig_annotation.serialize(self))
-        self._out(&#34;endobj&#34;)
-        self._sig_annotation_obj_id = self.n
-        # For now, this constant is fixed in _putpages:
-        assert self._sig_annotation_obj_id == 5
+    def _put_annotations_as_objects(self):
+        sig_annotation_obj_id = None
+        # The following code inserts annotations in the order
+        # they have been inserted in the pages / .annots_as_obj dict;
+        # this relies on a property of Python dicts since v3.7:
+        for page_annots_as_obj in self.annots_as_obj.values():
+            for annot in page_annots_as_obj:
+                self._newobj()
+                self._out(annot.serialize(self))
+                self._out(&#34;endobj&#34;)
+                if isinstance(annot.value, Signature):
+                    sig_annotation_obj_id = self.n
+        return sig_annotation_obj_id
 
     def _put_document_outline(self):
         # This property is later used by _putcatalog to insert a reference to the Outlines:
@@ -9229,7 +9277,7 @@ Default to "mm".</dd>
 
         self._out(pdf_dict(info_d, open_dict=&#34;&#34;, close_dict=&#34;&#34;, has_empty_fields=True))
 
-    def _putcatalog(self):
+    def _putcatalog(self, sig_annotation_obj_id=None):
         catalog_d = {
             &#34;/Type&#34;: &#34;/Catalog&#34;,
             # Pages is always the 1st object of the document, cf. the end of _putpages:
@@ -9238,10 +9286,10 @@ Default to "mm".</dd>
         lang = enclose_in_parens(getattr(self, &#34;lang&#34;, None))
         if lang:
             catalog_d[&#34;/Lang&#34;] = lang
-        if self._sig_annotation_obj_id:
+        if sig_annotation_obj_id:
             flags = SignatureFlag.SIGNATURES_EXIST + SignatureFlag.APPEND_ONLY
             self._out(
-                f&#34;/AcroForm &lt;&lt;/Fields [{self._sig_annotation_obj_id} 0 R] /SigFlags {flags}&gt;&gt;&#34;
+                f&#34;/AcroForm &lt;&lt;/Fields [{sig_annotation_obj_id} 0 R] /SigFlags {flags}&gt;&gt;&#34;
             )
 
         if self.zoom_mode in ZOOM_CONFIGS:
@@ -9312,10 +9360,12 @@ Default to "mm".</dd>
         LOGGER.debug(&#34;Final doc sections size summary:&#34;)
         with self._trace_size(&#34;header&#34;):
             self._putheader()
+        # It is important that pages are the first PDF objects inserted in the document,
+        # followed immediately by annotations: some parts of fpdf2 currently relies on that
+        # order of insertion (e.g. util.object_id_for_page):
         with self._trace_size(&#34;pages&#34;):
             self._putpages()
-        if self._sig_annotation:
-            self._put_signature_annotation()
+        sig_annotation_obj_id = self._put_annotations_as_objects()
         self._putresources()  # trace_size is performed inside
         if not self.struct_builder.empty():
             with self._trace_size(&#34;structure_tree&#34;):
@@ -9336,7 +9386,7 @@ Default to "mm".</dd>
         with self._trace_size(&#34;catalog&#34;):
             self._newobj()
             self._out(&#34;&lt;&lt;&#34;)
-            self._putcatalog()
+            self._putcatalog(sig_annotation_obj_id)
             self._out(&#34;&gt;&gt;&#34;)
             self._out(&#34;endobj&#34;)
         # Cross-ref
@@ -9356,7 +9406,7 @@ Default to "mm".</dd>
             self._out(&#34;startxref&#34;)
             self._out(o)
         self._out(&#34;%%EOF&#34;)
-        if self._sig_annotation:
+        if self._sign_key:
             self.buffer = sign_content(
                 signer,
                 self.buffer,
@@ -13058,7 +13108,7 @@ of about 2 for the resulting document.</p>
 </summary>
 <pre><code class="python">def set_creation_date(self, date=None):
     &#34;&#34;&#34;Sets Creation of Date time, or current time if None given.&#34;&#34;&#34;
-    if self._sig_annotation:
+    if self._sign_key:
         raise FPDFException(
             &#34;.set_creation_date() must always be called before .sign*() methods&#34;
         )
@@ -14143,7 +14193,7 @@ def sign(
         raise EnvironmentError(
             &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
         )
-    if self._sig_annotation:
+    if self._sign_key:
         raise FPDFException(&#34;.sign* methods should be called only once&#34;)
 
     self._sign_key = key
@@ -14152,7 +14202,7 @@ def sign(
     self._sign_hashalgo = hashalgo
     self._sign_time = signing_time or self.creation_date
 
-    self._sig_annotation = Annotation(
+    annotation = Annotation(
         &#34;Widget&#34;,
         field_type=&#34;Sig&#34;,
         x=0,
@@ -14167,7 +14217,8 @@ def sign(
             m=format_date(self._sign_time),
             reason=reason,
         ),
-    )</code></pre>
+    )
+    self.annots_as_obj[self.page].append(annotation)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.sign_pkcs12"><code class="name flex">
@@ -14225,6 +14276,10 @@ a recipient to contact the signer to verify the signature</dd>
         reason (str): optional signing reason
         flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
     &#34;&#34;&#34;
+    if not signer:
+        raise EnvironmentError(
+            &#34;endesive.signer not available - PDF cannot be signed - Try: pip install endesive&#34;
+        )
     with open(pkcs_filepath, &#34;rb&#34;) as pkcs_file:
         key, cert, extra_certs = pkcs12.load_key_and_certificates(
             pkcs_file.read(), password
