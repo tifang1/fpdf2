@@ -403,7 +403,6 @@ class FPDF(GraphicsStateMixin):
         self.links = {}  # array of Destination
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
-        self.current_font = {}  # current font
         self.str_alias_nb_pages = &#34;{nb}&#34;
 
         self.ws = 0  # word spacing
@@ -460,9 +459,10 @@ class FPDF(GraphicsStateMixin):
         # We set their default values here.
         self.font_family = &#34;&#34;  # current font family
         self.font_style = &#34;&#34;  # current font style
-        self.font_size = 12 / self.k
+        self.font_size_pt = 12
         self.font_stretching = 100  # current font stretching
         self.underline = 0  # underlining flag
+        self.current_font = {}  # current font
         self.draw_color = self.DEFAULT_DRAW_COLOR
         self.fill_color = self.DEFAULT_FILL_COLOR
         self.text_color = self.DEFAULT_TEXT_COLOR
@@ -500,10 +500,6 @@ class FPDF(GraphicsStateMixin):
 
     def _set_min_pdf_version(self, version):
         self.pdf_version = max(self.pdf_version, version)
-
-    @property
-    def font_size_pt(self):
-        return self.font_size * self.k
 
     @property
     def unifontsubset(self):
@@ -1944,7 +1940,7 @@ class FPDF(GraphicsStateMixin):
         # Select it
         self.font_family = family
         self.font_style = style
-        self.font_size = size / self.k
+        self.font_size_pt = size
         self.current_font = self.fonts[fontkey]
         if self.page &gt; 0:
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
@@ -1958,7 +1954,7 @@ class FPDF(GraphicsStateMixin):
         &#34;&#34;&#34;
         if isclose(self.font_size_pt, size):
             return
-        self.font_size = size / self.k
+        self.font_size_pt = size
         if self.page &gt; 0:
             if not self.current_font:
                 raise FPDFException(
@@ -4642,8 +4638,8 @@ class FPDF(GraphicsStateMixin):
         &#34;Draw an horizontal line starting from (x, y) with a length equal to &#39;txt&#39; width&#34;
         if current_font is None:
             current_font = self.current_font
-        up = self.current_font[&#34;up&#34;]
-        ut = self.current_font[&#34;ut&#34;]
+        up = current_font[&#34;up&#34;]
+        ut = current_font[&#34;ut&#34;]
         w = self.get_string_width(txt, True) + self.ws * txt.count(&#34; &#34;)
         return (
             f&#34;{x * self.k:.2f} &#34;
@@ -5230,7 +5226,6 @@ Default to "mm".</dd>
         self.links = {}  # array of Destination
         self.in_footer = 0  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
-        self.current_font = {}  # current font
         self.str_alias_nb_pages = &#34;{nb}&#34;
 
         self.ws = 0  # word spacing
@@ -5287,9 +5282,10 @@ Default to "mm".</dd>
         # We set their default values here.
         self.font_family = &#34;&#34;  # current font family
         self.font_style = &#34;&#34;  # current font style
-        self.font_size = 12 / self.k
+        self.font_size_pt = 12
         self.font_stretching = 100  # current font stretching
         self.underline = 0  # underlining flag
+        self.current_font = {}  # current font
         self.draw_color = self.DEFAULT_DRAW_COLOR
         self.fill_color = self.DEFAULT_FILL_COLOR
         self.text_color = self.DEFAULT_TEXT_COLOR
@@ -5327,10 +5323,6 @@ Default to "mm".</dd>
 
     def _set_min_pdf_version(self, version):
         self.pdf_version = max(self.pdf_version, version)
-
-    @property
-    def font_size_pt(self):
-        return self.font_size * self.k
 
     @property
     def unifontsubset(self):
@@ -6771,7 +6763,7 @@ Default to "mm".</dd>
         # Select it
         self.font_family = family
         self.font_style = style
-        self.font_size = size / self.k
+        self.font_size_pt = size
         self.current_font = self.fonts[fontkey]
         if self.page &gt; 0:
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
@@ -6785,7 +6777,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         if isclose(self.font_size_pt, size):
             return
-        self.font_size = size / self.k
+        self.font_size_pt = size
         if self.page &gt; 0:
             if not self.current_font:
                 raise FPDFException(
@@ -9469,8 +9461,8 @@ Default to "mm".</dd>
         &#34;Draw an horizontal line starting from (x, y) with a length equal to &#39;txt&#39; width&#34;
         if current_font is None:
             current_font = self.current_font
-        up = self.current_font[&#34;up&#34;]
-        ut = self.current_font[&#34;ut&#34;]
+        up = current_font[&#34;up&#34;]
+        ut = current_font[&#34;ut&#34;]
         w = self.get_string_width(txt, True) + self.ws * txt.count(&#34; &#34;)
         return (
             f&#34;{x * self.k:.2f} &#34;
@@ -9932,18 +9924,6 @@ def epw(self):
     Effective page width: the page width minus its horizontal margins.
     &#34;&#34;&#34;
     return self.w - self.l_margin - self.r_margin</code></pre>
-</details>
-</dd>
-<dt id="fpdf.fpdf.FPDF.font_size_pt"><code class="name">var <span class="ident">font_size_pt</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def font_size_pt(self):
-    return self.font_size * self.k</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.page_mode"><code class="name">var <span class="ident">page_mode</span></code></dt>
@@ -13494,7 +13474,7 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     # Select it
     self.font_family = family
     self.font_style = style
-    self.font_size = size / self.k
+    self.font_size_pt = size
     self.current_font = self.fonts[fontkey]
     if self.page &gt; 0:
         self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)</code></pre>
@@ -13523,7 +13503,7 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
     &#34;&#34;&#34;
     if isclose(self.font_size_pt, size):
         return
-    self.font_size = size / self.k
+    self.font_size_pt = size
     if self.page &gt; 0:
         if not self.current_font:
             raise FPDFException(
@@ -15165,7 +15145,6 @@ def write(
 <li><code><a title="fpdf.fpdf.FPDF.eph" href="#fpdf.fpdf.FPDF.eph">eph</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.epw" href="#fpdf.fpdf.FPDF.epw">epw</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.file_id" href="#fpdf.fpdf.FPDF.file_id">file_id</a></code></li>
-<li><code><a title="fpdf.fpdf.FPDF.font_size_pt" href="#fpdf.fpdf.FPDF.font_size_pt">font_size_pt</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.footer" href="#fpdf.fpdf.FPDF.footer">footer</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.get_normalized_string_width_with_style" href="#fpdf.fpdf.FPDF.get_normalized_string_width_with_style">get_normalized_string_width_with_style</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.get_string_width" href="#fpdf.fpdf.FPDF.get_string_width">get_string_width</a></code></li>
