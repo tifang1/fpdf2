@@ -58,6 +58,7 @@ except ImportError:
 from . import html
 from .drawing import (
     color_from_hex_string,
+    color_from_rgb_string,
     BezierCurve,
     GraphicsContext,
     GraphicsStyle,
@@ -211,6 +212,9 @@ def svgcolor(colorstr):
 
     if colorstr.startswith(&#34;#&#34;):
         return color_from_hex_string(colorstr)
+
+    if colorstr.startswith(&#34;rgb&#34;):
+        return color_from_rgb_string(colorstr)
 
     raise ValueError(f&#34;unsupported color specification {colorstr}&#34;)
 
@@ -1110,6 +1114,7 @@ class SVGObject:
                 self.build_group(child)
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 self.build_path(child)
+            # We could/should also support &lt;defs&gt; that are rect, circle, ellipse, line, polyline, polygon...
 
     # this assumes xrefs only reference already-defined ids.
     # I don&#39;t know if this is required by the SVG spec.
@@ -1435,6 +1440,7 @@ class SVGObject:
                 self.build_group(child)
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 self.build_path(child)
+            # We could/should also support &lt;defs&gt; that are rect, circle, ellipse, line, polyline, polygon...
 
     # this assumes xrefs only reference already-defined ids.
     # I don&#39;t know if this is required by the SVG spec.

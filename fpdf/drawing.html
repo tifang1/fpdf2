@@ -467,6 +467,36 @@ def color_from_hex_string(hexstr):
     raise ValueError(f&#34;{hexstr} could not be interpreted as a RGB(A) hex string&#34;)
 
 
+def color_from_rgb_string(rgbstr):
+    &#34;&#34;&#34;
+    Parse an RGB color from a css-style rgb(R, G, B, A) color string.
+
+    Args:
+        rgbstr (str): of the form `rgb(R, G, B)` or `rgb(R, G, B, A)`.
+
+    Returns:
+        DeviceRGB representation of the color.
+    &#34;&#34;&#34;
+    if not isinstance(rgbstr, str):
+        raise TypeError(f&#34;{rgbstr} is not of type str&#34;)
+
+    rgbstr = rgbstr.replace(&#34; &#34;, &#34;&#34;)
+
+    if not rgbstr.startswith(&#34;rgb(&#34;) or not rgbstr.endswith(&#34;)&#34;):
+        raise ValueError(f&#34;{rgbstr} does not follow the expected rgb(...) format&#34;)
+
+    rgbstr = rgbstr[4:-1]
+    colors = rgbstr.split(&#34;,&#34;)
+
+    if len(colors) == 3:
+        return rgb8(*[int(c) for c in colors], a=None)
+
+    if len(colors) == 4:
+        return rgb8(*[int(c) for c in colors])
+
+    raise ValueError(f&#34;{rgbstr} could not be interpreted as a rgb(R, G, B[, A]) color&#34;)
+
+
 class Point(NamedTuple):
     &#34;&#34;&#34;
     An x-y coordinate pair within the two-dimensional coordinate frame.
@@ -4327,6 +4357,52 @@ interpreted as not specifying the opacity, so it will not be explicitly set.</p>
         return rgb8(*[int(hexstr[idx : idx + 2], base=16) for idx in range(1, hlen, 2)])
 
     raise ValueError(f&#34;{hexstr} could not be interpreted as a RGB(A) hex string&#34;)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.drawing.color_from_rgb_string"><code class="name flex">
+<span>def <span class="ident">color_from_rgb_string</span></span>(<span>rgbstr)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse an RGB color from a css-style rgb(R, G, B, A) color string.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>rgbstr</code></strong> :&ensp;<code>str</code></dt>
+<dd>of the form <code>rgb(R, G, B)</code> or <code>rgb(R, G, B, A)</code>.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>DeviceRGB representation of the color.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def color_from_rgb_string(rgbstr):
+    &#34;&#34;&#34;
+    Parse an RGB color from a css-style rgb(R, G, B, A) color string.
+
+    Args:
+        rgbstr (str): of the form `rgb(R, G, B)` or `rgb(R, G, B, A)`.
+
+    Returns:
+        DeviceRGB representation of the color.
+    &#34;&#34;&#34;
+    if not isinstance(rgbstr, str):
+        raise TypeError(f&#34;{rgbstr} is not of type str&#34;)
+
+    rgbstr = rgbstr.replace(&#34; &#34;, &#34;&#34;)
+
+    if not rgbstr.startswith(&#34;rgb(&#34;) or not rgbstr.endswith(&#34;)&#34;):
+        raise ValueError(f&#34;{rgbstr} does not follow the expected rgb(...) format&#34;)
+
+    rgbstr = rgbstr[4:-1]
+    colors = rgbstr.split(&#34;,&#34;)
+
+    if len(colors) == 3:
+        return rgb8(*[int(c) for c in colors], a=None)
+
+    if len(colors) == 4:
+        return rgb8(*[int(c) for c in colors])
+
+    raise ValueError(f&#34;{rgbstr} could not be interpreted as a rgb(R, G, B[, A]) color&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.drawing.gray8"><code class="name flex">
@@ -12240,6 +12316,7 @@ mutating self.</p>
 <ul class="">
 <li><code><a title="fpdf.drawing.cmyk8" href="#fpdf.drawing.cmyk8">cmyk8</a></code></li>
 <li><code><a title="fpdf.drawing.color_from_hex_string" href="#fpdf.drawing.color_from_hex_string">color_from_hex_string</a></code></li>
+<li><code><a title="fpdf.drawing.color_from_rgb_string" href="#fpdf.drawing.color_from_rgb_string">color_from_rgb_string</a></code></li>
 <li><code><a title="fpdf.drawing.gray8" href="#fpdf.drawing.gray8">gray8</a></code></li>
 <li><code><a title="fpdf.drawing.number_to_str" href="#fpdf.drawing.number_to_str">number_to_str</a></code></li>
 <li><code><a title="fpdf.drawing.render_pdf_primitive" href="#fpdf.drawing.render_pdf_primitive">render_pdf_primitive</a></code></li>
