@@ -741,6 +741,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#path-styling" class="md-nav__link">
+    Path styling
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1215,6 +1222,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#path-styling" class="md-nav__link">
+    Path styling
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1409,6 +1423,47 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;star.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <img alt="" src="star.png" /></p>
+<h2 id="path-styling">Path styling</h2>
+<ul>
+<li>
+<p><a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_line_width"><code>line_width</code></a>
+  specifies the thickness of the line used to stroke a path</p>
+</li>
+<li>
+<p><a href="fpdf/enums.html#fpdf.enums.StrokeJoinStyle"><code>stroke_join_style</code></a>
+  defines how the corner joining two path components should be rendered:</p>
+</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">fpdf.enums</span> <span class="kn">import</span> <span class="n">StrokeJoinStyle</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">local_context</span><span class="p">(</span><span class="n">stroke_join_style</span><span class="o">=</span><span class="n">StrokeJoinStyle</span><span class="o">.</span><span class="n">ROUND</span><span class="p">):</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">regular_polygon</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">polyWidth</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">numSides</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;FD&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;regular_polygon_rounded.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p><img alt="" src="regular_polygon_rounded.png" /></p>
+<ul>
+<li><a href="fpdf/enums.html#fpdf.enums.StrokeCapStyle"><code>stroke_cap_style</code></a>
+  defines how the end of a stroke should be rendered.
+  This affects the ends of the segments of dashed strokes, as well.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
+<span class="kn">from</span> <span class="nn">fpdf.enums</span> <span class="kn">import</span> <span class="n">StrokeCapStyle</span>
+
+<span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_line_width</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="n">r</span><span class="o">=</span><span class="mi">255</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">pdf</span><span class="o">.</span><span class="n">local_context</span><span class="p">(</span><span class="n">stroke_cap_style</span><span class="o">=</span><span class="n">StrokeCapStyle</span><span class="o">.</span><span class="n">ROUND</span><span class="p">):</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">line</span><span class="p">(</span><span class="n">x1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">x2</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;line_with_round_ends.pdf&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>There are even more specific path styling settings supported: <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_dash_pattern"><code>dash_pattern</code></a>, <code>stroke_opacity</code>, <code>stroke_miter_limit</code>...</p>
+<p>All of those settings can be set in a <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.local_context"><code>local_context()</code></a>.</p>
 
 
 
