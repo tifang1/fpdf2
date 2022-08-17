@@ -1575,9 +1575,12 @@ Default to "mm".</dd>
             )
 
         if end_at_center:
-            self._out(
-                f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {style.operator}&#34;
-            )
+            if start_from_center:
+                self._out(f&#34;h {style.operator}&#34;)
+            else:
+                self._out(
+                    f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {style.operator}&#34;
+                )
 
     @check_page
     def solid_arc(
@@ -5734,9 +5737,12 @@ It can be drawn (border only), filled (with no border) or both.</p>
         )
 
     if end_at_center:
-        self._out(
-            f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {style.operator}&#34;
-        )</code></pre>
+        if start_from_center:
+            self._out(f&#34;h {style.operator}&#34;)
+        else:
+            self._out(
+                f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {style.operator}&#34;
+            )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.cell"><code class="name flex">
