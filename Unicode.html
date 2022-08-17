@@ -589,6 +589,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#right-to-left-arabic-script-workaround" class="md-nav__link">
+    Right-to-Left &amp; Arabic Script workaround
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#example" class="md-nav__link">
     Example
   </a>
@@ -1104,6 +1111,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#right-to-left-arabic-script-workaround" class="md-nav__link">
+    Right-to-Left &amp; Arabic Script workaround
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#example" class="md-nav__link">
     Example
   </a>
@@ -1139,6 +1153,7 @@
 <div class="toc">
 <ul>
 <li><a href="#unicode">Unicode</a><ul>
+<li><a href="#right-to-left-arabic-script-workaround">Right-to-Left &amp; Arabic Script workaround</a></li>
 <li><a href="#example">Example</a></li>
 <li><a href="#free-font-pack-and-copyright-restrictions">Free Font Pack and Copyright Restrictions</a></li>
 </ul>
@@ -1196,6 +1211,14 @@ of <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.add_font"><code>add_font</code></a>.</
 From the error in the image above, Thai characters can be fixed using fonts from  <a href="http://linux.thai.net/projects/fonts-tlwg/">Fonts-TLWG</a> which can be downloaded from
 <a href="https://linux.thai.net/pub/thailinux/software/fonts-tlwg/fonts/">this link</a>. The example shown below.</p>
 <p><img alt="thai-font-working" src="https://raw.githubusercontent.com/PyFPDF/fpdf2/master/tutorial/thai-accent-working.png" /></p>
+<h3 id="right-to-left-arabic-script-workaround">Right-to-Left &amp; Arabic Script workaround</h3>
+<p>For Arabic and RTL scripts there is a temporary solution (using two additional libraries <code>python-bidi</code> and <code>arabic-reshaper</code>) that works for most languages; only a few (rare) Arabic characters aren't supported. Using it on other scripts(eg. when the input is unknown or mixed scripts) does not affect them:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">arabic_reshaper</span> <span class="kn">import</span> <span class="n">reshape</span>
+<span class="kn">from</span> <span class="nn">bidi.algorithm</span> <span class="kn">import</span> <span class="n">get_display</span>
+
+<span class="n">some_text</span> <span class="o">=</span> <span class="s1">&#39;اَلْعَرَبِيَّةُכַּף סוֹפִית&#39;</span>
+<span class="n">fixed_text</span> <span class="o">=</span> <span class="n">get_display</span><span class="p">(</span><span class="n">reshape</span><span class="p">(</span><span class="n">some_text</span><span class="p">))</span>
+</code></pre></div></p>
 <h2 id="example">Example</h2>
 <p>This example uses several free fonts to display some Unicode strings. Be sure to
 install the fonts in the <code>font</code> directory first.</p>
