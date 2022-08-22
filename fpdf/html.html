@@ -466,6 +466,10 @@ class HTML2FPDF(HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+        if tag == &#34;strong&#34;:
+            tag = &#34;b&#34;
+        if tag == &#34;em&#34;:
+            tag = &#34;i&#34;
         if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
             self.set_style(tag, True)
         if tag == &#34;a&#34;:
@@ -1083,6 +1087,10 @@ to new image URLs</dd>
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+        if tag == &#34;strong&#34;:
+            tag = &#34;b&#34;
+        if tag == &#34;em&#34;:
+            tag = &#34;i&#34;
         if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
             self.set_style(tag, True)
         if tag == &#34;a&#34;:
@@ -1535,6 +1543,10 @@ to new image URLs</dd>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     attrs = dict(attrs)
     LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+    if tag == &#34;strong&#34;:
+        tag = &#34;b&#34;
+    if tag == &#34;em&#34;:
+        tag = &#34;i&#34;
     if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
         self.set_style(tag, True)
     if tag == &#34;a&#34;:
