@@ -339,6 +339,7 @@ Default to "mm".</dd>
         self.draw_color = self.DEFAULT_DRAW_COLOR
         self.fill_color = self.DEFAULT_FILL_COLOR
         self.text_color = self.DEFAULT_TEXT_COLOR
+        self.page_background = None
         self.dash_pattern = dict(dash=0, gap=0, phase=0)
         self.line_width = 0.567 / self.k  # line width (0.2 mm)
         self.text_mode = TextMode.FILL
@@ -770,6 +771,14 @@ Default to "mm".</dd>
             new_page=not self._has_next_page(),
         )
 
+        if self.page_background:
+            if isinstance(self.page_background, tuple):
+                self.set_fill_color(*self.page_background)
+                self.rect(0, 0, self.w, self.h, style=&#34;F&#34;)
+                self.set_fill_color(*(255 * v for v in fc.colors))
+            else:
+                self.image(self.page_background, 0, 0, self.w, self.h)
+
         self._out(&#34;2 J&#34;)  # Set line cap style to square
         self.line_width = lw  # Set line width
         self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -940,6 +949,27 @@ Default to "mm".</dd>
         self.line_width = width
         if self.page &gt; 0:
             self._out(f&#34;{width * self.k:.2f} w&#34;)
+
+    def set_page_background(self, background):
+        &#34;&#34;&#34;
+        Sets a background color or image to be drawn every time `FPDF.add_page()` is called.
+        The method can be called before the first page is created and the value is retained from page to page.
+
+        Args:
+            background: either a string representing a file path or URL to an image,
+                an io.BytesIO containg an image as bytes, an instance of `PIL.Image.Image`, drawing.DeviceRGB
+                or a RGB tuple representing a color to fill the background with
+        &#34;&#34;&#34;
+
+        if isinstance(background, (str, io.BytesIO, Image, drawing.DeviceRGB, tuple)):
+            if isinstance(background, drawing.DeviceRGB):
+                self.page_background = tuple(255 * v for v in background.colors)
+            else:
+                self.page_background = background
+        else:
+            raise TypeError(
+                f&#34;background must be of type str, io.BytesIO, PIL.Image.Image, drawing.DeviceRGB or tuple, got: {type(background)}&#34;
+            )
 
     @contextmanager
     @check_page
@@ -5391,6 +5421,14 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
         new_page=not self._has_next_page(),
     )
 
+    if self.page_background:
+        if isinstance(self.page_background, tuple):
+            self.set_fill_color(*self.page_background)
+            self.rect(0, 0, self.w, self.h, style=&#34;F&#34;)
+            self.set_fill_color(*(255 * v for v in fc.colors))
+        else:
+            self.image(self.page_background, 0, 0, self.w, self.h)
+
     self._out(&#34;2 J&#34;)  # Set line cap style to square
     self.line_width = lw  # Set line width
     self._out(f&#34;{lw * self.k:.2f} w&#34;)
@@ -8900,6 +8938,45 @@ Also sets the current FPDF.y on the page to this minimum vertical position.</p>
     if right == -1:
         right = left
     self.r_margin = right</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.set_page_background"><code class="name flex">
+<span>def <span class="ident">set_page_background</span></span>(<span>self, background)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets a background color or image to be drawn every time <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> is called.
+The method can be called before the first page is created and the value is retained from page to page.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>background</code></strong></dt>
+<dd>either a string representing a file path or URL to an image,
+an io.BytesIO containg an image as bytes, an instance of <code>PIL.Image.Image</code>, drawing.DeviceRGB
+or a RGB tuple representing a color to fill the background with</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_page_background(self, background):
+    &#34;&#34;&#34;
+    Sets a background color or image to be drawn every time `FPDF.add_page()` is called.
+    The method can be called before the first page is created and the value is retained from page to page.
+
+    Args:
+        background: either a string representing a file path or URL to an image,
+            an io.BytesIO containg an image as bytes, an instance of `PIL.Image.Image`, drawing.DeviceRGB
+            or a RGB tuple representing a color to fill the background with
+    &#34;&#34;&#34;
+
+    if isinstance(background, (str, io.BytesIO, Image, drawing.DeviceRGB, tuple)):
+        if isinstance(background, drawing.DeviceRGB):
+            self.page_background = tuple(255 * v for v in background.colors)
+        else:
+            self.page_background = background
+    else:
+        raise TypeError(
+            f&#34;background must be of type str, io.BytesIO, PIL.Image.Image, drawing.DeviceRGB or tuple, got: {type(background)}&#34;
+        )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_producer"><code class="name flex">
@@ -12653,6 +12730,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.set_link" href="#fpdf.FPDF.set_link">set_link</a></code></li>
 <li><code><a title="fpdf.FPDF.set_margin" href="#fpdf.FPDF.set_margin">set_margin</a></code></li>
 <li><code><a title="fpdf.FPDF.set_margins" href="#fpdf.FPDF.set_margins">set_margins</a></code></li>
+<li><code><a title="fpdf.FPDF.set_page_background" href="#fpdf.FPDF.set_page_background">set_page_background</a></code></li>
 <li><code><a title="fpdf.FPDF.set_producer" href="#fpdf.FPDF.set_producer">set_producer</a></code></li>
 <li><code><a title="fpdf.FPDF.set_right_margin" href="#fpdf.FPDF.set_right_margin">set_right_margin</a></code></li>
 <li><code><a title="fpdf.FPDF.set_section_title_styles" href="#fpdf.FPDF.set_section_title_styles">set_section_title_styles</a></code></li>
