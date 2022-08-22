@@ -662,7 +662,7 @@ Default to "mm".</dd>
         This is useful to insert the number of pages of the document
         at a time when this number is not known by the program.
 
-        This substitution can be disabled for performances reasons, by caling `alias_nb_pages(None)`.
+        This substitution can be disabled for performances reasons, by calling `alias_nb_pages(None)`.
 
         Args:
             alias (str): the alias. Defaults to &#34;{nb}&#34;.
@@ -670,8 +670,8 @@ Default to "mm".</dd>
         Notes
         -----
 
-        When using this feature with the `cell` / `multicell` methods,
-        or the `underline` attribute of `FPDF` class,
+        When using this feature with the `FPDF.cell` / `FPDF.multi_cell` methods,
+        or the `.underline` attribute of `FPDF` class,
         the width of the text rendered will take into account the alias length,
         not the length of the &#34;actual number of pages&#34; string,
         which can causes slight positioning differences.
@@ -681,7 +681,7 @@ Default to "mm".</dd>
     def open(self):
         &#34;&#34;&#34;
         Starts the generation of the PDF document.
-        It is not necessary to call it explicitly because `add_page()` does it automatically.
+        It is not necessary to call it explicitly because `FPDF.add_page()` does it automatically.
 
         Notes
         -----
@@ -694,8 +694,8 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Terminates the PDF document.
 
-        It is not necessary to call this method explicitly because `output()` does it automatically.
-        If the document contains no page, `add_page()` is called to prevent from generating an invalid document.
+        It is not necessary to call this method explicitly because `FPDF.output()` does it automatically.
+        If the document contains no page, `FPDF.add_page()` is called to prevent from generating an invalid document.
         &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
             return
@@ -715,9 +715,9 @@ Default to "mm".</dd>
     ):
         &#34;&#34;&#34;
         Adds a new page to the document.
-        If a page is already present, the `footer()` method is called first.
+        If a page is already present, the `FPDF.footer()` method is called first.
         Then the page  is added, the current position is set to the top-left corner,
-        with respect to the left and top margins, and the `header()` method is called.
+        with respect to the left and top margins, and the `FPDF.header()` method is called.
 
         Args:
             orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
@@ -729,11 +729,11 @@ Default to "mm".</dd>
             duration (float): optional page’s display duration, i.e. the maximum length of time,
                 in seconds, that the page is displayed in presentation mode,
                 before the viewer application automatically advances to the next page.
-                Can be configured globally through the `page_duration` FPDF property.
+                Can be configured globally through the `.page_duration` FPDF property.
                 As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
             transition (Transition child class): optional visual transition to use when moving
                 from another page to the given page during a presentation.
-                Can be configured globally through the `page_transition` FPDF property.
+                Can be configured globally through the `.page_transition` FPDF property.
                 As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
         &#34;&#34;&#34;
         if self.state == DocumentState.CLOSED:
@@ -813,7 +813,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Header to be implemented in your own inherited class
 
-        This is automatically called by `add_page()`
+        This is automatically called by `FPDF.add_page()`
         and should not be called directly by the user application.
         The default implementation performs nothing: you have to override this method
         in a subclass to implement your own rendering logic.
@@ -823,7 +823,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Footer to be implemented in your own inherited class.
 
-        This is automatically called by `add_page()` and `close()`
+        This is automatically called by `FPDF.add_page()` and `FPDF.close()`
         and should not be called directly by the user application.
         The default implementation performs nothing: you have to override this method
         in a subclass to implement your own rendering logic.
@@ -1631,12 +1631,12 @@ Default to "mm".</dd>
     def add_font(self, family, style=&#34;&#34;, fname=None, uni=&#34;DEPRECATED&#34;):
         &#34;&#34;&#34;
         Imports a TrueType or OpenType font and makes it available
-        for later calls to the `set_font()` method.
+        for later calls to the `FPDF.set_font()` method.
 
         You will find more information on the &#34;Unicode&#34; documentation page.
 
         Args:
-            family (str): font family. Used as a reference for `set_font()`
+            family (str): font family. Used as a reference for `FPDF.set_font()`
             style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
             fname (str): font file name. You can specify a relative or full path.
                 If the file is not found, it will be searched in `FPDF_FONT_DIR`.
@@ -1857,8 +1857,9 @@ Default to "mm".</dd>
         Creates a new internal link and returns its identifier.
         An internal link is a clickable area which directs to another place within the document.
 
-        The identifier can then be passed to the `cell()`, `write()`, `image()` or `link()` methods.
-        The destination must be defined using `set_link()`.
+        The identifier can then be passed to the `FPDF.cell()`, `FPDF.write()`, `FPDF.image()`
+        or `FPDF.link()` methods.
+        The destination must be defined using `FPDF.set_link()`.
         &#34;&#34;&#34;
         n = len(self.links) + 1
         self.links[n] = DestinationXYZ(page=1)
@@ -1869,7 +1870,7 @@ Default to "mm".</dd>
         Defines the page and position a link points to.
 
         Args:
-            link (int): a link identifier returned by `add_link`.
+            link (int): a link identifier returned by `FPDF.add_link()`.
             y (float): optional ordinate of target position.
                 The default value is 0 (top of page).
             x (float): optional abscissa of target position.
@@ -1887,8 +1888,8 @@ Default to "mm".</dd>
     def link(self, x, y, w, h, link, alt_text=None, border_width=0):
         &#34;&#34;&#34;
         Puts a link annotation on a rectangular area of the page.
-        Text or image links are generally put via [cell](#fpdf.FPDF.cell),
-        [write](#fpdf.FPDF.write) or [image](#fpdf.FPDF.image),
+        Text or image links are generally put via `FPDF.cell`,
+        `FPDF.write` or `FPDF.image`,
         but this method can be useful for instance to define a clickable area inside an image.
 
         Args:
@@ -1896,7 +1897,7 @@ Default to "mm".</dd>
             y (float): vertical position (from the top) to the bottom side of the link rectangle
             w (float): width of the link rectangle
             h (float): height of the link rectangle
-            link: either an URL or a integer returned by `add_link`, defining an internal link to a page
+            link: either an URL or a integer returned by `FPDF.add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
             border_width (int): thickness of an optional black border surrounding the link.
                 Not all PDF readers honor this: Acrobat renders it but not Sumatra.
@@ -2097,7 +2098,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         Prints a character string. The origin is on the left of the first character,
         on the baseline. This method allows placing a string precisely on the page,
-        but it is usually easier to use the `cell()`, `multi_cell() or `write()` methods.
+        but it is usually easier to use the `FPDF.cell()`, `FPDF.multi_cell() or `FPDF.write()` methods.
 
         Args:
             x (float): abscissa of the origin
@@ -2202,7 +2203,7 @@ Default to "mm".</dd>
         Notes
         -----
 
-        Only the rendering is altered. The `get_x()` and `get_y()` methods are
+        Only the rendering is altered. The `FPDF.get_x()` and `FPDF.get_y()` methods are
         not affected, nor the automatic page break mechanism.
         The rotation also establishes a local graphics state, so that any
         graphics state settings changed within will not affect the operations
@@ -2333,7 +2334,7 @@ Default to "mm".</dd>
         Whenever a page break condition is met, this method is called,
         and the break is issued or not depending on the returned value.
 
-        The default implementation returns a value according to the mode selected by `set_auto_page_break()`.
+        The default implementation returns a value according to the mode selected by `FPDF.set_auto_page_break()`.
         This method is called automatically and should not be called directly by the application.
         &#34;&#34;&#34;
         return self.auto_page_break
@@ -2384,7 +2385,7 @@ Default to "mm".</dd>
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
-                (identifier returned by `add_link`) or external URL.
+                (identifier returned by `FPDF.add_link`) or external URL.
             center (bool): **DEPRECATED** since 2.5.1:
                 Use align=&#34;C&#34; or align=&#34;X&#34; instead.
             markdown (bool): enable minimal markdown-like markup to render part
@@ -2511,7 +2512,7 @@ Default to "mm".</dd>
             fill (bool): Indicates if the cell background must be painted (`True`)
                 or transparent (`False`). Default value: False.
             link (str): optional link to add on the cell, internal
-                (identifier returned by `add_link`) or external URL.
+                (identifier returned by `FPDF.add_link`) or external URL.
             center (bool): **DEPRECATED since 2.5.1**: Use `align=&#34;C&#34;` instead.
             markdown (bool): enable minimal markdown-like markup to render part
                 of text as bold / italics / underlined. Default to False.
@@ -3125,7 +3126,7 @@ Default to "mm".</dd>
             h (float): line height. Default value: None, meaning to use the current font size.
             txt (str): text content
             link (str): optional link to add on the text, internal
-                (identifier returned by `add_link`) or external URL.
+                (identifier returned by `FPDF.add_link`) or external URL.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
         &#34;&#34;&#34;
@@ -3237,7 +3238,7 @@ Default to "mm".</dd>
                 Pass `pdf.eph` to scale horizontally to the full page height.
             type (str): [**DEPRECATED since 2.2.0**] unused, will be removed in a later version.
             link (str): optional link to add on the image, internal
-                (identifier returned by `add_link`) or external URL.
+                (identifier returned by `FPDF.add_link`) or external URL.
             title (str): optional. Currently, never seem rendered by PDF readers.
             alt_text (str): optional alternative text describing the image,
                 for accessibility purposes. Displayed by some PDF readers on hover.
@@ -4820,7 +4821,7 @@ Default to "mm".</dd>
     ):
         &#34;&#34;&#34;
         Defines a style for section titles.
-        After calling this method, calls to `start_section` will render section names visually.
+        After calling this method, calls to `FPDF.start_section` will render section names visually.
 
         Args:
             level0 (TitleStyle): style for the top level section titles
@@ -4942,7 +4943,7 @@ Default to "mm".</dd>
 <dd>
 <div class="desc"><p>Whenever a page break condition is met, this method is called,
 and the break is issued or not depending on the returned value.</p>
-<p>The default implementation returns a value according to the mode selected by <code>set_auto_page_break()</code>.
+<p>The default implementation returns a value according to the mode selected by <code><a title="fpdf.FPDF.set_auto_page_break" href="#fpdf.FPDF.set_auto_page_break">FPDF.set_auto_page_break()</a></code>.
 This method is called automatically and should not be called directly by the application.</p></div>
 <details class="source">
 <summary>
@@ -4954,7 +4955,7 @@ def accept_page_break(self):
     Whenever a page break condition is met, this method is called,
     and the break is issued or not depending on the returned value.
 
-    The default implementation returns a value according to the mode selected by `set_auto_page_break()`.
+    The default implementation returns a value according to the mode selected by `FPDF.set_auto_page_break()`.
     This method is called automatically and should not be called directly by the application.
     &#34;&#34;&#34;
     return self.auto_page_break</code></pre>
@@ -5087,12 +5088,12 @@ def add_action(self, action, x, y, w, h):
 </code></dt>
 <dd>
 <div class="desc"><p>Imports a TrueType or OpenType font and makes it available
-for later calls to the <code>set_font()</code> method.</p>
+for later calls to the <code><a title="fpdf.FPDF.set_font" href="#fpdf.FPDF.set_font">FPDF.set_font()</a></code> method.</p>
 <p>You will find more information on the "Unicode" documentation page.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>family</code></strong> :&ensp;<code>str</code></dt>
-<dd>font family. Used as a reference for <code>set_font()</code></dd>
+<dd>font family. Used as a reference for <code><a title="fpdf.FPDF.set_font" href="#fpdf.FPDF.set_font">FPDF.set_font()</a></code></dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
 <dd>font style. "B" for bold, "I" for italic.</dd>
 <dt><strong><code>fname</code></strong> :&ensp;<code>str</code></dt>
@@ -5108,12 +5109,12 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
 <pre><code class="python">def add_font(self, family, style=&#34;&#34;, fname=None, uni=&#34;DEPRECATED&#34;):
     &#34;&#34;&#34;
     Imports a TrueType or OpenType font and makes it available
-    for later calls to the `set_font()` method.
+    for later calls to the `FPDF.set_font()` method.
 
     You will find more information on the &#34;Unicode&#34; documentation page.
 
     Args:
-        family (str): font family. Used as a reference for `set_font()`
+        family (str): font family. Used as a reference for `FPDF.set_font()`
         style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
         fname (str): font file name. You can specify a relative or full path.
             If the file is not found, it will be searched in `FPDF_FONT_DIR`.
@@ -5273,8 +5274,9 @@ def highlight(
 <dd>
 <div class="desc"><p>Creates a new internal link and returns its identifier.
 An internal link is a clickable area which directs to another place within the document.</p>
-<p>The identifier can then be passed to the <code>cell()</code>, <code>write()</code>, <code>image()</code> or <code>link()</code> methods.
-The destination must be defined using <code>set_link()</code>.</p></div>
+<p>The identifier can then be passed to the <code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">FPDF.cell()</a></code>, <code><a title="fpdf.FPDF.write" href="#fpdf.FPDF.write">FPDF.write()</a></code>, <code><a title="fpdf.FPDF.image" href="#fpdf.FPDF.image">FPDF.image()</a></code>
+or <code><a title="fpdf.FPDF.link" href="#fpdf.FPDF.link">FPDF.link()</a></code> methods.
+The destination must be defined using <code><a title="fpdf.FPDF.set_link" href="#fpdf.FPDF.set_link">FPDF.set_link()</a></code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5284,8 +5286,9 @@ The destination must be defined using <code>set_link()</code>.</p></div>
     Creates a new internal link and returns its identifier.
     An internal link is a clickable area which directs to another place within the document.
 
-    The identifier can then be passed to the `cell()`, `write()`, `image()` or `link()` methods.
-    The destination must be defined using `set_link()`.
+    The identifier can then be passed to the `FPDF.cell()`, `FPDF.write()`, `FPDF.image()`
+    or `FPDF.link()` methods.
+    The destination must be defined using `FPDF.set_link()`.
     &#34;&#34;&#34;
     n = len(self.links) + 1
     self.links[n] = DestinationXYZ(page=1)
@@ -5297,10 +5300,10 @@ The destination must be defined using <code>set_link()</code>.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds a new page to the document.
-If a page is already present, the <code>footer()</code> method is called first.
+If a page is already present, the <code><a title="fpdf.FPDF.footer" href="#fpdf.FPDF.footer">FPDF.footer()</a></code> method is called first.
 Then the page
 is added, the current position is set to the top-left corner,
-with respect to the left and top margins, and the <code>header()</code> method is called.</p>
+with respect to the left and top margins, and the <code><a title="fpdf.FPDF.header" href="#fpdf.FPDF.header">FPDF.header()</a></code> method is called.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>orientation</code></strong> :&ensp;<code>str</code></dt>
@@ -5316,12 +5319,12 @@ Default to False.</dd>
 <dd>optional page’s display duration, i.e. the maximum length of time,
 in seconds, that the page is displayed in presentation mode,
 before the viewer application automatically advances to the next page.
-Can be configured globally through the <code>page_duration</code> FPDF property.
+Can be configured globally through the <code>.page_duration</code> FPDF property.
 As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.</dd>
 <dt><strong><code>transition</code></strong> :&ensp;<code>Transition child class</code></dt>
 <dd>optional visual transition to use when moving
 from another page to the given page during a presentation.
-Can be configured globally through the <code>page_transition</code> FPDF property.
+Can be configured globally through the <code>.page_transition</code> FPDF property.
 As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.</dd>
 </dl></div>
 <details class="source">
@@ -5333,9 +5336,9 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 ):
     &#34;&#34;&#34;
     Adds a new page to the document.
-    If a page is already present, the `footer()` method is called first.
+    If a page is already present, the `FPDF.footer()` method is called first.
     Then the page  is added, the current position is set to the top-left corner,
-    with respect to the left and top margins, and the `header()` method is called.
+    with respect to the left and top margins, and the `FPDF.header()` method is called.
 
     Args:
         orientation (str): &#34;portrait&#34; (can be abbreviated &#34;P&#34;)
@@ -5347,11 +5350,11 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
         duration (float): optional page’s display duration, i.e. the maximum length of time,
             in seconds, that the page is displayed in presentation mode,
             before the viewer application automatically advances to the next page.
-            Can be configured globally through the `page_duration` FPDF property.
+            Can be configured globally through the `.page_duration` FPDF property.
             As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
         transition (Transition child class): optional visual transition to use when moving
             from another page to the given page during a presentation.
-            Can be configured globally through the `page_transition` FPDF property.
+            Can be configured globally through the `.page_transition` FPDF property.
             As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
     &#34;&#34;&#34;
     if self.state == DocumentState.CLOSED:
@@ -5521,15 +5524,15 @@ def add_text_markup_annotation(
 It will be substituted as the document is closed.</p>
 <p>This is useful to insert the number of pages of the document
 at a time when this number is not known by the program.</p>
-<p>This substitution can be disabled for performances reasons, by caling <code>alias_nb_pages(None)</code>.</p>
+<p>This substitution can be disabled for performances reasons, by calling <code>alias_nb_pages(None)</code>.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>alias</code></strong> :&ensp;<code>str</code></dt>
 <dd>the alias. Defaults to "{nb}".</dd>
 </dl>
 <h2 id="notes">Notes</h2>
-<p>When using this feature with the <code>cell</code> / <code>multicell</code> methods,
-or the <code>underline</code> attribute of <code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code> class,
+<p>When using this feature with the <code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">FPDF.cell()</a></code> / <code><a title="fpdf.FPDF.multi_cell" href="#fpdf.FPDF.multi_cell">FPDF.multi_cell()</a></code> methods,
+or the <code>.underline</code> attribute of <code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code> class,
 the width of the text rendered will take into account the alias length,
 not the length of the "actual number of pages" string,
 which can causes slight positioning differences.</p></div>
@@ -5545,7 +5548,7 @@ which can causes slight positioning differences.</p></div>
     This is useful to insert the number of pages of the document
     at a time when this number is not known by the program.
 
-    This substitution can be disabled for performances reasons, by caling `alias_nb_pages(None)`.
+    This substitution can be disabled for performances reasons, by calling `alias_nb_pages(None)`.
 
     Args:
         alias (str): the alias. Defaults to &#34;{nb}&#34;.
@@ -5553,8 +5556,8 @@ which can causes slight positioning differences.</p></div>
     Notes
     -----
 
-    When using this feature with the `cell` / `multicell` methods,
-    or the `underline` attribute of `FPDF` class,
+    When using this feature with the `FPDF.cell` / `FPDF.multi_cell` methods,
+    or the `.underline` attribute of `FPDF` class,
     the width of the text rendered will take into account the alias length,
     not the length of the &#34;actual number of pages&#34; string,
     which can causes slight positioning differences.
@@ -5787,7 +5790,7 @@ Possible values are: <code>L</code> or empty string: left align (default value) 
 or transparent (<code>False</code>). Default value: False.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the cell, internal
-(identifier returned by <code>add_link</code>) or external URL.</dd>
+(identifier returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>) or external URL.</dd>
 <dt><strong><code>center</code></strong> :&ensp;<code>bool</code></dt>
 <dd><strong>DEPRECATED</strong> since 2.5.1:
 Use align="C" or align="X" instead.</dd>
@@ -5846,7 +5849,7 @@ def cell(
         fill (bool): Indicates if the cell background must be painted (`True`)
             or transparent (`False`). Default value: False.
         link (str): optional link to add on the cell, internal
-            (identifier returned by `add_link`) or external URL.
+            (identifier returned by `FPDF.add_link`) or external URL.
         center (bool): **DEPRECATED** since 2.5.1:
             Use align=&#34;C&#34; or align=&#34;X&#34; instead.
         markdown (bool): enable minimal markdown-like markup to render part
@@ -5979,8 +5982,8 @@ def circle(self, x, y, r, style=None):
 </code></dt>
 <dd>
 <div class="desc"><p>Terminates the PDF document.</p>
-<p>It is not necessary to call this method explicitly because <code>output()</code> does it automatically.
-If the document contains no page, <code>add_page()</code> is called to prevent from generating an invalid document.</p></div>
+<p>It is not necessary to call this method explicitly because <code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">FPDF.output()</a></code> does it automatically.
+If the document contains no page, <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> is called to prevent from generating an invalid document.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5989,8 +5992,8 @@ If the document contains no page, <code>add_page()</code> is called to prevent f
     &#34;&#34;&#34;
     Terminates the PDF document.
 
-    It is not necessary to call this method explicitly because `output()` does it automatically.
-    If the document contains no page, `add_page()` is called to prevent from generating an invalid document.
+    It is not necessary to call this method explicitly because `FPDF.output()` does it automatically.
+    If the document contains no page, `FPDF.add_page()` is called to prevent from generating an invalid document.
     &#34;&#34;&#34;
     if self.state == DocumentState.CLOSED:
         return
@@ -6363,7 +6366,7 @@ no /ID will be inserted in the generated PDF document.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Footer to be implemented in your own inherited class.</p>
-<p>This is automatically called by <code>add_page()</code> and <code>close()</code>
+<p>This is automatically called by <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> and <code><a title="fpdf.FPDF.close" href="#fpdf.FPDF.close">FPDF.close()</a></code>
 and should not be called directly by the user application.
 The default implementation performs nothing: you have to override this method
 in a subclass to implement your own rendering logic.</p></div>
@@ -6375,7 +6378,7 @@ in a subclass to implement your own rendering logic.</p></div>
     &#34;&#34;&#34;
     Footer to be implemented in your own inherited class.
 
-    This is automatically called by `add_page()` and `close()`
+    This is automatically called by `FPDF.add_page()` and `FPDF.close()`
     and should not be called directly by the user application.
     The default implementation performs nothing: you have to override this method
     in a subclass to implement your own rendering logic.
@@ -6491,7 +6494,7 @@ The value is calculated with stretching and spacing.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Header to be implemented in your own inherited class</p>
-<p>This is automatically called by <code>add_page()</code>
+<p>This is automatically called by <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code>
 and should not be called directly by the user application.
 The default implementation performs nothing: you have to override this method
 in a subclass to implement your own rendering logic.</p></div>
@@ -6503,7 +6506,7 @@ in a subclass to implement your own rendering logic.</p></div>
     &#34;&#34;&#34;
     Header to be implemented in your own inherited class
 
-    This is automatically called by `add_page()`
+    This is automatically called by `FPDF.add_page()`
     and should not be called directly by the user application.
     The default implementation performs nothing: you have to override this method
     in a subclass to implement your own rendering logic.
@@ -6607,7 +6610,7 @@ Pass <code>pdf.eph</code> to scale horizontally to the full page height.</dd>
 <dd>[<strong>DEPRECATED since 2.2.0</strong>] unused, will be removed in a later version.</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the image, internal
-(identifier returned by <code>add_link</code>) or external URL.</dd>
+(identifier returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>) or external URL.</dd>
 <dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional. Currently, never seem rendered by PDF readers.</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
@@ -6660,7 +6663,7 @@ def image(
             Pass `pdf.eph` to scale horizontally to the full page height.
         type (str): [**DEPRECATED since 2.2.0**] unused, will be removed in a later version.
         link (str): optional link to add on the image, internal
-            (identifier returned by `add_link`) or external URL.
+            (identifier returned by `FPDF.add_link`) or external URL.
         title (str): optional. Currently, never seem rendered by PDF readers.
         alt_text (str): optional alternative text describing the image,
             for accessibility purposes. Displayed by some PDF readers on hover.
@@ -6960,8 +6963,8 @@ def line(self, x1, y1, x2, y2):
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a link annotation on a rectangular area of the page.
-Text or image links are generally put via <a href="#fpdf.FPDF.cell">cell</a>,
-<a href="#fpdf.FPDF.write">write</a> or <a href="#fpdf.FPDF.image">image</a>,
+Text or image links are generally put via <code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">FPDF.cell()</a></code>,
+<code><a title="fpdf.FPDF.write" href="#fpdf.FPDF.write">FPDF.write()</a></code> or <code><a title="fpdf.FPDF.image" href="#fpdf.FPDF.image">FPDF.image()</a></code>,
 but this method can be useful for instance to define a clickable area inside an image.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -6974,7 +6977,7 @@ but this method can be useful for instance to define a clickable area inside an 
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>height of the link rectangle</dd>
 <dt><strong><code>link</code></strong></dt>
-<dd>either an URL or a integer returned by <code>add_link</code>, defining an internal link to a page</dd>
+<dd>either an URL or a integer returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>, defining an internal link to a page</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional textual description of the link, for accessibility purposes</dd>
 <dt><strong><code>border_width</code></strong> :&ensp;<code>int</code></dt>
@@ -6989,8 +6992,8 @@ Not all PDF readers honor this: Acrobat renders it but not Sumatra.</dd>
 def link(self, x, y, w, h, link, alt_text=None, border_width=0):
     &#34;&#34;&#34;
     Puts a link annotation on a rectangular area of the page.
-    Text or image links are generally put via [cell](#fpdf.FPDF.cell),
-    [write](#fpdf.FPDF.write) or [image](#fpdf.FPDF.image),
+    Text or image links are generally put via `FPDF.cell`,
+    `FPDF.write` or `FPDF.image`,
     but this method can be useful for instance to define a clickable area inside an image.
 
     Args:
@@ -6998,7 +7001,7 @@ def link(self, x, y, w, h, link, alt_text=None, border_width=0):
         y (float): vertical position (from the top) to the bottom side of the link rectangle
         w (float): width of the link rectangle
         h (float): height of the link rectangle
-        link: either an URL or a integer returned by `add_link`, defining an internal link to a page
+        link: either an URL or a integer returned by `FPDF.add_link`, defining an internal link to a page
         alt_text (str): optional textual description of the link, for accessibility purposes
         border_width (int): thickness of an optional black border surrounding the link.
             Not all PDF readers honor this: Acrobat renders it but not Sumatra.
@@ -7580,7 +7583,7 @@ def offset_rendering(self):
 </code></dt>
 <dd>
 <div class="desc"><p>Starts the generation of the PDF document.
-It is not necessary to call it explicitly because <code>add_page()</code> does it automatically.</p>
+It is not necessary to call it explicitly because <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> does it automatically.</p>
 <h2 id="notes">Notes</h2>
 <p>This method does not add any page.</p></div>
 <details class="source">
@@ -7590,7 +7593,7 @@ It is not necessary to call it explicitly because <code>add_page()</code> does i
 <pre><code class="python">def open(self):
     &#34;&#34;&#34;
     Starts the generation of the PDF document.
-    It is not necessary to call it explicitly because `add_page()` does it automatically.
+    It is not necessary to call it explicitly because `FPDF.add_page()` does it automatically.
 
     Notes
     -----
@@ -8036,7 +8039,7 @@ context (with the exception of clickable areas).</p>
 <dd>ordinate of the center of the rotation</dd>
 </dl>
 <h2 id="notes">Notes</h2>
-<p>Only the rendering is altered. The <code>get_x()</code> and <code>get_y()</code> methods are
+<p>Only the rendering is altered. The <code><a title="fpdf.FPDF.get_x" href="#fpdf.FPDF.get_x">FPDF.get_x()</a></code> and <code><a title="fpdf.FPDF.get_y" href="#fpdf.FPDF.get_y">FPDF.get_y()</a></code> methods are
 not affected, nor the automatic page break mechanism.
 The rotation also establishes a local graphics state, so that any
 graphics state settings changed within will not affect the operations
@@ -8066,7 +8069,7 @@ def rotation(self, angle, x=None, y=None):
     Notes
     -----
 
-    Only the rendering is altered. The `get_x()` and `get_y()` methods are
+    Only the rendering is altered. The `FPDF.get_x()` and `FPDF.get_y()` methods are
     not affected, nor the automatic page break mechanism.
     The rotation also establishes a local graphics state, so that any
     graphics state settings changed within will not affect the operations
@@ -8796,7 +8799,7 @@ The method can be called before the first page is created and the value is retai
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>link</code></strong> :&ensp;<code>int</code></dt>
-<dd>a link identifier returned by <code>add_link</code>.</dd>
+<dd>a link identifier returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
 <dd>optional ordinate of target position.
 The default value is 0 (top of page).</dd>
@@ -8819,7 +8822,7 @@ Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.</
     Defines the page and position a link points to.
 
     Args:
-        link (int): a link identifier returned by `add_link`.
+        link (int): a link identifier returned by `FPDF.add_link()`.
         y (float): optional ordinate of target position.
             The default value is 0 (top of page).
         x (float): optional abscissa of target position.
@@ -8942,7 +8945,7 @@ Also sets the current FPDF.y on the page to this minimum vertical position.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Defines a style for section titles.
-After calling this method, calls to <code>start_section</code> will render section names visually.</p>
+After calling this method, calls to <code><a title="fpdf.FPDF.start_section" href="#fpdf.FPDF.start_section">FPDF.start_section()</a></code> will render section names visually.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>level0</code></strong> :&ensp;<code><a title="fpdf.TitleStyle" href="#fpdf.TitleStyle">TitleStyle</a></code></dt>
@@ -8976,7 +8979,7 @@ After calling this method, calls to <code>start_section</code> will render secti
 ):
     &#34;&#34;&#34;
     Defines a style for section titles.
-    After calling this method, calls to `start_section` will render section names visually.
+    After calling this method, calls to `FPDF.start_section` will render section names visually.
 
     Args:
         level0 (TitleStyle): style for the top level section titles
@@ -9629,7 +9632,7 @@ def start_section(self, name, level=0):
 <dd>
 <div class="desc"><p>Prints a character string. The origin is on the left of the first character,
 on the baseline. This method allows placing a string precisely on the page,
-but it is usually easier to use the <code>cell()</code>, <code>multi_cell() or </code>write()` methods.</p>
+but it is usually easier to use the <code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">FPDF.cell()</a></code>, <code><a title="fpdf.FPDF.multi_cell" href="#fpdf.FPDF.multi_cell">FPDF.multi_cell()</a> or </code>FPDF.write()` methods.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
@@ -9648,7 +9651,7 @@ def text(self, x, y, txt=&#34;&#34;):
     &#34;&#34;&#34;
     Prints a character string. The origin is on the left of the first character,
     on the baseline. This method allows placing a string precisely on the page,
-    but it is usually easier to use the `cell()`, `multi_cell() or `write()` methods.
+    but it is usually easier to use the `FPDF.cell()`, `FPDF.multi_cell() or `FPDF.write()` methods.
 
     Args:
         x (float): abscissa of the origin
@@ -9849,7 +9852,7 @@ Upon method exit, the current position is left just at the end of the text.</p>
 <dd>text content</dd>
 <dt><strong><code>link</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional link to add on the text, internal
-(identifier returned by <code>add_link</code>) or external URL.</dd>
+(identifier returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>) or external URL.</dd>
 <dt><strong><code>print_sh</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Treat a soft-hyphen (\u00ad) as a normal printable
 character, instead of a line breaking opportunity. Default value: False</dd>
@@ -9873,7 +9876,7 @@ def write(
         h (float): line height. Default value: None, meaning to use the current font size.
         txt (str): text content
         link (str): optional link to add on the text, internal
-            (identifier returned by `add_link`) or external URL.
+            (identifier returned by `FPDF.add_link`) or external URL.
         print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
             character, instead of a line breaking opportunity. Default value: False
     &#34;&#34;&#34;
