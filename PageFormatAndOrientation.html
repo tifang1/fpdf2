@@ -443,8 +443,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#per-page-format-and-orientation" class="md-nav__link">
-    Per-page format and orientation
+  <a href="#per-page-format-orientation-and-background" class="md-nav__link">
+    Per-page format, orientation and background
   </a>
   
 </li>
@@ -1118,8 +1118,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#per-page-format-and-orientation" class="md-nav__link">
-    Per-page format and orientation
+  <a href="#per-page-format-orientation-and-background" class="md-nav__link">
+    Per-page format, orientation and background
   </a>
   
 </li>
@@ -1170,15 +1170,21 @@
 </code></pre></div>
 <p>Currently supported formats are <code>a3</code>, <code>a4</code>, <code>a5</code>, <code>letter</code>, <code>legal</code> or a tuple <code>(width, height)</code>.
 Additional standard formats are welcome and can be suggested through pull requests.</p>
-<h2 id="per-page-format-and-orientation">Per-page format and orientation</h2>
-<p>The following code snippet illustrate how to configure different page formats for specific pages:</p>
+<h2 id="per-page-format-orientation-and-background">Per-page format, orientation and background</h2>
+<p><code>.set_page_background()</code> lets you set a background for all pages following this call until the background is removed.
+The value must be of type <code>str</code>, <code>io.BytesIO</code>, <code>PIL.Image.Image</code>, <code>drawing.DeviceRGB</code>, <code>tuple</code> or <code>None</code></p>
+<p>The following code snippet illustrates how to configure different page formats for specific pages as well as setting different backgrounds and then removing it:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_page_background</span><span class="p">((</span><span class="mi">252</span><span class="p">,</span><span class="mi">212</span><span class="p">,</span><span class="mi">255</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">9</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+        <span class="n">pdf</span><span class="o">.</span><span class="n">set_page_background</span><span class="p">(</span><span class="s1">&#39;image_path.png&#39;</span><span class="p">)</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="p">(</span><span class="mi">210</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="o">/</span><span class="mi">10</span><span class="p">),</span> <span class="mi">297</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">i</span><span class="o">/</span><span class="mi">10</span><span class="p">)))</span>
     <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_page_background</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">(</span><span class="n">same</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;9&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;varying_format.pdf&quot;</span><span class="p">)</span>
