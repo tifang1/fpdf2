@@ -754,6 +754,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sharing-the-image-cache-among-fpdf-instances" class="md-nav__link">
+    Sharing the image cache among FPDF instances
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1269,6 +1276,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sharing-the-image-cache-among-fpdf-instances" class="md-nav__link">
+    Sharing the image cache among FPDF instances
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1430,6 +1444,24 @@ This can be disabled by setting <code>.allow_images_transparency</code>,
 </code></pre></div>
 <p>This will fill transparent areas of your images with color (usually black).</p>
 <p><em>cf.</em> also documentation on <a href="Transparency.html">controlling transparency</a>.</p>
+<h2 id="sharing-the-image-cache-among-fpdf-instances">Sharing the image cache among FPDF instances</h2>
+<p>Image parsing is often the most CPU &amp; memory intensive step when inserting pictures in a PDF.</p>
+<p>If you create several PDF files that use the same illustrations,
+you can share the images cache among FPDF instances:</p>
+<div class="highlight"><pre><span></span><code><span class="n">images_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="k">for</span> <span class="o">...</span> <span class="c1"># loop</span>
+    <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="n">images_cache</span>
+    <span class="o">...</span> <span class="c1"># build the PDF</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="c1"># Reset the &quot;usages&quot; count, to avoid ALL images to be inserted in subsequent PDFs:</span>
+    <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">images_cache</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">img</span><span class="p">[</span><span class="s2">&quot;usages&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+</code></pre></div>
+<p>This recipe is valid for <code>fpdf2</code> v2.5.7+.
+For previous versions of <code>fpdf2</code>, a <em>deepcopy</em> of <code>.images</code> must be made,
+(<em>cf.</em> <a href="https://github.com/PyFPDF/fpdf2/issues/501">issue #501</a>).</p>
 
 
 
