@@ -27,7 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import locale
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Union, Iterable
 
 
@@ -44,7 +44,13 @@ def substr(s, start, length=-1):
 
 def format_date(date: datetime, with_tz=False) -&gt; str:
     if with_tz:
-        return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;)
+        assert date.tzinfo
+        if date.tzinfo == timezone.utc:
+            str_date = f&#34;D:{date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;
+        else:
+            str_date = f&#34;D:{date:%Y%m%d%H%M%S%z}&#34;
+            str_date = str_date[:-2] + &#34;&#39;&#34; + str_date[-2:] + &#34;&#39;&#34;
+        return enclose_in_parens(str_date)
     return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%S}&#34;)
 
 
@@ -283,7 +289,13 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 </summary>
 <pre><code class="python">def format_date(date: datetime, with_tz=False) -&gt; str:
     if with_tz:
-        return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;)
+        assert date.tzinfo
+        if date.tzinfo == timezone.utc:
+            str_date = f&#34;D:{date:%Y%m%d%H%M%SZ%H&#39;%M&#39;}&#34;
+        else:
+            str_date = f&#34;D:{date:%Y%m%d%H%M%S%z}&#34;
+            str_date = str_date[:-2] + &#34;&#39;&#34; + str_date[-2:] + &#34;&#39;&#34;
+        return enclose_in_parens(str_date)
     return enclose_in_parens(f&#34;D:{date:%Y%m%d%H%M%S}&#34;)</code></pre>
 </details>
 </dd>
