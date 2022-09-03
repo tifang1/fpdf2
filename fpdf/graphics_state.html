@@ -55,6 +55,7 @@ class GraphicsStateMixin:
                 underline=False,
                 font_style=&#34;&#34;,
                 font_stretching=100,
+                char_spacing=0,
                 font_family=&#34;&#34;,
                 font_size_pt=0,
                 current_font={},
@@ -70,6 +71,9 @@ class GraphicsStateMixin:
 
     def _pop_local_stack(self):
         del self.__statestack[-1]
+
+    def _get_current_graphics_state(self):
+        return self.__statestack[-1].copy()
 
     @property
     def draw_color(self):
@@ -118,6 +122,14 @@ class GraphicsStateMixin:
     @font_stretching.setter
     def font_stretching(self, v):
         self.__statestack[-1][&#34;font_stretching&#34;] = v
+
+    @property
+    def char_spacing(self):
+        return self.__statestack[-1][&#34;char_spacing&#34;]
+
+    @char_spacing.setter
+    def char_spacing(self, v):
+        self.__statestack[-1][&#34;char_spacing&#34;] = v
 
     @property
     def font_family(self):
@@ -226,6 +238,7 @@ directly by user code.</p></div>
                 underline=False,
                 font_style=&#34;&#34;,
                 font_stretching=100,
+                char_spacing=0,
                 font_family=&#34;&#34;,
                 font_size_pt=0,
                 current_font={},
@@ -241,6 +254,9 @@ directly by user code.</p></div>
 
     def _pop_local_stack(self):
         del self.__statestack[-1]
+
+    def _get_current_graphics_state(self):
+        return self.__statestack[-1].copy()
 
     @property
     def draw_color(self):
@@ -289,6 +305,14 @@ directly by user code.</p></div>
     @font_stretching.setter
     def font_stretching(self, v):
         self.__statestack[-1][&#34;font_stretching&#34;] = v
+
+    @property
+    def char_spacing(self):
+        return self.__statestack[-1][&#34;char_spacing&#34;]
+
+    @char_spacing.setter
+    def char_spacing(self, v):
+        self.__statestack[-1][&#34;char_spacing&#34;] = v
 
     @property
     def font_family(self):
@@ -367,6 +391,18 @@ directly by user code.</p></div>
 </dl>
 <h3>Instance variables</h3>
 <dl>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.char_spacing"><code class="name">var <span class="ident">char_spacing</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def char_spacing(self):
+    return self.__statestack[-1][&#34;char_spacing&#34;]</code></pre>
+</details>
+</dd>
 <dt id="fpdf.graphics_state.GraphicsStateMixin.current_font"><code class="name">var <span class="ident">current_font</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -547,6 +583,7 @@ def underline(self):
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.DEFAULT_DRAW_COLOR" href="#fpdf.graphics_state.GraphicsStateMixin.DEFAULT_DRAW_COLOR">DEFAULT_DRAW_COLOR</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.DEFAULT_FILL_COLOR" href="#fpdf.graphics_state.GraphicsStateMixin.DEFAULT_FILL_COLOR">DEFAULT_FILL_COLOR</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.DEFAULT_TEXT_COLOR" href="#fpdf.graphics_state.GraphicsStateMixin.DEFAULT_TEXT_COLOR">DEFAULT_TEXT_COLOR</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.char_spacing" href="#fpdf.graphics_state.GraphicsStateMixin.char_spacing">char_spacing</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.current_font" href="#fpdf.graphics_state.GraphicsStateMixin.current_font">current_font</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.dash_pattern" href="#fpdf.graphics_state.GraphicsStateMixin.dash_pattern">dash_pattern</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.draw_color" href="#fpdf.graphics_state.GraphicsStateMixin.draw_color">draw_color</a></code></li>

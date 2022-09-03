@@ -576,7 +576,21 @@
       
         <li class="md-nav__item">
   <a href="#set_font" class="md-nav__link">
-    set_font
+    set_font()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set_stretchingstretching100" class="md-nav__link">
+    .set_stretching(stretching=100)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set_char_spacingspacing0" class="md-nav__link">
+    .set_char_spacing(spacing=0)
   </a>
   
 </li>
@@ -1133,7 +1147,21 @@
       
         <li class="md-nav__item">
   <a href="#set_font" class="md-nav__link">
-    set_font
+    set_font()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set_stretchingstretching100" class="md-nav__link">
+    .set_stretching(stretching=100)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#set_char_spacingspacing0" class="md-nav__link">
+    .set_char_spacing(spacing=0)
   </a>
   
 </li>
@@ -1178,7 +1206,7 @@
 
 
 <h1 id="text-styling">Text styling</h1>
-<h2 id="set_font">set_font</h2>
+<h2 id="set_font">set_font()</h2>
 <p>Setting emphasis on text can be controlled by using <code>set_font(style=...)</code>:</p>
 <ul>
 <li><code>style="B"</code> indicates <strong>bold</strong></li>
@@ -1200,6 +1228,36 @@
 <span class="n">pdf</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;style.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
+<h2 id="set_stretchingstretching100">.set_stretching(stretching=100)</h2>
+<p>Text can be stretched horizontally with this setting, measured in percent.
+If the argument is less than 100, then all characters are rendered proportionally narrower and the text string will take less space.
+If it is larger than 100, then the width of all characters will be expanded accordingly.</p>
+<p>The example shows the same text justified to the same width, with stretching values of 100 and 150.
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="n">LOREM_IPSUM</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span> <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LEFT&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_stretching</span><span class="p">(</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="n">LOREM_IPSUM</span><span class="p">[:</span><span class="mi">100</span><span class="p">],</span> <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LEFT&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" src="font_stretching.png" /></p>
+<h2 id="set_char_spacingspacing0">.set_char_spacing(spacing=0)</h2>
+<p>This method changes the distance between individual characters of a test string. Normally, characters are placed at a given distance according the width information in the font file. If spacing is larger than 0, then their distance will be larger, creating a gap in between. If it is less than 0, then their distance will be smaller, possibly resulting in an overlap. The change in distance is given in typographic points (Pica), which makes it easy to adapt it relative to the current font size.</p>
+<p>Character spacing works best for formatting single line text created by any method, or for highlighting individual words included in a block of text with <code>.write()</code>.</p>
+<p>Limitations: Spacing will only be changed <em>within</em> a sequence of characters that fpdf adds to the PDF in one go. This means that there will be no extra distance eg. between text parts that are placed successivly with <code>write()</code>. Also, if you apply different font styles using the markdown functionality of <code>.cell()</code> and <code>.multi_cell()</code> or by using <code>html_write()</code>, then any parts given different styles will have the original distance between them. This is so because fpdf has to add each styled fragment to the PDF file seperately.</p>
+<p>The example shows the same text justified to the same width, with char_spacing values of 0 and 10 (font size 8 pt).
+<div class="highlight"><pre><span></span><code><span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_fill_color</span><span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="n">LOREM_IPSUM</span><span class="p">[:</span><span class="mi">200</span><span class="p">],</span> <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LEFT&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">set_char_spacing</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="n">LOREM_IPSUM</span><span class="p">[:</span><span class="mi">200</span><span class="p">],</span> <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LEFT&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" src="char_spacing.png" /></p>
 <h2 id="text_mode">.text_mode</h2>
 <p>The PDF spec defines several text modes:
 <img alt="" src="pdf-text-modes.jpg" /></p>

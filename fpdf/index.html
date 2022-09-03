@@ -121,7 +121,8 @@ __all__ = [
 </dd>
 <dt><code class="name"><a title="fpdf.line_break" href="line_break.html">fpdf.line_break</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Routines for organizing lines and larger blocks of text, with manual and
+automatic line wrapping …</p></div>
 </dd>
 <dt><code class="name"><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></dt>
 <dd>
@@ -332,9 +333,10 @@ Default to "mm".</dd>
         # We set their default values here.
         self.font_family = &#34;&#34;  # current font family
         self.font_style = &#34;&#34;  # current font style
-        self.font_size_pt = 12
+        self.font_size_pt = 12  # current font size in points
         self.font_stretching = 100  # current font stretching
-        self.underline = 0  # underlining flag
+        self.char_spacing = 0  # current character spacing
+        self.underline = False  # underlining flag
         self.current_font = {}  # current font
         self.draw_color = self.DEFAULT_DRAW_COLOR
         self.fill_color = self.DEFAULT_FILL_COLOR
@@ -371,6 +373,20 @@ Default to "mm".</dd>
         self.record_text_quad_points = False
         # page number -&gt; array of 8 × n numbers:
         self.text_quad_points = defaultdict(list)
+
+    def _add_quad_points(self, x, y, w, h):
+        self.text_quad_points[self.page].extend(
+            [
+                x * self.k,
+                (self.h - y) * self.k,
+                (x + w) * self.k,
+                (self.h - y) * self.k,
+                x * self.k,
+                (self.h - y - h) * self.k,
+                (x + w) * self.k,
+                (self.h - y - h) * self.k,
+            ]
+        )
 
     def _set_min_pdf_version(self, version):
         self.pdf_version = max(self.pdf_version, version)
@@ -756,6 +772,7 @@ Default to "mm".</dd>
         fc = self.fill_color
         tc = self.text_color
         stretching = self.font_stretching
+        char_spacing = self.char_spacing
 
         if self.page &gt; 0:
             # Page footer
@@ -820,6 +837,8 @@ Default to "mm".</dd>
 
         if stretching != 100:  # Restore stretching
             self.set_stretching(stretching)
+        if char_spacing != 0:
+            self.set_char_spacing(char_spacing)
         # END Page header
 
     def header(self):
@@ -917,28 +936,9 @@ Default to "mm".</dd>
         for frag in (
             self._markdown_parse(s)
             if markdown
-            else (Fragment.from_string(s, self.font_style, bool(self.underline)),)
+            else (Fragment(s, self._get_current_graphics_state(), self.k),)
         ):
-            w += self.get_normalized_string_width_with_style(frag.string, frag.style)
-        if self.font_stretching != 100:
-            w *= self.font_stretching / 100
-        return w * self.font_size / 1000
-
-    def get_normalized_string_width_with_style(self, string, style):
-        &#34;&#34;&#34;
-        Returns the length of a string with given style
-
-        Args:
-            string (str): the string whose length is to be computed.
-            style (str) : the string representing the style
-        &#34;&#34;&#34;
-        w = 0
-        font = self.fonts[self.font_family + style]
-        if self.unifontsubset:
-            for char in string:
-                w += _char_width(font, ord(char))
-        else:
-            w += sum(_char_width(font, char) for char in string)
+            w += frag.get_width()
         return w
 
     def set_line_width(self, width):
@@ -1875,6 +1875,22 @@ Default to "mm".</dd>
                 )
             self._out(f&#34;BT /F{self.current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf ET&#34;)
 
+    def set_char_spacing(self, spacing):
+        &#34;&#34;&#34;
+        Sets horizontal character spacing.
+        A positive value increases the space between characters, a negative value
+        reduces it (which may result in glyph overlap).
+        By default, no spacing is set (which is equivalent to a value of 0).
+
+        Args:
+            spacing (float): horizontal spacing in document units
+        &#34;&#34;&#34;
+        if self.char_spacing == spacing:
+            return
+        self.char_spacing = spacing
+        if self.page &gt; 0:
+            self._out(f&#34;BT {spacing:.2f} Tc ET&#34;)
+
     def set_stretching(self, stretching):
         &#34;&#34;&#34;
         Sets horizontal font stretching.
@@ -1887,7 +1903,7 @@ Default to "mm".</dd>
             return
         self.font_stretching = stretching
         if self.page &gt; 0:
-            self._out(f&#34;BT {self.font_stretching:.2f} Tz ET&#34;)
+            self._out(f&#34;BT {stretching:.2f} Tz ET&#34;)
 
     def add_link(self):
         &#34;&#34;&#34;
@@ -2251,33 +2267,17 @@ Default to "mm".</dd>
         if self.text_mode != TextMode.FILL:
             s += f&#34; {self.text_mode} Tr {self.line_width:.2f} w&#34;
         s += f&#34; ({txt2}) Tj ET&#34;
-        if self.underline and txt != &#34;&#34;:
-            s += &#34; &#34; + self._do_underline(x, y, txt)
+        if (self.underline and txt != &#34;&#34;) or self.record_text_quad_points:
+            w = self.get_string_width(txt, normalized=True, markdown=False)
+            if self.underline and txt != &#34;&#34;:
+                s += &#34; &#34; + self._do_underline(x, y, w)
+            if self.record_text_quad_points:
+                h = self.font_size
+                y -= 0.8 * h  # same coefficient as in _render_styled_text_line()
+                self._add_quad_points(x, y, w, h)
         if self.fill_color != self.text_color:
             s = f&#34;q {self.text_color.pdf_repr().lower()} {s} Q&#34;
         self._out(s)
-        if self.record_text_quad_points:
-            w = (
-                self.get_normalized_string_width_with_style(txt, self.font_style)
-                * self.font_stretching
-                / 100
-                * self.font_size
-                / 1000
-            )
-            h = self.font_size
-            y -= 0.8 * h  # same coefficient as in _render_styled_text_line()
-            self.text_quad_points[self.page].extend(
-                [
-                    x * self.k,
-                    (self.h - y) * self.k,
-                    (x + w) * self.k,
-                    (self.h - y) * self.k,
-                    x * self.k,
-                    (self.h - y - h) * self.k,
-                    (x + w) * self.k,
-                    (self.h - y - h) * self.k,
-                ]
-            )
 
     @check_page
     def rotate(self, angle, x=None, y=None):
@@ -2656,17 +2656,11 @@ Default to "mm".</dd>
                 &#34;ignored&#34;
             )
             border = 1
-        styled_txt_width = text_line.text_width / 1000 * self.font_size
+        styled_txt_width = text_line.text_width
         if not styled_txt_width:
-            for styled_txt_frag in text_line.fragments:
-                unscaled_width = self.get_normalized_string_width_with_style(
-                    styled_txt_frag.string, styled_txt_frag.style
-                )
-                if self.font_stretching != 100:
-                    unscaled_width *= self.font_stretching / 100
-                styled_txt_width += unscaled_width * self.font_size / 1000
-        elif self.font_stretching != 100:
-            styled_txt_width *= self.font_stretching / 100
+            for frag in text_line.fragments:
+                unscaled_width = frag.get_width()
+                styled_txt_width += unscaled_width
 
         if w == 0:
             w = self.w - self.r_margin - self.x
@@ -2725,20 +2719,7 @@ Default to "mm".</dd>
                 )
 
         if self.record_text_quad_points:
-            x = self.x
-            y = self.y
-            self.text_quad_points[self.page].extend(
-                [
-                    x * self.k,
-                    (self.h - y) * self.k,
-                    (x + w) * self.k,
-                    (self.h - y) * self.k,
-                    x * self.k,
-                    (self.h - y - h) * self.k,
-                    (x + w) * self.k,
-                    (self.h - y - h) * self.k,
-                ]
-            )
+            self._add_quad_points(self.x, self.y, w, h)
 
         s_start = self.x
         s_width, underlines = 0, []
@@ -2771,9 +2752,6 @@ Default to "mm".</dd>
                 word_spacing = (
                     w - self.c_margin - self.c_margin - styled_txt_width
                 ) / text_line.number_of_spaces_between_words
-            if self.font_stretching != 100:
-                # Space character is already stretched, extra spacing is absolute.
-                word_spacing *= 100 / self.font_stretching
             if word_spacing and self.unifontsubset:
                 # If multibyte, Tw has no effect - do word spacing using an
                 # adjustment before each space
@@ -2782,10 +2760,15 @@ Default to "mm".</dd>
                     sl.append(&#34;0 Tw&#34;)
                     self.ws = 0
                 for frag in text_line.fragments:
-                    if current_font_style != frag.style:
-                        current_font_style = frag.style
-                        current_font = self.fonts[self.font_family + current_font_style]
-                        sl.append(f&#34;/F{current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;)
+                    if frag.font_stretching != 100:
+                        # Space character is already stretched, extra spacing is absolute.
+                        frag_word_spacing = word_spacing * 100 / frag.font_stretching
+                    else:
+                        frag_word_spacing = word_spacing
+                    if current_font_style != frag.font_style:
+                        current_font_style = frag.font_style
+                        current_font = frag.font
+                        sl.append(f&#34;/F{current_font[&#39;i&#39;]} {frag.font_size_pt:.2f} Tf&#34;)
                     txt_frag_mapped = &#34;&#34;
                     for char in frag.string:
                         uni = ord(char)
@@ -2803,29 +2786,40 @@ Default to "mm".</dd>
                         if i == 0:
                             words_strl.append(f&#34;({word})&#34;)
                         else:
-                            adj = -(word_spacing * self.k) * 1000 / self.font_size_pt
+                            adj = (
+                                -(frag_word_spacing * self.k) * 1000 / frag.font_size_pt
+                            )
                             words_strl.append(f&#34;{adj:.3f}({space}{word})&#34;)
                     sl.append(f&#34;[{&#39; &#39;.join(words_strl)}] TJ&#34;)
+                    frag_width = frag.get_width() + self.ws * frag.string.count(&#34; &#34;)
                     if frag.underline:
-                        underlines.append((self.x + dx + s_width, frag.string))
-                    frag_width = self.get_normalized_string_width_with_style(
-                        frag.string, current_font_style
-                    )
-                    # /1000 for font space conversion, /100 for percentage -&gt; *0.00001
-                    frag_width *= self.font_stretching * self.font_size * 0.00001
-                    s_width += frag_width + self.ws * frag.string.count(&#34; &#34;)
+                        underlines.append(
+                            (
+                                self.x + dx + s_width,
+                                frag_width,
+                                frag.font,
+                                frag.font_size,
+                            )
+                        )
+                    s_width += frag_width
             else:
-                if word_spacing and word_spacing != self.ws:
-                    sl.append(f&#34;{word_spacing * self.k:.3f} Tw&#34;)
-                elif self.ws &gt; 0:
-                    sl.append(&#34;0 Tw&#34;)
-                self.ws = word_spacing
 
                 for frag in text_line.fragments:
-                    if current_font_style != frag.style:
-                        current_font_style = frag.style
-                        current_font = self.fonts[self.font_family + current_font_style]
-                        sl.append(f&#34;/F{current_font[&#39;i&#39;]} {self.font_size_pt:.2f} Tf&#34;)
+                    if frag.font_stretching != 100:
+                        # Space character is already stretched, extra spacing is absolute.
+                        frag_word_spacing = word_spacing * 100 / frag.font_stretching
+                    else:
+                        frag_word_spacing = word_spacing
+                    if frag_word_spacing and frag_word_spacing != self.ws:
+                        sl.append(f&#34;{frag_word_spacing * self.k:.3f} Tw&#34;)
+                    elif frag_word_spacing == 0 and self.ws &gt; 0:
+                        sl.append(&#34;0 Tw&#34;)
+                    self.ws = frag_word_spacing
+
+                    if current_font_style != frag.font_style:
+                        current_font_style = frag.font_style
+                        current_font = frag.font
+                        sl.append(f&#34;/F{current_font[&#39;i&#39;]} {frag.font_size_pt:.2f} Tf&#34;)
                     if self.unifontsubset:
                         txt_frag_mapped = &#34;&#34;
                         for char in frag.string:
@@ -2837,31 +2831,34 @@ Default to "mm".</dd>
                     else:
                         txt_frag_escaped = escape_parens(frag.string)
                     sl.append(f&#34;({txt_frag_escaped}) Tj&#34;)
+                    frag_width = frag.get_width() + self.ws * frag.string.count(&#34; &#34;)
                     if frag.underline:
-                        underlines.append((self.x + dx + s_width, frag.string))
-                    frag_width = self.get_normalized_string_width_with_style(
-                        frag.string, current_font_style
-                    )
-                    # /1000 for font space conversion, /100 for percentage -&gt; *0.00001
-                    frag_width *= self.font_stretching * self.font_size * 0.00001
-                    s_width += frag_width + self.ws * frag.string.count(&#34; &#34;)
+                        underlines.append(
+                            (
+                                self.x + dx + s_width,
+                                frag_width,
+                                frag.font,
+                                frag.font_size,
+                            )
+                        )
+                    s_width += frag_width
             sl.append(&#34;ET&#34;)
 
-            for start_x, txt_frag in underlines:
+            for start_x, ul_w, ul_font, ul_font_size in underlines:
                 sl.append(
                     self._do_underline(
                         start_x,
-                        self.y + (0.5 * h) + (0.3 * self.font_size),
-                        txt_frag,
-                        current_font,
+                        self.y + (0.5 * h) + (0.3 * ul_font_size),
+                        ul_w,
+                        ul_font,
                     )
                 )
             if link:
                 self.link(
                     self.x + dx,
-                    self.y + (0.5 * h) - (0.5 * self.font_size),
+                    self.y + (0.5 * h) - (0.5 * frag.font_size),
                     styled_txt_width,
-                    self.font_size,
+                    frag.font_size,
                     link,
                 )
         if sl:
@@ -2915,21 +2912,21 @@ Default to "mm".</dd>
         if not txt:
             return tuple()
         if not markdown:
-            return tuple(
-                [Fragment.from_string(txt, self.font_style, bool(self.underline))]
-            )
+            return tuple([Fragment(txt, self._get_current_graphics_state(), self.k)])
         prev_font_style = self.font_style
         styled_txt_frags = tuple(self._markdown_parse(txt))
         page = self.page
         # We set the current to page to zero so that
         # set_font() does not produce any text object on the stream buffer:
         self.page = 0
-        if any(&#34;B&#34; in frag.style for frag in styled_txt_frags):
+        if any(&#34;B&#34; in frag.font_style for frag in styled_txt_frags):
             # Ensuring bold font is supported:
             self.set_font(style=&#34;B&#34;)
-        if any(&#34;I&#34; in frag.style for frag in styled_txt_frags):
+        if any(&#34;I&#34; in frag.font_style for frag in styled_txt_frags):
             # Ensuring italics font is supported:
             self.set_font(style=&#34;I&#34;)
+        for frag in styled_txt_frags:
+            frag.font = self.fonts[frag.font_family + frag.font_style]
         # Restoring initial style:
         self.set_font(style=prev_font_style)
         self.page = page
@@ -2957,11 +2954,12 @@ Default to "mm".</dd>
                 and (len(txt) &lt; 3 or txt[2] != half_marker)
             ):
                 if txt_frag:
-                    yield Fragment(
-                        (&#34;B&#34; if in_bold else &#34;&#34;) + (&#34;I&#34; if in_italics else &#34;&#34;),
-                        in_underline,
-                        txt_frag,
+                    gstate = self._get_current_graphics_state()
+                    gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
+                        &#34;I&#34; if in_italics else &#34;&#34;
                     )
+                    gstate[&#34;underline&#34;] = in_underline
+                    yield Fragment(txt_frag, gstate, self.k)
                 if txt[:2] == self.MARKDOWN_BOLD_MARKER:
                     in_bold = not in_bold
                 if txt[:2] == self.MARKDOWN_ITALICS_MARKER:
@@ -2974,11 +2972,12 @@ Default to "mm".</dd>
                 txt_frag.append(txt[0])
                 txt = txt[1:]
         if txt_frag:
-            yield Fragment(
-                (&#34;B&#34; if in_bold else &#34;&#34;) + (&#34;I&#34; if in_italics else &#34;&#34;),
-                in_underline,
-                txt_frag,
+            gstate = self._get_current_graphics_state()
+            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
+                &#34;I&#34; if in_italics else &#34;&#34;
             )
+            gstate[&#34;underline&#34;] = in_underline
+            yield Fragment(txt_frag, gstate, self.k)
 
     def will_page_break(self, height):
         &#34;&#34;&#34;
@@ -3130,9 +3129,7 @@ Default to "mm".</dd>
         # If width is 0, set width to available width between margins
         if w == 0:
             w = self.w - self.r_margin - self.x
-        maximum_allowed_emwidth = (w - 2 * self.c_margin) * 1000 / self.font_size
-        if self.font_stretching != 100:
-            maximum_allowed_emwidth *= 100 / self.font_stretching
+        maximum_allowed_width = w - 2 * self.c_margin
 
         # Calculate text length
         txt = self.normalize_text(txt)
@@ -3150,16 +3147,13 @@ Default to "mm".</dd>
         text_lines = []
         multi_line_break = MultiLineBreak(
             styled_text_fragments,
-            self.get_normalized_string_width_with_style,
             justify=(align == Align.J),
             print_sh=print_sh,
         )
-        text_line = multi_line_break.get_line_of_given_width(maximum_allowed_emwidth)
+        text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
         while (text_line) is not None:
             text_lines.append(text_line)
-            text_line = multi_line_break.get_line_of_given_width(
-                maximum_allowed_emwidth
-            )
+            text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
 
         if not text_lines:  # ensure we display at least one cell - cf. issue #349
             text_lines = [
@@ -3276,26 +3270,19 @@ Default to "mm".</dd>
         text_lines = []
         multi_line_break = MultiLineBreak(
             styled_text_fragments,
-            self.get_normalized_string_width_with_style,
             print_sh=print_sh,
         )
-        prev_x = self.x
         # first line from current x position to right margin
-        first_width = self.w - prev_x - self.r_margin
-        first_emwidth = (first_width - 2 * self.c_margin) * 1000 / self.font_size
-        if self.font_stretching != 100:
-            first_emwidth *= 100 / self.font_stretching
+        first_width = self.w - self.x - self.r_margin
         text_line = multi_line_break.get_line_of_given_width(
-            first_emwidth, wordsplit=False
+            first_width - 2 * self.c_margin, wordsplit=False
         )
         # remaining lines fill between margins
         full_width = self.w - self.l_margin - self.r_margin
-        full_emwidth = (full_width - 2 * self.c_margin) * 1000 / self.font_size
-        if self.font_stretching != 100:
-            full_emwidth *= 100 / self.font_stretching
+        fit_width = full_width - 2 * self.c_margin
         while (text_line) is not None:
             text_lines.append(text_line)
-            text_line = multi_line_break.get_line_of_given_width(full_emwidth)
+            text_line = multi_line_break.get_line_of_given_width(fit_width)
         if text_line:
             text_lines.append(text_line)
         if not text_lines:
@@ -4682,6 +4669,7 @@ Default to "mm".</dd>
         self.y = self.t_margin
         self.font_family = &#34;&#34;
         self.font_stretching = 100
+        self.char_spacing = 0
         if same:
             if orientation or format:
                 raise ValueError(
@@ -4709,13 +4697,12 @@ Default to "mm".</dd>
         self._out(f&#34;{self.n} 0 obj&#34;)
         return self.n
 
-    def _do_underline(self, x, y, txt, current_font=None):
+    def _do_underline(self, x, y, w, current_font=None):
         &#34;Draw an horizontal line starting from (x, y) with a length equal to &#39;txt&#39; width&#34;
         if current_font is None:
             current_font = self.current_font
         up = current_font[&#34;up&#34;]
         ut = current_font[&#34;ut&#34;]
-        w = self.get_string_width(txt, True) + self.ws * txt.count(&#34; &#34;)
         return (
             f&#34;{x * self.k:.2f} &#34;
             f&#34;{(self.h - y + up / 1000 * self.font_size) * self.k:.2f} &#34;
@@ -5555,6 +5542,7 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
     fc = self.fill_color
     tc = self.text_color
     stretching = self.font_stretching
+    char_spacing = self.char_spacing
 
     if self.page &gt; 0:
         # Page footer
@@ -5619,6 +5607,8 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 
     if stretching != 100:  # Restore stretching
         self.set_stretching(stretching)
+    if char_spacing != 0:
+        self.set_char_spacing(char_spacing)
     # END Page header</code></pre>
 </details>
 </dd>
@@ -6739,39 +6729,6 @@ in a subclass to implement your own rendering logic.</p></div>
     &#34;&#34;&#34;</code></pre>
 </details>
 </dd>
-<dt id="fpdf.FPDF.get_normalized_string_width_with_style"><code class="name flex">
-<span>def <span class="ident">get_normalized_string_width_with_style</span></span>(<span>self, string, style)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Returns the length of a string with given style</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>string</code></strong> :&ensp;<code>str</code></dt>
-<dd>the string whose length is to be computed.</dd>
-</dl>
-<p>style (str) : the string representing the style</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_normalized_string_width_with_style(self, string, style):
-    &#34;&#34;&#34;
-    Returns the length of a string with given style
-
-    Args:
-        string (str): the string whose length is to be computed.
-        style (str) : the string representing the style
-    &#34;&#34;&#34;
-    w = 0
-    font = self.fonts[self.font_family + style]
-    if self.unifontsubset:
-        for char in string:
-            w += _char_width(font, ord(char))
-    else:
-        w += sum(_char_width(font, char) for char in string)
-    return w</code></pre>
-</details>
-</dd>
 <dt id="fpdf.FPDF.get_string_width"><code class="name flex">
 <span>def <span class="ident">get_string_width</span></span>(<span>self, s, normalized=False, markdown=False)</span>
 </code></dt>
@@ -6807,12 +6764,10 @@ The value is calculated with stretching and spacing.</p>
     for frag in (
         self._markdown_parse(s)
         if markdown
-        else (Fragment.from_string(s, self.font_style, bool(self.underline)),)
+        else (Fragment(s, self._get_current_graphics_state(), self.k),)
     ):
-        w += self.get_normalized_string_width_with_style(frag.string, frag.style)
-    if self.font_stretching != 100:
-        w *= self.font_stretching / 100
-    return w * self.font_size / 1000</code></pre>
+        w += frag.get_width()
+    return w</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.get_x"><code class="name flex">
@@ -7721,9 +7676,7 @@ def multi_cell(
     # If width is 0, set width to available width between margins
     if w == 0:
         w = self.w - self.r_margin - self.x
-    maximum_allowed_emwidth = (w - 2 * self.c_margin) * 1000 / self.font_size
-    if self.font_stretching != 100:
-        maximum_allowed_emwidth *= 100 / self.font_stretching
+    maximum_allowed_width = w - 2 * self.c_margin
 
     # Calculate text length
     txt = self.normalize_text(txt)
@@ -7741,16 +7694,13 @@ def multi_cell(
     text_lines = []
     multi_line_break = MultiLineBreak(
         styled_text_fragments,
-        self.get_normalized_string_width_with_style,
         justify=(align == Align.J),
         print_sh=print_sh,
     )
-    text_line = multi_line_break.get_line_of_given_width(maximum_allowed_emwidth)
+    text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
     while (text_line) is not None:
         text_lines.append(text_line)
-        text_line = multi_line_break.get_line_of_given_width(
-            maximum_allowed_emwidth
-        )
+        text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
 
     if not text_lines:  # ensure we display at least one cell - cf. issue #349
         text_lines = [
@@ -8531,6 +8481,40 @@ in the unit specified to FPDF constructor</dd>
     self.auto_page_break = auto
     self.b_margin = margin
     self.page_break_trigger = self.h - self.b_margin</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.set_char_spacing"><code class="name flex">
+<span>def <span class="ident">set_char_spacing</span></span>(<span>self, spacing)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Sets horizontal character spacing.
+A positive value increases the space between characters, a negative value
+reduces it (which may result in glyph overlap).
+By default, no spacing is set (which is equivalent to a value of 0).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>spacing</code></strong> :&ensp;<code>float</code></dt>
+<dd>horizontal spacing in document units</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_char_spacing(self, spacing):
+    &#34;&#34;&#34;
+    Sets horizontal character spacing.
+    A positive value increases the space between characters, a negative value
+    reduces it (which may result in glyph overlap).
+    By default, no spacing is set (which is equivalent to a value of 0).
+
+    Args:
+        spacing (float): horizontal spacing in document units
+    &#34;&#34;&#34;
+    if self.char_spacing == spacing:
+        return
+    self.char_spacing = spacing
+    if self.page &gt; 0:
+        self._out(f&#34;BT {spacing:.2f} Tc ET&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_compression"><code class="name flex">
@@ -9433,7 +9417,7 @@ By default, no stretching is set (which is equivalent to a value of 100).</p>
         return
     self.font_stretching = stretching
     if self.page &gt; 0:
-        self._out(f&#34;BT {self.font_stretching:.2f} Tz ET&#34;)</code></pre>
+        self._out(f&#34;BT {stretching:.2f} Tz ET&#34;)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_subject"><code class="name flex">
@@ -10075,33 +10059,17 @@ def text(self, x, y, txt=&#34;&#34;):
     if self.text_mode != TextMode.FILL:
         s += f&#34; {self.text_mode} Tr {self.line_width:.2f} w&#34;
     s += f&#34; ({txt2}) Tj ET&#34;
-    if self.underline and txt != &#34;&#34;:
-        s += &#34; &#34; + self._do_underline(x, y, txt)
+    if (self.underline and txt != &#34;&#34;) or self.record_text_quad_points:
+        w = self.get_string_width(txt, normalized=True, markdown=False)
+        if self.underline and txt != &#34;&#34;:
+            s += &#34; &#34; + self._do_underline(x, y, w)
+        if self.record_text_quad_points:
+            h = self.font_size
+            y -= 0.8 * h  # same coefficient as in _render_styled_text_line()
+            self._add_quad_points(x, y, w, h)
     if self.fill_color != self.text_color:
         s = f&#34;q {self.text_color.pdf_repr().lower()} {s} Q&#34;
-    self._out(s)
-    if self.record_text_quad_points:
-        w = (
-            self.get_normalized_string_width_with_style(txt, self.font_style)
-            * self.font_stretching
-            / 100
-            * self.font_size
-            / 1000
-        )
-        h = self.font_size
-        y -= 0.8 * h  # same coefficient as in _render_styled_text_line()
-        self.text_quad_points[self.page].extend(
-            [
-                x * self.k,
-                (self.h - y) * self.k,
-                (x + w) * self.k,
-                (self.h - y) * self.k,
-                x * self.k,
-                (self.h - y - h) * self.k,
-                (x + w) * self.k,
-                (self.h - y - h) * self.k,
-            ]
-        )</code></pre>
+    self._out(s)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.text_annotation"><code class="name flex">
@@ -10297,26 +10265,19 @@ def write(
     text_lines = []
     multi_line_break = MultiLineBreak(
         styled_text_fragments,
-        self.get_normalized_string_width_with_style,
         print_sh=print_sh,
     )
-    prev_x = self.x
     # first line from current x position to right margin
-    first_width = self.w - prev_x - self.r_margin
-    first_emwidth = (first_width - 2 * self.c_margin) * 1000 / self.font_size
-    if self.font_stretching != 100:
-        first_emwidth *= 100 / self.font_stretching
+    first_width = self.w - self.x - self.r_margin
     text_line = multi_line_break.get_line_of_given_width(
-        first_emwidth, wordsplit=False
+        first_width - 2 * self.c_margin, wordsplit=False
     )
     # remaining lines fill between margins
     full_width = self.w - self.l_margin - self.r_margin
-    full_emwidth = (full_width - 2 * self.c_margin) * 1000 / self.font_size
-    if self.font_stretching != 100:
-        full_emwidth *= 100 / self.font_stretching
+    fit_width = full_width - 2 * self.c_margin
     while (text_line) is not None:
         text_lines.append(text_line)
-        text_line = multi_line_break.get_line_of_given_width(full_emwidth)
+        text_line = multi_line_break.get_line_of_given_width(fit_width)
     if text_line:
         text_lines.append(text_line)
     if not text_lines:
@@ -13004,7 +12965,6 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.file_attachment_annotation" href="#fpdf.FPDF.file_attachment_annotation">file_attachment_annotation</a></code></li>
 <li><code><a title="fpdf.FPDF.file_id" href="#fpdf.FPDF.file_id">file_id</a></code></li>
 <li><code><a title="fpdf.FPDF.footer" href="#fpdf.FPDF.footer">footer</a></code></li>
-<li><code><a title="fpdf.FPDF.get_normalized_string_width_with_style" href="#fpdf.FPDF.get_normalized_string_width_with_style">get_normalized_string_width_with_style</a></code></li>
 <li><code><a title="fpdf.FPDF.get_string_width" href="#fpdf.FPDF.get_string_width">get_string_width</a></code></li>
 <li><code><a title="fpdf.FPDF.get_x" href="#fpdf.FPDF.get_x">get_x</a></code></li>
 <li><code><a title="fpdf.FPDF.get_y" href="#fpdf.FPDF.get_y">get_y</a></code></li>
@@ -13037,6 +12997,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.round_clip" href="#fpdf.FPDF.round_clip">round_clip</a></code></li>
 <li><code><a title="fpdf.FPDF.set_author" href="#fpdf.FPDF.set_author">set_author</a></code></li>
 <li><code><a title="fpdf.FPDF.set_auto_page_break" href="#fpdf.FPDF.set_auto_page_break">set_auto_page_break</a></code></li>
+<li><code><a title="fpdf.FPDF.set_char_spacing" href="#fpdf.FPDF.set_char_spacing">set_char_spacing</a></code></li>
 <li><code><a title="fpdf.FPDF.set_compression" href="#fpdf.FPDF.set_compression">set_compression</a></code></li>
 <li><code><a title="fpdf.FPDF.set_creation_date" href="#fpdf.FPDF.set_creation_date">set_creation_date</a></code></li>
 <li><code><a title="fpdf.FPDF.set_creator" href="#fpdf.FPDF.set_creator">set_creator</a></code></li>
