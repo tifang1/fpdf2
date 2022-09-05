@@ -108,8 +108,28 @@ class Fragment:
         return self.graphics_state[&#34;char_spacing&#34;]
 
     @property
+    def text_mode(self):
+        return self.graphics_state[&#34;text_mode&#34;]
+
+    @property
     def underline(self):
         return self.graphics_state[&#34;underline&#34;]
+
+    @property
+    def draw_color(self):
+        return self.graphics_state[&#34;draw_color&#34;]
+
+    @property
+    def fill_color(self):
+        return self.graphics_state[&#34;fill_color&#34;]
+
+    @property
+    def text_color(self):
+        return self.graphics_state[&#34;text_color&#34;]
+
+    @property
+    def line_width(self):
+        return self.graphics_state[&#34;line_width&#34;]
 
     @property
     def string(self):
@@ -125,7 +145,13 @@ class Fragment:
             and self.k == other.k
         )
 
-    def get_width(self, start: int = 0, end: int = None, chars: str = None):
+    def get_width(
+        self,
+        start: int = 0,
+        end: int = None,
+        chars: str = None,
+        initial_cs: bool = True,
+    ):
         &#34;&#34;&#34;
         Return the witdth of the string with the given font/size/style/etc.
 
@@ -159,25 +185,28 @@ class Fragment:
         if self.font_size_pt:
             w *= self.font_size_pt * 0.001
         if self.char_spacing != 0:
-            # Make sure a single character is calculated with spacing as well.
-            # CurrentLine.automatic_break() will remove one for each fragment start.
-            w += char_spacing * max(1, (len(chars) - 1))
+            # initial_cs must be False if the fragment is located at the
+            # beginning of a text object, because the first char won&#39;t get spaced.
+            if initial_cs:
+                w += char_spacing * len(chars)
+            else:
+                w += char_spacing * (len(chars) - 1)
         return w / self.k
 
-    def get_character_width(self, character: str, print_sh=False):
+    def get_character_width(self, character: str, print_sh=False, initial_cs=True):
         &#34;&#34;&#34;
         Return the width of a single character out of the stored text.
         &#34;&#34;&#34;
         if character == SOFT_HYPHEN and not print_sh:
             # HYPHEN is inserted instead of SOFT_HYPHEN
             character = HYPHEN
-        return self.get_width(chars=character)
+        return self.get_width(chars=character, initial_cs=initial_cs)
 
 
 class TextLine(NamedTuple):
     fragments: tuple
     text_width: float
-    number_of_spaces_between_words: int
+    number_of_spaces: int
     justify: bool
     trailing_nl: bool = False
 
@@ -295,18 +324,10 @@ class CurrentLine:
         self.width = break_hint.line_width
 
     def manual_break(self, justify: bool = False, trailing_nl: bool = False):
-        # The first character per fragment doesn&#39;t get a spacing displacement.
-        # We need to reduce the total width of the line accordingly.
-        frag_start_spacing = 0
-        for frag in self.fragments:
-            if frag.char_spacing:
-                frag_start_spacing -= (
-                    frag.char_spacing / frag.k * frag.font_stretching * 0.01
-                )
         return TextLine(
             fragments=self.fragments,
-            text_width=self.width + frag_start_spacing,
-            number_of_spaces_between_words=self.number_of_spaces,
+            text_width=self.width,
+            number_of_spaces=self.number_of_spaces,
             justify=(self.number_of_spaces &gt; 0) and justify,
             trailing_nl=trailing_nl,
         )
@@ -358,6 +379,7 @@ class MultiLineBreak:
 
     # pylint: disable=too-many-return-statements
     def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
+        first_char = True  # &#34;Tw&#34; ignores the first character in a text object.
         idx_last_forced_break = self.idx_last_forced_break
         self.idx_last_forced_break = None
 
@@ -380,9 +402,9 @@ class MultiLineBreak:
 
             character = current_fragment.characters[self.character_index]
             character_width = current_fragment.get_character_width(
-                character,
-                self.print_sh,
+                character, self.print_sh, initial_cs=not first_char
             )
+            first_char = False
 
             if character == NEWLINE:
                 self.character_index += 1
@@ -544,18 +566,10 @@ normally, instead of triggering a line break. Default: False</p></div>
         self.width = break_hint.line_width
 
     def manual_break(self, justify: bool = False, trailing_nl: bool = False):
-        # The first character per fragment doesn&#39;t get a spacing displacement.
-        # We need to reduce the total width of the line accordingly.
-        frag_start_spacing = 0
-        for frag in self.fragments:
-            if frag.char_spacing:
-                frag_start_spacing -= (
-                    frag.char_spacing / frag.k * frag.font_stretching * 0.01
-                )
         return TextLine(
             fragments=self.fragments,
-            text_width=self.width + frag_start_spacing,
-            number_of_spaces_between_words=self.number_of_spaces,
+            text_width=self.width,
+            number_of_spaces=self.number_of_spaces,
             justify=(self.number_of_spaces &gt; 0) and justify,
             trailing_nl=trailing_nl,
         )
@@ -713,18 +727,10 @@ normally, instead of triggering a line break. Default: False</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def manual_break(self, justify: bool = False, trailing_nl: bool = False):
-    # The first character per fragment doesn&#39;t get a spacing displacement.
-    # We need to reduce the total width of the line accordingly.
-    frag_start_spacing = 0
-    for frag in self.fragments:
-        if frag.char_spacing:
-            frag_start_spacing -= (
-                frag.char_spacing / frag.k * frag.font_stretching * 0.01
-            )
     return TextLine(
         fragments=self.fragments,
-        text_width=self.width + frag_start_spacing,
-        number_of_spaces_between_words=self.number_of_spaces,
+        text_width=self.width,
+        number_of_spaces=self.number_of_spaces,
         justify=(self.number_of_spaces &gt; 0) and justify,
         trailing_nl=trailing_nl,
     )</code></pre>
@@ -801,8 +807,28 @@ normally, instead of triggering a line break. Default: False</p></div>
         return self.graphics_state[&#34;char_spacing&#34;]
 
     @property
+    def text_mode(self):
+        return self.graphics_state[&#34;text_mode&#34;]
+
+    @property
     def underline(self):
         return self.graphics_state[&#34;underline&#34;]
+
+    @property
+    def draw_color(self):
+        return self.graphics_state[&#34;draw_color&#34;]
+
+    @property
+    def fill_color(self):
+        return self.graphics_state[&#34;fill_color&#34;]
+
+    @property
+    def text_color(self):
+        return self.graphics_state[&#34;text_color&#34;]
+
+    @property
+    def line_width(self):
+        return self.graphics_state[&#34;line_width&#34;]
 
     @property
     def string(self):
@@ -818,7 +844,13 @@ normally, instead of triggering a line break. Default: False</p></div>
             and self.k == other.k
         )
 
-    def get_width(self, start: int = 0, end: int = None, chars: str = None):
+    def get_width(
+        self,
+        start: int = 0,
+        end: int = None,
+        chars: str = None,
+        initial_cs: bool = True,
+    ):
         &#34;&#34;&#34;
         Return the witdth of the string with the given font/size/style/etc.
 
@@ -852,19 +884,22 @@ normally, instead of triggering a line break. Default: False</p></div>
         if self.font_size_pt:
             w *= self.font_size_pt * 0.001
         if self.char_spacing != 0:
-            # Make sure a single character is calculated with spacing as well.
-            # CurrentLine.automatic_break() will remove one for each fragment start.
-            w += char_spacing * max(1, (len(chars) - 1))
+            # initial_cs must be False if the fragment is located at the
+            # beginning of a text object, because the first char won&#39;t get spaced.
+            if initial_cs:
+                w += char_spacing * len(chars)
+            else:
+                w += char_spacing * (len(chars) - 1)
         return w / self.k
 
-    def get_character_width(self, character: str, print_sh=False):
+    def get_character_width(self, character: str, print_sh=False, initial_cs=True):
         &#34;&#34;&#34;
         Return the width of a single character out of the stored text.
         &#34;&#34;&#34;
         if character == SOFT_HYPHEN and not print_sh:
             # HYPHEN is inserted instead of SOFT_HYPHEN
             character = HYPHEN
-        return self.get_width(chars=character)</code></pre>
+        return self.get_width(chars=character, initial_cs=initial_cs)</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -878,6 +913,30 @@ normally, instead of triggering a line break. Default: False</p></div>
 <pre><code class="python">@property
 def char_spacing(self):
     return self.graphics_state[&#34;char_spacing&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.Fragment.draw_color"><code class="name">var <span class="ident">draw_color</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def draw_color(self):
+    return self.graphics_state[&#34;draw_color&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.Fragment.fill_color"><code class="name">var <span class="ident">fill_color</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def fill_color(self):
+    return self.graphics_state[&#34;fill_color&#34;]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.Fragment.font"><code class="name">var <span class="ident">font</span></code></dt>
@@ -952,6 +1011,18 @@ def font_style(self):
     return self.graphics_state[&#34;font_style&#34;]</code></pre>
 </details>
 </dd>
+<dt id="fpdf.line_break.Fragment.line_width"><code class="name">var <span class="ident">line_width</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def line_width(self):
+    return self.graphics_state[&#34;line_width&#34;]</code></pre>
+</details>
+</dd>
 <dt id="fpdf.line_break.Fragment.string"><code class="name">var <span class="ident">string</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -962,6 +1033,30 @@ def font_style(self):
 <pre><code class="python">@property
 def string(self):
     return &#34;&#34;.join(self.characters)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.Fragment.text_color"><code class="name">var <span class="ident">text_color</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def text_color(self):
+    return self.graphics_state[&#34;text_color&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.Fragment.text_mode"><code class="name">var <span class="ident">text_mode</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def text_mode(self):
+    return self.graphics_state[&#34;text_mode&#34;]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.Fragment.underline"><code class="name">var <span class="ident">underline</span></code></dt>
@@ -992,7 +1087,7 @@ def unicode_font(self):
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.line_break.Fragment.get_character_width"><code class="name flex">
-<span>def <span class="ident">get_character_width</span></span>(<span>self, character: str, print_sh=False)</span>
+<span>def <span class="ident">get_character_width</span></span>(<span>self, character: str, print_sh=False, initial_cs=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the width of a single character out of the stored text.</p></div>
@@ -1000,18 +1095,18 @@ def unicode_font(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_character_width(self, character: str, print_sh=False):
+<pre><code class="python">def get_character_width(self, character: str, print_sh=False, initial_cs=True):
     &#34;&#34;&#34;
     Return the width of a single character out of the stored text.
     &#34;&#34;&#34;
     if character == SOFT_HYPHEN and not print_sh:
         # HYPHEN is inserted instead of SOFT_HYPHEN
         character = HYPHEN
-    return self.get_width(chars=character)</code></pre>
+    return self.get_width(chars=character, initial_cs=initial_cs)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.Fragment.get_width"><code class="name flex">
-<span>def <span class="ident">get_width</span></span>(<span>self, start: int = 0, end: int = None, chars: str = None)</span>
+<span>def <span class="ident">get_width</span></span>(<span>self, start: int = 0, end: int = None, chars: str = None, initial_cs: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Return the witdth of the string with the given font/size/style/etc.</p>
@@ -1030,7 +1125,13 @@ precedence over the start/end arguments.</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_width(self, start: int = 0, end: int = None, chars: str = None):
+<pre><code class="python">def get_width(
+    self,
+    start: int = 0,
+    end: int = None,
+    chars: str = None,
+    initial_cs: bool = True,
+):
     &#34;&#34;&#34;
     Return the witdth of the string with the given font/size/style/etc.
 
@@ -1064,9 +1165,12 @@ precedence over the start/end arguments.</dd>
     if self.font_size_pt:
         w *= self.font_size_pt * 0.001
     if self.char_spacing != 0:
-        # Make sure a single character is calculated with spacing as well.
-        # CurrentLine.automatic_break() will remove one for each fragment start.
-        w += char_spacing * max(1, (len(chars) - 1))
+        # initial_cs must be False if the fragment is located at the
+        # beginning of a text object, because the first char won&#39;t get spaced.
+        if initial_cs:
+            w += char_spacing * len(chars)
+        else:
+            w += char_spacing * (len(chars) - 1)
     return w / self.k</code></pre>
 </details>
 </dd>
@@ -1181,6 +1285,7 @@ precedence over the start/end arguments.</dd>
 
     # pylint: disable=too-many-return-statements
     def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
+        first_char = True  # &#34;Tw&#34; ignores the first character in a text object.
         idx_last_forced_break = self.idx_last_forced_break
         self.idx_last_forced_break = None
 
@@ -1203,9 +1308,9 @@ precedence over the start/end arguments.</dd>
 
             character = current_fragment.characters[self.character_index]
             character_width = current_fragment.get_character_width(
-                character,
-                self.print_sh,
+                character, self.print_sh, initial_cs=not first_char
             )
+            first_char = False
 
             if character == NEWLINE:
                 self.character_index += 1
@@ -1265,6 +1370,7 @@ precedence over the start/end arguments.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_line_of_given_width(self, maximum_width: float, wordsplit: bool = True):
+    first_char = True  # &#34;Tw&#34; ignores the first character in a text object.
     idx_last_forced_break = self.idx_last_forced_break
     self.idx_last_forced_break = None
 
@@ -1287,9 +1393,9 @@ precedence over the start/end arguments.</dd>
 
         character = current_fragment.characters[self.character_index]
         character_width = current_fragment.get_character_width(
-            character,
-            self.print_sh,
+            character, self.print_sh, initial_cs=not first_char
         )
+        first_char = False
 
         if character == NEWLINE:
             self.character_index += 1
@@ -1392,10 +1498,10 @@ precedence over the start/end arguments.</dd>
 </dd>
 <dt id="fpdf.line_break.TextLine"><code class="flex name class">
 <span>class <span class="ident">TextLine</span></span>
-<span>(</span><span>fragments: tuple, text_width: float, number_of_spaces_between_words: int, justify: bool, trailing_nl: bool = False)</span>
+<span>(</span><span>fragments: tuple, text_width: float, number_of_spaces: int, justify: bool, trailing_nl: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>TextLine(fragments, text_width, number_of_spaces_between_words, justify, trailing_nl)</p></div>
+<div class="desc"><p>TextLine(fragments, text_width, number_of_spaces, justify, trailing_nl)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1403,7 +1509,7 @@ precedence over the start/end arguments.</dd>
 <pre><code class="python">class TextLine(NamedTuple):
     fragments: tuple
     text_width: float
-    number_of_spaces_between_words: int
+    number_of_spaces: int
     justify: bool
     trailing_nl: bool = False</code></pre>
 </details>
@@ -1421,7 +1527,7 @@ precedence over the start/end arguments.</dd>
 <dd>
 <div class="desc"><p>Alias for field number 3</p></div>
 </dd>
-<dt id="fpdf.line_break.TextLine.number_of_spaces_between_words"><code class="name">var <span class="ident">number_of_spaces_between_words</span> : int</code></dt>
+<dt id="fpdf.line_break.TextLine.number_of_spaces"><code class="name">var <span class="ident">number_of_spaces</span> : int</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 2</p></div>
 </dd>
@@ -1464,6 +1570,8 @@ precedence over the start/end arguments.</dd>
 <h4><code><a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a></code></h4>
 <ul class="two-column">
 <li><code><a title="fpdf.line_break.Fragment.char_spacing" href="#fpdf.line_break.Fragment.char_spacing">char_spacing</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.draw_color" href="#fpdf.line_break.Fragment.draw_color">draw_color</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.fill_color" href="#fpdf.line_break.Fragment.fill_color">fill_color</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.font" href="#fpdf.line_break.Fragment.font">font</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.font_family" href="#fpdf.line_break.Fragment.font_family">font_family</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.font_size" href="#fpdf.line_break.Fragment.font_size">font_size</a></code></li>
@@ -1472,7 +1580,10 @@ precedence over the start/end arguments.</dd>
 <li><code><a title="fpdf.line_break.Fragment.font_style" href="#fpdf.line_break.Fragment.font_style">font_style</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_character_width" href="#fpdf.line_break.Fragment.get_character_width">get_character_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_width" href="#fpdf.line_break.Fragment.get_width">get_width</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.line_width" href="#fpdf.line_break.Fragment.line_width">line_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.string" href="#fpdf.line_break.Fragment.string">string</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.text_color" href="#fpdf.line_break.Fragment.text_color">text_color</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.text_mode" href="#fpdf.line_break.Fragment.text_mode">text_mode</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.trim" href="#fpdf.line_break.Fragment.trim">trim</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.underline" href="#fpdf.line_break.Fragment.underline">underline</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.unicode_font" href="#fpdf.line_break.Fragment.unicode_font">unicode_font</a></code></li>
@@ -1515,7 +1626,7 @@ precedence over the start/end arguments.</dd>
 <ul class="">
 <li><code><a title="fpdf.line_break.TextLine.fragments" href="#fpdf.line_break.TextLine.fragments">fragments</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.justify" href="#fpdf.line_break.TextLine.justify">justify</a></code></li>
-<li><code><a title="fpdf.line_break.TextLine.number_of_spaces_between_words" href="#fpdf.line_break.TextLine.number_of_spaces_between_words">number_of_spaces_between_words</a></code></li>
+<li><code><a title="fpdf.line_break.TextLine.number_of_spaces" href="#fpdf.line_break.TextLine.number_of_spaces">number_of_spaces</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.text_width" href="#fpdf.line_break.TextLine.text_width">text_width</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.trailing_nl" href="#fpdf.line_break.TextLine.trailing_nl">trailing_nl</a></code></li>
 </ul>
