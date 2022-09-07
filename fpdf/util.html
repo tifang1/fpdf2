@@ -36,12 +36,6 @@ def object_id_for_page(page):
     return 2 * page + 1
 
 
-def substr(s, start, length=-1):
-    if length &lt; 0:
-        length = len(s) - start
-    return s[start : start + length]
-
-
 def format_date(date: datetime, with_tz=False) -&gt; str:
     if with_tz:
         assert date.tzinfo
@@ -359,21 +353,6 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
     return 2 * page + 1</code></pre>
 </details>
 </dd>
-<dt id="fpdf.util.substr"><code class="name flex">
-<span>def <span class="ident">substr</span></span>(<span>s, start, length=-1)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def substr(s, start, length=-1):
-    if length &lt; 0:
-        length = len(s) - start
-    return s[start : start + length]</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -400,7 +379,6 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <li><code><a title="fpdf.util.format_date" href="#fpdf.util.format_date">format_date</a></code></li>
 <li><code><a title="fpdf.util.get_scale_factor" href="#fpdf.util.get_scale_factor">get_scale_factor</a></code></li>
 <li><code><a title="fpdf.util.object_id_for_page" href="#fpdf.util.object_id_for_page">object_id_for_page</a></code></li>
-<li><code><a title="fpdf.util.substr" href="#fpdf.util.substr">substr</a></code></li>
 </ul>
 </li>
 </ul>

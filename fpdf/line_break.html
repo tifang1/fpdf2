@@ -80,7 +80,7 @@ class Fragment:
         self.graphics_state[&#34;current_font&#34;] = v
 
     @property
-    def unicode_font(self):
+    def is_ttf_font(self):
         return self.font.get(&#34;type&#34;) == &#34;TTF&#34;
 
     @property
@@ -163,21 +163,12 @@ class Fragment:
                 precedence over the start/end arguments.
         &#34;&#34;&#34;
 
-        def char_width(char):
-            try:
-                width = self.font[&#34;cw&#34;][char]
-            except (IndexError, KeyError):
-                width = self.font.get(&#34;desc&#34;, {}).get(&#34;MissingWidth&#34;) or 500
-            if width == 65535:
-                return 0
-            return width
-
         if chars is None:
             chars = self.characters[start:end]
-        if self.unicode_font:
-            w = sum(char_width(ord(c)) for c in chars)
+        if self.is_ttf_font:
+            w = sum(self.font[&#34;cw&#34;][ord(c)] for c in chars)
         else:
-            w = sum(char_width(c) for c in chars)
+            w = sum(self.font[&#34;cw&#34;][c] for c in chars)
         char_spacing = self.char_spacing
         if self.font_stretching != 100:
             w *= self.font_stretching * 0.01
@@ -779,7 +770,7 @@ normally, instead of triggering a line break. Default: False</p></div>
         self.graphics_state[&#34;current_font&#34;] = v
 
     @property
-    def unicode_font(self):
+    def is_ttf_font(self):
         return self.font.get(&#34;type&#34;) == &#34;TTF&#34;
 
     @property
@@ -862,21 +853,12 @@ normally, instead of triggering a line break. Default: False</p></div>
                 precedence over the start/end arguments.
         &#34;&#34;&#34;
 
-        def char_width(char):
-            try:
-                width = self.font[&#34;cw&#34;][char]
-            except (IndexError, KeyError):
-                width = self.font.get(&#34;desc&#34;, {}).get(&#34;MissingWidth&#34;) or 500
-            if width == 65535:
-                return 0
-            return width
-
         if chars is None:
             chars = self.characters[start:end]
-        if self.unicode_font:
-            w = sum(char_width(ord(c)) for c in chars)
+        if self.is_ttf_font:
+            w = sum(self.font[&#34;cw&#34;][ord(c)] for c in chars)
         else:
-            w = sum(char_width(c) for c in chars)
+            w = sum(self.font[&#34;cw&#34;][c] for c in chars)
         char_spacing = self.char_spacing
         if self.font_stretching != 100:
             w *= self.font_stretching * 0.01
@@ -1011,6 +993,18 @@ def font_style(self):
     return self.graphics_state[&#34;font_style&#34;]</code></pre>
 </details>
 </dd>
+<dt id="fpdf.line_break.Fragment.is_ttf_font"><code class="name">var <span class="ident">is_ttf_font</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_ttf_font(self):
+    return self.font.get(&#34;type&#34;) == &#34;TTF&#34;</code></pre>
+</details>
+</dd>
 <dt id="fpdf.line_break.Fragment.line_width"><code class="name">var <span class="ident">line_width</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1069,18 +1063,6 @@ def text_mode(self):
 <pre><code class="python">@property
 def underline(self):
     return self.graphics_state[&#34;underline&#34;]</code></pre>
-</details>
-</dd>
-<dt id="fpdf.line_break.Fragment.unicode_font"><code class="name">var <span class="ident">unicode_font</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def unicode_font(self):
-    return self.font.get(&#34;type&#34;) == &#34;TTF&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -1143,21 +1125,12 @@ precedence over the start/end arguments.</dd>
             precedence over the start/end arguments.
     &#34;&#34;&#34;
 
-    def char_width(char):
-        try:
-            width = self.font[&#34;cw&#34;][char]
-        except (IndexError, KeyError):
-            width = self.font.get(&#34;desc&#34;, {}).get(&#34;MissingWidth&#34;) or 500
-        if width == 65535:
-            return 0
-        return width
-
     if chars is None:
         chars = self.characters[start:end]
-    if self.unicode_font:
-        w = sum(char_width(ord(c)) for c in chars)
+    if self.is_ttf_font:
+        w = sum(self.font[&#34;cw&#34;][ord(c)] for c in chars)
     else:
-        w = sum(char_width(c) for c in chars)
+        w = sum(self.font[&#34;cw&#34;][c] for c in chars)
     char_spacing = self.char_spacing
     if self.font_stretching != 100:
         w *= self.font_stretching * 0.01
@@ -1580,13 +1553,13 @@ precedence over the start/end arguments.</dd>
 <li><code><a title="fpdf.line_break.Fragment.font_style" href="#fpdf.line_break.Fragment.font_style">font_style</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_character_width" href="#fpdf.line_break.Fragment.get_character_width">get_character_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_width" href="#fpdf.line_break.Fragment.get_width">get_width</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.is_ttf_font" href="#fpdf.line_break.Fragment.is_ttf_font">is_ttf_font</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.line_width" href="#fpdf.line_break.Fragment.line_width">line_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.string" href="#fpdf.line_break.Fragment.string">string</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.text_color" href="#fpdf.line_break.Fragment.text_color">text_color</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.text_mode" href="#fpdf.line_break.Fragment.text_mode">text_mode</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.trim" href="#fpdf.line_break.Fragment.trim">trim</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.underline" href="#fpdf.line_break.Fragment.underline">underline</a></code></li>
-<li><code><a title="fpdf.line_break.Fragment.unicode_font" href="#fpdf.line_break.Fragment.unicode_font">unicode_font</a></code></li>
 </ul>
 </li>
 <li>
