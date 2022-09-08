@@ -596,6 +596,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#subscript-superscript-and-fractional-numbers" class="md-nav__link">
+    Subscript, Superscript, and Fractional Numbers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#text_mode" class="md-nav__link">
     .text_mode
   </a>
@@ -1167,6 +1174,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#subscript-superscript-and-fractional-numbers" class="md-nav__link">
+    Subscript, Superscript, and Fractional Numbers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#text_mode" class="md-nav__link">
     .text_mode
   </a>
@@ -1259,6 +1273,60 @@ If it is larger than 100, then the width of all characters will be expanded acco
 <span class="n">pdf</span><span class="o">.</span><span class="n">multi_cell</span><span class="p">(</span><span class="n">w</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">txt</span><span class="o">=</span><span class="n">LOREM_IPSUM</span><span class="p">[:</span><span class="mi">200</span><span class="p">],</span> <span class="n">new_x</span><span class="o">=</span><span class="s2">&quot;LEFT&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 <img alt="" src="char_spacing.png" /></p>
+<h2 id="subscript-superscript-and-fractional-numbers">Subscript, Superscript, and Fractional Numbers</h2>
+<p>The class attribute <code>.char_vpos</code> controls special vertical positioning modes for text:</p>
+<ul>
+<li>"LINE" - normal line text (default)</li>
+<li>"SUP" - superscript (exponent)</li>
+<li>"SUB" - subscript (index)</li>
+<li>"NOM" - nominator of a fraction with "/"</li>
+<li>"DENOM" - denominator of a fraction with "/"</li>
+</ul>
+<p>For each positioning mode there are two parameters that can be configured.
+The defaults have been set to result in a decent layout with most fonts, and are given in parens.</p>
+<p>The size multiplier for the font size:</p>
+<ul>
+<li><code>.sup_scale</code> (0.7)</li>
+<li><code>.sub_scale</code> (0.7)</li>
+<li><code>.nom_scale</code> (0.75)</li>
+<li><code>.denom_scale</code> (0.75)</li>
+</ul>
+<p>The lift is given as fraction of the unscaled font size and indicates how much the glyph gets lifted above the base line (negative for below):</p>
+<ul>
+<li><code>.sup_lift</code> (0.4)</li>
+<li><code>.sub_lift</code> (-0.15)</li>
+<li><code>.nom_lift</code> (0.2)</li>
+<li><code>.denom_lift</code> (0.0)</li>
+</ul>
+<p><strong>Limitations:</strong> The individual glyphs will be scaled down as configured. This is not typographically correct, as it will also reduce the stroke width, making them look lighter than the normal text.
+Unicode fonts may include characters in the <a href="https://en.wikipedia.org/wiki/Unicode_subscripts_and_superscripts">subscripts and superscripts range</a>. In a high quality font, those glyphs will be smaller than the normal ones, but have a proportionally stronger stroke width in order to maintain the same visual density. If available in good quality, using Characters from this range is preferred and will look better. Unfortunately, many fonts either don't (fully) cover this range, or the glyphs are of unsatisfactory quality. In those cases, this feature of <code>fpdf2</code> offers a reliable workaround with suboptimal but consistent output quality.</p>
+<p>Practical use is essentially limited to <code>.write()</code> and <code>html_write()</code>.
+The feature does technically work with <code>.cell()</code> and <code>.multi_cell</code>, but is of limited usefulness there, since you can't change font properties in the middle of a line (there is no markdown support). It currently gets completely ignored by <code>.text()</code>.</p>
+<p>The example shows the most common use cases:</p>
+<p><div class="highlight"><pre><span></span><code>    <span class="n">pdf</span> <span class="o">=</span> <span class="n">fpdf</span><span class="o">.</span><span class="n">FPDF</span><span class="p">()</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">add_page</span><span class="p">()</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">set_font</span><span class="p">(</span><span class="s2">&quot;Helvetica&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;2&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;SUP&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;56&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;LINE&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot; more line text&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;SUB&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;(idx)&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;LINE&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot; end&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">ln</span><span class="p">()</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;1234 + &quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;NOM&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;5&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;LINE&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;DENOM&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot;16&quot;</span><span class="p">)</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">char_vpos</span> <span class="o">=</span> <span class="s2">&quot;LINE&quot;</span>
+    <span class="n">pdf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">txt</span><span class="o">=</span><span class="s2">&quot; + 987 = x&quot;</span><span class="p">)</span>
+</code></pre></div>
+<img alt="" src="char_vpos.png" /></p>
 <h2 id="text_mode">.text_mode</h2>
 <p>The PDF spec defines several text modes:
 <img alt="" src="pdf-text-modes.jpg" /></p>

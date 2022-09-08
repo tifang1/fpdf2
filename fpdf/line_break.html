@@ -41,6 +41,7 @@ They may change at any time without prior warning or any deprecation period.
 
 from typing import NamedTuple, Any, Union, Sequence
 
+from .enums import CharVPos
 from .errors import FPDFException
 
 SOFT_HYPHEN = &#34;\u00ad&#34;
@@ -93,7 +94,17 @@ class Fragment:
 
     @property
     def font_size_pt(self):
-        return self.graphics_state[&#34;font_size_pt&#34;]
+        size = self.graphics_state[&#34;font_size_pt&#34;]
+        vpos = self.graphics_state[&#34;char_vpos&#34;]
+        if vpos == CharVPos.SUB:
+            size *= self.graphics_state[&#34;sub_scale&#34;]
+        elif vpos == CharVPos.SUP:
+            size *= self.graphics_state[&#34;sup_scale&#34;]
+        elif vpos == CharVPos.NOM:
+            size *= self.graphics_state[&#34;nom_scale&#34;]
+        elif vpos == CharVPos.DENOM:
+            size *= self.graphics_state[&#34;denom_scale&#34;]
+        return size
 
     @property
     def font_size(self):
@@ -130,6 +141,25 @@ class Fragment:
     @property
     def line_width(self):
         return self.graphics_state[&#34;line_width&#34;]
+
+    @property
+    def char_vpos(self):
+        return self.graphics_state[&#34;char_vpos&#34;]
+
+    @property
+    def lift(self):
+        vpos = self.graphics_state[&#34;char_vpos&#34;]
+        if vpos == CharVPos.SUB:
+            lift = self.graphics_state[&#34;sub_lift&#34;]
+        elif vpos == CharVPos.SUP:
+            lift = self.graphics_state[&#34;sup_lift&#34;]
+        elif vpos == CharVPos.NOM:
+            lift = self.graphics_state[&#34;nom_lift&#34;]
+        elif vpos == CharVPos.DENOM:
+            lift = self.graphics_state[&#34;denom_lift&#34;]
+        else:
+            lift = 0.0
+        return lift * self.graphics_state[&#34;font_size_pt&#34;]
 
     @property
     def string(self):
@@ -173,8 +203,7 @@ class Fragment:
         if self.font_stretching != 100:
             w *= self.font_stretching * 0.01
             char_spacing *= self.font_stretching * 0.01
-        if self.font_size_pt:
-            w *= self.font_size_pt * 0.001
+        w *= self.font_size_pt * 0.001
         if self.char_spacing != 0:
             # initial_cs must be False if the fragment is located at the
             # beginning of a text object, because the first char won&#39;t get spaced.
@@ -783,7 +812,17 @@ normally, instead of triggering a line break. Default: False</p></div>
 
     @property
     def font_size_pt(self):
-        return self.graphics_state[&#34;font_size_pt&#34;]
+        size = self.graphics_state[&#34;font_size_pt&#34;]
+        vpos = self.graphics_state[&#34;char_vpos&#34;]
+        if vpos == CharVPos.SUB:
+            size *= self.graphics_state[&#34;sub_scale&#34;]
+        elif vpos == CharVPos.SUP:
+            size *= self.graphics_state[&#34;sup_scale&#34;]
+        elif vpos == CharVPos.NOM:
+            size *= self.graphics_state[&#34;nom_scale&#34;]
+        elif vpos == CharVPos.DENOM:
+            size *= self.graphics_state[&#34;denom_scale&#34;]
+        return size
 
     @property
     def font_size(self):
@@ -820,6 +859,25 @@ normally, instead of triggering a line break. Default: False</p></div>
     @property
     def line_width(self):
         return self.graphics_state[&#34;line_width&#34;]
+
+    @property
+    def char_vpos(self):
+        return self.graphics_state[&#34;char_vpos&#34;]
+
+    @property
+    def lift(self):
+        vpos = self.graphics_state[&#34;char_vpos&#34;]
+        if vpos == CharVPos.SUB:
+            lift = self.graphics_state[&#34;sub_lift&#34;]
+        elif vpos == CharVPos.SUP:
+            lift = self.graphics_state[&#34;sup_lift&#34;]
+        elif vpos == CharVPos.NOM:
+            lift = self.graphics_state[&#34;nom_lift&#34;]
+        elif vpos == CharVPos.DENOM:
+            lift = self.graphics_state[&#34;denom_lift&#34;]
+        else:
+            lift = 0.0
+        return lift * self.graphics_state[&#34;font_size_pt&#34;]
 
     @property
     def string(self):
@@ -863,8 +921,7 @@ normally, instead of triggering a line break. Default: False</p></div>
         if self.font_stretching != 100:
             w *= self.font_stretching * 0.01
             char_spacing *= self.font_stretching * 0.01
-        if self.font_size_pt:
-            w *= self.font_size_pt * 0.001
+        w *= self.font_size_pt * 0.001
         if self.char_spacing != 0:
             # initial_cs must be False if the fragment is located at the
             # beginning of a text object, because the first char won&#39;t get spaced.
@@ -895,6 +952,18 @@ normally, instead of triggering a line break. Default: False</p></div>
 <pre><code class="python">@property
 def char_spacing(self):
     return self.graphics_state[&#34;char_spacing&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.Fragment.char_vpos"><code class="name">var <span class="ident">char_vpos</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def char_vpos(self):
+    return self.graphics_state[&#34;char_vpos&#34;]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.Fragment.draw_color"><code class="name">var <span class="ident">draw_color</span></code></dt>
@@ -966,7 +1035,17 @@ def font_size(self):
 </summary>
 <pre><code class="python">@property
 def font_size_pt(self):
-    return self.graphics_state[&#34;font_size_pt&#34;]</code></pre>
+    size = self.graphics_state[&#34;font_size_pt&#34;]
+    vpos = self.graphics_state[&#34;char_vpos&#34;]
+    if vpos == CharVPos.SUB:
+        size *= self.graphics_state[&#34;sub_scale&#34;]
+    elif vpos == CharVPos.SUP:
+        size *= self.graphics_state[&#34;sup_scale&#34;]
+    elif vpos == CharVPos.NOM:
+        size *= self.graphics_state[&#34;nom_scale&#34;]
+    elif vpos == CharVPos.DENOM:
+        size *= self.graphics_state[&#34;denom_scale&#34;]
+    return size</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.Fragment.font_stretching"><code class="name">var <span class="ident">font_stretching</span></code></dt>
@@ -1003,6 +1082,29 @@ def font_style(self):
 <pre><code class="python">@property
 def is_ttf_font(self):
     return self.font.get(&#34;type&#34;) == &#34;TTF&#34;</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.Fragment.lift"><code class="name">var <span class="ident">lift</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def lift(self):
+    vpos = self.graphics_state[&#34;char_vpos&#34;]
+    if vpos == CharVPos.SUB:
+        lift = self.graphics_state[&#34;sub_lift&#34;]
+    elif vpos == CharVPos.SUP:
+        lift = self.graphics_state[&#34;sup_lift&#34;]
+    elif vpos == CharVPos.NOM:
+        lift = self.graphics_state[&#34;nom_lift&#34;]
+    elif vpos == CharVPos.DENOM:
+        lift = self.graphics_state[&#34;denom_lift&#34;]
+    else:
+        lift = 0.0
+    return lift * self.graphics_state[&#34;font_size_pt&#34;]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.line_break.Fragment.line_width"><code class="name">var <span class="ident">line_width</span></code></dt>
@@ -1135,8 +1237,7 @@ precedence over the start/end arguments.</dd>
     if self.font_stretching != 100:
         w *= self.font_stretching * 0.01
         char_spacing *= self.font_stretching * 0.01
-    if self.font_size_pt:
-        w *= self.font_size_pt * 0.001
+    w *= self.font_size_pt * 0.001
     if self.char_spacing != 0:
         # initial_cs must be False if the fragment is located at the
         # beginning of a text object, because the first char won&#39;t get spaced.
@@ -1543,6 +1644,7 @@ precedence over the start/end arguments.</dd>
 <h4><code><a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a></code></h4>
 <ul class="two-column">
 <li><code><a title="fpdf.line_break.Fragment.char_spacing" href="#fpdf.line_break.Fragment.char_spacing">char_spacing</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.char_vpos" href="#fpdf.line_break.Fragment.char_vpos">char_vpos</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.draw_color" href="#fpdf.line_break.Fragment.draw_color">draw_color</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.fill_color" href="#fpdf.line_break.Fragment.fill_color">fill_color</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.font" href="#fpdf.line_break.Fragment.font">font</a></code></li>
@@ -1554,6 +1656,7 @@ precedence over the start/end arguments.</dd>
 <li><code><a title="fpdf.line_break.Fragment.get_character_width" href="#fpdf.line_break.Fragment.get_character_width">get_character_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_width" href="#fpdf.line_break.Fragment.get_width">get_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.is_ttf_font" href="#fpdf.line_break.Fragment.is_ttf_font">is_ttf_font</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.lift" href="#fpdf.line_break.Fragment.lift">lift</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.line_width" href="#fpdf.line_break.Fragment.line_width">line_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.string" href="#fpdf.line_break.Fragment.string">string</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.text_color" href="#fpdf.line_break.Fragment.text_color">text_color</a></code></li>

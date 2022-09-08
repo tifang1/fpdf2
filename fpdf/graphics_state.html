@@ -27,7 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from .drawing import DeviceGray
-from .enums import TextMode
+from .enums import TextMode, CharVPos
 
 
 class GraphicsStateMixin:
@@ -62,6 +62,15 @@ class GraphicsStateMixin:
                 dash_pattern=dict(dash=0, gap=0, phase=0),
                 line_width=0,
                 text_mode=TextMode.FILL,
+                char_vpos=CharVPos.LINE,
+                sub_scale=0.7,
+                sup_scale=0.7,
+                nom_scale=0.75,
+                denom_scale=0.75,
+                sub_lift=-0.15,
+                sup_lift=0.4,
+                nom_lift=0.2,
+                denom_lift=0.0,
             ),
         ]
         super().__init__(*args, **kwargs)
@@ -185,7 +194,151 @@ class GraphicsStateMixin:
 
     @text_mode.setter
     def text_mode(self, v):
-        self.__statestack[-1][&#34;text_mode&#34;] = TextMode.coerce(v)</code></pre>
+        self.__statestack[-1][&#34;text_mode&#34;] = TextMode.coerce(v)
+
+    @property
+    def char_vpos(self):
+        &#34;&#34;&#34;
+        Return vertical character position relative to line.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;char_vpos&#34;]
+
+    @char_vpos.setter
+    def char_vpos(self, v):
+        &#34;&#34;&#34;
+        Set vertical character position relative to line.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;char_vpos&#34;] = CharVPos.coerce(v)
+
+    @property
+    def sub_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sub_scale&#34;]
+
+    @sub_scale.setter
+    def sub_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sub_scale&#34;] = float(v)
+
+    @property
+    def sup_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sup_scale&#34;]
+
+    @sup_scale.setter
+    def sup_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sup_scale&#34;] = float(v)
+
+    @property
+    def nom_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;nom_scale&#34;]
+
+    @nom_scale.setter
+    def nom_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;nom_scale&#34;] = float(v)
+
+    @property
+    def denom_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;denom_scale&#34;]
+
+    @denom_scale.setter
+    def denom_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;denom_scale&#34;] = float(v)
+
+    @property
+    def sub_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sub_lift&#34;]
+
+    @sub_lift.setter
+    def sub_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sub_lift&#34;] = float(v)
+
+    @property
+    def sup_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sup_lift&#34;]
+
+    @sup_lift.setter
+    def sup_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sup_lift&#34;] = float(v)
+
+    @property
+    def nom_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;nom_lift&#34;]
+
+    @nom_lift.setter
+    def nom_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;nom_lift&#34;] = float(v)
+
+    @property
+    def denom_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;denom_lift&#34;]
+
+    @denom_lift.setter
+    def denom_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;denom_lift&#34;] = float(v)</code></pre>
 </details>
 </section>
 <section>
@@ -245,6 +398,15 @@ directly by user code.</p></div>
                 dash_pattern=dict(dash=0, gap=0, phase=0),
                 line_width=0,
                 text_mode=TextMode.FILL,
+                char_vpos=CharVPos.LINE,
+                sub_scale=0.7,
+                sup_scale=0.7,
+                nom_scale=0.75,
+                denom_scale=0.75,
+                sub_lift=-0.15,
+                sup_lift=0.4,
+                nom_lift=0.2,
+                denom_lift=0.0,
             ),
         ]
         super().__init__(*args, **kwargs)
@@ -368,7 +530,151 @@ directly by user code.</p></div>
 
     @text_mode.setter
     def text_mode(self, v):
-        self.__statestack[-1][&#34;text_mode&#34;] = TextMode.coerce(v)</code></pre>
+        self.__statestack[-1][&#34;text_mode&#34;] = TextMode.coerce(v)
+
+    @property
+    def char_vpos(self):
+        &#34;&#34;&#34;
+        Return vertical character position relative to line.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;char_vpos&#34;]
+
+    @char_vpos.setter
+    def char_vpos(self, v):
+        &#34;&#34;&#34;
+        Set vertical character position relative to line.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;char_vpos&#34;] = CharVPos.coerce(v)
+
+    @property
+    def sub_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sub_scale&#34;]
+
+    @sub_scale.setter
+    def sub_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sub_scale&#34;] = float(v)
+
+    @property
+    def sup_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sup_scale&#34;]
+
+    @sup_scale.setter
+    def sup_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sup_scale&#34;] = float(v)
+
+    @property
+    def nom_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;nom_scale&#34;]
+
+    @nom_scale.setter
+    def nom_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;nom_scale&#34;] = float(v)
+
+    @property
+    def denom_scale(self):
+        &#34;&#34;&#34;
+        Return scale factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;denom_scale&#34;]
+
+    @denom_scale.setter
+    def denom_scale(self, v):
+        &#34;&#34;&#34;
+        Set scale factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;denom_scale&#34;] = float(v)
+
+    @property
+    def sub_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sub_lift&#34;]
+
+    @sub_lift.setter
+    def sub_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for subscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sub_lift&#34;] = float(v)
+
+    @property
+    def sup_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;sup_lift&#34;]
+
+    @sup_lift.setter
+    def sup_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for superscript text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;sup_lift&#34;] = float(v)
+
+    @property
+    def nom_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;nom_lift&#34;]
+
+    @nom_lift.setter
+    def nom_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for nominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;nom_lift&#34;] = float(v)
+
+    @property
+    def denom_lift(self):
+        &#34;&#34;&#34;
+        Return lift factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        return self.__statestack[-1][&#34;denom_lift&#34;]
+
+    @denom_lift.setter
+    def denom_lift(self, v):
+        &#34;&#34;&#34;
+        Set lift factor for denominator text.
+        ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+        &#34;&#34;&#34;
+        self.__statestack[-1][&#34;denom_lift&#34;] = float(v)</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -403,6 +709,23 @@ def char_spacing(self):
     return self.__statestack[-1][&#34;char_spacing&#34;]</code></pre>
 </details>
 </dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.char_vpos"><code class="name">var <span class="ident">char_vpos</span></code></dt>
+<dd>
+<div class="desc"><p>Return vertical character position relative to line.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def char_vpos(self):
+    &#34;&#34;&#34;
+    Return vertical character position relative to line.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;char_vpos&#34;]</code></pre>
+</details>
+</dd>
 <dt id="fpdf.graphics_state.GraphicsStateMixin.current_font"><code class="name">var <span class="ident">current_font</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -425,6 +748,40 @@ def current_font(self):
 <pre><code class="python">@property
 def dash_pattern(self):
     return self.__statestack[-1][&#34;dash_pattern&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.denom_lift"><code class="name">var <span class="ident">denom_lift</span></code></dt>
+<dd>
+<div class="desc"><p>Return lift factor for denominator text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def denom_lift(self):
+    &#34;&#34;&#34;
+    Return lift factor for denominator text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;denom_lift&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.denom_scale"><code class="name">var <span class="ident">denom_scale</span></code></dt>
+<dd>
+<div class="desc"><p>Return scale factor for denominator text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def denom_scale(self):
+    &#34;&#34;&#34;
+    Return scale factor for denominator text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;denom_scale&#34;]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.graphics_state.GraphicsStateMixin.draw_color"><code class="name">var <span class="ident">draw_color</span></code></dt>
@@ -523,6 +880,108 @@ def line_width(self):
     return self.__statestack[-1][&#34;line_width&#34;]</code></pre>
 </details>
 </dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.nom_lift"><code class="name">var <span class="ident">nom_lift</span></code></dt>
+<dd>
+<div class="desc"><p>Return lift factor for nominator text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def nom_lift(self):
+    &#34;&#34;&#34;
+    Return lift factor for nominator text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;nom_lift&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.nom_scale"><code class="name">var <span class="ident">nom_scale</span></code></dt>
+<dd>
+<div class="desc"><p>Return scale factor for nominator text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def nom_scale(self):
+    &#34;&#34;&#34;
+    Return scale factor for nominator text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;nom_scale&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.sub_lift"><code class="name">var <span class="ident">sub_lift</span></code></dt>
+<dd>
+<div class="desc"><p>Return lift factor for subscript text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sub_lift(self):
+    &#34;&#34;&#34;
+    Return lift factor for subscript text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;sub_lift&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.sub_scale"><code class="name">var <span class="ident">sub_scale</span></code></dt>
+<dd>
+<div class="desc"><p>Return scale factor for subscript text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sub_scale(self):
+    &#34;&#34;&#34;
+    Return scale factor for subscript text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;sub_scale&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.sup_lift"><code class="name">var <span class="ident">sup_lift</span></code></dt>
+<dd>
+<div class="desc"><p>Return lift factor for superscript text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sup_lift(self):
+    &#34;&#34;&#34;
+    Return lift factor for superscript text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;sup_lift&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.graphics_state.GraphicsStateMixin.sup_scale"><code class="name">var <span class="ident">sup_scale</span></code></dt>
+<dd>
+<div class="desc"><p>Return scale factor for superscript text.
+(<a href="../TextStyling.html#subscript-superscript-and-fractional-numbers">docs</a>)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def sup_scale(self):
+    &#34;&#34;&#34;
+    Return scale factor for superscript text.
+    ([docs](../TextStyling.html#subscript-superscript-and-fractional-numbers))
+    &#34;&#34;&#34;
+    return self.__statestack[-1][&#34;sup_scale&#34;]</code></pre>
+</details>
+</dd>
 <dt id="fpdf.graphics_state.GraphicsStateMixin.text_color"><code class="name">var <span class="ident">text_color</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -584,8 +1043,11 @@ def underline(self):
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.DEFAULT_FILL_COLOR" href="#fpdf.graphics_state.GraphicsStateMixin.DEFAULT_FILL_COLOR">DEFAULT_FILL_COLOR</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.DEFAULT_TEXT_COLOR" href="#fpdf.graphics_state.GraphicsStateMixin.DEFAULT_TEXT_COLOR">DEFAULT_TEXT_COLOR</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.char_spacing" href="#fpdf.graphics_state.GraphicsStateMixin.char_spacing">char_spacing</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.char_vpos" href="#fpdf.graphics_state.GraphicsStateMixin.char_vpos">char_vpos</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.current_font" href="#fpdf.graphics_state.GraphicsStateMixin.current_font">current_font</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.dash_pattern" href="#fpdf.graphics_state.GraphicsStateMixin.dash_pattern">dash_pattern</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_lift" href="#fpdf.graphics_state.GraphicsStateMixin.denom_lift">denom_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_scale" href="#fpdf.graphics_state.GraphicsStateMixin.denom_scale">denom_scale</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.draw_color" href="#fpdf.graphics_state.GraphicsStateMixin.draw_color">draw_color</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.fill_color" href="#fpdf.graphics_state.GraphicsStateMixin.fill_color">fill_color</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.font_family" href="#fpdf.graphics_state.GraphicsStateMixin.font_family">font_family</a></code></li>
@@ -594,6 +1056,12 @@ def underline(self):
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.font_stretching" href="#fpdf.graphics_state.GraphicsStateMixin.font_stretching">font_stretching</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.font_style" href="#fpdf.graphics_state.GraphicsStateMixin.font_style">font_style</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.line_width" href="#fpdf.graphics_state.GraphicsStateMixin.line_width">line_width</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_lift" href="#fpdf.graphics_state.GraphicsStateMixin.nom_lift">nom_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_scale" href="#fpdf.graphics_state.GraphicsStateMixin.nom_scale">nom_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_lift" href="#fpdf.graphics_state.GraphicsStateMixin.sub_lift">sub_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_scale" href="#fpdf.graphics_state.GraphicsStateMixin.sub_scale">sub_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_lift" href="#fpdf.graphics_state.GraphicsStateMixin.sup_lift">sup_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_scale" href="#fpdf.graphics_state.GraphicsStateMixin.sup_scale">sup_scale</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.text_color" href="#fpdf.graphics_state.GraphicsStateMixin.text_color">text_color</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.text_mode" href="#fpdf.graphics_state.GraphicsStateMixin.text_mode">text_mode</a></code></li>
 <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.underline" href="#fpdf.graphics_state.GraphicsStateMixin.underline">underline</a></code></li>

@@ -103,6 +103,7 @@ from .enums import (
     YPos,
     Corner,
     FontDescriptorFlags,
+    CharVPos,
 )
 from .errors import FPDFException, FPDFPageFormatException, FPDFUnicodeEncodingException
 from .fonts import fpdf_charwidths
@@ -2585,6 +2586,7 @@ class FPDF(GraphicsStateMixin):
             text_color
             text_mode
             underline
+            char_vpos
 
         Args:
             **kwargs: key-values settings to set at the beggining of this context.
@@ -2607,7 +2609,7 @@ class FPDF(GraphicsStateMixin):
                 setattr(gs, key, value)
                 if key == &#34;blend_mode&#34;:
                     self._set_min_pdf_version(&#34;1.4&#34;)
-            elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;):
+            elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;, &#34;char_vpos&#34;):
                 setattr(self, key, value)
             else:
                 raise ValueError(f&#34;Unsupported setting: {key}&#34;)
@@ -2919,6 +2921,7 @@ class FPDF(GraphicsStateMixin):
         s_width, underlines = 0, []
         # We try to avoid modifying global settings for temporary changes.
         current_ws = frag_ws = 0.0
+        current_char_vpos = CharVPos.LINE
         current_font = self.current_font
         current_text_mode = self.text_mode
         current_font_stretching = self.font_stretching
@@ -2962,9 +2965,14 @@ class FPDF(GraphicsStateMixin):
                 if current_char_spacing != frag.char_spacing:
                     current_char_spacing = frag.char_spacing
                     sl.append(f&#34;{frag.char_spacing:.2f} Tc&#34;)
-                if current_font != frag.font:
+                if current_font != frag.font or current_char_vpos != frag.char_vpos:
+                    if current_char_vpos != frag.char_vpos:
+                        current_char_vpos = frag.char_vpos
                     current_font = frag.font
                     sl.append(f&#34;/F{frag.font[&#39;i&#39;]} {frag.font_size_pt:.2f} Tf&#34;)
+                lift = frag.lift
+                if lift != 0.0:
+                    sl.append(f&#34;{lift:.2f} Ts&#34;)
                 if (
                     frag.text_mode != TextMode.FILL
                     or frag.text_mode != current_text_mode
@@ -3039,10 +3047,12 @@ class FPDF(GraphicsStateMixin):
                 )
 
         if sl:
-            # If any PDF settings have been left modified, wrap the line in a local context.
+            # If any PDF settings have been left modified, wrap the line
+            # in a local context.
             # pylint: disable=too-many-boolean-expressions
             if (
                 current_ws != 0.0
+                or current_char_vpos != CharVPos.LINE
                 or current_font != self.current_font
                 or current_text_mode != self.text_mode
                 or self.fill_color != self.text_color
@@ -3052,8 +3062,8 @@ class FPDF(GraphicsStateMixin):
                 s = f&#34;q {&#39; &#39;.join(sl)} Q&#34;
             else:
                 s = &#34; &#34;.join(sl)
-            self._out(s)
             # pylint: enable=too-many-boolean-expressions
+            self._out(s)
         self.lasth = h
 
         # XPos.LEFT -&gt; self.x stays the same
@@ -7551,6 +7561,7 @@ Default to "mm".</dd>
             text_color
             text_mode
             underline
+            char_vpos
 
         Args:
             **kwargs: key-values settings to set at the beggining of this context.
@@ -7573,7 +7584,7 @@ Default to "mm".</dd>
                 setattr(gs, key, value)
                 if key == &#34;blend_mode&#34;:
                     self._set_min_pdf_version(&#34;1.4&#34;)
-            elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;):
+            elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;, &#34;char_vpos&#34;):
                 setattr(self, key, value)
             else:
                 raise ValueError(f&#34;Unsupported setting: {key}&#34;)
@@ -7885,6 +7896,7 @@ Default to "mm".</dd>
         s_width, underlines = 0, []
         # We try to avoid modifying global settings for temporary changes.
         current_ws = frag_ws = 0.0
+        current_char_vpos = CharVPos.LINE
         current_font = self.current_font
         current_text_mode = self.text_mode
         current_font_stretching = self.font_stretching
@@ -7928,9 +7940,14 @@ Default to "mm".</dd>
                 if current_char_spacing != frag.char_spacing:
                     current_char_spacing = frag.char_spacing
                     sl.append(f&#34;{frag.char_spacing:.2f} Tc&#34;)
-                if current_font != frag.font:
+                if current_font != frag.font or current_char_vpos != frag.char_vpos:
+                    if current_char_vpos != frag.char_vpos:
+                        current_char_vpos = frag.char_vpos
                     current_font = frag.font
                     sl.append(f&#34;/F{frag.font[&#39;i&#39;]} {frag.font_size_pt:.2f} Tf&#34;)
+                lift = frag.lift
+                if lift != 0.0:
+                    sl.append(f&#34;{lift:.2f} Ts&#34;)
                 if (
                     frag.text_mode != TextMode.FILL
                     or frag.text_mode != current_text_mode
@@ -8005,10 +8022,12 @@ Default to "mm".</dd>
                 )
 
         if sl:
-            # If any PDF settings have been left modified, wrap the line in a local context.
+            # If any PDF settings have been left modified, wrap the line
+            # in a local context.
             # pylint: disable=too-many-boolean-expressions
             if (
                 current_ws != 0.0
+                or current_char_vpos != CharVPos.LINE
                 or current_font != self.current_font
                 or current_text_mode != self.text_mode
                 or self.fill_color != self.text_color
@@ -8018,8 +8037,8 @@ Default to "mm".</dd>
                 s = f&#34;q {&#39; &#39;.join(sl)} Q&#34;
             else:
                 s = &#34; &#34;.join(sl)
-            self._out(s)
             # pylint: enable=too-many-boolean-expressions
+            self._out(s)
         self.lasth = h
 
         # XPos.LEFT -&gt; self.x stays the same
@@ -12447,7 +12466,8 @@ stroke_miter_limit
 stroke_opacity
 text_color
 text_mode
-underline</p>
+underline
+char_vpos</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>**kwargs</code></strong></dt>
@@ -12501,6 +12521,7 @@ def local_context(
         text_color
         text_mode
         underline
+        char_vpos
 
     Args:
         **kwargs: key-values settings to set at the beggining of this context.
@@ -12523,7 +12544,7 @@ def local_context(
             setattr(gs, key, value)
             if key == &#34;blend_mode&#34;:
                 self._set_min_pdf_version(&#34;1.4&#34;)
-        elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;):
+        elif key in (&#34;font_stretching&#34;, &#34;text_mode&#34;, &#34;underline&#34;, &#34;char_vpos&#34;):
             setattr(self, key, value)
         else:
             raise ValueError(f&#34;Unsupported setting: {key}&#34;)
@@ -15364,6 +15385,22 @@ def write(
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.graphics_state.GraphicsStateMixin" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin">GraphicsStateMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.char_vpos" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.char_vpos">char_vpos</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.denom_lift">denom_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.denom_scale">denom_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.nom_lift">nom_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.nom_scale">nom_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sub_lift">sub_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sub_scale">sub_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sup_lift">sup_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sup_scale">sup_scale</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.fpdf.TextMode"><code class="flex name class">
 <span>class <span class="ident">TextMode</span></span>
