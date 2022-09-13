@@ -30,6 +30,7 @@
 from io import BytesIO
 import base64
 from urllib.request import urlopen
+from math import ceil
 
 try:
     from PIL import Image
@@ -98,12 +99,15 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
     if img.mode in (&#34;P&#34;, &#34;PA&#34;) and image_filter != &#34;FlateDecode&#34;:
         img = img.convert(&#34;RGBA&#34;)
 
-    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
+    if img.mode not in (&#34;1&#34;, &#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
         img = img.convert(&#34;RGBA&#34;)
 
     w, h = img.size
     info = {}
-    if img.mode == &#34;L&#34;:
+    if img.mode == &#34;1&#34;:
+        dpn, bpc, colspace = 1, 1, &#34;DeviceGray&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
+    elif img.mode == &#34;L&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
         info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;LA&#34;:
@@ -199,8 +203,11 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
     if select_slice:
         data = data[select_slice]
     # Left-padding every row with a single zero:
-    channels_count = len(data) // (img.size[0] * img.size[1])
-    loop_incr = img.size[0] * channels_count + 1
+    if img.mode == &#34;1&#34;:
+        loop_incr = ceil(img.size[0] / 8) + 1
+    else:
+        channels_count = len(data) // (img.size[0] * img.size[1])
+        loop_incr = img.size[0] * channels_count + 1
     i = 0
     while i &lt; len(data):
         data[i:i] = b&#34;\0&#34;
@@ -257,12 +264,15 @@ def _has_alpha(img, alpha_channel):
     if img.mode in (&#34;P&#34;, &#34;PA&#34;) and image_filter != &#34;FlateDecode&#34;:
         img = img.convert(&#34;RGBA&#34;)
 
-    if img.mode not in (&#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
+    if img.mode not in (&#34;1&#34;, &#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
         img = img.convert(&#34;RGBA&#34;)
 
     w, h = img.size
     info = {}
-    if img.mode == &#34;L&#34;:
+    if img.mode == &#34;1&#34;:
+        dpn, bpc, colspace = 1, 1, &#34;DeviceGray&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
+    elif img.mode == &#34;L&#34;:
         dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
         info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;LA&#34;:
