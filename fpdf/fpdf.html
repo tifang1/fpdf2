@@ -1634,6 +1634,7 @@ class FPDF(GraphicsStateMixin):
 
         self.polyline(point_list, polygon=True, style=style)
 
+    @check_page
     def arc(
         self,
         x,
@@ -1780,7 +1781,6 @@ class FPDF(GraphicsStateMixin):
                     f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {style.operator}&#34;
                 )
 
-    @check_page
     def solid_arc(
         self,
         x,
@@ -3183,7 +3183,9 @@ class FPDF(GraphicsStateMixin):
         Returns: a boolean indicating if a page break would occur
         &#34;&#34;&#34;
         return (
-            self.y + height &gt; self.page_break_trigger
+            # ensure that there is already some content on the page:
+            self.y &gt; self.t_margin
+            and self.y + height &gt; self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
         )
@@ -6609,6 +6611,7 @@ Default to "mm".</dd>
 
         self.polyline(point_list, polygon=True, style=style)
 
+    @check_page
     def arc(
         self,
         x,
@@ -6755,7 +6758,6 @@ Default to "mm".</dd>
                     f&#34;{cx * self.k:.2f} {(self.h - cy) * self.k:.2f} l {style.operator}&#34;
                 )
 
-    @check_page
     def solid_arc(
         self,
         x,
@@ -8158,7 +8160,9 @@ Default to "mm".</dd>
         Returns: a boolean indicating if a page break would occur
         &#34;&#34;&#34;
         return (
-            self.y + height &gt; self.page_break_trigger
+            # ensure that there is already some content on the page:
+            self.y &gt; self.t_margin
+            and self.y + height &gt; self.page_break_trigger
             and not self.in_footer
             and self.accept_page_break
         )
@@ -10856,7 +10860,8 @@ It can be drawn (border only), filled (with no border) or both.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def arc(
+<pre><code class="python">@check_page
+def arc(
     self,
     x,
     y,
@@ -14909,8 +14914,7 @@ It can be drawn (border only), filled (with no border) or both.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@check_page
-def solid_arc(
+<pre><code class="python">def solid_arc(
     self,
     x,
     y,
@@ -15276,7 +15280,9 @@ based on its height and the current ordinate (<code>y</code> position).</p>
     Returns: a boolean indicating if a page break would occur
     &#34;&#34;&#34;
     return (
-        self.y + height &gt; self.page_break_trigger
+        # ensure that there is already some content on the page:
+        self.y &gt; self.t_margin
+        and self.y + height &gt; self.page_break_trigger
         and not self.in_footer
         and self.accept_page_break
     )</code></pre>
