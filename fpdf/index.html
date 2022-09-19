@@ -225,6 +225,8 @@ Default to "mm".</dd>
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
 
+    HTML2FPDF_CLASS = HTML2FPDF
+
     def __init__(
         self,
         orientation=&#34;portrait&#34;,
@@ -368,6 +370,21 @@ Default to "mm".</dd>
         self.record_text_quad_points = False
         # page number -&gt; array of 8 × n numbers:
         self.text_quad_points = defaultdict(list)
+
+    def write_html(self, text, *args, **kwargs):
+        &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+        kwargs2 = vars(self)
+        # Method arguments must override class &amp; instance attributes:
+        kwargs2.update(kwargs)
+        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
+        if self.HTML2FPDF_CLASS != HTML2FPDF:
+            warnings.warn(
+                &#34;The HTML2FPDF_CLASS is deprecated. It will be removed in a future release.&#34;,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        text = unescape(text)  # To deal with HTML entities
+        h2p.feed(text)
 
     def _add_quad_points(self, x, y, w, h):
         self.text_quad_points[self.page].extend(
@@ -5063,6 +5080,10 @@ Default to "mm".</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="fpdf.FPDF.HTML2FPDF_CLASS"><code class="name">var <span class="ident">HTML2FPDF_CLASS</span></code></dt>
+<dd>
+<div class="desc"><p>Render basic HTML to FPDF</p></div>
+</dd>
 <dt id="fpdf.FPDF.MARKDOWN_BOLD_MARKER"><code class="name">var <span class="ident">MARKDOWN_BOLD_MARKER</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -10307,6 +10328,31 @@ def write(
     return page_break_triggered</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.write_html"><code class="name flex">
+<span>def <span class="ident">write_html</span></span>(<span>self, text, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse HTML and convert it to PDF</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_html(self, text, *args, **kwargs):
+    &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+    kwargs2 = vars(self)
+    # Method arguments must override class &amp; instance attributes:
+    kwargs2.update(kwargs)
+    h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
+    if self.HTML2FPDF_CLASS != HTML2FPDF:
+        warnings.warn(
+            &#34;The HTML2FPDF_CLASS is deprecated. It will be removed in a future release.&#34;,
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    text = unescape(text)  # To deal with HTML entities
+    h2p.feed(text)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -11237,7 +11283,7 @@ when rendered in the element font style and size.</p></div>
 </dd>
 <dt id="fpdf.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, li_tag_indent=5, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, **_)</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=5, dd_tag_indent=10, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, **_)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -11250,6 +11296,8 @@ when rendered in the element font style and size.</p></div>
 to new image URLs</dd>
 <dt><strong><code>li_tag_indent</code></strong> :&ensp;<code>int</code></dt>
 <dd>numeric indentation of <li> elements</dd>
+<dt><strong><code>dd_tag_indent</code></strong> :&ensp;<code>int</code></dt>
+<dd>numeric indentation of <dd> elements</dd>
 <dt><strong><code>table_line_separators</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable horizontal line separators in <table></dd>
 <dt><strong><code>ul_bullet_char</code></strong> :&ensp;<code>str</code></dt>
@@ -11267,6 +11315,7 @@ to new image URLs</dd>
         pdf,
         image_map=None,
         li_tag_indent=5,
+        dd_tag_indent=10,
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         heading_sizes=None,
@@ -11278,6 +11327,7 @@ to new image URLs</dd>
             image_map (function): an optional one-argument function that map &lt;img&gt; &#34;src&#34;
                 to new image URLs
             li_tag_indent (int): numeric indentation of &lt;li&gt; elements
+            dd_tag_indent (int): numeric indentation of &lt;dd&gt; elements
             table_line_separators (bool): enable horizontal line separators in &lt;table&gt;
             ul_bullet_char (str): bullet character for &lt;ul&gt; elements
         &#34;&#34;&#34;
@@ -11285,6 +11335,7 @@ to new image URLs</dd>
         self.pdf = pdf
         self.image_map = image_map or (lambda src: src)
         self.li_tag_indent = li_tag_indent
+        self.dd_tag_indent = dd_tag_indent
         self.table_line_separators = table_line_separators
         self.ul_bullet_char = ul_bullet_char
         self.style = dict(b=False, i=False, u=False)
@@ -11506,6 +11557,12 @@ to new image URLs</dd>
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+        if tag == &#34;dt&#34;:
+            self.pdf.ln(self.h)
+            tag = &#34;b&#34;
+        if tag == &#34;dd&#34;:
+            self.pdf.ln(self.h)
+            self.pdf.write(self.h, &#34; &#34; * self.dd_tag_indent)
         if tag == &#34;strong&#34;:
             tag = &#34;b&#34;
         if tag == &#34;em&#34;:
@@ -11689,7 +11746,7 @@ to new image URLs</dd>
             self.set_text_color(*self.font_color)
             self.indent -= 1
             self.pdf.ln(3)
-        if tag == &#34;strong&#34;:
+        if tag in (&#34;strong&#34;, &#34;dt&#34;):
             tag = &#34;b&#34;
         if tag == &#34;em&#34;:
             tag = &#34;i&#34;
@@ -11906,7 +11963,7 @@ to new image URLs</dd>
         self.set_text_color(*self.font_color)
         self.indent -= 1
         self.pdf.ln(3)
-    if tag == &#34;strong&#34;:
+    if tag in (&#34;strong&#34;, &#34;dt&#34;):
         tag = &#34;b&#34;
     if tag == &#34;em&#34;:
         tag = &#34;i&#34;
@@ -11978,6 +12035,12 @@ to new image URLs</dd>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     attrs = dict(attrs)
     LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+    if tag == &#34;dt&#34;:
+        self.pdf.ln(self.h)
+        tag = &#34;b&#34;
+    if tag == &#34;dd&#34;:
+        self.pdf.ln(self.h)
+        self.pdf.write(self.h, &#34; &#34; * self.dd_tag_indent)
     if tag == &#34;strong&#34;:
         tag = &#34;b&#34;
     if tag == &#34;em&#34;:
@@ -12327,6 +12390,7 @@ to new image URLs</dd>
 </dd>
 <dt id="fpdf.HTMLMixin"><code class="flex name class">
 <span>class <span class="ident">HTMLMixin</span></span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -12335,46 +12399,15 @@ to new image URLs</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HTMLMixin:
-    HTML2FPDF_CLASS = HTML2FPDF
-
-    def write_html(self, text, *args, **kwargs):
-        &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-        kwargs2 = vars(self)
-        # Method arguments must override class &amp; instance attributes:
-        kwargs2.update(kwargs)
-        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
-        text = html.unescape(text)  # To deal with HTML entities
-        h2p.feed(text)</code></pre>
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        warnings.warn(
+            &#34;The HTMLMixin class is deprecated. &#34;
+            &#34;Simply use the FPDF class as a replacement.&#34;,
+            DeprecationWarning,
+            stacklevel=2,
+        )</code></pre>
 </details>
-<h3>Class variables</h3>
-<dl>
-<dt id="fpdf.HTMLMixin.HTML2FPDF_CLASS"><code class="name">var <span class="ident">HTML2FPDF_CLASS</span></code></dt>
-<dd>
-<div class="desc"><p>Render basic HTML to FPDF</p></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="fpdf.HTMLMixin.write_html"><code class="name flex">
-<span>def <span class="ident">write_html</span></span>(<span>self, text, *args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Parse HTML and convert it to PDF</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def write_html(self, text, *args, **kwargs):
-    &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
-    kwargs2 = vars(self)
-    # Method arguments must override class &amp; instance attributes:
-    kwargs2.update(kwargs)
-    h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
-    text = html.unescape(text)  # To deal with HTML entities
-    h2p.feed(text)</code></pre>
-</details>
-</dd>
-</dl>
 </dd>
 <dt id="fpdf.Template"><code class="flex name class">
 <span>class <span class="ident">Template</span></span>
@@ -12973,6 +13006,7 @@ def non_full_screen_page_mode(self):
 <li>
 <h4><code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code></h4>
 <ul class="">
+<li><code><a title="fpdf.FPDF.HTML2FPDF_CLASS" href="#fpdf.FPDF.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_BOLD_MARKER" href="#fpdf.FPDF.MARKDOWN_BOLD_MARKER">MARKDOWN_BOLD_MARKER</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER" href="#fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER">MARKDOWN_UNDERLINE_MARKER</a></code></li>
@@ -13076,6 +13110,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.unbreakable" href="#fpdf.FPDF.unbreakable">unbreakable</a></code></li>
 <li><code><a title="fpdf.FPDF.will_page_break" href="#fpdf.FPDF.will_page_break">will_page_break</a></code></li>
 <li><code><a title="fpdf.FPDF.write" href="#fpdf.FPDF.write">write</a></code></li>
+<li><code><a title="fpdf.FPDF.write_html" href="#fpdf.FPDF.write_html">write_html</a></code></li>
 </ul>
 </li>
 <li>
@@ -13109,10 +13144,6 @@ def non_full_screen_page_mode(self):
 </li>
 <li>
 <h4><code><a title="fpdf.HTMLMixin" href="#fpdf.HTMLMixin">HTMLMixin</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.HTMLMixin.HTML2FPDF_CLASS" href="#fpdf.HTMLMixin.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
-<li><code><a title="fpdf.HTMLMixin.write_html" href="#fpdf.HTMLMixin.write_html">write_html</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="fpdf.Template" href="#fpdf.Template">Template</a></code></h4>

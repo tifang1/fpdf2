@@ -65,6 +65,8 @@ from typing import Callable, List, NamedTuple, Optional, Tuple, Union
 from fontTools import ttLib
 from fontTools import subset as ftsubset
 from io import BytesIO
+from fpdf.html import HTML2FPDF
+from html import unescape
 
 try:
     from PIL.Image import Image
@@ -391,6 +393,8 @@ class FPDF(GraphicsStateMixin):
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
 
+    HTML2FPDF_CLASS = HTML2FPDF
+
     def __init__(
         self,
         orientation=&#34;portrait&#34;,
@@ -534,6 +538,21 @@ class FPDF(GraphicsStateMixin):
         self.record_text_quad_points = False
         # page number -&gt; array of 8 × n numbers:
         self.text_quad_points = defaultdict(list)
+
+    def write_html(self, text, *args, **kwargs):
+        &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+        kwargs2 = vars(self)
+        # Method arguments must override class &amp; instance attributes:
+        kwargs2.update(kwargs)
+        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
+        if self.HTML2FPDF_CLASS != HTML2FPDF:
+            warnings.warn(
+                &#34;The HTML2FPDF_CLASS is deprecated. It will be removed in a future release.&#34;,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        text = unescape(text)  # To deal with HTML entities
+        h2p.feed(text)
 
     def _add_quad_points(self, x, y, w, h):
         self.text_quad_points[self.page].extend(
@@ -5368,6 +5387,8 @@ Default to "mm".</dd>
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
 
+    HTML2FPDF_CLASS = HTML2FPDF
+
     def __init__(
         self,
         orientation=&#34;portrait&#34;,
@@ -5511,6 +5532,21 @@ Default to "mm".</dd>
         self.record_text_quad_points = False
         # page number -&gt; array of 8 × n numbers:
         self.text_quad_points = defaultdict(list)
+
+    def write_html(self, text, *args, **kwargs):
+        &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+        kwargs2 = vars(self)
+        # Method arguments must override class &amp; instance attributes:
+        kwargs2.update(kwargs)
+        h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
+        if self.HTML2FPDF_CLASS != HTML2FPDF:
+            warnings.warn(
+                &#34;The HTML2FPDF_CLASS is deprecated. It will be removed in a future release.&#34;,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        text = unescape(text)  # To deal with HTML entities
+        h2p.feed(text)
 
     def _add_quad_points(self, x, y, w, h):
         self.text_quad_points[self.page].extend(
@@ -10206,6 +10242,10 @@ Default to "mm".</dd>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="fpdf.fpdf.FPDF.HTML2FPDF_CLASS"><code class="name">var <span class="ident">HTML2FPDF_CLASS</span></code></dt>
+<dd>
+<div class="desc"><p>Render basic HTML to FPDF</p></div>
+</dd>
 <dt id="fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER"><code class="name">var <span class="ident">MARKDOWN_BOLD_MARKER</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -15390,6 +15430,31 @@ def write(
     return page_break_triggered</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.write_html"><code class="name flex">
+<span>def <span class="ident">write_html</span></span>(<span>self, text, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Parse HTML and convert it to PDF</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_html(self, text, *args, **kwargs):
+    &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+    kwargs2 = vars(self)
+    # Method arguments must override class &amp; instance attributes:
+    kwargs2.update(kwargs)
+    h2p = self.HTML2FPDF_CLASS(self, *args, **kwargs2)
+    if self.HTML2FPDF_CLASS != HTML2FPDF:
+        warnings.warn(
+            &#34;The HTML2FPDF_CLASS is deprecated. It will be removed in a future release.&#34;,
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    text = unescape(text)  # To deal with HTML entities
+    h2p.feed(text)</code></pre>
+</details>
+</dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
@@ -15720,6 +15785,7 @@ def write(
 <li>
 <h4><code><a title="fpdf.fpdf.FPDF" href="#fpdf.fpdf.FPDF">FPDF</a></code></h4>
 <ul class="">
+<li><code><a title="fpdf.fpdf.FPDF.HTML2FPDF_CLASS" href="#fpdf.fpdf.FPDF.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER">MARKDOWN_BOLD_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER">MARKDOWN_UNDERLINE_MARKER</a></code></li>
@@ -15822,6 +15888,7 @@ def write(
 <li><code><a title="fpdf.fpdf.FPDF.unbreakable" href="#fpdf.fpdf.FPDF.unbreakable">unbreakable</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.will_page_break" href="#fpdf.fpdf.FPDF.will_page_break">will_page_break</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.write" href="#fpdf.fpdf.FPDF.write">write</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.write_html" href="#fpdf.fpdf.FPDF.write_html">write_html</a></code></li>
 </ul>
 </li>
 <li>
