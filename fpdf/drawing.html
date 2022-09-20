@@ -3384,6 +3384,9 @@ class PaintedPath:
 
         self._graphics_context.add_item(item, _copy=_copy)
 
+    def remove_last_path_element(self):
+        self._graphics_context.remove_last_item()
+
     def rectangle(self, x, y, w, h, rx=0, ry=0):
         &#34;&#34;&#34;
         Append a rectangle as a closed subpath to the current path.
@@ -3990,6 +3993,9 @@ class GraphicsContext:
             item = copy.deepcopy(item)
 
         self.path_items.append(item)
+
+    def remove_last_item(self):
+        del self.path_items[-1]
 
     def merge(self, other_context):
         &#34;&#34;&#34;Copy another `GraphicsContext`&#39;s path items into this one.&#34;&#34;&#34;
@@ -6215,6 +6221,9 @@ this context (an empty string is returned if there are no paths or groups)</p></
 
         self.path_items.append(item)
 
+    def remove_last_item(self):
+        del self.path_items[-1]
+
     def merge(self, other_context):
         &#34;&#34;&#34;Copy another `GraphicsContext`&#39;s path items into this one.&#34;&#34;&#34;
         self.path_items.extend(other_context.path_items)
@@ -6526,6 +6535,19 @@ caution.</dd>
 <pre><code class="python">def merge(self, other_context):
     &#34;&#34;&#34;Copy another `GraphicsContext`&#39;s path items into this one.&#34;&#34;&#34;
     self.path_items.extend(other_context.path_items)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.drawing.GraphicsContext.remove_last_item"><code class="name flex">
+<span>def <span class="ident">remove_last_item</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_last_item(self):
+    del self.path_items[-1]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.drawing.GraphicsContext.render"><code class="name flex">
@@ -7929,6 +7951,9 @@ primitive path elements and <code><a title="fpdf.drawing.GraphicsContext" href="
 
         self._graphics_context.add_item(item, _copy=_copy)
 
+    def remove_last_path_element(self):
+        self._graphics_context.remove_last_item()
+
     def rectangle(self, x, y, w, h, rx=0, ry=0):
         &#34;&#34;&#34;
         Append a rectangle as a closed subpath to the current path.
@@ -9284,6 +9309,19 @@ will not be rounded).</dd>
     self.move_to(x, y)
 
     return self</code></pre>
+</details>
+</dd>
+<dt id="fpdf.drawing.PaintedPath.remove_last_path_element"><code class="name flex">
+<span>def <span class="ident">remove_last_path_element</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def remove_last_path_element(self):
+    self._graphics_context.remove_last_item()</code></pre>
 </details>
 </dd>
 <dt id="fpdf.drawing.PaintedPath.render"><code class="name flex">
@@ -12396,6 +12434,7 @@ mutating self.</p>
 <li><code><a title="fpdf.drawing.GraphicsContext.add_item" href="#fpdf.drawing.GraphicsContext.add_item">add_item</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsContext.clipping_path" href="#fpdf.drawing.GraphicsContext.clipping_path">clipping_path</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsContext.merge" href="#fpdf.drawing.GraphicsContext.merge">merge</a></code></li>
+<li><code><a title="fpdf.drawing.GraphicsContext.remove_last_item" href="#fpdf.drawing.GraphicsContext.remove_last_item">remove_last_item</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsContext.render" href="#fpdf.drawing.GraphicsContext.render">render</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsContext.render_debug" href="#fpdf.drawing.GraphicsContext.render_debug">render_debug</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsContext.transform" href="#fpdf.drawing.GraphicsContext.transform">transform</a></code></li>
@@ -12479,6 +12518,7 @@ mutating self.</p>
 <li><code><a title="fpdf.drawing.PaintedPath.quadratic_curve_relative" href="#fpdf.drawing.PaintedPath.quadratic_curve_relative">quadratic_curve_relative</a></code></li>
 <li><code><a title="fpdf.drawing.PaintedPath.quadratic_curve_to" href="#fpdf.drawing.PaintedPath.quadratic_curve_to">quadratic_curve_to</a></code></li>
 <li><code><a title="fpdf.drawing.PaintedPath.rectangle" href="#fpdf.drawing.PaintedPath.rectangle">rectangle</a></code></li>
+<li><code><a title="fpdf.drawing.PaintedPath.remove_last_path_element" href="#fpdf.drawing.PaintedPath.remove_last_path_element">remove_last_path_element</a></code></li>
 <li><code><a title="fpdf.drawing.PaintedPath.render" href="#fpdf.drawing.PaintedPath.render">render</a></code></li>
 <li><code><a title="fpdf.drawing.PaintedPath.render_debug" href="#fpdf.drawing.PaintedPath.render_debug">render_debug</a></code></li>
 <li><code><a title="fpdf.drawing.PaintedPath.style" href="#fpdf.drawing.PaintedPath.style">style</a></code></li>
