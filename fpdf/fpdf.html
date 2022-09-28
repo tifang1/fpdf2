@@ -271,14 +271,14 @@ class EmbeddedFile(NamedTuple):
     checksum: bool = False
 
     def file_spec(self, embedded_file_ref):
-        return pdf_dict(
-            {
-                &#34;/Type&#34;: &#34;/Filespec&#34;,
-                &#34;/F&#34;: enclose_in_parens(self.basename),
-                &#34;/EF&#34;: pdf_dict({&#34;/F&#34;: embedded_file_ref}),
-                &#34;/Desc&#34;: f&#34;({escape_parens(self.desc)})&#34;,
-            }
-        )
+        pdf_obj = {
+            &#34;/Type&#34;: &#34;/Filespec&#34;,
+            &#34;/F&#34;: enclose_in_parens(self.basename),
+            &#34;/EF&#34;: pdf_dict({&#34;/F&#34;: embedded_file_ref}),
+        }
+        if self.desc:
+            pdf_obj[&#34;/Desc&#34;] = f&#34;({escape_parens(self.desc)})&#34;
+        return pdf_dict(pdf_obj)
 
 
 class TitleStyle(NamedTuple):
