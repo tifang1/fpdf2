@@ -105,7 +105,7 @@ __all__ = [
 </dd>
 <dt><code class="name"><a title="fpdf.fpdf" href="fpdf.html">fpdf.fpdf</a></code></dt>
 <dd>
-<div class="desc"><p>fpdf module (in fpdf package housing FPDF class) …</p></div>
+<div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="fpdf.graphics_state" href="graphics_state.html">fpdf.graphics_state</a></code></dt>
 <dd>
@@ -254,14 +254,13 @@ Default to "mm".</dd>
                 stacklevel=2,
             )
         super().__init__()
-        # Initialization of instance attributes
-        self.offsets = {}  # array of object offsets
         self.page = 0  # current page number
-        self.n = 2  # current object number
+        self.n = 2  # current PDF object number
         self.buffer = bytearray()  # buffer holding in-memory PDF
+        self.offsets = {}  # array of object offsets used to build the xref table
         # Associative array from page number to dicts containing pages and metadata:
         self.pages = {}
-        self.state = DocumentState.UNINITIALIZED  # current document state
+        self._state = DocumentState.GENERATING  # initial document state
         self.fonts = {}  # array of used fonts
         self.font_files = {}  # array of font files
         self.diffs = {}  # array of encoding differences
@@ -273,7 +272,7 @@ Default to "mm".</dd>
         self.links = {}  # array of Destination
         self.embedded_files = []
         self.embedded_files_per_pdf_ref = {}
-        self.in_footer = 0  # flag set when processing footer
+        self.in_footer = False  # flag set when processing footer
         self.lasth = 0  # height of last cell printed
         self.str_alias_nb_pages = &#34;{nb}&#34;
 
@@ -370,6 +369,10 @@ Default to "mm".</dd>
         self.record_text_quad_points = False
         # page number -&gt; array of 8 × n numbers:
         self.text_quad_points = defaultdict(list)
+
+        self._is_unbreakable = (
+            False  # indicates that we are inside an .unbreakable() code block
+        )
 
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
@@ -676,7 +679,7 @@ Default to "mm".</dd>
     def set_image_filter(self, image_filter):
         &#34;&#34;&#34;
         Args:
-            image_filter (str): name of a support image filter or &#34;AUTO&#34;,
+            image_filter (str): name of a supported image filter or &#34;AUTO&#34;,
                 meaning to use the best image filter given the images provided.
         &#34;&#34;&#34;
         if image_filter not in SUPPORTED_IMAGE_FILTERS:
@@ -711,38 +714,6 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         self.str_alias_nb_pages = alias
 
-    def open(self):
-        &#34;&#34;&#34;
-        Starts the generation of the PDF document.
-        It is not necessary to call it explicitly because `FPDF.add_page()` does it automatically.
-
-        Notes
-        -----
-
-        This method does not add any page.
-        &#34;&#34;&#34;
-        self.state = DocumentState.READY
-
-    def close(self):
-        &#34;&#34;&#34;
-        Terminates the PDF document.
-
-        It is not necessary to call this method explicitly because `FPDF.output()` does it automatically.
-        If the document contains no page, `FPDF.add_page()` is called to prevent from generating an invalid document.
-        &#34;&#34;&#34;
-        if self.state == DocumentState.CLOSED:
-            return
-        if self.page == 0:
-            self.add_page()
-
-        # Page footer
-        self.in_footer = 1
-        self.footer()
-        self.in_footer = 0
-
-        self._endpage()  # close page
-        self._enddoc()  # close document
-
     def add_page(
         self, orientation=&#34;&#34;, format=&#34;&#34;, same=False, duration=0, transition=None
     ):
@@ -769,13 +740,10 @@ Default to "mm".</dd>
                 Can be configured globally through the `.page_transition` FPDF property.
                 As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
         &#34;&#34;&#34;
-        if self.state == DocumentState.CLOSED:
+        if self._state == DocumentState.CLOSED:
             raise FPDFException(
                 &#34;A page cannot be added on a closed document, after calling output()&#34;
             )
-        if self.state == DocumentState.UNINITIALIZED:
-            self.open()
-
         family = self.font_family
         style = f&#34;{self.font_style}U&#34; if self.underline else self.font_style
         size = self.font_size_pt
@@ -788,11 +756,9 @@ Default to "mm".</dd>
 
         if self.page &gt; 0:
             # Page footer
-            self.in_footer = 1
+            self.in_footer = True
             self.footer()
-            self.in_footer = 0
-            # close page
-            self._endpage()
+            self.in_footer = False
 
         # Start new page
         self._beginpage(
@@ -2442,6 +2408,10 @@ Default to "mm".</dd>
         Args:
             **kwargs: key-values settings to set at the beggining of this context.
         &#34;&#34;&#34;
+        if self._is_unbreakable:
+            raise FPDFException(
+                &#34;cannot create a local context inside an unbreakable() code block&#34;
+            )
         self._push_local_stack()
         gs = None
         for key, value in kwargs.items():
@@ -3660,6 +3630,10 @@ Default to "mm".</dd>
 
     def get_y(self):
         &#34;&#34;&#34;Returns the ordinate of the current position.&#34;&#34;&#34;
+        if self._is_unbreakable:
+            raise FPDFException(
+                &#34;Using get_y() inside an unbreakable() code block is error-prone&#34;
+            )
         return self.y
 
     def set_y(self, y):
@@ -3705,8 +3679,17 @@ Default to "mm".</dd>
                 stacklevel=2,
             )
         # Finish document if necessary:
-        if self.state &lt; DocumentState.CLOSED:
-            self.close()
+        if self._state == DocumentState.GENERATING:
+            if self.page == 0:
+                self.add_page()
+            # Generating final page footer:
+            self.in_footer = True
+            self.footer()
+            self.in_footer = False
+            # Generating .buffer based on .pages:
+            self._state = DocumentState.CLOSING
+            self._enddoc()
+            self._state = DocumentState.CLOSED
         if name:
             if isinstance(name, os.PathLike):
                 name.write_bytes(self.buffer)
@@ -3947,11 +3930,11 @@ Default to "mm".</dd>
             )
 
     def _insert_table_of_contents(self):
-        prev_state = self.state
+        prev_state = self._state
         tocp = self._toc_placeholder
         self.page = tocp.start_page
         # Doc has been closed but we want to write to self.pages[self.page] instead of self.buffer:
-        self.state = DocumentState.GENERATING_PAGE
+        self._state = DocumentState.GENERATING
         self.y = tocp.y
         # Disabling footer &amp; header, as they have already been called:
         self.footer = lambda *args, **kwargs: None
@@ -3963,7 +3946,7 @@ Default to "mm".</dd>
             error_msg = f&#34;The rendering function passed to FPDF.insert_toc_placeholder triggered too {too} page breaks: &#34;
             error_msg += f&#34;ToC ended on page {self.page} while it was expected to span exactly {tocp.pages} pages&#34;
             raise FPDFException(error_msg)
-        self.state = prev_state
+        self._state = prev_state
 
     def _putfonts(self):
         for diff in self.diffs.values():
@@ -4636,7 +4619,6 @@ Default to "mm".</dd>
                 self._sign_hashalgo,
                 self._sign_time,
             )
-        self.state = DocumentState.CLOSED
 
     def _beginpage(
         self, orientation, format, same, duration, transition, new_page=True
@@ -4653,7 +4635,7 @@ Default to "mm".</dd>
                 self._set_min_pdf_version(&#34;1.5&#34;)
         else:
             page = self.pages[self.page]
-        self.state = DocumentState.GENERATING_PAGE
+        self._state = DocumentState.GENERATING
         self.x = self.l_margin
         self.y = self.t_margin
         self.font_family = &#34;&#34;
@@ -4675,10 +4657,6 @@ Default to "mm".</dd>
             self.page_break_trigger = self.h - self.b_margin
         page[&#34;w_pt&#34;], page[&#34;h_pt&#34;] = self.w_pt, self.h_pt
 
-    def _endpage(self):
-        # End of page contents
-        self.state = DocumentState.READY
-
     def _newobj(self):
         # Begin a new object
         self.n += 1
@@ -4699,7 +4677,7 @@ Default to "mm".</dd>
         )
 
     def _out(self, s):
-        if self.state == DocumentState.CLOSED:
+        if self._state == DocumentState.CLOSED:
             raise FPDFException(
                 &#34;Content cannot be added on a closed document, after calling output()&#34;
             )
@@ -4707,9 +4685,11 @@ Default to "mm".</dd>
             if not isinstance(s, str):
                 s = str(s)
             s = s.encode(&#34;latin1&#34;)
-        if self.state == DocumentState.GENERATING_PAGE:
+        if self._state == DocumentState.GENERATING:
+            if not self.page:
+                raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
             self.pages[self.page][&#34;content&#34;] += s + b&#34;\n&#34;
-        else:
+        else:  # self._state == DocumentState.CLOSING
             self.buffer += s + b&#34;\n&#34;
 
     @check_page
@@ -4910,6 +4890,7 @@ Default to "mm".</dd>
         prev_page, prev_y = self.page, self.y
         recorder = FPDFRecorder(self, accept_page_break=False)
         recorder.page_break_triggered = False
+        self._is_unbreakable = True
         LOGGER.debug(&#34;Starting unbreakable block&#34;)
         yield recorder
         y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
@@ -4921,6 +4902,7 @@ Default to "mm".</dd>
             recorder.pdf._perform_page_break()
             recorder.replay()
             recorder.page_break_triggered = True
+        self._is_unbreakable = False
         LOGGER.debug(&#34;Ending unbreakable block&#34;)
 
     @contextmanager
@@ -5546,13 +5528,10 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
             Can be configured globally through the `.page_transition` FPDF property.
             As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF reader.
     &#34;&#34;&#34;
-    if self.state == DocumentState.CLOSED:
+    if self._state == DocumentState.CLOSED:
         raise FPDFException(
             &#34;A page cannot be added on a closed document, after calling output()&#34;
         )
-    if self.state == DocumentState.UNINITIALIZED:
-        self.open()
-
     family = self.font_family
     style = f&#34;{self.font_style}U&#34; if self.underline else self.font_style
     size = self.font_size_pt
@@ -5565,11 +5544,9 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 
     if self.page &gt; 0:
         # Page footer
-        self.in_footer = 1
+        self.in_footer = True
         self.footer()
-        self.in_footer = 0
-        # close page
-        self._endpage()
+        self.in_footer = False
 
     # Start new page
     self._beginpage(
@@ -6178,38 +6155,6 @@ def circle(self, x, y, r, style=None):
     self.ellipse(x, y, r, r, style)</code></pre>
 </details>
 </dd>
-<dt id="fpdf.FPDF.close"><code class="name flex">
-<span>def <span class="ident">close</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Terminates the PDF document.</p>
-<p>It is not necessary to call this method explicitly because <code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">FPDF.output()</a></code> does it automatically.
-If the document contains no page, <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> is called to prevent from generating an invalid document.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def close(self):
-    &#34;&#34;&#34;
-    Terminates the PDF document.
-
-    It is not necessary to call this method explicitly because `FPDF.output()` does it automatically.
-    If the document contains no page, `FPDF.add_page()` is called to prevent from generating an invalid document.
-    &#34;&#34;&#34;
-    if self.state == DocumentState.CLOSED:
-        return
-    if self.page == 0:
-        self.add_page()
-
-    # Page footer
-    self.in_footer = 1
-    self.footer()
-    self.in_footer = 0
-
-    self._endpage()  # close page
-    self._enddoc()  # close document</code></pre>
-</details>
-</dd>
 <dt id="fpdf.FPDF.code39"><code class="name flex">
 <span>def <span class="ident">code39</span></span>(<span>self, txt, x, y, w=1.5, h=5)</span>
 </code></dt>
@@ -6730,7 +6675,7 @@ no /ID will be inserted in the generated PDF document.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Footer to be implemented in your own inherited class.</p>
-<p>This is automatically called by <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> and <code><a title="fpdf.FPDF.close" href="#fpdf.FPDF.close">FPDF.close()</a></code>
+<p>This is automatically called by <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> and <code>FPDF.close()</code>
 and should not be called directly by the user application.
 The default implementation performs nothing: you have to override this method
 in a subclass to implement your own rendering logic.</p></div>
@@ -6815,6 +6760,10 @@ The value is calculated with stretching and spacing.</p>
 </summary>
 <pre><code class="python">def get_y(self):
     &#34;&#34;&#34;Returns the ordinate of the current position.&#34;&#34;&#34;
+    if self._is_unbreakable:
+        raise FPDFException(
+            &#34;Using get_y() inside an unbreakable() code block is error-prone&#34;
+        )
     return self.y</code></pre>
 </details>
 </dd>
@@ -7472,6 +7421,10 @@ def local_context(
     Args:
         **kwargs: key-values settings to set at the beggining of this context.
     &#34;&#34;&#34;
+    if self._is_unbreakable:
+        raise FPDFException(
+            &#34;cannot create a local context inside an unbreakable() code block&#34;
+        )
     self._push_local_stack()
     gs = None
     for key, value in kwargs.items():
@@ -7904,31 +7857,6 @@ def offset_rendering(self):
     recorder.rewind()</code></pre>
 </details>
 </dd>
-<dt id="fpdf.FPDF.open"><code class="name flex">
-<span>def <span class="ident">open</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Starts the generation of the PDF document.
-It is not necessary to call it explicitly because <code><a title="fpdf.FPDF.add_page" href="#fpdf.FPDF.add_page">FPDF.add_page()</a></code> does it automatically.</p>
-<h2 id="notes">Notes</h2>
-<p>This method does not add any page.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def open(self):
-    &#34;&#34;&#34;
-    Starts the generation of the PDF document.
-    It is not necessary to call it explicitly because `FPDF.add_page()` does it automatically.
-
-    Notes
-    -----
-
-    This method does not add any page.
-    &#34;&#34;&#34;
-    self.state = DocumentState.READY</code></pre>
-</details>
-</dd>
 <dt id="fpdf.FPDF.output"><code class="name flex">
 <span>def <span class="ident">output</span></span>(<span>self, name='', dest='')</span>
 </code></dt>
@@ -7969,8 +7897,17 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
             stacklevel=2,
         )
     # Finish document if necessary:
-    if self.state &lt; DocumentState.CLOSED:
-        self.close()
+    if self._state == DocumentState.GENERATING:
+        if self.page == 0:
+            self.add_page()
+        # Generating final page footer:
+        self.in_footer = True
+        self.footer()
+        self.in_footer = False
+        # Generating .buffer based on .pages:
+        self._state = DocumentState.CLOSING
+        self._enddoc()
+        self._state = DocumentState.CLOSED
     if name:
         if isinstance(name, os.PathLike):
             name.write_bytes(self.buffer)
@@ -9019,7 +8956,7 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
 <div class="desc"><h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>image_filter</code></strong> :&ensp;<code>str</code></dt>
-<dd>name of a support image filter or "AUTO",
+<dd>name of a supported image filter or "AUTO",
 meaning to use the best image filter given the images provided.</dd>
 </dl></div>
 <details class="source">
@@ -9029,7 +8966,7 @@ meaning to use the best image filter given the images provided.</dd>
 <pre><code class="python">def set_image_filter(self, image_filter):
     &#34;&#34;&#34;
     Args:
-        image_filter (str): name of a support image filter or &#34;AUTO&#34;,
+        image_filter (str): name of a supported image filter or &#34;AUTO&#34;,
             meaning to use the best image filter given the images provided.
     &#34;&#34;&#34;
     if image_filter not in SUPPORTED_IMAGE_FILTERS:
@@ -10180,6 +10117,7 @@ def unbreakable(self):
     prev_page, prev_y = self.page, self.y
     recorder = FPDFRecorder(self, accept_page_break=False)
     recorder.page_break_triggered = False
+    self._is_unbreakable = True
     LOGGER.debug(&#34;Starting unbreakable block&#34;)
     yield recorder
     y_scroll = recorder.y - prev_y + (recorder.page - prev_page) * self.eph
@@ -10191,6 +10129,7 @@ def unbreakable(self):
         recorder.pdf._perform_page_break()
         recorder.replay()
         recorder.page_break_triggered = True
+    self._is_unbreakable = False
     LOGGER.debug(&#34;Ending unbreakable block&#34;)</code></pre>
 </details>
 </dd>
@@ -13024,7 +12963,6 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.arc" href="#fpdf.FPDF.arc">arc</a></code></li>
 <li><code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">cell</a></code></li>
 <li><code><a title="fpdf.FPDF.circle" href="#fpdf.FPDF.circle">circle</a></code></li>
-<li><code><a title="fpdf.FPDF.close" href="#fpdf.FPDF.close">close</a></code></li>
 <li><code><a title="fpdf.FPDF.code39" href="#fpdf.FPDF.code39">code39</a></code></li>
 <li><code><a title="fpdf.FPDF.core_fonts_encoding" href="#fpdf.FPDF.core_fonts_encoding">core_fonts_encoding</a></code></li>
 <li><code><a title="fpdf.FPDF.dashed_line" href="#fpdf.FPDF.dashed_line">dashed_line</a></code></li>
@@ -13056,7 +12994,6 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.new_path" href="#fpdf.FPDF.new_path">new_path</a></code></li>
 <li><code><a title="fpdf.FPDF.normalize_text" href="#fpdf.FPDF.normalize_text">normalize_text</a></code></li>
 <li><code><a title="fpdf.FPDF.offset_rendering" href="#fpdf.FPDF.offset_rendering">offset_rendering</a></code></li>
-<li><code><a title="fpdf.FPDF.open" href="#fpdf.FPDF.open">open</a></code></li>
 <li><code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">output</a></code></li>
 <li><code><a title="fpdf.FPDF.page_mode" href="#fpdf.FPDF.page_mode">page_mode</a></code></li>
 <li><code><a title="fpdf.FPDF.page_no" href="#fpdf.FPDF.page_no">page_no</a></code></li>

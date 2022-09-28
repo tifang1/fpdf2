@@ -708,6 +708,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#alpha-transparency" class="md-nav__link">
+    Alpha / transparency
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#assembling-images" class="md-nav__link">
     Assembling images
   </a>
@@ -1244,6 +1251,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#alpha-transparency" class="md-nav__link">
+    Alpha / transparency
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#assembling-images" class="md-nav__link">
     Assembling images
   </a>
@@ -1371,6 +1385,10 @@
 </code></pre></div>
 <p>By default an image is rendered with a resolution of 72 dpi,
 but you can control its dimension on the page using the <code>w=</code> &amp; <code>h=</code> parameters of the <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.image"><code>image()</code></a> method.</p>
+<h2 id="alpha-transparency">Alpha / transparency</h2>
+<p><code>fpdf2</code> allows to embed images with alpha pixels.</p>
+<p>Technically, it is implemented by extracting an <code>/SMask</code> from images with transparency,
+and inserting it along with the image data in the PDF document. Related code is in the <a href="https://github.com/PyFPDF/fpdf2/blob/master/fpdf/image_parsing.py">image_parsing</a> module.</p>
 <h2 id="assembling-images">Assembling images</h2>
 <p>The following code snippets provide examples of some basic layouts for assembling images into PDF files.</p>
 <h3 id="side-by-side-images-full-height-landscape-page">Side by side images, full height, landscape page</h3>
@@ -1462,6 +1480,8 @@ no image conversion from / to PNG / JPEG is performed.</p>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-with-image.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
 <p>Beware that "flattening" images this way will fill transparent areas of your images with color (usually black).</p>
+<p>The allowed <code>image_filter</code> values are listed in the <a href="https://github.com/PyFPDF/fpdf2/blob/master/fpdf/image_parsing.py">image_parsing</a> module and are currently:
+<code>FlateDecode</code> (lossless zlib/deflate compression), <code>DCTDecode</code> (lossy compression with JPEG) and <code>JPXDecode</code> (lossy compression with JPEG2000).</p>
 <h2 id="oversized-images-detection-downscaling">Oversized images detection &amp; downscaling</h2>
 <p>If the resulting PDF size is a concern,
 you may want to check if some inserted images are <em>oversized</em>,
