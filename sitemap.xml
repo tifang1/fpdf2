@@ -211,6 +211,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/notebook.html</loc>
+         <lastmod>2022-09-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/overrides/index.html</loc>
          <lastmod>2022-09-28</lastmod>
          <changefreq>daily</changefreq>
