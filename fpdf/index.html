@@ -679,12 +679,17 @@ Default to "mm".</dd>
     def set_image_filter(self, image_filter):
         &#34;&#34;&#34;
         Args:
-            image_filter (str): name of a supported image filter or &#34;AUTO&#34;,
+            image_filter (str): name of a the image filter to use
+                when embedding images images in the document, or &#34;AUTO&#34;,
                 meaning to use the best image filter given the images provided.
+                Allowed values: `FlateDecode` (lossless zlib/deflate compression),
+                `DCTDecode` (lossy compression with JPEG)
+                and `JPXDecode` (lossy compression with JPEG2000).
         &#34;&#34;&#34;
         if image_filter not in SUPPORTED_IMAGE_FILTERS:
             raise ValueError(
-                f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
+                f&#34;&#39;{image_filter}&#39; is not a supported image filter&#34;
+                f&#34; - Allowed values: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
             )
         self.image_filter = image_filter
         if image_filter == &#34;JPXDecode&#34;:
@@ -8956,8 +8961,12 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
 <div class="desc"><h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>image_filter</code></strong> :&ensp;<code>str</code></dt>
-<dd>name of a supported image filter or "AUTO",
-meaning to use the best image filter given the images provided.</dd>
+<dd>name of a the image filter to use
+when embedding images images in the document, or "AUTO",
+meaning to use the best image filter given the images provided.
+Allowed values: <code>FlateDecode</code> (lossless zlib/deflate compression),
+<code>DCTDecode</code> (lossy compression with JPEG)
+and <code>JPXDecode</code> (lossy compression with JPEG2000).</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -8966,12 +8975,17 @@ meaning to use the best image filter given the images provided.</dd>
 <pre><code class="python">def set_image_filter(self, image_filter):
     &#34;&#34;&#34;
     Args:
-        image_filter (str): name of a supported image filter or &#34;AUTO&#34;,
+        image_filter (str): name of a the image filter to use
+            when embedding images images in the document, or &#34;AUTO&#34;,
             meaning to use the best image filter given the images provided.
+            Allowed values: `FlateDecode` (lossless zlib/deflate compression),
+            `DCTDecode` (lossy compression with JPEG)
+            and `JPXDecode` (lossy compression with JPEG2000).
     &#34;&#34;&#34;
     if image_filter not in SUPPORTED_IMAGE_FILTERS:
         raise ValueError(
-            f&#34;&#39;{image_filter}&#39; is not a supported image filter: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
+            f&#34;&#39;{image_filter}&#39; is not a supported image filter&#34;
+            f&#34; - Allowed values: {&#39;&#39;.join(SUPPORTED_IMAGE_FILTERS)}&#34;
         )
     self.image_filter = image_filter
     if image_filter == &#34;JPXDecode&#34;:

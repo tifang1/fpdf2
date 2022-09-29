@@ -1470,7 +1470,8 @@ will be embedded as <a href="SVG.html">PDF paths</a>:
 <h2 id="image-compression">Image compression</h2>
 <p>By default, <code>fpdf2</code> will avoid altering your images :
 no image conversion from / to PNG / JPEG is performed.</p>
-<p>However, you can easily tell <code>fpdf2</code> to convert and embed all images as JPEGs in order to reduce your PDF size:</p>
+<p>However, you can easily tell <code>fpdf2</code> to embed all images as JPEGs in order to reduce your PDF size,
+using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.set_image_filter"><code>set_image_filter()</code></a>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">fpdf</span> <span class="kn">import</span> <span class="n">FPDF</span>
 
 <span class="n">pdf</span> <span class="o">=</span> <span class="n">FPDF</span><span class="p">()</span>
@@ -1479,7 +1480,7 @@ no image conversion from / to PNG / JPEG is performed.</p>
 <span class="n">pdf</span><span class="o">.</span><span class="n">image</span><span class="p">(</span><span class="s2">&quot;docs/fpdf2-logo.png&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
 <span class="n">pdf</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="s2">&quot;pdf-with-image.pdf&quot;</span><span class="p">)</span>
 </code></pre></div>
-<p>Beware that "flattening" images this way will fill transparent areas of your images with color (usually black).</p>
+<p>Beware that "flattening" images into JPEGs this way will fill transparent areas of your images with color (usually black).</p>
 <p>The allowed <code>image_filter</code> values are listed in the <a href="https://github.com/PyFPDF/fpdf2/blob/master/fpdf/image_parsing.py">image_parsing</a> module and are currently:
 <code>FlateDecode</code> (lossless zlib/deflate compression), <code>DCTDecode</code> (lossy compression with JPEG) and <code>JPXDecode</code> (lossy compression with JPEG2000).</p>
 <h2 id="oversized-images-detection-downscaling">Oversized images detection &amp; downscaling</h2>
