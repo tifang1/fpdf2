@@ -26,12 +26,9 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from collections import OrderedDict
+<pre><code class="python">import copy, decimal, math, re
+from collections import OrderedDict
 from contextlib import contextmanager
-import copy
-import decimal
-import math
-import re
 from typing import Optional, NamedTuple, Union
 
 from .enums import (

@@ -58,7 +58,10 @@ class Signature:
 
 
 def sign_content(signer, buffer, key, cert, extra_certs, hashalgo, sign_time):
-    &#34;Perform PDF signing based on the content of the buffer, performing substitutions on it.&#34;
+    &#34;&#34;&#34;
+    Perform PDF signing based on the content of the buffer, performing substitutions on it.
+    The signing operation does not alter the buffer size
+    &#34;&#34;&#34;
     # We start by substituting the ByteRange,
     # that defines which part of the document content the signature is based on.
     # This is basically ALL the content EXCEPT the signature content itself.
@@ -121,13 +124,17 @@ _SIGNATURE_CONTENTS_PLACEHOLDER = _pkcs11_aligned((0,))</code></pre>
 <span>def <span class="ident">sign_content</span></span>(<span>signer, buffer, key, cert, extra_certs, hashalgo, sign_time)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Perform PDF signing based on the content of the buffer, performing substitutions on it.</p></div>
+<div class="desc"><p>Perform PDF signing based on the content of the buffer, performing substitutions on it.
+The signing operation does not alter the buffer size</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def sign_content(signer, buffer, key, cert, extra_certs, hashalgo, sign_time):
-    &#34;Perform PDF signing based on the content of the buffer, performing substitutions on it.&#34;
+    &#34;&#34;&#34;
+    Perform PDF signing based on the content of the buffer, performing substitutions on it.
+    The signing operation does not alter the buffer size
+    &#34;&#34;&#34;
     # We start by substituting the ByteRange,
     # that defines which part of the document content the signature is based on.
     # This is basically ALL the content EXCEPT the signature content itself.

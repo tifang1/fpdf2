@@ -26,11 +26,10 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import zlib
+<pre><code class="python">import base64, zlib
 from io import BytesIO
-import base64
-from urllib.request import urlopen
 from math import ceil
+from urllib.request import urlopen
 
 try:
     from PIL import Image
