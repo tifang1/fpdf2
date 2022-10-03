@@ -10145,35 +10145,36 @@ or parse_csv() before doing anything else.</p></div>
                 Scale the inserted template by this factor.
         &#34;&#34;&#34;
         sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
-        for element in sorted_elements:
-            ele = element.copy()  # don&#39;t want to modify the callers original
-            ele[&#34;text&#34;] = self.texts.get(ele[&#34;name&#34;].lower(), ele.get(&#34;text&#34;, &#34;&#34;))
-            if scale != 1.0:
-                ele[&#34;x1&#34;] = ele[&#34;x1&#34;] * scale
-                ele[&#34;y1&#34;] = ele[&#34;y1&#34;] * scale
-                ele[&#34;x2&#34;] = ele[&#34;x1&#34;] + ((ele[&#34;x2&#34;] - element[&#34;x1&#34;]) * scale)
-                ele[&#34;y2&#34;] = ele[&#34;y1&#34;] + ((ele[&#34;y2&#34;] - element[&#34;y1&#34;]) * scale)
-            if offsetx:
-                ele[&#34;x1&#34;] = ele[&#34;x1&#34;] + offsetx
-                ele[&#34;x2&#34;] = ele[&#34;x2&#34;] + offsetx
-            if offsety:
-                ele[&#34;y1&#34;] = ele[&#34;y1&#34;] + offsety
-                ele[&#34;y2&#34;] = ele[&#34;y2&#34;] + offsety
-            ele[&#34;scale&#34;] = scale
-            handler_name = ele[&#34;type&#34;].upper()
-            if rotate:  # don&#39;t rotate by 0.0 degrees
-                with self.pdf.rotation(rotate, offsetx, offsety):
+        with self.pdf.local_context():
+            for element in sorted_elements:
+                ele = element.copy()  # don&#39;t want to modify the callers original
+                ele[&#34;text&#34;] = self.texts.get(ele[&#34;name&#34;].lower(), ele.get(&#34;text&#34;, &#34;&#34;))
+                if scale != 1.0:
+                    ele[&#34;x1&#34;] = ele[&#34;x1&#34;] * scale
+                    ele[&#34;y1&#34;] = ele[&#34;y1&#34;] * scale
+                    ele[&#34;x2&#34;] = ele[&#34;x1&#34;] + ((ele[&#34;x2&#34;] - element[&#34;x1&#34;]) * scale)
+                    ele[&#34;y2&#34;] = ele[&#34;y1&#34;] + ((ele[&#34;y2&#34;] - element[&#34;y1&#34;]) * scale)
+                if offsetx:
+                    ele[&#34;x1&#34;] = ele[&#34;x1&#34;] + offsetx
+                    ele[&#34;x2&#34;] = ele[&#34;x2&#34;] + offsetx
+                if offsety:
+                    ele[&#34;y1&#34;] = ele[&#34;y1&#34;] + offsety
+                    ele[&#34;y2&#34;] = ele[&#34;y2&#34;] + offsety
+                ele[&#34;scale&#34;] = scale
+                handler_name = ele[&#34;type&#34;].upper()
+                if rotate:  # don&#39;t rotate by 0.0 degrees
+                    with self.pdf.rotation(rotate, offsetx, offsety):
+                        if &#34;rotate&#34; in ele and ele[&#34;rotate&#34;]:
+                            with self.pdf.rotation(ele[&#34;rotate&#34;], ele[&#34;x1&#34;], ele[&#34;y1&#34;]):
+                                self.handlers[handler_name](**ele)
+                        else:
+                            self.handlers[handler_name](**ele)
+                else:
                     if &#34;rotate&#34; in ele and ele[&#34;rotate&#34;]:
                         with self.pdf.rotation(ele[&#34;rotate&#34;], ele[&#34;x1&#34;], ele[&#34;y1&#34;]):
                             self.handlers[handler_name](**ele)
                     else:
                         self.handlers[handler_name](**ele)
-            else:
-                if &#34;rotate&#34; in ele and ele[&#34;rotate&#34;]:
-                    with self.pdf.rotation(ele[&#34;rotate&#34;], ele[&#34;x1&#34;], ele[&#34;y1&#34;]):
-                        self.handlers[handler_name](**ele)
-                else:
-                    self.handlers[handler_name](**ele)
         self.texts = {}  # reset modified entries for the next page</code></pre>
 </details>
 <h3>Subclasses</h3>
@@ -10401,35 +10402,36 @@ Scale the inserted template by this factor.</p></div>
             Scale the inserted template by this factor.
     &#34;&#34;&#34;
     sorted_elements = sorted(self.elements, key=lambda x: x[&#34;priority&#34;])
-    for element in sorted_elements:
-        ele = element.copy()  # don&#39;t want to modify the callers original
-        ele[&#34;text&#34;] = self.texts.get(ele[&#34;name&#34;].lower(), ele.get(&#34;text&#34;, &#34;&#34;))
-        if scale != 1.0:
-            ele[&#34;x1&#34;] = ele[&#34;x1&#34;] * scale
-            ele[&#34;y1&#34;] = ele[&#34;y1&#34;] * scale
-            ele[&#34;x2&#34;] = ele[&#34;x1&#34;] + ((ele[&#34;x2&#34;] - element[&#34;x1&#34;]) * scale)
-            ele[&#34;y2&#34;] = ele[&#34;y1&#34;] + ((ele[&#34;y2&#34;] - element[&#34;y1&#34;]) * scale)
-        if offsetx:
-            ele[&#34;x1&#34;] = ele[&#34;x1&#34;] + offsetx
-            ele[&#34;x2&#34;] = ele[&#34;x2&#34;] + offsetx
-        if offsety:
-            ele[&#34;y1&#34;] = ele[&#34;y1&#34;] + offsety
-            ele[&#34;y2&#34;] = ele[&#34;y2&#34;] + offsety
-        ele[&#34;scale&#34;] = scale
-        handler_name = ele[&#34;type&#34;].upper()
-        if rotate:  # don&#39;t rotate by 0.0 degrees
-            with self.pdf.rotation(rotate, offsetx, offsety):
+    with self.pdf.local_context():
+        for element in sorted_elements:
+            ele = element.copy()  # don&#39;t want to modify the callers original
+            ele[&#34;text&#34;] = self.texts.get(ele[&#34;name&#34;].lower(), ele.get(&#34;text&#34;, &#34;&#34;))
+            if scale != 1.0:
+                ele[&#34;x1&#34;] = ele[&#34;x1&#34;] * scale
+                ele[&#34;y1&#34;] = ele[&#34;y1&#34;] * scale
+                ele[&#34;x2&#34;] = ele[&#34;x1&#34;] + ((ele[&#34;x2&#34;] - element[&#34;x1&#34;]) * scale)
+                ele[&#34;y2&#34;] = ele[&#34;y1&#34;] + ((ele[&#34;y2&#34;] - element[&#34;y1&#34;]) * scale)
+            if offsetx:
+                ele[&#34;x1&#34;] = ele[&#34;x1&#34;] + offsetx
+                ele[&#34;x2&#34;] = ele[&#34;x2&#34;] + offsetx
+            if offsety:
+                ele[&#34;y1&#34;] = ele[&#34;y1&#34;] + offsety
+                ele[&#34;y2&#34;] = ele[&#34;y2&#34;] + offsety
+            ele[&#34;scale&#34;] = scale
+            handler_name = ele[&#34;type&#34;].upper()
+            if rotate:  # don&#39;t rotate by 0.0 degrees
+                with self.pdf.rotation(rotate, offsetx, offsety):
+                    if &#34;rotate&#34; in ele and ele[&#34;rotate&#34;]:
+                        with self.pdf.rotation(ele[&#34;rotate&#34;], ele[&#34;x1&#34;], ele[&#34;y1&#34;]):
+                            self.handlers[handler_name](**ele)
+                    else:
+                        self.handlers[handler_name](**ele)
+            else:
                 if &#34;rotate&#34; in ele and ele[&#34;rotate&#34;]:
                     with self.pdf.rotation(ele[&#34;rotate&#34;], ele[&#34;x1&#34;], ele[&#34;y1&#34;]):
                         self.handlers[handler_name](**ele)
                 else:
                     self.handlers[handler_name](**ele)
-        else:
-            if &#34;rotate&#34; in ele and ele[&#34;rotate&#34;]:
-                with self.pdf.rotation(ele[&#34;rotate&#34;], ele[&#34;x1&#34;], ele[&#34;y1&#34;]):
-                    self.handlers[handler_name](**ele)
-            else:
-                self.handlers[handler_name](**ele)
     self.texts = {}  # reset modified entries for the next page</code></pre>
 </details>
 </dd>
