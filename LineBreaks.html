@@ -1136,6 +1136,7 @@ one.</p>
 <p>An automatic break is performed at the location of the nearest space or soft-hyphen (<code>\u00ad</code>) character before the right limit.
 A soft-hyphen will be replaced by a normal hyphen when triggering a line break, and ignored otherwise.</p>
 <p>If the parameter <code>print_sh=False</code> in <code>multi_cell()</code> or <code>write()</code> is set to <code>True</code>, then they will print the soft-hyphen character to the document (as a normal hyphen with most fonts) instead of using it as a line break opportunity.</p>
+<p>When using <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell">multi_cell()</a>, the parameter <code>split_only=True</code> will perform word-wrapping only and return the resulting multi-lines as a list of strings. This can be used in conjunction with the cursor position and document height to determine if inserting a <a href="fpdf/fpdf.html#fpdf.fpdf.FPDF.multi_cell">multi_cell()</a> will result in a page break.</p>
 
 
 
