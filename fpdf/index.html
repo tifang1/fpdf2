@@ -497,6 +497,15 @@ Default to "mm".</dd>
         self.b_margin = margin
         self.page_break_trigger = self.h - self.b_margin
 
+    @property
+    def default_page_dimensions(self):
+        &#34;Return a pair (width, height) in the unit specified to FPDF constructor&#34;
+        return (
+            (self.dw_pt, self.dh_pt)
+            if self.def_orientation == &#34;P&#34;
+            else (self.dh_pt, self.dw_pt)
+        )
+
     def _set_orientation(self, orientation, page_width_pt, page_height_pt):
         orientation = orientation.lower()
         if orientation in (&#34;p&#34;, &#34;portrait&#34;):
@@ -1669,7 +1678,7 @@ Default to "mm".</dd>
             style,
         )
 
-    def add_font(self, family, style=&#34;&#34;, fname=None, uni=&#34;DEPRECATED&#34;):
+    def add_font(self, family=None, style=&#34;&#34;, fname=None, uni=&#34;DEPRECATED&#34;):
         &#34;&#34;&#34;
         Imports a TrueType or OpenType font and makes it available
         for later calls to the `FPDF.set_font()` method.
@@ -1677,7 +1686,8 @@ Default to "mm".</dd>
         You will find more information on the &#34;Unicode&#34; documentation page.
 
         Args:
-            family (str): font family. Used as a reference for `FPDF.set_font()`
+            family (str): optional name of the font family. Used as a reference for `FPDF.set_font()`.
+                If not provided, use the base name of the `fname` font path, without extension.
             style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
             fname (str): font file name. You can specify a relative or full path.
                 If the file is not found, it will be searched in `FPDF_FONT_DIR`.
@@ -1706,24 +1716,26 @@ Default to "mm".</dd>
             raise ValueError(
                 f&#34;Unknown style provided (only B &amp; I letters are allowed): {style}&#34;
             )
-        fontkey = f&#34;{family.lower()}{style}&#34;
-
-        # Check if font already added or one of the core fonts
-        if fontkey in self.fonts or fontkey in self.core_fonts:
-            warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
-            return
 
         for parent in (&#34;.&#34;, FPDF_FONT_DIR):
             if not parent:
                 continue
 
             if (Path(parent) / fname).exists():
-                ttffilename = Path(parent) / fname
+                font_file_path = Path(parent) / fname
                 break
         else:
             raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
 
-        font = ttLib.TTFont(ttffilename)
+        if family is None:
+            family = font_file_path.stem
+
+        fontkey = f&#34;{family.lower()}{style}&#34;
+        # Check if font already added or one of the core fonts
+        if fontkey in self.fonts or fontkey in self.core_fonts:
+            warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
+            return
+        font = ttLib.TTFont(font_file_path)
 
         scale = 1000 / font[&#34;head&#34;].unitsPerEm
         default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
@@ -1786,7 +1798,7 @@ Default to "mm".</dd>
             &#34;up&#34;: round(font[&#34;post&#34;].underlinePosition * scale),
             &#34;ut&#34;: round(font[&#34;post&#34;].underlineThickness * scale),
             &#34;cw&#34;: char_widths,
-            &#34;ttffile&#34;: ttffilename,
+            &#34;ttffile&#34;: font_file_path,
             &#34;fontkey&#34;: fontkey,
             &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
         }
@@ -4379,6 +4391,23 @@ def accept_page_break(self):
 <dd>
 <div class="desc"><p>Font encoding, Latin-1 by default</p></div>
 </dd>
+<dt id="fpdf.FPDF.default_page_dimensions"><code class="name">var <span class="ident">default_page_dimensions</span></code></dt>
+<dd>
+<div class="desc"><p>Return a pair (width, height) in the unit specified to FPDF constructor</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def default_page_dimensions(self):
+    &#34;Return a pair (width, height) in the unit specified to FPDF constructor&#34;
+    return (
+        (self.dw_pt, self.dh_pt)
+        if self.def_orientation == &#34;P&#34;
+        else (self.dh_pt, self.dw_pt)
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.eph"><code class="name">var <span class="ident">eph</span></code></dt>
 <dd>
 <div class="desc"><p>Effective page height: the page height minus its vertical margins.</p></div>
@@ -4498,7 +4527,7 @@ def add_action(self, action, x, y, w, h):
 </details>
 </dd>
 <dt id="fpdf.FPDF.add_font"><code class="name flex">
-<span>def <span class="ident">add_font</span></span>(<span>self, family, style='', fname=None, uni='DEPRECATED')</span>
+<span>def <span class="ident">add_font</span></span>(<span>self, family=None, style='', fname=None, uni='DEPRECATED')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Imports a TrueType or OpenType font and makes it available
@@ -4507,7 +4536,8 @@ for later calls to the <code><a title="fpdf.FPDF.set_font" href="#fpdf.FPDF.set_
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>family</code></strong> :&ensp;<code>str</code></dt>
-<dd>font family. Used as a reference for <code><a title="fpdf.FPDF.set_font" href="#fpdf.FPDF.set_font">FPDF.set_font()</a></code></dd>
+<dd>optional name of the font family. Used as a reference for <code><a title="fpdf.FPDF.set_font" href="#fpdf.FPDF.set_font">FPDF.set_font()</a></code>.
+If not provided, use the base name of the <code>fname</code> font path, without extension.</dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
 <dd>font style. "B" for bold, "I" for italic.</dd>
 <dt><strong><code>fname</code></strong> :&ensp;<code>str</code></dt>
@@ -4520,7 +4550,7 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_font(self, family, style=&#34;&#34;, fname=None, uni=&#34;DEPRECATED&#34;):
+<pre><code class="python">def add_font(self, family=None, style=&#34;&#34;, fname=None, uni=&#34;DEPRECATED&#34;):
     &#34;&#34;&#34;
     Imports a TrueType or OpenType font and makes it available
     for later calls to the `FPDF.set_font()` method.
@@ -4528,7 +4558,8 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
     You will find more information on the &#34;Unicode&#34; documentation page.
 
     Args:
-        family (str): font family. Used as a reference for `FPDF.set_font()`
+        family (str): optional name of the font family. Used as a reference for `FPDF.set_font()`.
+            If not provided, use the base name of the `fname` font path, without extension.
         style (str): font style. &#34;B&#34; for bold, &#34;I&#34; for italic.
         fname (str): font file name. You can specify a relative or full path.
             If the file is not found, it will be searched in `FPDF_FONT_DIR`.
@@ -4557,24 +4588,26 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
         raise ValueError(
             f&#34;Unknown style provided (only B &amp; I letters are allowed): {style}&#34;
         )
-    fontkey = f&#34;{family.lower()}{style}&#34;
-
-    # Check if font already added or one of the core fonts
-    if fontkey in self.fonts or fontkey in self.core_fonts:
-        warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
-        return
 
     for parent in (&#34;.&#34;, FPDF_FONT_DIR):
         if not parent:
             continue
 
         if (Path(parent) / fname).exists():
-            ttffilename = Path(parent) / fname
+            font_file_path = Path(parent) / fname
             break
     else:
         raise FileNotFoundError(f&#34;TTF Font file not found: {fname}&#34;)
 
-    font = ttLib.TTFont(ttffilename)
+    if family is None:
+        family = font_file_path.stem
+
+    fontkey = f&#34;{family.lower()}{style}&#34;
+    # Check if font already added or one of the core fonts
+    if fontkey in self.fonts or fontkey in self.core_fonts:
+        warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
+        return
+    font = ttLib.TTFont(font_file_path)
 
     scale = 1000 / font[&#34;head&#34;].unitsPerEm
     default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
@@ -4637,7 +4670,7 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
         &#34;up&#34;: round(font[&#34;post&#34;].underlinePosition * scale),
         &#34;ut&#34;: round(font[&#34;post&#34;].underlineThickness * scale),
         &#34;cw&#34;: char_widths,
-        &#34;ttffile&#34;: ttffilename,
+        &#34;ttffile&#34;: font_file_path,
         &#34;fontkey&#34;: fontkey,
         &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
     }</code></pre>
@@ -12261,6 +12294,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.code39" href="#fpdf.FPDF.code39">code39</a></code></li>
 <li><code><a title="fpdf.FPDF.core_fonts_encoding" href="#fpdf.FPDF.core_fonts_encoding">core_fonts_encoding</a></code></li>
 <li><code><a title="fpdf.FPDF.dashed_line" href="#fpdf.FPDF.dashed_line">dashed_line</a></code></li>
+<li><code><a title="fpdf.FPDF.default_page_dimensions" href="#fpdf.FPDF.default_page_dimensions">default_page_dimensions</a></code></li>
 <li><code><a title="fpdf.FPDF.draw_path" href="#fpdf.FPDF.draw_path">draw_path</a></code></li>
 <li><code><a title="fpdf.FPDF.drawing_context" href="#fpdf.FPDF.drawing_context">drawing_context</a></code></li>
 <li><code><a title="fpdf.FPDF.ellipse" href="#fpdf.FPDF.ellipse">ellipse</a></code></li>
