@@ -1203,7 +1203,7 @@ class GraphicsStyle:
     def paint_rule(self, new):
         if new is None:
             super().__setattr__(&#34;_paint_rule&#34;, PathPaintRule.DONT_PAINT)
-        if new is self.INHERIT:
+        elif new is self.INHERIT:
             super().__setattr__(&#34;_paint_rule&#34;, new)
         else:
             super().__setattr__(&#34;_paint_rule&#34;, PathPaintRule.coerce(new))
@@ -6827,7 +6827,7 @@ which use None as hints to the auto paint style detection code.</p></div>
     def paint_rule(self, new):
         if new is None:
             super().__setattr__(&#34;_paint_rule&#34;, PathPaintRule.DONT_PAINT)
-        if new is self.INHERIT:
+        elif new is self.INHERIT:
             super().__setattr__(&#34;_paint_rule&#34;, new)
         else:
             super().__setattr__(&#34;_paint_rule&#34;, PathPaintRule.coerce(new))
