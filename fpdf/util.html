@@ -31,9 +31,12 @@ from datetime import datetime, timezone
 from typing import Union, Iterable
 
 
-def object_id_for_page(page):
-    # Predictable given that FPDF._putpages is invoked first in FPDF._enddoc:
-    return 2 * page + 1
+def buffer_subst(buffer, placeholder, value):
+    buffer_size = len(buffer)
+    assert len(placeholder) == len(value), f&#34;placeholder={placeholder} value={value}&#34;
+    buffer = buffer.replace(placeholder.encode(), value.encode(), 1)
+    assert len(buffer) == buffer_size
+    return buffer
 
 
 def format_date(date: datetime, with_tz=False) -&gt; str:
@@ -167,6 +170,23 @@ dochecks()</code></pre>
     if isinstance(s, int):
         return bytes([s])  # http://bugs.python.org/issue4588
     raise ValueError(f&#34;Invalid input: {s}&#34;)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.util.buffer_subst"><code class="name flex">
+<span>def <span class="ident">buffer_subst</span></span>(<span>buffer, placeholder, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def buffer_subst(buffer, placeholder, value):
+    buffer_size = len(buffer)
+    assert len(placeholder) == len(value), f&#34;placeholder={placeholder} value={value}&#34;
+    buffer = buffer.replace(placeholder.encode(), value.encode(), 1)
+    assert len(buffer) == buffer_size
+    return buffer</code></pre>
 </details>
 </dd>
 <dt id="fpdf.util.convert_unit"><code class="name flex">
@@ -339,20 +359,6 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
     raise ValueError(f&#34;Incorrect unit: {unit}&#34;)</code></pre>
 </details>
 </dd>
-<dt id="fpdf.util.object_id_for_page"><code class="name flex">
-<span>def <span class="ident">object_id_for_page</span></span>(<span>page)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def object_id_for_page(page):
-    # Predictable given that FPDF._putpages is invoked first in FPDF._enddoc:
-    return 2 * page + 1</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -372,13 +378,13 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
 <li><code><a title="fpdf.util.b" href="#fpdf.util.b">b</a></code></li>
+<li><code><a title="fpdf.util.buffer_subst" href="#fpdf.util.buffer_subst">buffer_subst</a></code></li>
 <li><code><a title="fpdf.util.convert_unit" href="#fpdf.util.convert_unit">convert_unit</a></code></li>
 <li><code><a title="fpdf.util.dochecks" href="#fpdf.util.dochecks">dochecks</a></code></li>
 <li><code><a title="fpdf.util.enclose_in_parens" href="#fpdf.util.enclose_in_parens">enclose_in_parens</a></code></li>
 <li><code><a title="fpdf.util.escape_parens" href="#fpdf.util.escape_parens">escape_parens</a></code></li>
 <li><code><a title="fpdf.util.format_date" href="#fpdf.util.format_date">format_date</a></code></li>
 <li><code><a title="fpdf.util.get_scale_factor" href="#fpdf.util.get_scale_factor">get_scale_factor</a></code></li>
-<li><code><a title="fpdf.util.object_id_for_page" href="#fpdf.util.object_id_for_page">object_id_for_page</a></code></li>
 </ul>
 </li>
 </ul>

@@ -26,38 +26,156 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from datetime import datetime
-from typing import NamedTuple, Optional, Tuple, Union
+<pre><code class="python">import hashlib
+from datetime import datetime
+from typing import NamedTuple, Tuple, Union
 
-from .enums import AnnotationFlag, AnnotationName
 from .actions import Action
+from .enums import AnnotationFlag, AnnotationName, FileAttachmentAnnotationName
+from .util import enclose_in_parens, format_date
+from .syntax import build_obj_dict, Destination, Name, PDFObject, PDFContentStream
+from .syntax import create_dictionary_string as pdf_dict
+from .syntax import create_list_string as pdf_list
+from .syntax import iobj_ref as pdf_ref
 
 
 # cf. https://docs.verapdf.org/validation/pdfa-part1/#rule-653-2
 DEFAULT_ANNOT_FLAGS = (AnnotationFlag.PRINT,)
 
 
-class Annotation(NamedTuple):
-    type: str
-    x: int
-    y: int
-    width: int
-    height: int
-    flags: Tuple[AnnotationFlag] = DEFAULT_ANNOT_FLAGS
-    contents: str = None
-    link: Union[str, int] = None
-    action: Optional[Action] = None
-    color: Optional[int] = None
-    modification_time: Optional[datetime] = None
-    title: Optional[str] = None
-    quad_points: Optional[tuple] = None
-    page: Optional[int] = None
-    border_width: int = 0  # PDF readers support: displayed by Acrobat but not Sumatra
-    name: Optional[AnnotationName] = None  # for text annotations
-    ink_list: Tuple[int] = ()  # for ink annotations
-    embedded_file_name: Optional[str] = None
-    field_type: Optional[str] = None
-    value: Optional[str] = None</code></pre>
+class AnnotationMixin:
+    def __init__(
+        self,
+        subtype: str,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        flags: Tuple[AnnotationFlag] = DEFAULT_ANNOT_FLAGS,
+        contents: str = None,
+        dest: Destination = None,
+        action: Action = None,
+        color: tuple = None,
+        modification_time: datetime = None,
+        title: str = None,
+        quad_points: tuple = None,
+        border_width: int = 0,  # PDF readers support: displayed by Acrobat but not Sumatra
+        name: Union[AnnotationName, FileAttachmentAnnotationName] = None,
+        ink_list: Tuple[int] = (),  # for ink annotations
+        file_spec: str = None,
+        field_type: str = None,
+        value=None,
+    ):
+        self.type = Name(&#34;Annot&#34;)
+        self.subtype = Name(subtype)
+        self.rect = f&#34;[{x:.2f} {y:.2f} {x + width:.2f} {y - height:.2f}]&#34;
+        self.border = f&#34;[0 0 {border_width}]&#34;
+        self.f_t = Name(field_type) if field_type else None
+        self.v = value
+        self.f = sum(flags)
+        self.contents = enclose_in_parens(contents) if contents else None
+        self.a = action
+        self.dest = dest
+        self.c = f&#34;[{color[0]} {color[1]} {color[2]}]&#34; if color else None
+        self.t = enclose_in_parens(title) if title else None
+        self.m = format_date(modification_time) if modification_time else None
+        self.quad_points = (
+            pdf_list(f&#34;{quad_point:.2f}&#34; for quad_point in quad_points)
+            if quad_points
+            else None
+        )
+        self.p = None  # must always be set before calling .serialize()
+        self.name = name
+        self.ink_list = (
+            (&#34;[&#34; + pdf_list(f&#34;{coord:.2f}&#34; for coord in ink_list) + &#34;]&#34;)
+            if ink_list
+            else None
+        )
+        self.f_s = file_spec
+
+
+class PDFAnnotation(AnnotationMixin, PDFObject):
+    &#34;A PDF annotation that get serialized as an obj&lt;&lt;/&gt;&gt;endobj block&#34;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class AnnotationDict(AnnotationMixin):
+    &#34;A PDF annotation that get serialized as an inline &lt;&lt;dictionnary&gt;&gt;&#34;
+    __slots__ = (  # RAM usage optimization
+        &#34;type&#34;,
+        &#34;subtype&#34;,
+        &#34;rect&#34;,
+        &#34;border&#34;,
+        &#34;f_t&#34;,
+        &#34;v&#34;,
+        &#34;f&#34;,
+        &#34;contents&#34;,
+        &#34;a&#34;,
+        &#34;dest&#34;,
+        &#34;c&#34;,
+        &#34;t&#34;,
+        &#34;quad_points&#34;,
+        &#34;p&#34;,
+        &#34;name&#34;,
+        &#34;ink_list&#34;,
+        &#34;f_s&#34;,
+    )
+
+    def serialize(self):
+        obj_dict = build_obj_dict({key: getattr(self, key) for key in dir(self)})
+        return pdf_dict(obj_dict)
+
+
+class PDFEmbeddedFile(PDFContentStream):
+    def __init__(
+        self,
+        basename: str,
+        contents: bytes,
+        desc: str = &#34;&#34;,
+        creation_date: datetime = None,
+        modification_date: datetime = None,
+        compress: bool = False,
+        checksum: bool = False,
+    ):
+        super().__init__(contents=contents, compress=compress)
+        self.type = Name(&#34;EmbeddedFile&#34;)
+        params = {&#34;/Size&#34;: len(contents)}
+        if creation_date:
+            params[&#34;/CreationDate&#34;] = format_date(creation_date, with_tz=True)
+        if modification_date:
+            params[&#34;/ModDate&#34;] = format_date(modification_date, with_tz=True)
+        if checksum:
+            file_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)
+            file_hash.update(self._contents)
+            hash_hex = file_hash.hexdigest()
+            params[&#34;/CheckSum&#34;] = f&#34;&lt;{hash_hex}&gt;&#34;
+        self.params = pdf_dict(params)
+        self._basename = basename  # private so that it does not get serialized
+        self._desc = desc  # private so that it does not get serialized
+
+    def basename(self):
+        return self._basename
+
+    def file_spec(self):
+        return FileSpec(self, self._basename, self._desc)
+
+
+class FileSpec(NamedTuple):
+    embedded_file: PDFEmbeddedFile
+    basename: str
+    desc: str
+
+    def serialize(self):
+        obj_dict = {
+            &#34;/Type&#34;: &#34;/Filespec&#34;,
+            &#34;/F&#34;: enclose_in_parens(self.basename),
+            &#34;/EF&#34;: pdf_dict({&#34;/F&#34;: pdf_ref(self.embedded_file.id)}),
+        }
+        if self.desc:
+            obj_dict[&#34;/Desc&#34;] = enclose_in_parens(self.desc)
+        return pdf_dict(obj_dict, field_join=&#34; &#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -69,37 +187,225 @@ class Annotation(NamedTuple):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="fpdf.annotations.Annotation"><code class="flex name class">
-<span>class <span class="ident">Annotation</span></span>
-<span>(</span><span>type: str, x: int, y: int, width: int, height: int, flags: Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, link: Union[str, int] = None, action: Optional[<a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a>] = None, color: Optional[int] = None, modification_time: Optional[datetime.datetime] = None, title: Optional[str] = None, quad_points: Optional[tuple] = None, page: Optional[int] = None, border_width: int = 0, name: Optional[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>] = None, ink_list: Tuple[int] = (), embedded_file_name: Optional[str] = None, field_type: Optional[str] = None, value: Optional[str] = None)</span>
+<dt id="fpdf.annotations.AnnotationDict"><code class="flex name class">
+<span>class <span class="ident">AnnotationDict</span></span>
+<span>(</span><span>subtype: str, x: int, y: int, width: int, height: int, flags: Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, action: <a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a> = None, color: tuple = None, modification_time: datetime.datetime = None, title: str = None, quad_points: tuple = None, border_width: int = 0, name: Union[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, <a title="fpdf.enums.FileAttachmentAnnotationName" href="enums.html#fpdf.enums.FileAttachmentAnnotationName">FileAttachmentAnnotationName</a>] = None, ink_list: Tuple[int] = (), file_spec: str = None, field_type: str = None, value=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Annotation(type, x, y, width, height, flags, contents, link, action, color, modification_time, title, quad_points, page, border_width, name, ink_list, embedded_file_name, field_type, value)</p></div>
+<div class="desc"><p>A PDF annotation that get serialized as an inline &lt;<dictionnary>&gt;</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Annotation(NamedTuple):
-    type: str
-    x: int
-    y: int
-    width: int
-    height: int
-    flags: Tuple[AnnotationFlag] = DEFAULT_ANNOT_FLAGS
-    contents: str = None
-    link: Union[str, int] = None
-    action: Optional[Action] = None
-    color: Optional[int] = None
-    modification_time: Optional[datetime] = None
-    title: Optional[str] = None
-    quad_points: Optional[tuple] = None
-    page: Optional[int] = None
-    border_width: int = 0  # PDF readers support: displayed by Acrobat but not Sumatra
-    name: Optional[AnnotationName] = None  # for text annotations
-    ink_list: Tuple[int] = ()  # for ink annotations
-    embedded_file_name: Optional[str] = None
-    field_type: Optional[str] = None
-    value: Optional[str] = None</code></pre>
+<pre><code class="python">class AnnotationDict(AnnotationMixin):
+    &#34;A PDF annotation that get serialized as an inline &lt;&lt;dictionnary&gt;&gt;&#34;
+    __slots__ = (  # RAM usage optimization
+        &#34;type&#34;,
+        &#34;subtype&#34;,
+        &#34;rect&#34;,
+        &#34;border&#34;,
+        &#34;f_t&#34;,
+        &#34;v&#34;,
+        &#34;f&#34;,
+        &#34;contents&#34;,
+        &#34;a&#34;,
+        &#34;dest&#34;,
+        &#34;c&#34;,
+        &#34;t&#34;,
+        &#34;quad_points&#34;,
+        &#34;p&#34;,
+        &#34;name&#34;,
+        &#34;ink_list&#34;,
+        &#34;f_s&#34;,
+    )
+
+    def serialize(self):
+        obj_dict = build_obj_dict({key: getattr(self, key) for key in dir(self)})
+        return pdf_dict(obj_dict)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.annotations.AnnotationMixin" href="#fpdf.annotations.AnnotationMixin">AnnotationMixin</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.annotations.AnnotationDict.a"><code class="name">var <span class="ident">a</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.border"><code class="name">var <span class="ident">border</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.c"><code class="name">var <span class="ident">c</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.contents"><code class="name">var <span class="ident">contents</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.dest"><code class="name">var <span class="ident">dest</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.f"><code class="name">var <span class="ident">f</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.f_s"><code class="name">var <span class="ident">f_s</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.f_t"><code class="name">var <span class="ident">f_t</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.ink_list"><code class="name">var <span class="ident">ink_list</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.p"><code class="name">var <span class="ident">p</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.quad_points"><code class="name">var <span class="ident">quad_points</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.rect"><code class="name">var <span class="ident">rect</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.subtype"><code class="name">var <span class="ident">subtype</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.t"><code class="name">var <span class="ident">t</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.type"><code class="name">var <span class="ident">type</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.annotations.AnnotationDict.v"><code class="name">var <span class="ident">v</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.annotations.AnnotationDict.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serialize(self):
+    obj_dict = build_obj_dict({key: getattr(self, key) for key in dir(self)})
+    return pdf_dict(obj_dict)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fpdf.annotations.AnnotationMixin"><code class="flex name class">
+<span>class <span class="ident">AnnotationMixin</span></span>
+<span>(</span><span>subtype: str, x: int, y: int, width: int, height: int, flags: Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, action: <a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a> = None, color: tuple = None, modification_time: datetime.datetime = None, title: str = None, quad_points: tuple = None, border_width: int = 0, name: Union[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, <a title="fpdf.enums.FileAttachmentAnnotationName" href="enums.html#fpdf.enums.FileAttachmentAnnotationName">FileAttachmentAnnotationName</a>] = None, ink_list: Tuple[int] = (), file_spec: str = None, field_type: str = None, value=None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AnnotationMixin:
+    def __init__(
+        self,
+        subtype: str,
+        x: int,
+        y: int,
+        width: int,
+        height: int,
+        flags: Tuple[AnnotationFlag] = DEFAULT_ANNOT_FLAGS,
+        contents: str = None,
+        dest: Destination = None,
+        action: Action = None,
+        color: tuple = None,
+        modification_time: datetime = None,
+        title: str = None,
+        quad_points: tuple = None,
+        border_width: int = 0,  # PDF readers support: displayed by Acrobat but not Sumatra
+        name: Union[AnnotationName, FileAttachmentAnnotationName] = None,
+        ink_list: Tuple[int] = (),  # for ink annotations
+        file_spec: str = None,
+        field_type: str = None,
+        value=None,
+    ):
+        self.type = Name(&#34;Annot&#34;)
+        self.subtype = Name(subtype)
+        self.rect = f&#34;[{x:.2f} {y:.2f} {x + width:.2f} {y - height:.2f}]&#34;
+        self.border = f&#34;[0 0 {border_width}]&#34;
+        self.f_t = Name(field_type) if field_type else None
+        self.v = value
+        self.f = sum(flags)
+        self.contents = enclose_in_parens(contents) if contents else None
+        self.a = action
+        self.dest = dest
+        self.c = f&#34;[{color[0]} {color[1]} {color[2]}]&#34; if color else None
+        self.t = enclose_in_parens(title) if title else None
+        self.m = format_date(modification_time) if modification_time else None
+        self.quad_points = (
+            pdf_list(f&#34;{quad_point:.2f}&#34; for quad_point in quad_points)
+            if quad_points
+            else None
+        )
+        self.p = None  # must always be set before calling .serialize()
+        self.name = name
+        self.ink_list = (
+            (&#34;[&#34; + pdf_list(f&#34;{coord:.2f}&#34; for coord in ink_list) + &#34;]&#34;)
+            if ink_list
+            else None
+        )
+        self.f_s = file_spec</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fpdf.annotations.AnnotationDict" href="#fpdf.annotations.AnnotationDict">AnnotationDict</a></li>
+<li><a title="fpdf.annotations.PDFAnnotation" href="#fpdf.annotations.PDFAnnotation">PDFAnnotation</a></li>
+</ul>
+</dd>
+<dt id="fpdf.annotations.FileSpec"><code class="flex name class">
+<span>class <span class="ident">FileSpec</span></span>
+<span>(</span><span>embedded_file: <a title="fpdf.annotations.PDFEmbeddedFile" href="#fpdf.annotations.PDFEmbeddedFile">PDFEmbeddedFile</a>, basename: str, desc: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>FileSpec(embedded_file, basename, desc)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FileSpec(NamedTuple):
+    embedded_file: PDFEmbeddedFile
+    basename: str
+    desc: str
+
+    def serialize(self):
+        obj_dict = {
+            &#34;/Type&#34;: &#34;/Filespec&#34;,
+            &#34;/F&#34;: enclose_in_parens(self.basename),
+            &#34;/EF&#34;: pdf_dict({&#34;/F&#34;: pdf_ref(self.embedded_file.id)}),
+        }
+        if self.desc:
+            obj_dict[&#34;/Desc&#34;] = enclose_in_parens(self.desc)
+        return pdf_dict(obj_dict, field_join=&#34; &#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -107,87 +413,162 @@ class Annotation(NamedTuple):
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="fpdf.annotations.Annotation.action"><code class="name">var <span class="ident">action</span> : Optional[<a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a>]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 8</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.border_width"><code class="name">var <span class="ident">border_width</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 14</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.color"><code class="name">var <span class="ident">color</span> : Optional[int]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 9</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.contents"><code class="name">var <span class="ident">contents</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 6</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.embedded_file_name"><code class="name">var <span class="ident">embedded_file_name</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 17</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.field_type"><code class="name">var <span class="ident">field_type</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 18</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.flags"><code class="name">var <span class="ident">flags</span> : Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 5</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.height"><code class="name">var <span class="ident">height</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 4</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.ink_list"><code class="name">var <span class="ident">ink_list</span> : Tuple[int]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 16</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.link"><code class="name">var <span class="ident">link</span> : Union[str, int]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 7</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.modification_time"><code class="name">var <span class="ident">modification_time</span> : Optional[datetime.datetime]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 10</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.name"><code class="name">var <span class="ident">name</span> : Optional[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 15</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.page"><code class="name">var <span class="ident">page</span> : Optional[int]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 13</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.quad_points"><code class="name">var <span class="ident">quad_points</span> : Optional[tuple]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 12</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.title"><code class="name">var <span class="ident">title</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 11</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.type"><code class="name">var <span class="ident">type</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 0</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.value"><code class="name">var <span class="ident">value</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 19</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.width"><code class="name">var <span class="ident">width</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 3</p></div>
-</dd>
-<dt id="fpdf.annotations.Annotation.x"><code class="name">var <span class="ident">x</span> : int</code></dt>
+<dt id="fpdf.annotations.FileSpec.basename"><code class="name">var <span class="ident">basename</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 1</p></div>
 </dd>
-<dt id="fpdf.annotations.Annotation.y"><code class="name">var <span class="ident">y</span> : int</code></dt>
+<dt id="fpdf.annotations.FileSpec.desc"><code class="name">var <span class="ident">desc</span> : str</code></dt>
 <dd>
 <div class="desc"><p>Alias for field number 2</p></div>
 </dd>
+<dt id="fpdf.annotations.FileSpec.embedded_file"><code class="name">var <span class="ident">embedded_file</span> : <a title="fpdf.annotations.PDFEmbeddedFile" href="#fpdf.annotations.PDFEmbeddedFile">PDFEmbeddedFile</a></code></dt>
+<dd>
+<div class="desc"><p>Alias for field number 0</p></div>
+</dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.annotations.FileSpec.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def serialize(self):
+    obj_dict = {
+        &#34;/Type&#34;: &#34;/Filespec&#34;,
+        &#34;/F&#34;: enclose_in_parens(self.basename),
+        &#34;/EF&#34;: pdf_dict({&#34;/F&#34;: pdf_ref(self.embedded_file.id)}),
+    }
+    if self.desc:
+        obj_dict[&#34;/Desc&#34;] = enclose_in_parens(self.desc)
+    return pdf_dict(obj_dict, field_join=&#34; &#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="fpdf.annotations.PDFAnnotation"><code class="flex name class">
+<span>class <span class="ident">PDFAnnotation</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A PDF annotation that get serialized as an obj&lt;&gt;endobj block</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PDFAnnotation(AnnotationMixin, PDFObject):
+    &#34;A PDF annotation that get serialized as an obj&lt;&lt;/&gt;&gt;endobj block&#34;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.annotations.AnnotationMixin" href="#fpdf.annotations.AnnotationMixin">AnnotationMixin</a></li>
+<li><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFObject.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFObject.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fpdf.annotations.PDFEmbeddedFile"><code class="flex name class">
+<span>class <span class="ident">PDFEmbeddedFile</span></span>
+<span>(</span><span>basename: str, contents: bytes, desc: str = '', creation_date: datetime.datetime = None, modification_date: datetime.datetime = None, compress: bool = False, checksum: bool = False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Main features of this class:
+* delay ID assignement
+* implement serializing</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PDFEmbeddedFile(PDFContentStream):
+    def __init__(
+        self,
+        basename: str,
+        contents: bytes,
+        desc: str = &#34;&#34;,
+        creation_date: datetime = None,
+        modification_date: datetime = None,
+        compress: bool = False,
+        checksum: bool = False,
+    ):
+        super().__init__(contents=contents, compress=compress)
+        self.type = Name(&#34;EmbeddedFile&#34;)
+        params = {&#34;/Size&#34;: len(contents)}
+        if creation_date:
+            params[&#34;/CreationDate&#34;] = format_date(creation_date, with_tz=True)
+        if modification_date:
+            params[&#34;/ModDate&#34;] = format_date(modification_date, with_tz=True)
+        if checksum:
+            file_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)
+            file_hash.update(self._contents)
+            hash_hex = file_hash.hexdigest()
+            params[&#34;/CheckSum&#34;] = f&#34;&lt;{hash_hex}&gt;&#34;
+        self.params = pdf_dict(params)
+        self._basename = basename  # private so that it does not get serialized
+        self._desc = desc  # private so that it does not get serialized
+
+    def basename(self):
+        return self._basename
+
+    def file_spec(self):
+        return FileSpec(self, self._basename, self._desc)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.syntax.PDFContentStream" href="syntax.html#fpdf.syntax.PDFContentStream">PDFContentStream</a></li>
+<li><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.annotations.PDFEmbeddedFile.basename"><code class="name flex">
+<span>def <span class="ident">basename</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def basename(self):
+    return self._basename</code></pre>
+</details>
+</dd>
+<dt id="fpdf.annotations.PDFEmbeddedFile.file_spec"><code class="name flex">
+<span>def <span class="ident">file_spec</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def file_spec(self):
+    return FileSpec(self, self._basename, self._desc)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFContentStream" href="syntax.html#fpdf.syntax.PDFContentStream">PDFContentStream</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFContentStream.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFContentStream.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -206,28 +587,48 @@ class Annotation(NamedTuple):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="fpdf.annotations.Annotation" href="#fpdf.annotations.Annotation">Annotation</a></code></h4>
+<h4><code><a title="fpdf.annotations.AnnotationDict" href="#fpdf.annotations.AnnotationDict">AnnotationDict</a></code></h4>
 <ul class="two-column">
-<li><code><a title="fpdf.annotations.Annotation.action" href="#fpdf.annotations.Annotation.action">action</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.border_width" href="#fpdf.annotations.Annotation.border_width">border_width</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.color" href="#fpdf.annotations.Annotation.color">color</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.contents" href="#fpdf.annotations.Annotation.contents">contents</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.embedded_file_name" href="#fpdf.annotations.Annotation.embedded_file_name">embedded_file_name</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.field_type" href="#fpdf.annotations.Annotation.field_type">field_type</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.flags" href="#fpdf.annotations.Annotation.flags">flags</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.height" href="#fpdf.annotations.Annotation.height">height</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.ink_list" href="#fpdf.annotations.Annotation.ink_list">ink_list</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.link" href="#fpdf.annotations.Annotation.link">link</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.modification_time" href="#fpdf.annotations.Annotation.modification_time">modification_time</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.name" href="#fpdf.annotations.Annotation.name">name</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.page" href="#fpdf.annotations.Annotation.page">page</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.quad_points" href="#fpdf.annotations.Annotation.quad_points">quad_points</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.title" href="#fpdf.annotations.Annotation.title">title</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.type" href="#fpdf.annotations.Annotation.type">type</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.value" href="#fpdf.annotations.Annotation.value">value</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.width" href="#fpdf.annotations.Annotation.width">width</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.x" href="#fpdf.annotations.Annotation.x">x</a></code></li>
-<li><code><a title="fpdf.annotations.Annotation.y" href="#fpdf.annotations.Annotation.y">y</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.a" href="#fpdf.annotations.AnnotationDict.a">a</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.border" href="#fpdf.annotations.AnnotationDict.border">border</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.c" href="#fpdf.annotations.AnnotationDict.c">c</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.contents" href="#fpdf.annotations.AnnotationDict.contents">contents</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.dest" href="#fpdf.annotations.AnnotationDict.dest">dest</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.f" href="#fpdf.annotations.AnnotationDict.f">f</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.f_s" href="#fpdf.annotations.AnnotationDict.f_s">f_s</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.f_t" href="#fpdf.annotations.AnnotationDict.f_t">f_t</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.ink_list" href="#fpdf.annotations.AnnotationDict.ink_list">ink_list</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.name" href="#fpdf.annotations.AnnotationDict.name">name</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.p" href="#fpdf.annotations.AnnotationDict.p">p</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.quad_points" href="#fpdf.annotations.AnnotationDict.quad_points">quad_points</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.rect" href="#fpdf.annotations.AnnotationDict.rect">rect</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.serialize" href="#fpdf.annotations.AnnotationDict.serialize">serialize</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.subtype" href="#fpdf.annotations.AnnotationDict.subtype">subtype</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.t" href="#fpdf.annotations.AnnotationDict.t">t</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.type" href="#fpdf.annotations.AnnotationDict.type">type</a></code></li>
+<li><code><a title="fpdf.annotations.AnnotationDict.v" href="#fpdf.annotations.AnnotationDict.v">v</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.annotations.AnnotationMixin" href="#fpdf.annotations.AnnotationMixin">AnnotationMixin</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fpdf.annotations.FileSpec" href="#fpdf.annotations.FileSpec">FileSpec</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.annotations.FileSpec.basename" href="#fpdf.annotations.FileSpec.basename">basename</a></code></li>
+<li><code><a title="fpdf.annotations.FileSpec.desc" href="#fpdf.annotations.FileSpec.desc">desc</a></code></li>
+<li><code><a title="fpdf.annotations.FileSpec.embedded_file" href="#fpdf.annotations.FileSpec.embedded_file">embedded_file</a></code></li>
+<li><code><a title="fpdf.annotations.FileSpec.serialize" href="#fpdf.annotations.FileSpec.serialize">serialize</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.annotations.PDFAnnotation" href="#fpdf.annotations.PDFAnnotation">PDFAnnotation</a></code></h4>
+</li>
+<li>
+<h4><code><a title="fpdf.annotations.PDFEmbeddedFile" href="#fpdf.annotations.PDFEmbeddedFile">PDFEmbeddedFile</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.annotations.PDFEmbeddedFile.basename" href="#fpdf.annotations.PDFEmbeddedFile.basename">basename</a></code></li>
+<li><code><a title="fpdf.annotations.PDFEmbeddedFile.file_spec" href="#fpdf.annotations.PDFEmbeddedFile.file_spec">file_spec</a></code></li>
 </ul>
 </li>
 </ul>

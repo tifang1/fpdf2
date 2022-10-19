@@ -91,7 +91,7 @@ class GraphicsStateDictRegistry(OrderedDict):
     &#34;&#34;&#34;
 
     def register_style(self, style: &#34;GraphicsStyle&#34;):
-        sdict = style.to_pdf_dict()
+        sdict = style.serialize()
 
         # empty style does not need a dictionary
         if not sdict:
@@ -138,11 +138,11 @@ def render_pdf_primitive(primitive):
     Container types (tuples/lists and dicts) are rendered recursively. This supports
     values of the type Name, str, bytes, numbers, booleans, list/tuple, and dict.
 
-    Any custom type can be passed in as long as it provides a `pdf_repr` method that
+    Any custom type can be passed in as long as it provides a `serialize` method that
     takes no arguments and returns a string. The primitive object is returned directly
-    if it is an instance of the `Raw` class. Otherwise, The existence of the `pdf_repr`
+    if it is an instance of the `Raw` class. Otherwise, The existence of the `serialize`
     method is checked before any other type checking is performed, so, for example, a
-    `dict` subclass with a `pdf_repr` method would be converted using its `pdf_repr`
+    `dict` subclass with a `serialize` method would be converted using its `pdf_repr`
     method rather than the built-in `dict` conversion process.
 
     Args:
@@ -160,8 +160,8 @@ def render_pdf_primitive(primitive):
     if isinstance(primitive, Raw):
         return primitive
 
-    if callable(getattr(primitive, &#34;pdf_repr&#34;, None)):
-        output = primitive.pdf_repr()
+    if callable(getattr(primitive, &#34;serialize&#34;, None)):
+        output = primitive.serialize()
     elif primitive is None:
         output = &#34;null&#34;
     elif isinstance(primitive, str):
@@ -235,7 +235,7 @@ class DeviceRGB(
         &#34;&#34;&#34;The color components as a tuple in order `(r, g, b)` with alpha omitted.&#34;&#34;&#34;
         return self[:-1]
 
-    def pdf_repr(self) -&gt; str:
+    def serialize(self) -&gt; str:
         return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;
 
 
@@ -278,7 +278,7 @@ class DeviceGray(
         &#34;&#34;&#34;The color components as a tuple in order (g,) with alpha omitted.&#34;&#34;&#34;
         return self[:-1]
 
-    def pdf_repr(self) -&gt; str:
+    def serialize(self) -&gt; str:
         return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;
 
 
@@ -334,7 +334,7 @@ class DeviceCMYK(
 
         return self[:-1]
 
-    def pdf_repr(self) -&gt; str:
+    def serialize(self) -&gt; str:
         return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;
 
 
@@ -1424,7 +1424,7 @@ class GraphicsStyle:
 
         raise TypeError(f&#34;{value} isn&#39;t a number or GraphicsStyle.INHERIT&#34;)
 
-    def to_pdf_dict(self):
+    def serialize(self):
         &#34;&#34;&#34;
         Convert this style object to a PDF dictionary with appropriate style keys.
 
@@ -4105,10 +4105,10 @@ class GraphicsContext:
             stroke_color = self.style.stroke_color
 
             if fill_color not in NO_EMIT_SET:
-                render_list.append(fill_color.pdf_repr().lower())
+                render_list.append(fill_color.serialize().lower())
 
             if stroke_color not in NO_EMIT_SET:
-                render_list.append(stroke_color.pdf_repr().upper())
+                render_list.append(stroke_color.serialize().upper())
 
             if emit_dash is not None:
                 render_list.append(
@@ -4493,11 +4493,11 @@ interpreted as not specifying the opacity, so it will not be explicitly set.</p>
 <div class="desc"><p>Render a Python value as a PDF primitive type.</p>
 <p>Container types (tuples/lists and dicts) are rendered recursively. This supports
 values of the type Name, str, bytes, numbers, booleans, list/tuple, and dict.</p>
-<p>Any custom type can be passed in as long as it provides a <code>pdf_repr</code> method that
+<p>Any custom type can be passed in as long as it provides a <code>serialize</code> method that
 takes no arguments and returns a string. The primitive object is returned directly
-if it is an instance of the <code>Raw</code> class. Otherwise, The existence of the <code>pdf_repr</code>
+if it is an instance of the <code>Raw</code> class. Otherwise, The existence of the <code>serialize</code>
 method is checked before any other type checking is performed, so, for example, a
-<code>dict</code> subclass with a <code>pdf_repr</code> method would be converted using its <code>pdf_repr</code>
+<code>dict</code> subclass with a <code>serialize</code> method would be converted using its <code>pdf_repr</code>
 method rather than the built-in <code>dict</code> conversion process.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -4525,11 +4525,11 @@ representation.</dd>
     Container types (tuples/lists and dicts) are rendered recursively. This supports
     values of the type Name, str, bytes, numbers, booleans, list/tuple, and dict.
 
-    Any custom type can be passed in as long as it provides a `pdf_repr` method that
+    Any custom type can be passed in as long as it provides a `serialize` method that
     takes no arguments and returns a string. The primitive object is returned directly
-    if it is an instance of the `Raw` class. Otherwise, The existence of the `pdf_repr`
+    if it is an instance of the `Raw` class. Otherwise, The existence of the `serialize`
     method is checked before any other type checking is performed, so, for example, a
-    `dict` subclass with a `pdf_repr` method would be converted using its `pdf_repr`
+    `dict` subclass with a `serialize` method would be converted using its `pdf_repr`
     method rather than the built-in `dict` conversion process.
 
     Args:
@@ -4547,8 +4547,8 @@ representation.</dd>
     if isinstance(primitive, Raw):
         return primitive
 
-    if callable(getattr(primitive, &#34;pdf_repr&#34;, None)):
-        output = primitive.pdf_repr()
+    if callable(getattr(primitive, &#34;serialize&#34;, None)):
+        output = primitive.serialize()
     elif primitive is None:
         output = &#34;null&#34;
     elif isinstance(primitive, str):
@@ -5403,7 +5403,7 @@ to the start of the current path.</p>
 
         return self[:-1]
 
-    def pdf_repr(self) -&gt; str:
+    def serialize(self) -&gt; str:
         return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5429,8 +5429,8 @@ def colors(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="fpdf.drawing.DeviceCMYK.pdf_repr"><code class="name flex">
-<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
+<dt id="fpdf.drawing.DeviceCMYK.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5438,7 +5438,7 @@ def colors(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def pdf_repr(self) -&gt; str:
+<pre><code class="python">def serialize(self) -&gt; str:
     return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 </dd>
@@ -5476,7 +5476,7 @@ def colors(self):
         &#34;&#34;&#34;The color components as a tuple in order (g,) with alpha omitted.&#34;&#34;&#34;
         return self[:-1]
 
-    def pdf_repr(self) -&gt; str:
+    def serialize(self) -&gt; str:
         return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5501,8 +5501,8 @@ def colors(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="fpdf.drawing.DeviceGray.pdf_repr"><code class="name flex">
-<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
+<dt id="fpdf.drawing.DeviceGray.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5510,7 +5510,7 @@ def colors(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def pdf_repr(self) -&gt; str:
+<pre><code class="python">def serialize(self) -&gt; str:
     return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 </dd>
@@ -5564,7 +5564,7 @@ def colors(self):
         &#34;&#34;&#34;The color components as a tuple in order `(r, g, b)` with alpha omitted.&#34;&#34;&#34;
         return self[:-1]
 
-    def pdf_repr(self) -&gt; str:
+    def serialize(self) -&gt; str:
         return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -5589,8 +5589,8 @@ def colors(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="fpdf.drawing.DeviceRGB.pdf_repr"><code class="name flex">
-<span>def <span class="ident">pdf_repr</span></span>(<span>self) ‑> str</span>
+<dt id="fpdf.drawing.DeviceRGB.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self) ‑> str</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -5598,7 +5598,7 @@ def colors(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def pdf_repr(self) -&gt; str:
+<pre><code class="python">def serialize(self) -&gt; str:
     return &#34; &#34;.join(number_to_str(val) for val in self.colors) + f&#34; {self.OPERATOR}&#34;</code></pre>
 </details>
 </dd>
@@ -6332,10 +6332,10 @@ this context (an empty string is returned if there are no paths or groups)</p></
             stroke_color = self.style.stroke_color
 
             if fill_color not in NO_EMIT_SET:
-                render_list.append(fill_color.pdf_repr().lower())
+                render_list.append(fill_color.serialize().lower())
 
             if stroke_color not in NO_EMIT_SET:
-                render_list.append(stroke_color.pdf_repr().upper())
+                render_list.append(stroke_color.serialize().upper())
 
             if emit_dash is not None:
                 render_list.append(
@@ -6627,7 +6627,7 @@ caution.</dd>
     &#34;&#34;&#34;
 
     def register_style(self, style: &#34;GraphicsStyle&#34;):
-        sdict = style.to_pdf_dict()
+        sdict = style.serialize()
 
         # empty style does not need a dictionary
         if not sdict:
@@ -6660,7 +6660,7 @@ caution.</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def register_style(self, style: &#34;GraphicsStyle&#34;):
-    sdict = style.to_pdf_dict()
+    sdict = style.serialize()
 
     # empty style does not need a dictionary
     if not sdict:
@@ -7048,7 +7048,7 @@ which use None as hints to the auto paint style detection code.</p></div>
 
         raise TypeError(f&#34;{value} isn&#39;t a number or GraphicsStyle.INHERIT&#34;)
 
-    def to_pdf_dict(self):
+    def serialize(self):
         &#34;&#34;&#34;
         Convert this style object to a PDF dictionary with appropriate style keys.
 
@@ -7396,8 +7396,8 @@ def stroke_width(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="fpdf.drawing.GraphicsStyle.to_pdf_dict"><code class="name flex">
-<span>def <span class="ident">to_pdf_dict</span></span>(<span>self)</span>
+<dt id="fpdf.drawing.GraphicsStyle.serialize"><code class="name flex">
+<span>def <span class="ident">serialize</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Convert this style object to a PDF dictionary with appropriate style keys.</p>
@@ -7406,7 +7406,7 @@ def stroke_width(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def to_pdf_dict(self):
+<pre><code class="python">def serialize(self):
     &#34;&#34;&#34;
     Convert this style object to a PDF dictionary with appropriate style keys.
 
@@ -12393,21 +12393,21 @@ mutating self.</p>
 <h4><code><a title="fpdf.drawing.DeviceCMYK" href="#fpdf.drawing.DeviceCMYK">DeviceCMYK</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.DeviceCMYK.colors" href="#fpdf.drawing.DeviceCMYK.colors">colors</a></code></li>
-<li><code><a title="fpdf.drawing.DeviceCMYK.pdf_repr" href="#fpdf.drawing.DeviceCMYK.pdf_repr">pdf_repr</a></code></li>
+<li><code><a title="fpdf.drawing.DeviceCMYK.serialize" href="#fpdf.drawing.DeviceCMYK.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="fpdf.drawing.DeviceGray" href="#fpdf.drawing.DeviceGray">DeviceGray</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.DeviceGray.colors" href="#fpdf.drawing.DeviceGray.colors">colors</a></code></li>
-<li><code><a title="fpdf.drawing.DeviceGray.pdf_repr" href="#fpdf.drawing.DeviceGray.pdf_repr">pdf_repr</a></code></li>
+<li><code><a title="fpdf.drawing.DeviceGray.serialize" href="#fpdf.drawing.DeviceGray.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="fpdf.drawing.DeviceRGB" href="#fpdf.drawing.DeviceRGB">DeviceRGB</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.drawing.DeviceRGB.colors" href="#fpdf.drawing.DeviceRGB.colors">colors</a></code></li>
-<li><code><a title="fpdf.drawing.DeviceRGB.pdf_repr" href="#fpdf.drawing.DeviceRGB.pdf_repr">pdf_repr</a></code></li>
+<li><code><a title="fpdf.drawing.DeviceRGB.serialize" href="#fpdf.drawing.DeviceRGB.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li>
@@ -12458,6 +12458,7 @@ mutating self.</p>
 <li><code><a title="fpdf.drawing.GraphicsStyle.intersection_rule" href="#fpdf.drawing.GraphicsStyle.intersection_rule">intersection_rule</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.merge" href="#fpdf.drawing.GraphicsStyle.merge">merge</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.paint_rule" href="#fpdf.drawing.GraphicsStyle.paint_rule">paint_rule</a></code></li>
+<li><code><a title="fpdf.drawing.GraphicsStyle.serialize" href="#fpdf.drawing.GraphicsStyle.serialize">serialize</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.stroke_cap_style" href="#fpdf.drawing.GraphicsStyle.stroke_cap_style">stroke_cap_style</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.stroke_color" href="#fpdf.drawing.GraphicsStyle.stroke_color">stroke_color</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.stroke_dash_pattern" href="#fpdf.drawing.GraphicsStyle.stroke_dash_pattern">stroke_dash_pattern</a></code></li>
@@ -12466,7 +12467,6 @@ mutating self.</p>
 <li><code><a title="fpdf.drawing.GraphicsStyle.stroke_miter_limit" href="#fpdf.drawing.GraphicsStyle.stroke_miter_limit">stroke_miter_limit</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.stroke_opacity" href="#fpdf.drawing.GraphicsStyle.stroke_opacity">stroke_opacity</a></code></li>
 <li><code><a title="fpdf.drawing.GraphicsStyle.stroke_width" href="#fpdf.drawing.GraphicsStyle.stroke_width">stroke_width</a></code></li>
-<li><code><a title="fpdf.drawing.GraphicsStyle.to_pdf_dict" href="#fpdf.drawing.GraphicsStyle.to_pdf_dict">to_pdf_dict</a></code></li>
 </ul>
 </li>
 <li>

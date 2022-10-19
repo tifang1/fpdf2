@@ -128,6 +128,12 @@ __all__ = [
 <div class="desc"><p>Routines for organizing lines and larger blocks of text, with manual and
 automatic line wrapping …</p></div>
 </dd>
+<dt><code class="name"><a title="fpdf.linearization" href="linearization.html">fpdf.linearization</a></code></dt>
+<dd>
+<div class="desc"><p>This module is in work-in-progress state.
+Hint tables / hint streams have not been implemented yet,
+and there are a few "TODO" comment remaining</p></div>
+</dd>
 <dt><code class="name"><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></dt>
 <dd>
 <div class="desc"><p>Quoting section 8.2.2 "Document Outline" of the 2006 PDF spec 1.7:</p>
@@ -165,7 +171,7 @@ structural information about a document’s content …</p>
 </dd>
 <dt><code class="name"><a title="fpdf.syntax" href="syntax.html">fpdf.syntax</a></code></dt>
 <dd>
-<div class="desc"><p>PDF Syntax Helpers …</p></div>
+<div class="desc"><p><strong>PDF Syntax Helpers</strong> …</p></div>
 </dd>
 <dt><code class="name"><a title="fpdf.template" href="template.html">fpdf.template</a></code></dt>
 <dd>
@@ -263,16 +269,11 @@ Default to "mm".</dd>
             )
         super().__init__()
         self.page = 0  # current page number
-        # Associative array from page number to dicts containing pages and metadata:
-        self.pages = {}
-        self.fonts = {}  # array of used fonts
-        self.images = {}  # array of used images
-        # map page numbers to a list of Annotations; they will be inlined in the Page object:
-        self.annots = defaultdict(list)
-        # map page numbers to a list of pairs (Annotations, obj_id); they will be embedded in the doc as separated objects:
-        self.annots_as_obj = defaultdict(list)
-        self.links = {}  # map link indices (starting at 1) to Destination objects
-        self.embedded_files = []
+        self.pages = {}  # array of PDFPage objects starting at index 1
+        self.fonts = {}  # map font string keys to dicts describing the fonts used
+        self.images = {}  # map image identifiers to dicts describing the images
+        self.links = {}  # array of Destination objects starting at index 1
+        self.embedded_files = []  # array of PDFEmbeddedFile
 
         self.in_footer = False  # flag set while rendering footer
         # indicates that we are inside an .unbreakable() code block:
@@ -291,7 +292,6 @@ Default to "mm".</dd>
         self.oversized_images = None
         self.oversized_images_ratio = 2  # number of pixels per UserSpace point
         self.struct_builder = StructureTreeBuilder()
-        self._struct_parents_id_per_page = {}  # {page_object_id -&gt; StructParent(s) ID}
         self._toc_placeholder = None  # optional ToCPlaceholder instance
         self._outline = []  # list of OutlineSection
         self._sign_key = None
@@ -374,7 +374,10 @@ Default to "mm".</dd>
         self.buffer = None
 
     def write_html(self, text, *args, **kwargs):
-        &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+        &#34;&#34;&#34;
+        Parse HTML and convert it to PDF.
+        cf. https://pyfpdf.github.io/fpdf2/HTML.html
+        &#34;&#34;&#34;
         kwargs2 = vars(self)
         # Method arguments must override class &amp; instance attributes:
         kwargs2.update(kwargs)
@@ -402,6 +405,10 @@ Default to "mm".</dd>
     @page_mode.setter
     def page_mode(self, page_mode):
         self._page_mode = PageMode.coerce(page_mode)
+        if self._page_mode == PageMode.USE_ATTACHMENTS:
+            self._set_min_pdf_version(&#34;1.6&#34;)
+        elif self._page_mode == PageMode.USE_OC:
+            self._set_min_pdf_version(&#34;1.5&#34;)
 
     @property
     def epw(self):
@@ -543,11 +550,17 @@ Default to "mm".</dd>
             self.zoom_mode = zoom
         elif zoom != &#34;default&#34;:
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
+        self.page_layout = LAYOUT_ALIASES.get(layout, layout)
 
-        if layout in LAYOUT_ALIASES:
-            self.page_layout = LAYOUT_ALIASES[layout]
-        else:
-            self.page_layout = PageLayout.coerce(layout)
+    @property
+    def page_layout(self):
+        return self._page_layout
+
+    @page_layout.setter
+    def page_layout(self, page_layout):
+        self._page_layout = PageLayout.coerce(page_layout) if page_layout else None
+        if self._page_layout in (PageLayout.TWO_PAGE_LEFT, PageLayout.TWO_PAGE_RIGHT):
+            self._set_min_pdf_version(&#34;1.5&#34;)
 
     def set_compression(self, compress):
         &#34;&#34;&#34;
@@ -788,10 +801,10 @@ Default to "mm".</dd>
         # Set colors
         self.draw_color = dc
         if dc != self.DEFAULT_DRAW_COLOR:
-            self._out(dc.pdf_repr().upper())
+            self._out(dc.serialize().upper())
         self.fill_color = fc
         if fc != self.DEFAULT_FILL_COLOR:
-            self._out(fc.pdf_repr().lower())
+            self._out(fc.serialize().lower())
         self.text_color = tc
 
         # BEGIN Page header
@@ -806,10 +819,10 @@ Default to "mm".</dd>
 
         if self.draw_color != dc:  # Restore colors
             self.draw_color = dc
-            self._out(dc.pdf_repr().upper())
+            self._out(dc.serialize().upper())
         if self.fill_color != fc:
             self.fill_color = fc
-            self._out(fc.pdf_repr().lower())
+            self._out(fc.serialize().lower())
         self.text_color = tc
 
         if stretching != 100:  # Restore stretching
@@ -823,11 +836,11 @@ Default to "mm".</dd>
     ):
         self.page += 1
         if new_page:
-            page = {
-                &#34;content&#34;: bytearray(),
-                &#34;duration&#34;: duration,
-                &#34;transition&#34;: transition,
-            }
+            page = PDFPage(
+                contents=bytearray(),
+                duration=duration,
+                transition=transition,
+            )
             self.pages[self.page] = page
             if transition:
                 self._set_min_pdf_version(&#34;1.5&#34;)
@@ -852,7 +865,7 @@ Default to "mm".</dd>
                 orientation or self.def_orientation, page_width_pt, page_height_pt
             )
             self.page_break_trigger = self.h - self.b_margin
-        page[&#34;w_pt&#34;], page[&#34;h_pt&#34;] = self.w_pt, self.h_pt
+        page.set_dimensions(self.w_pt, self.h_pt)
 
     def header(self):
         &#34;&#34;&#34;
@@ -895,7 +908,7 @@ Default to "mm".</dd>
         else:
             self.draw_color = drawing.DeviceRGB(r / 255, g / 255, b / 255)
         if self.page &gt; 0:
-            self._out(self.draw_color.pdf_repr().upper())
+            self._out(self.draw_color.serialize().upper())
 
     def set_fill_color(self, r, g=-1, b=-1):
         &#34;&#34;&#34;
@@ -914,7 +927,7 @@ Default to "mm".</dd>
         else:
             self.fill_color = drawing.DeviceRGB(r / 255, g / 255, b / 255)
         if self.page &gt; 0:
-            self._out(self.fill_color.pdf_repr().lower())
+            self._out(self.fill_color.serialize().lower())
 
     def set_text_color(self, r, g=-1, b=-1):
         &#34;&#34;&#34;
@@ -1754,19 +1767,19 @@ Default to "mm".</dd>
         if font[&#34;OS/2&#34;].usWeightClass &gt;= 600:
             flags |= FontDescriptorFlags.FORCE_BOLD
 
-        desc = {
-            &#34;Ascent&#34;: round(font[&#34;hhea&#34;].ascent * scale),
-            &#34;Descent&#34;: round(font[&#34;hhea&#34;].descent * scale),
-            &#34;CapHeight&#34;: round(cap_height * scale),
-            &#34;Flags&#34;: flags.value,
-            &#34;FontBBox&#34;: (
+        desc = PDFFontDescriptor(
+            ascent=round(font[&#34;hhea&#34;].ascent * scale),
+            descent=round(font[&#34;hhea&#34;].descent * scale),
+            cap_height=round(cap_height * scale),
+            flags=flags,
+            font_b_box=(
                 f&#34;[{font[&#39;head&#39;].xMin * scale:.0f} {font[&#39;head&#39;].yMin * scale:.0f}&#34;
                 f&#34; {font[&#39;head&#39;].xMax * scale:.0f} {font[&#39;head&#39;].yMax * scale:.0f}]&#34;
             ),
-            &#34;ItalicAngle&#34;: int(font[&#34;post&#34;].italicAngle),
-            &#34;StemV&#34;: round(50 + int(pow((font[&#34;OS/2&#34;].usWeightClass / 65), 2))),
-            &#34;MissingWidth&#34;: default_width,
-        }
+            italic_angle=int(font[&#34;post&#34;].italicAngle),
+            stem_v=round(50 + int(pow((font[&#34;OS/2&#34;].usWeightClass / 65), 2))),
+            missing_width=default_width,
+        )
 
         # a map unicode_char -&gt; char_width
         char_widths = defaultdict(lambda: default_width)
@@ -1952,7 +1965,7 @@ Default to "mm".</dd>
         The destination must be defined using `FPDF.set_link()`.
         &#34;&#34;&#34;
         link_index = len(self.links) + 1
-        self.links[link_index] = DestinationXYZ(page=1)
+        self.links[link_index] = DestinationXYZ(page=1, top=self.h_pt)
         return link_index
 
     def set_link(self, link, y=0, x=0, page=-1, zoom=&#34;null&#34;):
@@ -1971,7 +1984,10 @@ Default to "mm".</dd>
                 Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
         &#34;&#34;&#34;
         self.links[link] = DestinationXYZ(
-            self.page if page == -1 else page, x=x, y=y, zoom=zoom
+            self.page if page == -1 else page,
+            top=self.h_pt - y * self.k,
+            left=x * self.k,
+            zoom=zoom,
         )
 
     @check_page
@@ -1992,25 +2008,32 @@ Default to "mm".</dd>
             border_width (int): thickness of an optional black border surrounding the link.
                 Not all PDF readers honor this: Acrobat renders it but not Sumatra.
         &#34;&#34;&#34;
-        link = Annotation(
+        action, dest = None, None
+        if link:
+            if isinstance(link, str):
+                action = URIAction(link)
+            else:  # Dest type ending of annotation entry
+                assert (
+                    link in self.links
+                ), f&#34;Link with an invalid index: {link} (doc #links={len(self.links)})&#34;
+                dest = self.links[link]
+        link_annot = AnnotationDict(
             &#34;Link&#34;,
             x=x * self.k,
             y=self.h_pt - y * self.k,
             width=w * self.k,
             height=h * self.k,
-            link=link,
+            action=action,
+            dest=dest,
             border_width=border_width,
         )
-        self.annots[self.page].append(link)
+        self.pages[self.page].annots.append(link_annot)
         if alt_text is not None:
             # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
             # but tests with Adobe Acrobat Reader reveal that the page /StructParents inserted below
             # is enough to link the marked content in the hierarchy tree with this annotation link.
-            page_object_id = object_id_for_page(self.page)
-            self._add_marked_content(
-                page_object_id, struct_type=&#34;/Link&#34;, alt_text=alt_text
-            )
-        return link
+            self._add_marked_content(struct_type=&#34;/Link&#34;, alt_text=alt_text)
+        return link_annot
 
     def embed_file(
         self,
@@ -2033,7 +2056,7 @@ Default to "mm".</dd>
             compress (bool): enabled zlib compression of the file - False by default
             checksum (bool): insert a MD5 checksum of the file content - False by default
 
-        Returns: a string representing the internal file name
+        Returns: a PDFEmbeddedFile instance, with a .basename string attribute representing the internal file name
         &#34;&#34;&#34;
         if file_path:
             if bytes:
@@ -2054,18 +2077,20 @@ Default to "mm".</dd>
                 raise ValueError(
                     &#34;&#39;basename&#39; is required if &#39;file_path&#39; is not provided&#34;
                 )
-        already_embedded_basenames = set(file.basename for file in self.embedded_files)
+        already_embedded_basenames = set(
+            file.basename() for file in self.embedded_files
+        )
         if basename in already_embedded_basenames:
             raise ValueError(f&#34;{basename} has already been embedded in this file&#34;)
-        self.embedded_files.append(
-            EmbeddedFile(
-                basename=basename,
-                bytes=bytes,
-                modification_date=modification_date,
-                **kwargs,
-            )
+        embedded_file = PDFEmbeddedFile(
+            basename=basename,
+            contents=bytes,
+            modification_date=modification_date,
+            **kwargs,
         )
-        return basename
+        self.embedded_files.append(embedded_file)
+        self._set_min_pdf_version(&#34;1.4&#34;)
+        return embedded_file
 
     @check_page
     def file_attachment_annotation(
@@ -2090,18 +2115,18 @@ Default to "mm".</dd>
             compress (bool): enabled zlib compression of the file - False by default
             checksum (bool): insert a MD5 checksum of the file content - False by default
         &#34;&#34;&#34;
-        embedded_file_name = self.embed_file(file_path, **kwargs)
-        annotation = Annotation(
+        embedded_file = self.embed_file(file_path, **kwargs)
+        annotation = AnnotationDict(
             &#34;FileAttachment&#34;,
             x * self.k,
             self.h_pt - y * self.k,
             w * self.k,
             h * self.k,
-            embedded_file_name=embedded_file_name,
+            file_spec=embedded_file.file_spec(),
             name=FileAttachmentAnnotationName.coerce(name) if name else None,
             flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
         )
-        self.annots[self.page].append(annotation)
+        self.pages[self.page].annots.append(annotation)
         return annotation
 
     @check_page
@@ -2120,7 +2145,7 @@ Default to "mm".</dd>
             name (fpdf.enums.AnnotationName, str): optional icon that shall be used in displaying the annotation
             flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
         &#34;&#34;&#34;
-        annotation = Annotation(
+        annotation = AnnotationDict(
             &#34;Text&#34;,
             x * self.k,
             self.h_pt - y * self.k,
@@ -2130,7 +2155,7 @@ Default to "mm".</dd>
             name=AnnotationName.coerce(name) if name else None,
             flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
         )
-        self.annots[self.page].append(annotation)
+        self.pages[self.page].annots.append(annotation)
         return annotation
 
     @check_page
@@ -2145,7 +2170,7 @@ Default to "mm".</dd>
             w (float): width of the link rectangle
             h (float): height of the link rectangle
         &#34;&#34;&#34;
-        annotation = Annotation(
+        annotation = AnnotationDict(
             &#34;Action&#34;,
             x * self.k,
             self.h_pt - y * self.k,
@@ -2153,7 +2178,7 @@ Default to "mm".</dd>
             h * self.k,
             action=action,
         )
-        self.annots[self.page].append(annotation)
+        self.pages[self.page].annots.append(annotation)
         return annotation
 
     @contextmanager
@@ -2187,7 +2212,7 @@ Default to "mm".</dd>
                 modification_time=modification_time,
                 page=page,
             )
-            self._text_quad_points = defaultdict(list)
+        self._text_quad_points = defaultdict(list)
         self._record_text_quad_points = False
 
     add_highlight = highlight  # For backward compatibilty
@@ -2220,6 +2245,7 @@ Default to "mm".</dd>
             modification_time (datetime): date and time when the annotation was most recently modified
             page (int): index of the page where this annotation is added
         &#34;&#34;&#34;
+        self._set_min_pdf_version(&#34;1.6&#34;)
         type = TextMarkupType.coerce(type).value
         if modification_time is None:
             modification_time = self.creation_date
@@ -2229,7 +2255,7 @@ Default to "mm".</dd>
         y_min = min(quad_points[1::2])
         x_max = max(quad_points[0::2])
         y_max = max(quad_points[1::2])
-        annotation = Annotation(
+        annotation = AnnotationDict(
             type,
             contents=text,
             x=y_min,
@@ -2240,9 +2266,8 @@ Default to "mm".</dd>
             modification_time=modification_time,
             title=title,
             quad_points=quad_points,
-            page=page,
         )
-        self.annots[page].append(annotation)
+        self.pages[page].annots.append(annotation)
         return annotation
 
     @check_page
@@ -2266,7 +2291,7 @@ Default to "mm".</dd>
         y_min = min(ink_list[1::2])
         x_max = max(ink_list[0::2])
         y_max = max(ink_list[1::2])
-        annotation = Annotation(
+        annotation = AnnotationDict(
             &#34;Ink&#34;,
             x=y_min,
             y=y_max,
@@ -2275,11 +2300,10 @@ Default to "mm".</dd>
             ink_list=ink_list,
             color=color,
             border_width=border_width,
-            page=self.page,
             contents=contents,
             title=title,
         )
-        self.annots[self.page].append(annotation)
+        self.pages[self.page].annots.append(annotation)
         return annotation
 
     @check_page
@@ -2321,7 +2345,7 @@ Default to "mm".</dd>
                 self._add_quad_points(x, y, w, h)
         attr_l = []
         if self.fill_color != self.text_color:
-            attr_l.append(f&#34;{self.text_color.pdf_repr().lower()}&#34;)
+            attr_l.append(f&#34;{self.text_color.serialize().lower()}&#34;)
         if attr_l:
             sl = [&#34;q&#34;] + attr_l + sl + [&#34;Q&#34;]
         self._out(&#34; &#34;.join(sl))
@@ -2797,7 +2821,7 @@ Default to "mm".</dd>
             s_start += dx
 
             if self.fill_color != self.text_color:
-                sl.append(self.text_color.pdf_repr().lower())
+                sl.append(self.text_color.serialize().lower())
 
             # do this once in advance
             u_space = escape_parens(&#34; &#34;.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))
@@ -3656,31 +3680,28 @@ Default to "mm".</dd>
         Can receive as named arguments any of the entries described in section 14.7.2 &#39;Structure Hierarchy&#39;
         of the PDF spec: iD, a, c, r, lang, e, actualText
         &#34;&#34;&#34;
-        page_object_id = object_id_for_page(self.page)
-        mcid = self.struct_builder.next_mcid_for_page(page_object_id)
-        marked_content = self._add_marked_content(
-            page_object_id, struct_type=&#34;/Figure&#34;, mcid=mcid, **kwargs
+        mcid = self.struct_builder.next_mcid_for_page(self.page)
+        struct_elem = self._add_marked_content(
+            struct_type=&#34;/Figure&#34;, mcid=mcid, **kwargs
         )
         start_page = self.page
         self._out(f&#34;/P &lt;&lt;/MCID {mcid}&gt;&gt; BDC&#34;)
-        yield marked_content
+        yield struct_elem
         if self.page != start_page:
             raise FPDFException(&#34;A page jump occured inside a marked sequence&#34;)
         self._out(&#34;EMC&#34;)
 
-    def _add_marked_content(self, page_object_id, **kwargs):
+    def _add_marked_content(self, **kwargs):
         &#34;&#34;&#34;
         Can receive as named arguments any of the entries described in section 14.7.2 &#39;Structure Hierarchy&#39;
         of the PDF spec: iD, a, c, r, lang, e, actualText
         &#34;&#34;&#34;
-        struct_parents_id = self._struct_parents_id_per_page.get(page_object_id)
-        if struct_parents_id is None:
-            struct_parents_id = len(self._struct_parents_id_per_page)
-            self._struct_parents_id_per_page[page_object_id] = struct_parents_id
-        marked_content = MarkedContent(page_object_id, struct_parents_id, **kwargs)
-        self.struct_builder.add_marked_content(marked_content)
+        struct_elem, spid = self.struct_builder.add_marked_content(
+            page_number=self.page, **kwargs
+        )
+        self.pages[self.page].struct_parents = spid
         self._set_min_pdf_version(&#34;1.4&#34;)  # due to using /MarkInfo
-        return marked_content
+        return struct_elem
 
     @check_page
     def ln(self, h=None):
@@ -3840,7 +3861,7 @@ Default to "mm".</dd>
         self._sign_hashalgo = hashalgo
         self._sign_time = signing_time or self.creation_date
 
-        annotation = Annotation(
+        annotation = PDFAnnotation(
             &#34;Widget&#34;,
             field_type=&#34;Sig&#34;,
             x=0,
@@ -3856,40 +3877,22 @@ Default to "mm".</dd>
                 reason=reason,
             ),
         )
-        self.annots_as_obj[self.page].append(annotation)
-
-    def _final_pdf_version(self):
-        &#34;&#34;&#34;
-        Internal method used to compute the final 1.X PDF version
-        once the document has been finalized, based on the PDF features used.
-        &#34;&#34;&#34;
-        if self.page_mode == PageMode.USE_ATTACHMENTS:
-            self._set_min_pdf_version(&#34;1.6&#34;)
-        elif self.page_layout in (PageLayout.TWO_PAGE_LEFT, PageLayout.TWO_PAGE_RIGHT):
-            self._set_min_pdf_version(&#34;1.5&#34;)
-        elif self.page_mode == PageMode.USE_OC:
-            self._set_min_pdf_version(&#34;1.5&#34;)
-        elif self.embedded_files:
-            self._set_min_pdf_version(&#34;1.4&#34;)
-        return self.pdf_version
+        self.pages[self.page].annots.append(annotation)
 
     def _substitute_page_number(self):
-        nb = self.pages_count  # total number of pages
         substituted = False
         # Replace number of pages in fonts using subsets (unicode)
         alias = self.str_alias_nb_pages.encode(&#34;utf-16-be&#34;)
-        encoded_nb = str(nb).encode(&#34;utf-16-be&#34;)
+        encoded_nb = str(self.pages_count).encode(&#34;utf-16-be&#34;)
         for page in self.pages.values():
-            new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
-            substituted |= page[&#34;content&#34;] != new_content
-            page[&#34;content&#34;] = new_content
+            substituted |= alias in page.contents
+            page.contents = page.contents.replace(alias, encoded_nb)
         # Now repeat for no pages in non-subset fonts
         alias = self.str_alias_nb_pages.encode(&#34;latin-1&#34;)
-        encoded_nb = str(nb).encode(&#34;latin-1&#34;)
+        encoded_nb = str(self.pages_count).encode(&#34;latin-1&#34;)
         for page in self.pages.values():
-            new_content = page[&#34;content&#34;].replace(alias, encoded_nb)
-            substituted |= page[&#34;content&#34;] != new_content
-            page[&#34;content&#34;] = new_content
+            substituted |= alias in page.contents
+            page.contents = page.contents.replace(alias, encoded_nb)
         if substituted:
             LOGGER.debug(
                 &#34;Substitution of &#39;%s&#39; was performed in the document&#34;,
@@ -3915,18 +3918,17 @@ Default to "mm".</dd>
         del self.footer
         del self.header
 
-    def file_id(self, buffer, creation_date):
+    def file_id(self):
         &#34;&#34;&#34;
-        Args:
-            buffer (bytearray): resulting output buffer
-            creation_date (datetime): PDF document creation date
-
         This method can be overridden in inherited classes
         in order to define a custom file identifier.
         Its output must have the format &#34;&lt;hex_string1&gt;&lt;hex_string2&gt;&#34;.
         If this method returns a falsy value (None, empty string),
         no /ID will be inserted in the generated PDF document.
         &#34;&#34;&#34;
+        return -1
+
+    def _default_file_id(self, buffer):
         # Quoting the PDF 1.7 spec, section 14.4 File Identifiers:
         # &gt; The value of this entry shall be an array of two byte strings.
         # &gt; The first byte string shall be a permanent identifier
@@ -3937,8 +3939,8 @@ Default to "mm".</dd>
         # &gt; When a file is first written, both identifiers shall be set to the same value.
         id_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
         id_hash.update(buffer)
-        if creation_date:
-            id_hash.update(creation_date.strftime(&#34;%Y%m%d%H%M%S&#34;).encode(&#34;utf8&#34;))
+        if self.creation_date:
+            id_hash.update(self.creation_date.strftime(&#34;%Y%m%d%H%M%S&#34;).encode(&#34;utf8&#34;))
         hash_hex = id_hash.hexdigest().upper()
         return f&#34;&lt;{hash_hex}&gt;&lt;{hash_hex}&gt;&#34;
 
@@ -3965,7 +3967,7 @@ Default to "mm".</dd>
             s = s.encode(&#34;latin1&#34;)
         if not self.page:
             raise FPDFException(&#34;No page open, you need to call add_page() first&#34;)
-        self.pages[self.page][&#34;content&#34;] += s + b&#34;\n&#34;
+        self.pages[self.page].contents += s + b&#34;\n&#34;
 
     @check_page
     def interleaved2of5(self, txt, x, y, w=1, h=10):
@@ -4274,8 +4276,8 @@ Default to "mm".</dd>
             raise ValueError(
                 f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
             )
-        dest = DestinationXYZ(self.page, y=self.y)
-        struct_elem = None
+        dest = DestinationXYZ(self.page, top=self.h_pt - self.y * self.k)
+        outline_struct_elem = None
         if self.section_title_styles:
             # We first check if adding this multi-cell will trigger a page break:
             with self.offset_rendering() as pdf:
@@ -4291,8 +4293,8 @@ Default to "mm".</dd>
             if pdf.page_break_triggered:
                 # If so, we trigger a page break manually beforehand:
                 self.add_page()
-            with self._marked_sequence(title=name) as marked_content:
-                struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
+            with self._marked_sequence(title=name) as struct_elem:
+                outline_struct_elem = struct_elem
                 with self._apply_style(self.section_title_styles[level]):
                     self.multi_cell(
                         w=self.epw,
@@ -4301,7 +4303,9 @@ Default to "mm".</dd>
                         new_x=XPos.LMARGIN,
                         new_y=YPos.NEXT,
                     )
-        self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))
+        self._outline.append(
+            OutlineSection(name, level, self.page, dest, outline_struct_elem)
+        )
 
     @contextmanager
     def _apply_style(self, title_style):
@@ -4356,8 +4360,11 @@ Default to "mm".</dd>
             self.footer()
             self.in_footer = False
             # Generating .buffer based on .pages:
-            output_producer = OutputProducer(self)
-            self.buffer = output_producer.bufferize()
+            if self._toc_placeholder:
+                self._insert_table_of_contents()
+            if self.str_alias_nb_pages:
+                self._substitute_page_number()
+            self.buffer = OutputProducer(self).bufferize()
         if name:
             if isinstance(name, os.PathLike):
                 name.write_bytes(self.buffer)
@@ -4478,6 +4485,18 @@ def is_ttf_font(self):
     return self.current_font.get(&#34;type&#34;) == &#34;TTF&#34;</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.page_layout"><code class="name">var <span class="ident">page_layout</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def page_layout(self):
+    return self._page_layout</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.page_mode"><code class="name">var <span class="ident">page_mode</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -4542,7 +4561,7 @@ def add_action(self, action, x, y, w, h):
         w (float): width of the link rectangle
         h (float): height of the link rectangle
     &#34;&#34;&#34;
-    annotation = Annotation(
+    annotation = AnnotationDict(
         &#34;Action&#34;,
         x * self.k,
         self.h_pt - y * self.k,
@@ -4550,7 +4569,7 @@ def add_action(self, action, x, y, w, h):
         h * self.k,
         action=action,
     )
-    self.annots[self.page].append(annotation)
+    self.pages[self.page].annots.append(annotation)
     return annotation</code></pre>
 </details>
 </dd>
@@ -4654,19 +4673,19 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
     if font[&#34;OS/2&#34;].usWeightClass &gt;= 600:
         flags |= FontDescriptorFlags.FORCE_BOLD
 
-    desc = {
-        &#34;Ascent&#34;: round(font[&#34;hhea&#34;].ascent * scale),
-        &#34;Descent&#34;: round(font[&#34;hhea&#34;].descent * scale),
-        &#34;CapHeight&#34;: round(cap_height * scale),
-        &#34;Flags&#34;: flags.value,
-        &#34;FontBBox&#34;: (
+    desc = PDFFontDescriptor(
+        ascent=round(font[&#34;hhea&#34;].ascent * scale),
+        descent=round(font[&#34;hhea&#34;].descent * scale),
+        cap_height=round(cap_height * scale),
+        flags=flags,
+        font_b_box=(
             f&#34;[{font[&#39;head&#39;].xMin * scale:.0f} {font[&#39;head&#39;].yMin * scale:.0f}&#34;
             f&#34; {font[&#39;head&#39;].xMax * scale:.0f} {font[&#39;head&#39;].yMax * scale:.0f}]&#34;
         ),
-        &#34;ItalicAngle&#34;: int(font[&#34;post&#34;].italicAngle),
-        &#34;StemV&#34;: round(50 + int(pow((font[&#34;OS/2&#34;].usWeightClass / 65), 2))),
-        &#34;MissingWidth&#34;: default_width,
-    }
+        italic_angle=int(font[&#34;post&#34;].italicAngle),
+        stem_v=round(50 + int(pow((font[&#34;OS/2&#34;].usWeightClass / 65), 2))),
+        missing_width=default_width,
+    )
 
     # a map unicode_char -&gt; char_width
     char_widths = defaultdict(lambda: default_width)
@@ -4760,7 +4779,7 @@ def highlight(
             modification_time=modification_time,
             page=page,
         )
-        self._text_quad_points = defaultdict(list)
+    self._text_quad_points = defaultdict(list)
     self._record_text_quad_points = False</code></pre>
 </details>
 </dd>
@@ -4787,7 +4806,7 @@ The destination must be defined using <code><a title="fpdf.FPDF.set_link" href="
     The destination must be defined using `FPDF.set_link()`.
     &#34;&#34;&#34;
     link_index = len(self.links) + 1
-    self.links[link_index] = DestinationXYZ(page=1)
+    self.links[link_index] = DestinationXYZ(page=1, top=self.h_pt)
     return link_index</code></pre>
 </details>
 </dd>
@@ -4902,10 +4921,10 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
     # Set colors
     self.draw_color = dc
     if dc != self.DEFAULT_DRAW_COLOR:
-        self._out(dc.pdf_repr().upper())
+        self._out(dc.serialize().upper())
     self.fill_color = fc
     if fc != self.DEFAULT_FILL_COLOR:
-        self._out(fc.pdf_repr().lower())
+        self._out(fc.serialize().lower())
     self.text_color = tc
 
     # BEGIN Page header
@@ -4920,10 +4939,10 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 
     if self.draw_color != dc:  # Restore colors
         self.draw_color = dc
-        self._out(dc.pdf_repr().upper())
+        self._out(dc.serialize().upper())
     if self.fill_color != fc:
         self.fill_color = fc
-        self._out(fc.pdf_repr().lower())
+        self._out(fc.serialize().lower())
     self.text_color = tc
 
     if stretching != 100:  # Restore stretching
@@ -4992,6 +5011,7 @@ def add_text_markup_annotation(
         modification_time (datetime): date and time when the annotation was most recently modified
         page (int): index of the page where this annotation is added
     &#34;&#34;&#34;
+    self._set_min_pdf_version(&#34;1.6&#34;)
     type = TextMarkupType.coerce(type).value
     if modification_time is None:
         modification_time = self.creation_date
@@ -5001,7 +5021,7 @@ def add_text_markup_annotation(
     y_min = min(quad_points[1::2])
     x_max = max(quad_points[0::2])
     y_max = max(quad_points[1::2])
-    annotation = Annotation(
+    annotation = AnnotationDict(
         type,
         contents=text,
         x=y_min,
@@ -5012,9 +5032,8 @@ def add_text_markup_annotation(
         modification_time=modification_time,
         title=title,
         quad_points=quad_points,
-        page=page,
     )
-    self.annots[page].append(annotation)
+    self.pages[page].annots.append(annotation)
     return annotation</code></pre>
 </details>
 </dd>
@@ -5820,7 +5839,7 @@ def elliptic_clip(self, x, y, w, h):
 <dt><strong><code>checksum</code></strong> :&ensp;<code>bool</code></dt>
 <dd>insert a MD5 checksum of the file content - False by default</dd>
 </dl>
-<p>Returns: a string representing the internal file name</p></div>
+<p>Returns: a PDFEmbeddedFile instance, with a .basename string attribute representing the internal file name</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -5846,7 +5865,7 @@ def elliptic_clip(self, x, y, w, h):
         compress (bool): enabled zlib compression of the file - False by default
         checksum (bool): insert a MD5 checksum of the file content - False by default
 
-    Returns: a string representing the internal file name
+    Returns: a PDFEmbeddedFile instance, with a .basename string attribute representing the internal file name
     &#34;&#34;&#34;
     if file_path:
         if bytes:
@@ -5867,18 +5886,20 @@ def elliptic_clip(self, x, y, w, h):
             raise ValueError(
                 &#34;&#39;basename&#39; is required if &#39;file_path&#39; is not provided&#34;
             )
-    already_embedded_basenames = set(file.basename for file in self.embedded_files)
+    already_embedded_basenames = set(
+        file.basename() for file in self.embedded_files
+    )
     if basename in already_embedded_basenames:
         raise ValueError(f&#34;{basename} has already been embedded in this file&#34;)
-    self.embedded_files.append(
-        EmbeddedFile(
-            basename=basename,
-            bytes=bytes,
-            modification_date=modification_date,
-            **kwargs,
-        )
+    embedded_file = PDFEmbeddedFile(
+        basename=basename,
+        contents=bytes,
+        modification_date=modification_date,
+        **kwargs,
     )
-    return basename</code></pre>
+    self.embedded_files.append(embedded_file)
+    self._set_min_pdf_version(&#34;1.4&#34;)
+    return embedded_file</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.file_attachment_annotation"><code class="name flex">
@@ -5944,33 +5965,26 @@ def file_attachment_annotation(
         compress (bool): enabled zlib compression of the file - False by default
         checksum (bool): insert a MD5 checksum of the file content - False by default
     &#34;&#34;&#34;
-    embedded_file_name = self.embed_file(file_path, **kwargs)
-    annotation = Annotation(
+    embedded_file = self.embed_file(file_path, **kwargs)
+    annotation = AnnotationDict(
         &#34;FileAttachment&#34;,
         x * self.k,
         self.h_pt - y * self.k,
         w * self.k,
         h * self.k,
-        embedded_file_name=embedded_file_name,
+        file_spec=embedded_file.file_spec(),
         name=FileAttachmentAnnotationName.coerce(name) if name else None,
         flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
     )
-    self.annots[self.page].append(annotation)
+    self.pages[self.page].annots.append(annotation)
     return annotation</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.file_id"><code class="name flex">
-<span>def <span class="ident">file_id</span></span>(<span>self, buffer, creation_date)</span>
+<span>def <span class="ident">file_id</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>buffer</code></strong> :&ensp;<code>bytearray</code></dt>
-<dd>resulting output buffer</dd>
-<dt><strong><code>creation_date</code></strong> :&ensp;<code>datetime</code></dt>
-<dd>PDF document creation date</dd>
-</dl>
-<p>This method can be overridden in inherited classes
+<div class="desc"><p>This method can be overridden in inherited classes
 in order to define a custom file identifier.
 Its output must have the format "<hex_string1><hex_string2>".
 If this method returns a falsy value (None, empty string),
@@ -5979,32 +5993,15 @@ no /ID will be inserted in the generated PDF document.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def file_id(self, buffer, creation_date):
+<pre><code class="python">def file_id(self):
     &#34;&#34;&#34;
-    Args:
-        buffer (bytearray): resulting output buffer
-        creation_date (datetime): PDF document creation date
-
     This method can be overridden in inherited classes
     in order to define a custom file identifier.
     Its output must have the format &#34;&lt;hex_string1&gt;&lt;hex_string2&gt;&#34;.
     If this method returns a falsy value (None, empty string),
     no /ID will be inserted in the generated PDF document.
     &#34;&#34;&#34;
-    # Quoting the PDF 1.7 spec, section 14.4 File Identifiers:
-    # &gt; The value of this entry shall be an array of two byte strings.
-    # &gt; The first byte string shall be a permanent identifier
-    # &gt; based on the contents of the file at the time it was originally created
-    # &gt; and shall not change when the file is incrementally updated.
-    # &gt; The second byte string shall be a changing identifier
-    # &gt; based on the file’s contents at the time it was last updated.
-    # &gt; When a file is first written, both identifiers shall be set to the same value.
-    id_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
-    id_hash.update(buffer)
-    if creation_date:
-        id_hash.update(creation_date.strftime(&#34;%Y%m%d%H%M%S&#34;).encode(&#34;utf8&#34;))
-    hash_hex = id_hash.hexdigest().upper()
-    return f&#34;&lt;{hash_hex}&gt;&lt;{hash_hex}&gt;&#34;</code></pre>
+    return -1</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.footer"><code class="name flex">
@@ -6184,7 +6181,7 @@ def highlight(
             modification_time=modification_time,
             page=page,
         )
-        self._text_quad_points = defaultdict(list)
+    self._text_quad_points = defaultdict(list)
     self._record_text_quad_points = False</code></pre>
 </details>
 </dd>
@@ -6402,7 +6399,7 @@ def ink_annotation(
     y_min = min(ink_list[1::2])
     x_max = max(ink_list[0::2])
     y_max = max(ink_list[1::2])
-    annotation = Annotation(
+    annotation = AnnotationDict(
         &#34;Ink&#34;,
         x=y_min,
         y=y_max,
@@ -6411,11 +6408,10 @@ def ink_annotation(
         ink_list=ink_list,
         color=color,
         border_width=border_width,
-        page=self.page,
         contents=contents,
         title=title,
     )
-    self.annots[self.page].append(annotation)
+    self.pages[self.page].annots.append(annotation)
     return annotation</code></pre>
 </details>
 </dd>
@@ -6621,25 +6617,32 @@ def link(self, x, y, w, h, link, alt_text=None, border_width=0):
         border_width (int): thickness of an optional black border surrounding the link.
             Not all PDF readers honor this: Acrobat renders it but not Sumatra.
     &#34;&#34;&#34;
-    link = Annotation(
+    action, dest = None, None
+    if link:
+        if isinstance(link, str):
+            action = URIAction(link)
+        else:  # Dest type ending of annotation entry
+            assert (
+                link in self.links
+            ), f&#34;Link with an invalid index: {link} (doc #links={len(self.links)})&#34;
+            dest = self.links[link]
+    link_annot = AnnotationDict(
         &#34;Link&#34;,
         x=x * self.k,
         y=self.h_pt - y * self.k,
         width=w * self.k,
         height=h * self.k,
-        link=link,
+        action=action,
+        dest=dest,
         border_width=border_width,
     )
-    self.annots[self.page].append(link)
+    self.pages[self.page].annots.append(link_annot)
     if alt_text is not None:
         # Note: the spec indicates that a /StructParent could be added **inside* this /Annot,
         # but tests with Adobe Acrobat Reader reveal that the page /StructParents inserted below
         # is enough to link the marked content in the hierarchy tree with this annotation link.
-        page_object_id = object_id_for_page(self.page)
-        self._add_marked_content(
-            page_object_id, struct_type=&#34;/Link&#34;, alt_text=alt_text
-        )
-    return link</code></pre>
+        self._add_marked_content(struct_type=&#34;/Link&#34;, alt_text=alt_text)
+    return link_annot</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.ln"><code class="name flex">
@@ -7277,8 +7280,11 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
         self.footer()
         self.in_footer = False
         # Generating .buffer based on .pages:
-        output_producer = OutputProducer(self)
-        self.buffer = output_producer.bufferize()
+        if self._toc_placeholder:
+            self._insert_table_of_contents()
+        if self.str_alias_nb_pages:
+            self._substitute_page_number()
+        self.buffer = OutputProducer(self).bufferize()
     if name:
         if isinstance(name, os.PathLike):
             name.write_bytes(self.buffer)
@@ -8033,11 +8039,7 @@ The layout set by default is "continuous".</dd>
         self.zoom_mode = zoom
     elif zoom != &#34;default&#34;:
         raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
-
-    if layout in LAYOUT_ALIASES:
-        self.page_layout = LAYOUT_ALIASES[layout]
-    else:
-        self.page_layout = PageLayout.coerce(layout)</code></pre>
+    self.page_layout = LAYOUT_ALIASES.get(layout, layout)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_doc_option"><code class="name flex">
@@ -8119,7 +8121,7 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
     else:
         self.draw_color = drawing.DeviceRGB(r / 255, g / 255, b / 255)
     if self.page &gt; 0:
-        self._out(self.draw_color.pdf_repr().upper())</code></pre>
+        self._out(self.draw_color.serialize().upper())</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_fill_color"><code class="name flex">
@@ -8160,7 +8162,7 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
     else:
         self.fill_color = drawing.DeviceRGB(r / 255, g / 255, b / 255)
     if self.page &gt; 0:
-        self._out(self.fill_color.pdf_repr().lower())</code></pre>
+        self._out(self.fill_color.serialize().lower())</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_font"><code class="name flex">
@@ -8514,7 +8516,10 @@ Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.</
             Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
     &#34;&#34;&#34;
     self.links[link] = DestinationXYZ(
-        self.page if page == -1 else page, x=x, y=y, zoom=zoom
+        self.page if page == -1 else page,
+        top=self.h_pt - y * self.k,
+        left=x * self.k,
+        zoom=zoom,
     )</code></pre>
 </details>
 </dd>
@@ -9041,7 +9046,7 @@ def sign(
     self._sign_hashalgo = hashalgo
     self._sign_time = signing_time or self.creation_date
 
-    annotation = Annotation(
+    annotation = PDFAnnotation(
         &#34;Widget&#34;,
         field_type=&#34;Sig&#34;,
         x=0,
@@ -9057,7 +9062,7 @@ def sign(
             reason=reason,
         ),
     )
-    self.annots_as_obj[self.page].append(annotation)</code></pre>
+    self.pages[self.page].annots.append(annotation)</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.sign_pkcs12"><code class="name flex">
@@ -9318,8 +9323,8 @@ def start_section(self, name, level=0):
         raise ValueError(
             f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
         )
-    dest = DestinationXYZ(self.page, y=self.y)
-    struct_elem = None
+    dest = DestinationXYZ(self.page, top=self.h_pt - self.y * self.k)
+    outline_struct_elem = None
     if self.section_title_styles:
         # We first check if adding this multi-cell will trigger a page break:
         with self.offset_rendering() as pdf:
@@ -9335,8 +9340,8 @@ def start_section(self, name, level=0):
         if pdf.page_break_triggered:
             # If so, we trigger a page break manually beforehand:
             self.add_page()
-        with self._marked_sequence(title=name) as marked_content:
-            struct_elem = self.struct_builder.struct_elem_per_mc[marked_content]
+        with self._marked_sequence(title=name) as struct_elem:
+            outline_struct_elem = struct_elem
             with self._apply_style(self.section_title_styles[level]):
                 self.multi_cell(
                     w=self.epw,
@@ -9345,7 +9350,9 @@ def start_section(self, name, level=0):
                     new_x=XPos.LMARGIN,
                     new_y=YPos.NEXT,
                 )
-    self._outline.append(OutlineSection(name, level, self.page, dest, struct_elem))</code></pre>
+    self._outline.append(
+        OutlineSection(name, level, self.page, dest, outline_struct_elem)
+    )</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.text"><code class="name flex">
@@ -9407,7 +9414,7 @@ def text(self, x, y, txt=&#34;&#34;):
             self._add_quad_points(x, y, w, h)
     attr_l = []
     if self.fill_color != self.text_color:
-        attr_l.append(f&#34;{self.text_color.pdf_repr().lower()}&#34;)
+        attr_l.append(f&#34;{self.text_color.serialize().lower()}&#34;)
     if attr_l:
         sl = [&#34;q&#34;] + attr_l + sl + [&#34;Q&#34;]
     self._out(&#34; &#34;.join(sl))</code></pre>
@@ -9455,7 +9462,7 @@ def text_annotation(
         name (fpdf.enums.AnnotationName, str): optional icon that shall be used in displaying the annotation
         flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
     &#34;&#34;&#34;
-    annotation = Annotation(
+    annotation = AnnotationDict(
         &#34;Text&#34;,
         x * self.k,
         self.h_pt - y * self.k,
@@ -9465,7 +9472,7 @@ def text_annotation(
         name=AnnotationName.coerce(name) if name else None,
         flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
     )
-    self.annots[self.page].append(annotation)
+    self.pages[self.page].annots.append(annotation)
     return annotation</code></pre>
 </details>
 </dd>
@@ -9654,13 +9661,17 @@ def write(
 <span>def <span class="ident">write_html</span></span>(<span>self, text, *args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Parse HTML and convert it to PDF</p></div>
+<div class="desc"><p>Parse HTML and convert it to PDF.
+cf. <a href="https://pyfpdf.github.io/fpdf2/HTML.html">https://pyfpdf.github.io/fpdf2/HTML.html</a></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def write_html(self, text, *args, **kwargs):
-    &#34;&#34;&#34;Parse HTML and convert it to PDF&#34;&#34;&#34;
+    &#34;&#34;&#34;
+    Parse HTML and convert it to PDF.
+    cf. https://pyfpdf.github.io/fpdf2/HTML.html
+    &#34;&#34;&#34;
     kwargs2 = vars(self)
     # Method arguments must override class &amp; instance attributes:
     kwargs2.update(kwargs)
@@ -10065,7 +10076,7 @@ or parse_csv() before doing anything else.</p></div>
         foreground=0,
         **__,
     ):
-        if self.pdf.draw_color.pdf_repr().lower() != _rgb_as_str(foreground):
+        if self.pdf.draw_color.serialize().lower() != _rgb_as_str(foreground):
             self.pdf.set_draw_color(*_rgb(foreground))
         self.pdf.set_line_width(size * scale)
         self.pdf.line(x1, y1, x2, y2)
@@ -10084,7 +10095,7 @@ or parse_csv() before doing anything else.</p></div>
         **__,
     ):
         pdf = self.pdf
-        if pdf.draw_color.pdf_repr().lower() != _rgb_as_str(foreground):
+        if pdf.draw_color.serialize().lower() != _rgb_as_str(foreground):
             pdf.set_draw_color(*_rgb(foreground))
         if background is None:
             style = &#34;D&#34;
@@ -10109,7 +10120,7 @@ or parse_csv() before doing anything else.</p></div>
         **__,
     ):
         pdf = self.pdf
-        if pdf.draw_color.pdf_repr().lower() != _rgb_as_str(foreground):
+        if pdf.draw_color.serialize().lower() != _rgb_as_str(foreground):
             pdf.set_draw_color(*_rgb(foreground))
         if background is None:
             style = &#34;D&#34;
@@ -10140,7 +10151,7 @@ or parse_csv() before doing anything else.</p></div>
     ):
         # pylint: disable=unused-argument
         pdf = self.pdf
-        if pdf.fill_color.pdf_repr().lower() != _rgb_as_str(foreground):
+        if pdf.fill_color.serialize().lower() != _rgb_as_str(foreground):
             pdf.set_fill_color(*_rgb(foreground))
         font = font.lower().strip()
         if font == &#34;interleaved 2of5 nt&#34;:
@@ -10169,7 +10180,7 @@ or parse_csv() before doing anything else.</p></div>
                 stacklevel=2,
             )
         pdf = self.pdf
-        if pdf.fill_color.pdf_repr().lower() != _rgb_as_str(foreground):
+        if pdf.fill_color.serialize().lower() != _rgb_as_str(foreground):
             pdf.set_fill_color(*_rgb(foreground))
         h = y2 - y1
         if h &lt;= 0:
@@ -12308,6 +12319,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.html" href="html.html">fpdf.html</a></code></li>
 <li><code><a title="fpdf.image_parsing" href="image_parsing.html">fpdf.image_parsing</a></code></li>
 <li><code><a title="fpdf.line_break" href="line_break.html">fpdf.line_break</a></code></li>
+<li><code><a title="fpdf.linearization" href="linearization.html">fpdf.linearization</a></code></li>
 <li><code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></li>
 <li><code><a title="fpdf.output" href="output.html">fpdf.output</a></code></li>
 <li><code><a title="fpdf.prefs" href="prefs.html">fpdf.prefs</a></code></li>
@@ -12380,6 +12392,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.normalize_text" href="#fpdf.FPDF.normalize_text">normalize_text</a></code></li>
 <li><code><a title="fpdf.FPDF.offset_rendering" href="#fpdf.FPDF.offset_rendering">offset_rendering</a></code></li>
 <li><code><a title="fpdf.FPDF.output" href="#fpdf.FPDF.output">output</a></code></li>
+<li><code><a title="fpdf.FPDF.page_layout" href="#fpdf.FPDF.page_layout">page_layout</a></code></li>
 <li><code><a title="fpdf.FPDF.page_mode" href="#fpdf.FPDF.page_mode">page_mode</a></code></li>
 <li><code><a title="fpdf.FPDF.page_no" href="#fpdf.FPDF.page_no">page_no</a></code></li>
 <li><code><a title="fpdf.FPDF.pages_count" href="#fpdf.FPDF.pages_count">pages_count</a></code></li>

@@ -66,9 +66,12 @@ class OutlineItemDictionary(PDFObject):
     )
 
     def __init__(
-        self, title: str, dest: str = None, struct_elem: StructElem = None, **kwargs
+        self,
+        title: str,
+        dest: Destination = None,
+        struct_elem: StructElem = None,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
         self.title = PDFString(title)
         self.parent = None
         self.prev = None
@@ -91,40 +94,22 @@ class OutlineDictionary(PDFObject):
         self.count = 0
 
 
-def serialize_outline(sections, first_object_id=1, output_producer=None):
+def build_outline_objs(sections):
     &#34;&#34;&#34;
-    Assign object IDs &amp; output the whole outline hierarchy serialized
-    as a multi-lines string in PDF syntax, ready to be embedded.
-
-    Objects ID assignement will start with the provided first ID,
-    that will be assigned to the Outlines object.
-    Apart from that, assignement is made in an arbitrary order.
-    All PDF objects must have assigned IDs before proceeding to output
-    generation though, as they have many references to each others.
-
-    If a OutputProducer instance provided, its `_newobj` &amp; `_out` methods will be called
-    and this method output will be meaningless.
-
-    Args:
-        sections (sequence): list of OutlineSection
+    Build PDF objects constitutive of the documents outline,
+    and yield them one by one, starting with the outline dictionary
     &#34;&#34;&#34;
-    outline, outline_items = build_outline(sections, first_object_id, output_producer)
-    return outline_as_str(outline, outline_items, output_producer)
-
-
-def build_outline(sections, first_object_id, output_producer):
-    outline = OutlineDictionary(id=first_object_id)
-    n = first_object_id + 1
+    outline = OutlineDictionary()
+    yield outline
     outline_items = []
     last_outline_item_per_level = {}
     for section in sections:
         outline_item = OutlineItemDictionary(
             title=section.name,
-            dest=section.dest.as_str(output_producer.fpdf if output_producer else None),
+            dest=section.dest,
             struct_elem=section.struct_elem,
-            id=n,
         )
-        n += 1
+        yield outline_item
         if section.level in last_outline_item_per_level:
             last_outline_item_at_level = last_outline_item_per_level[section.level]
             last_outline_item_at_level.next = outline_item
@@ -145,15 +130,7 @@ def build_outline(sections, first_object_id, output_producer):
             for level, oitem in last_outline_item_per_level.items()
             if level &lt;= section.level
         }
-    return outline, outline_items
-
-
-def outline_as_str(outline, outline_items, output_producer):
-    output = []
-    output.append(outline.serialize(output_producer))
-    for outline_item in outline_items:
-        output.append(outline_item.serialize(output_producer))
-    return &#34;\n&#34;.join(output)</code></pre>
+    return [outline] + outline_items</code></pre>
 </details>
 </section>
 <section>
@@ -163,28 +140,32 @@ def outline_as_str(outline, outline_items, output_producer):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="fpdf.outline.build_outline"><code class="name flex">
-<span>def <span class="ident">build_outline</span></span>(<span>sections, first_object_id, output_producer)</span>
+<dt id="fpdf.outline.build_outline_objs"><code class="name flex">
+<span>def <span class="ident">build_outline_objs</span></span>(<span>sections)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Build PDF objects constitutive of the documents outline,
+and yield them one by one, starting with the outline dictionary</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def build_outline(sections, first_object_id, output_producer):
-    outline = OutlineDictionary(id=first_object_id)
-    n = first_object_id + 1
+<pre><code class="python">def build_outline_objs(sections):
+    &#34;&#34;&#34;
+    Build PDF objects constitutive of the documents outline,
+    and yield them one by one, starting with the outline dictionary
+    &#34;&#34;&#34;
+    outline = OutlineDictionary()
+    yield outline
     outline_items = []
     last_outline_item_per_level = {}
     for section in sections:
         outline_item = OutlineItemDictionary(
             title=section.name,
-            dest=section.dest.as_str(output_producer.fpdf if output_producer else None),
+            dest=section.dest,
             struct_elem=section.struct_elem,
-            id=n,
         )
-        n += 1
+        yield outline_item
         if section.level in last_outline_item_per_level:
             last_outline_item_at_level = last_outline_item_per_level[section.level]
             last_outline_item_at_level.next = outline_item
@@ -205,67 +186,7 @@ def outline_as_str(outline, outline_items, output_producer):
             for level, oitem in last_outline_item_per_level.items()
             if level &lt;= section.level
         }
-    return outline, outline_items</code></pre>
-</details>
-</dd>
-<dt id="fpdf.outline.outline_as_str"><code class="name flex">
-<span>def <span class="ident">outline_as_str</span></span>(<span>outline, outline_items, output_producer)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def outline_as_str(outline, outline_items, output_producer):
-    output = []
-    output.append(outline.serialize(output_producer))
-    for outline_item in outline_items:
-        output.append(outline_item.serialize(output_producer))
-    return &#34;\n&#34;.join(output)</code></pre>
-</details>
-</dd>
-<dt id="fpdf.outline.serialize_outline"><code class="name flex">
-<span>def <span class="ident">serialize_outline</span></span>(<span>sections, first_object_id=1, output_producer=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Assign object IDs &amp; output the whole outline hierarchy serialized
-as a multi-lines string in PDF syntax, ready to be embedded.</p>
-<p>Objects ID assignement will start with the provided first ID,
-that will be assigned to the Outlines object.
-Apart from that, assignement is made in an arbitrary order.
-All PDF objects must have assigned IDs before proceeding to output
-generation though, as they have many references to each others.</p>
-<p>If a OutputProducer instance provided, its <code>_newobj</code> &amp; <code>_out</code> methods will be called
-and this method output will be meaningless.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>sections</code></strong> :&ensp;<code>sequence</code></dt>
-<dd>list of OutlineSection</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def serialize_outline(sections, first_object_id=1, output_producer=None):
-    &#34;&#34;&#34;
-    Assign object IDs &amp; output the whole outline hierarchy serialized
-    as a multi-lines string in PDF syntax, ready to be embedded.
-
-    Objects ID assignement will start with the provided first ID,
-    that will be assigned to the Outlines object.
-    Apart from that, assignement is made in an arbitrary order.
-    All PDF objects must have assigned IDs before proceeding to output
-    generation though, as they have many references to each others.
-
-    If a OutputProducer instance provided, its `_newobj` &amp; `_out` methods will be called
-    and this method output will be meaningless.
-
-    Args:
-        sections (sequence): list of OutlineSection
-    &#34;&#34;&#34;
-    outline, outline_items = build_outline(sections, first_object_id, output_producer)
-    return outline_as_str(outline, outline_items, output_producer)</code></pre>
+    return [outline] + outline_items</code></pre>
 </details>
 </dd>
 </dl>
@@ -280,9 +201,7 @@ and this method output will be meaningless.</p>
 <dd>
 <div class="desc"><p>Main features of this class:
 * delay ID assignement
-* implement serializing</p>
-<p>To ensure consistency on how the serialize() method operates,
-child classes must define a <strong>slots</strong> attribute.</p></div>
+* implement serializing</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -320,17 +239,24 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFObject.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFObject.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.outline.OutlineItemDictionary"><code class="flex name class">
 <span>class <span class="ident">OutlineItemDictionary</span></span>
-<span>(</span><span>title: str, dest: str = None, struct_elem: <a title="fpdf.structure_tree.StructElem" href="structure_tree.html#fpdf.structure_tree.StructElem">StructElem</a> = None, **kwargs)</span>
+<span>(</span><span>title: str, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, struct_elem: <a title="fpdf.structure_tree.StructElem" href="structure_tree.html#fpdf.structure_tree.StructElem">StructElem</a> = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main features of this class:
 * delay ID assignement
-* implement serializing</p>
-<p>To ensure consistency on how the serialize() method operates,
-child classes must define a <strong>slots</strong> attribute.</p></div>
+* implement serializing</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -350,9 +276,12 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
     )
 
     def __init__(
-        self, title: str, dest: str = None, struct_elem: StructElem = None, **kwargs
+        self,
+        title: str,
+        dest: Destination = None,
+        struct_elem: StructElem = None,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
         self.title = PDFString(title)
         self.parent = None
         self.prev = None
@@ -406,6 +335,15 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFObject.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFObject.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.outline.OutlineSection"><code class="flex name class">
 <span>class <span class="ident">OutlineSection</span></span>
@@ -468,9 +406,7 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="fpdf.outline.build_outline" href="#fpdf.outline.build_outline">build_outline</a></code></li>
-<li><code><a title="fpdf.outline.outline_as_str" href="#fpdf.outline.outline_as_str">outline_as_str</a></code></li>
-<li><code><a title="fpdf.outline.serialize_outline" href="#fpdf.outline.serialize_outline">serialize_outline</a></code></li>
+<li><code><a title="fpdf.outline.build_outline_objs" href="#fpdf.outline.build_outline_objs">build_outline_objs</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>

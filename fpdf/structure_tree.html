@@ -48,19 +48,9 @@ Quoting the PDF spec:
 &gt; located by means of the **StructTreeRoot** entry in the document catalog.
 &#34;&#34;&#34;
 from collections import defaultdict
-from typing import NamedTuple, List, Optional, Union
+from typing import List, Union
 
 from .syntax import PDFObject, PDFString, PDFArray
-
-
-# pylint: disable=inherit-non-class,unsubscriptable-object
-class MarkedContent(NamedTuple):
-    page_object_id: int  # refers to the first page displaying this marked content
-    struct_parents_id: int
-    struct_type: str
-    mcid: Optional[int] = None
-    title: Optional[str] = None
-    alt_text: Optional[str] = None
 
 
 class NumberTree(PDFObject):
@@ -79,24 +69,24 @@ class NumberTree(PDFObject):
 
     __slots__ = (&#34;_id&#34;, &#34;nums&#34;)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.nums = defaultdict(list)  # {struct_parent_id -&gt; struct_elems}
 
-    def serialize(self, output_producer=None, obj_dict=None):
+    def serialize(self, obj_dict=None):
         newline = &#34;\n&#34;
         serialized_nums = &#34;\n&#34;.join(
             f&#34;{struct_parent_id} [{newline.join(struct_elem.ref for struct_elem in struct_elems)}]&#34;
             for struct_parent_id, struct_elems in self.nums.items()
         )
-        return super().serialize(output_producer, {&#34;/Nums&#34;: f&#34;[{serialized_nums}]&#34;})
+        return super().serialize({&#34;/Nums&#34;: f&#34;[{serialized_nums}]&#34;})
 
 
 class StructTreeRoot(PDFObject):
     __slots__ = (&#34;_id&#34;, &#34;type&#34;, &#34;parent_tree&#34;, &#34;k&#34;)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.type = &#34;/StructTreeRoot&#34;
         # A number tree used in finding the structure elements to which content items belong:
         self.parent_tree = NumberTree()
@@ -107,105 +97,84 @@ class StructTreeRoot(PDFObject):
 class StructElem(PDFObject):
     # The main reason to use __slots__ in PDFObject child classes is to save up some memory
     # when very many instances of this class are created.
-    __slots__ = (&#34;_id&#34;, &#34;type&#34;, &#34;s&#34;, &#34;p&#34;, &#34;k&#34;, &#34;pg&#34;, &#34;t&#34;, &#34;alt&#34;)
+    __slots__ = (&#34;_id&#34;, &#34;type&#34;, &#34;s&#34;, &#34;p&#34;, &#34;k&#34;, &#34;t&#34;, &#34;alt&#34;, &#34;pg&#34;, &#34;_page_number&#34;)
 
     def __init__(
         self,
         struct_type: str,
         parent: PDFObject,
         kids: Union[List[int], List[&#34;StructElem&#34;]],
-        page: PDFObject = None,
+        page_number: int = None,
         title: str = None,
         alt: str = None,
-        **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
         self.type = &#34;/StructElem&#34;
-        self.s = (
-            struct_type  # a name object identifying the nature of the structure element
-        )
+        # A name object identifying the nature of the structure element:
+        self.s = struct_type
         self.p = parent  # The structure element that is the immediate parent of this one in the structure hierarchy
         self.k = PDFArray(kids)  # The children of this structure element
-        self.pg = page  # A page object on which some or all of the content items designated by the K entry are rendered
-        self.t = (
-            None if title is None else PDFString(title)
-        )  # a text string representing it in human-readable form
-        self.alt = (
-            None if alt is None else PDFString(alt)
-        )  # An alternate description of the structure element in human-readable form
+        # a text string representing it in human-readable form:
+        self.t = None if title is None else PDFString(title)
+        # An alternate description of the structure element in human-readable form:
+        self.alt = None if alt is None else PDFString(alt)
+        self.pg = None  # A page object on which some or all of the content items designated by the K entry are rendered
+        self._page_number = page_number  # private so that it does not get serialized
+
+    def page_number(self):
+        return self._page_number
 
 
 class StructureTreeBuilder:
     def __init__(self):
-        &#34;&#34;&#34;
-        Args:
-            marked_contents (tuple): list of MarkedContent
-        &#34;&#34;&#34;
         self.struct_tree_root = StructTreeRoot()
         self.doc_struct_elem = StructElem(
             struct_type=&#34;/Document&#34;, parent=self.struct_tree_root, kids=[]
         )
         self.struct_tree_root.k.append(self.doc_struct_elem)
-        self.struct_elem_per_mc = {}
+        self.spid_per_page_number = {}  # {page_number -&gt; StructParent(s) ID}
 
-    def add_marked_content(self, marked_content):
-        page = PDFObject(marked_content.page_object_id)
+    def add_marked_content(
+        self,
+        page_number: int,
+        struct_type: str,
+        mcid: int = None,
+        title: str = None,
+        alt_text: str = None,
+    ):
+        struct_parents_id = self.spid_per_page_number.get(page_number)
+        if struct_parents_id is None:
+            struct_parents_id = len(self.spid_per_page_number)
+            self.spid_per_page_number[page_number] = struct_parents_id
         struct_elem = StructElem(
-            struct_type=marked_content.struct_type,
+            struct_type=struct_type,
             parent=self.doc_struct_elem,
-            kids=[] if marked_content.mcid is None else [marked_content.mcid],
-            page=page,
-            title=marked_content.title,
-            alt=marked_content.alt_text,
+            kids=[] if mcid is None else [mcid],
+            page_number=page_number,
+            title=title,
+            alt=alt_text,
         )
-        self.struct_elem_per_mc[marked_content] = struct_elem
         self.doc_struct_elem.k.append(struct_elem)
-        self.struct_tree_root.parent_tree.nums[marked_content.struct_parents_id].append(
-            struct_elem
-        )
+        self.struct_tree_root.parent_tree.nums[struct_parents_id].append(struct_elem)
+        return struct_elem, struct_parents_id
 
-    def next_mcid_for_page(self, page_object_id):
+    def next_mcid_for_page(self, page_number):
         return sum(
-            1 for mc in self.struct_elem_per_mc if mc.page_object_id == page_object_id
+            1
+            for struct_elem in self.doc_struct_elem.k
+            if struct_elem.page_number() == page_number
+            and struct_elem.k  # ensure it has a mcid set
         )
 
     def empty(self):
-        return not self.struct_elem_per_mc
+        return not self.doc_struct_elem.k
 
-    def serialize(self, first_object_id=1, output_producer=None):
-        &#34;&#34;&#34;
-        Assign object IDs &amp; output the whole hierarchy tree serialized
-        as a multi-lines string in PDF syntax, ready to be embedded.
-
-        Objects ID assignement will start with the provided first ID,
-        that will be assigned to the StructTreeRoot.
-        Apart from that, assignement is made in an arbitrary order.
-        All PDF objects must have assigned IDs before proceeding to output
-        generation though, as they have many references to each others.
-
-        If a OutputProducer instance provided, its `_newobj` &amp; `_out` methods will be called
-        and this method output will be meaningless.
-        &#34;&#34;&#34;
-        self.assign_ids(first_object_id)
-        output = []
-        output.append(self.struct_tree_root.serialize(output_producer))
-        output.append(self.doc_struct_elem.serialize(output_producer))
-        output.append(self.struct_tree_root.parent_tree.serialize(output_producer))
-        for struct_elem in self.doc_struct_elem.k:
-            output.append(struct_elem.serialize(output_producer))
-        return &#34;\n&#34;.join(output)
-
-    def assign_ids(self, n):
-        self.struct_tree_root.id = n
-        n += 1
-        self.doc_struct_elem.id = n
-        n += 1
-        self.struct_tree_root.parent_tree.id = n
-        n += 1
-        for struct_elem in self.doc_struct_elem.k:
-            struct_elem.id = n
-            n += 1
-        return n</code></pre>
+    def __iter__(self):
+        &#34;Iterate all PDF objects in the tree, starting with the tree root&#34;
+        yield self.struct_tree_root
+        yield self.doc_struct_elem
+        yield self.struct_tree_root.parent_tree
+        yield from self.doc_struct_elem.k</code></pre>
 </details>
 </section>
 <section>
@@ -217,59 +186,8 @@ class StructureTreeBuilder:
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="fpdf.structure_tree.MarkedContent"><code class="flex name class">
-<span>class <span class="ident">MarkedContent</span></span>
-<span>(</span><span>page_object_id: int, struct_parents_id: int, struct_type: str, mcid: Optional[int] = None, title: Optional[str] = None, alt_text: Optional[str] = None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>MarkedContent(page_object_id, struct_parents_id, struct_type, mcid, title, alt_text)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class MarkedContent(NamedTuple):
-    page_object_id: int  # refers to the first page displaying this marked content
-    struct_parents_id: int
-    struct_type: str
-    mcid: Optional[int] = None
-    title: Optional[str] = None
-    alt_text: Optional[str] = None</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.tuple</li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="fpdf.structure_tree.MarkedContent.alt_text"><code class="name">var <span class="ident">alt_text</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 5</p></div>
-</dd>
-<dt id="fpdf.structure_tree.MarkedContent.mcid"><code class="name">var <span class="ident">mcid</span> : Optional[int]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 3</p></div>
-</dd>
-<dt id="fpdf.structure_tree.MarkedContent.page_object_id"><code class="name">var <span class="ident">page_object_id</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 0</p></div>
-</dd>
-<dt id="fpdf.structure_tree.MarkedContent.struct_parents_id"><code class="name">var <span class="ident">struct_parents_id</span> : int</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 1</p></div>
-</dd>
-<dt id="fpdf.structure_tree.MarkedContent.struct_type"><code class="name">var <span class="ident">struct_type</span> : str</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 2</p></div>
-</dd>
-<dt id="fpdf.structure_tree.MarkedContent.title"><code class="name">var <span class="ident">title</span> : Optional[str]</code></dt>
-<dd>
-<div class="desc"><p>Alias for field number 4</p></div>
-</dd>
-</dl>
-</dd>
 <dt id="fpdf.structure_tree.NumberTree"><code class="flex name class">
 <span>class <span class="ident">NumberTree</span></span>
-<span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A number tree is similar to a name tree, except that its keys are integers
@@ -301,17 +219,17 @@ and names) be specified as direct objects</p></div>
 
     __slots__ = (&#34;_id&#34;, &#34;nums&#34;)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.nums = defaultdict(list)  # {struct_parent_id -&gt; struct_elems}
 
-    def serialize(self, output_producer=None, obj_dict=None):
+    def serialize(self, obj_dict=None):
         newline = &#34;\n&#34;
         serialized_nums = &#34;\n&#34;.join(
             f&#34;{struct_parent_id} [{newline.join(struct_elem.ref for struct_elem in struct_elems)}]&#34;
             for struct_parent_id, struct_elems in self.nums.items()
         )
-        return super().serialize(output_producer, {&#34;/Nums&#34;: f&#34;[{serialized_nums}]&#34;})</code></pre>
+        return super().serialize({&#34;/Nums&#34;: f&#34;[{serialized_nums}]&#34;})</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -324,38 +242,24 @@ and names) be specified as direct objects</p></div>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="fpdf.structure_tree.NumberTree.serialize"><code class="name flex">
-<span>def <span class="ident">serialize</span></span>(<span>self, output_producer=None, obj_dict=None)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def serialize(self, output_producer=None, obj_dict=None):
-    newline = &#34;\n&#34;
-    serialized_nums = &#34;\n&#34;.join(
-        f&#34;{struct_parent_id} [{newline.join(struct_elem.ref for struct_elem in struct_elems)}]&#34;
-        for struct_parent_id, struct_elems in self.nums.items()
-    )
-    return super().serialize(output_producer, {&#34;/Nums&#34;: f&#34;[{serialized_nums}]&#34;})</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFObject.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFObject.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.structure_tree.StructElem"><code class="flex name class">
 <span>class <span class="ident">StructElem</span></span>
-<span>(</span><span>struct_type: str, parent: <a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a>, kids: Union[List[int], List[ForwardRef('<a title="fpdf.structure_tree.StructElem" href="#fpdf.structure_tree.StructElem">StructElem</a>')]], page: <a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a> = None, title: str = None, alt: str = None, **kwargs)</span>
+<span>(</span><span>struct_type: str, parent: <a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a>, kids: Union[List[int], List[ForwardRef('<a title="fpdf.structure_tree.StructElem" href="#fpdf.structure_tree.StructElem">StructElem</a>')]], page_number: int = None, title: str = None, alt: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main features of this class:
 * delay ID assignement
-* implement serializing</p>
-<p>To ensure consistency on how the serialize() method operates,
-child classes must define a <strong>slots</strong> attribute.</p></div>
+* implement serializing</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -363,32 +267,32 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <pre><code class="python">class StructElem(PDFObject):
     # The main reason to use __slots__ in PDFObject child classes is to save up some memory
     # when very many instances of this class are created.
-    __slots__ = (&#34;_id&#34;, &#34;type&#34;, &#34;s&#34;, &#34;p&#34;, &#34;k&#34;, &#34;pg&#34;, &#34;t&#34;, &#34;alt&#34;)
+    __slots__ = (&#34;_id&#34;, &#34;type&#34;, &#34;s&#34;, &#34;p&#34;, &#34;k&#34;, &#34;t&#34;, &#34;alt&#34;, &#34;pg&#34;, &#34;_page_number&#34;)
 
     def __init__(
         self,
         struct_type: str,
         parent: PDFObject,
         kids: Union[List[int], List[&#34;StructElem&#34;]],
-        page: PDFObject = None,
+        page_number: int = None,
         title: str = None,
         alt: str = None,
-        **kwargs,
     ):
-        super().__init__(**kwargs)
+        super().__init__()
         self.type = &#34;/StructElem&#34;
-        self.s = (
-            struct_type  # a name object identifying the nature of the structure element
-        )
+        # A name object identifying the nature of the structure element:
+        self.s = struct_type
         self.p = parent  # The structure element that is the immediate parent of this one in the structure hierarchy
         self.k = PDFArray(kids)  # The children of this structure element
-        self.pg = page  # A page object on which some or all of the content items designated by the K entry are rendered
-        self.t = (
-            None if title is None else PDFString(title)
-        )  # a text string representing it in human-readable form
-        self.alt = (
-            None if alt is None else PDFString(alt)
-        )  # An alternate description of the structure element in human-readable form</code></pre>
+        # a text string representing it in human-readable form:
+        self.t = None if title is None else PDFString(title)
+        # An alternate description of the structure element in human-readable form:
+        self.alt = None if alt is None else PDFString(alt)
+        self.pg = None  # A page object on which some or all of the content items designated by the K entry are rendered
+        self._page_number = page_number  # private so that it does not get serialized
+
+    def page_number(self):
+        return self._page_number</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -425,17 +329,39 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.structure_tree.StructElem.page_number"><code class="name flex">
+<span>def <span class="ident">page_number</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def page_number(self):
+    return self._page_number</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFObject.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFObject.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.structure_tree.StructTreeRoot"><code class="flex name class">
 <span>class <span class="ident">StructTreeRoot</span></span>
-<span>(</span><span>**kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main features of this class:
 * delay ID assignement
-* implement serializing</p>
-<p>To ensure consistency on how the serialize() method operates,
-child classes must define a <strong>slots</strong> attribute.</p></div>
+* implement serializing</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -443,8 +369,8 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <pre><code class="python">class StructTreeRoot(PDFObject):
     __slots__ = (&#34;_id&#34;, &#34;type&#34;, &#34;parent_tree&#34;, &#34;k&#34;)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self):
+        super().__init__()
         self.type = &#34;/StructTreeRoot&#34;
         # A number tree used in finding the structure elements to which content items belong:
         self.parent_tree = NumberTree()
@@ -470,96 +396,80 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.syntax.PDFObject" href="syntax.html#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.syntax.PDFObject.content_stream" href="syntax.html#fpdf.syntax.PDFObject.content_stream">content_stream</a></code></li>
+<li><code><a title="fpdf.syntax.PDFObject.serialize" href="syntax.html#fpdf.syntax.PDFObject.serialize">serialize</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.structure_tree.StructureTreeBuilder"><code class="flex name class">
 <span>class <span class="ident">StructureTreeBuilder</span></span>
 </code></dt>
 <dd>
-<div class="desc"><h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>marked_contents</code></strong> :&ensp;<code>tuple</code></dt>
-<dd>list of MarkedContent</dd>
-</dl></div>
+<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class StructureTreeBuilder:
     def __init__(self):
-        &#34;&#34;&#34;
-        Args:
-            marked_contents (tuple): list of MarkedContent
-        &#34;&#34;&#34;
         self.struct_tree_root = StructTreeRoot()
         self.doc_struct_elem = StructElem(
             struct_type=&#34;/Document&#34;, parent=self.struct_tree_root, kids=[]
         )
         self.struct_tree_root.k.append(self.doc_struct_elem)
-        self.struct_elem_per_mc = {}
+        self.spid_per_page_number = {}  # {page_number -&gt; StructParent(s) ID}
 
-    def add_marked_content(self, marked_content):
-        page = PDFObject(marked_content.page_object_id)
+    def add_marked_content(
+        self,
+        page_number: int,
+        struct_type: str,
+        mcid: int = None,
+        title: str = None,
+        alt_text: str = None,
+    ):
+        struct_parents_id = self.spid_per_page_number.get(page_number)
+        if struct_parents_id is None:
+            struct_parents_id = len(self.spid_per_page_number)
+            self.spid_per_page_number[page_number] = struct_parents_id
         struct_elem = StructElem(
-            struct_type=marked_content.struct_type,
+            struct_type=struct_type,
             parent=self.doc_struct_elem,
-            kids=[] if marked_content.mcid is None else [marked_content.mcid],
-            page=page,
-            title=marked_content.title,
-            alt=marked_content.alt_text,
+            kids=[] if mcid is None else [mcid],
+            page_number=page_number,
+            title=title,
+            alt=alt_text,
         )
-        self.struct_elem_per_mc[marked_content] = struct_elem
         self.doc_struct_elem.k.append(struct_elem)
-        self.struct_tree_root.parent_tree.nums[marked_content.struct_parents_id].append(
-            struct_elem
-        )
+        self.struct_tree_root.parent_tree.nums[struct_parents_id].append(struct_elem)
+        return struct_elem, struct_parents_id
 
-    def next_mcid_for_page(self, page_object_id):
+    def next_mcid_for_page(self, page_number):
         return sum(
-            1 for mc in self.struct_elem_per_mc if mc.page_object_id == page_object_id
+            1
+            for struct_elem in self.doc_struct_elem.k
+            if struct_elem.page_number() == page_number
+            and struct_elem.k  # ensure it has a mcid set
         )
 
     def empty(self):
-        return not self.struct_elem_per_mc
+        return not self.doc_struct_elem.k
 
-    def serialize(self, first_object_id=1, output_producer=None):
-        &#34;&#34;&#34;
-        Assign object IDs &amp; output the whole hierarchy tree serialized
-        as a multi-lines string in PDF syntax, ready to be embedded.
-
-        Objects ID assignement will start with the provided first ID,
-        that will be assigned to the StructTreeRoot.
-        Apart from that, assignement is made in an arbitrary order.
-        All PDF objects must have assigned IDs before proceeding to output
-        generation though, as they have many references to each others.
-
-        If a OutputProducer instance provided, its `_newobj` &amp; `_out` methods will be called
-        and this method output will be meaningless.
-        &#34;&#34;&#34;
-        self.assign_ids(first_object_id)
-        output = []
-        output.append(self.struct_tree_root.serialize(output_producer))
-        output.append(self.doc_struct_elem.serialize(output_producer))
-        output.append(self.struct_tree_root.parent_tree.serialize(output_producer))
-        for struct_elem in self.doc_struct_elem.k:
-            output.append(struct_elem.serialize(output_producer))
-        return &#34;\n&#34;.join(output)
-
-    def assign_ids(self, n):
-        self.struct_tree_root.id = n
-        n += 1
-        self.doc_struct_elem.id = n
-        n += 1
-        self.struct_tree_root.parent_tree.id = n
-        n += 1
-        for struct_elem in self.doc_struct_elem.k:
-            struct_elem.id = n
-            n += 1
-        return n</code></pre>
+    def __iter__(self):
+        &#34;Iterate all PDF objects in the tree, starting with the tree root&#34;
+        yield self.struct_tree_root
+        yield self.doc_struct_elem
+        yield self.struct_tree_root.parent_tree
+        yield from self.doc_struct_elem.k</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.structure_tree.StructureTreeBuilder.add_marked_content"><code class="name flex">
-<span>def <span class="ident">add_marked_content</span></span>(<span>self, marked_content)</span>
+<span>def <span class="ident">add_marked_content</span></span>(<span>self, page_number: int, struct_type: str, mcid: int = None, title: str = None, alt_text: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -567,43 +477,29 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_marked_content(self, marked_content):
-    page = PDFObject(marked_content.page_object_id)
+<pre><code class="python">def add_marked_content(
+    self,
+    page_number: int,
+    struct_type: str,
+    mcid: int = None,
+    title: str = None,
+    alt_text: str = None,
+):
+    struct_parents_id = self.spid_per_page_number.get(page_number)
+    if struct_parents_id is None:
+        struct_parents_id = len(self.spid_per_page_number)
+        self.spid_per_page_number[page_number] = struct_parents_id
     struct_elem = StructElem(
-        struct_type=marked_content.struct_type,
+        struct_type=struct_type,
         parent=self.doc_struct_elem,
-        kids=[] if marked_content.mcid is None else [marked_content.mcid],
-        page=page,
-        title=marked_content.title,
-        alt=marked_content.alt_text,
+        kids=[] if mcid is None else [mcid],
+        page_number=page_number,
+        title=title,
+        alt=alt_text,
     )
-    self.struct_elem_per_mc[marked_content] = struct_elem
     self.doc_struct_elem.k.append(struct_elem)
-    self.struct_tree_root.parent_tree.nums[marked_content.struct_parents_id].append(
-        struct_elem
-    )</code></pre>
-</details>
-</dd>
-<dt id="fpdf.structure_tree.StructureTreeBuilder.assign_ids"><code class="name flex">
-<span>def <span class="ident">assign_ids</span></span>(<span>self, n)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def assign_ids(self, n):
-    self.struct_tree_root.id = n
-    n += 1
-    self.doc_struct_elem.id = n
-    n += 1
-    self.struct_tree_root.parent_tree.id = n
-    n += 1
-    for struct_elem in self.doc_struct_elem.k:
-        struct_elem.id = n
-        n += 1
-    return n</code></pre>
+    self.struct_tree_root.parent_tree.nums[struct_parents_id].append(struct_elem)
+    return struct_elem, struct_parents_id</code></pre>
 </details>
 </dd>
 <dt id="fpdf.structure_tree.StructureTreeBuilder.empty"><code class="name flex">
@@ -616,11 +512,11 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def empty(self):
-    return not self.struct_elem_per_mc</code></pre>
+    return not self.doc_struct_elem.k</code></pre>
 </details>
 </dd>
 <dt id="fpdf.structure_tree.StructureTreeBuilder.next_mcid_for_page"><code class="name flex">
-<span>def <span class="ident">next_mcid_for_page</span></span>(<span>self, page_object_id)</span>
+<span>def <span class="ident">next_mcid_for_page</span></span>(<span>self, page_number)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -628,51 +524,13 @@ child classes must define a <strong>slots</strong> attribute.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def next_mcid_for_page(self, page_object_id):
+<pre><code class="python">def next_mcid_for_page(self, page_number):
     return sum(
-        1 for mc in self.struct_elem_per_mc if mc.page_object_id == page_object_id
+        1
+        for struct_elem in self.doc_struct_elem.k
+        if struct_elem.page_number() == page_number
+        and struct_elem.k  # ensure it has a mcid set
     )</code></pre>
-</details>
-</dd>
-<dt id="fpdf.structure_tree.StructureTreeBuilder.serialize"><code class="name flex">
-<span>def <span class="ident">serialize</span></span>(<span>self, first_object_id=1, output_producer=None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Assign object IDs &amp; output the whole hierarchy tree serialized
-as a multi-lines string in PDF syntax, ready to be embedded.</p>
-<p>Objects ID assignement will start with the provided first ID,
-that will be assigned to the StructTreeRoot.
-Apart from that, assignement is made in an arbitrary order.
-All PDF objects must have assigned IDs before proceeding to output
-generation though, as they have many references to each others.</p>
-<p>If a OutputProducer instance provided, its <code>_newobj</code> &amp; <code>_out</code> methods will be called
-and this method output will be meaningless.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def serialize(self, first_object_id=1, output_producer=None):
-    &#34;&#34;&#34;
-    Assign object IDs &amp; output the whole hierarchy tree serialized
-    as a multi-lines string in PDF syntax, ready to be embedded.
-
-    Objects ID assignement will start with the provided first ID,
-    that will be assigned to the StructTreeRoot.
-    Apart from that, assignement is made in an arbitrary order.
-    All PDF objects must have assigned IDs before proceeding to output
-    generation though, as they have many references to each others.
-
-    If a OutputProducer instance provided, its `_newobj` &amp; `_out` methods will be called
-    and this method output will be meaningless.
-    &#34;&#34;&#34;
-    self.assign_ids(first_object_id)
-    output = []
-    output.append(self.struct_tree_root.serialize(output_producer))
-    output.append(self.doc_struct_elem.serialize(output_producer))
-    output.append(self.struct_tree_root.parent_tree.serialize(output_producer))
-    for struct_elem in self.doc_struct_elem.k:
-        output.append(struct_elem.serialize(output_producer))
-    return &#34;\n&#34;.join(output)</code></pre>
 </details>
 </dd>
 </dl>
@@ -694,21 +552,9 @@ and this method output will be meaningless.</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="fpdf.structure_tree.MarkedContent" href="#fpdf.structure_tree.MarkedContent">MarkedContent</a></code></h4>
-<ul class="two-column">
-<li><code><a title="fpdf.structure_tree.MarkedContent.alt_text" href="#fpdf.structure_tree.MarkedContent.alt_text">alt_text</a></code></li>
-<li><code><a title="fpdf.structure_tree.MarkedContent.mcid" href="#fpdf.structure_tree.MarkedContent.mcid">mcid</a></code></li>
-<li><code><a title="fpdf.structure_tree.MarkedContent.page_object_id" href="#fpdf.structure_tree.MarkedContent.page_object_id">page_object_id</a></code></li>
-<li><code><a title="fpdf.structure_tree.MarkedContent.struct_parents_id" href="#fpdf.structure_tree.MarkedContent.struct_parents_id">struct_parents_id</a></code></li>
-<li><code><a title="fpdf.structure_tree.MarkedContent.struct_type" href="#fpdf.structure_tree.MarkedContent.struct_type">struct_type</a></code></li>
-<li><code><a title="fpdf.structure_tree.MarkedContent.title" href="#fpdf.structure_tree.MarkedContent.title">title</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="fpdf.structure_tree.NumberTree" href="#fpdf.structure_tree.NumberTree">NumberTree</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.structure_tree.NumberTree.nums" href="#fpdf.structure_tree.NumberTree.nums">nums</a></code></li>
-<li><code><a title="fpdf.structure_tree.NumberTree.serialize" href="#fpdf.structure_tree.NumberTree.serialize">serialize</a></code></li>
 </ul>
 </li>
 <li>
@@ -717,6 +563,7 @@ and this method output will be meaningless.</p></div>
 <li><code><a title="fpdf.structure_tree.StructElem.alt" href="#fpdf.structure_tree.StructElem.alt">alt</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructElem.k" href="#fpdf.structure_tree.StructElem.k">k</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructElem.p" href="#fpdf.structure_tree.StructElem.p">p</a></code></li>
+<li><code><a title="fpdf.structure_tree.StructElem.page_number" href="#fpdf.structure_tree.StructElem.page_number">page_number</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructElem.pg" href="#fpdf.structure_tree.StructElem.pg">pg</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructElem.s" href="#fpdf.structure_tree.StructElem.s">s</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructElem.t" href="#fpdf.structure_tree.StructElem.t">t</a></code></li>
@@ -735,10 +582,8 @@ and this method output will be meaningless.</p></div>
 <h4><code><a title="fpdf.structure_tree.StructureTreeBuilder" href="#fpdf.structure_tree.StructureTreeBuilder">StructureTreeBuilder</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.structure_tree.StructureTreeBuilder.add_marked_content" href="#fpdf.structure_tree.StructureTreeBuilder.add_marked_content">add_marked_content</a></code></li>
-<li><code><a title="fpdf.structure_tree.StructureTreeBuilder.assign_ids" href="#fpdf.structure_tree.StructureTreeBuilder.assign_ids">assign_ids</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructureTreeBuilder.empty" href="#fpdf.structure_tree.StructureTreeBuilder.empty">empty</a></code></li>
 <li><code><a title="fpdf.structure_tree.StructureTreeBuilder.next_mcid_for_page" href="#fpdf.structure_tree.StructureTreeBuilder.next_mcid_for_page">next_mcid_for_page</a></code></li>
-<li><code><a title="fpdf.structure_tree.StructureTreeBuilder.serialize" href="#fpdf.structure_tree.StructureTreeBuilder.serialize">serialize</a></code></li>
 </ul>
 </li>
 </ul>

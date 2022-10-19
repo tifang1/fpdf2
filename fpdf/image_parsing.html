@@ -155,8 +155,6 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
         ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
 
-    dp = f&#34;/Predictor 15 /Colors {dpn} /BitsPerComponent {bpc} /Columns {w}&#34;
-
     info.update(
         {
             &#34;w&#34;: w,
@@ -164,8 +162,7 @@ def get_img_info(img, image_filter=&#34;AUTO&#34;, dims=None):
             &#34;cs&#34;: colspace,
             &#34;bpc&#34;: bpc,
             &#34;f&#34;: image_filter,
-            &#34;dp&#34;: dp,
-            &#34;trns&#34;: &#34;&#34;,
+            &#34;dp&#34;: f&#34;/Predictor 15 /Colors {dpn} /Columns {w}&#34;,
         }
     )
 
@@ -320,8 +317,6 @@ def _has_alpha(img, alpha_channel):
         ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
 
-    dp = f&#34;/Predictor 15 /Colors {dpn} /BitsPerComponent {bpc} /Columns {w}&#34;
-
     info.update(
         {
             &#34;w&#34;: w,
@@ -329,8 +324,7 @@ def _has_alpha(img, alpha_channel):
             &#34;cs&#34;: colspace,
             &#34;bpc&#34;: bpc,
             &#34;f&#34;: image_filter,
-            &#34;dp&#34;: dp,
-            &#34;trns&#34;: &#34;&#34;,
+            &#34;dp&#34;: f&#34;/Predictor 15 /Colors {dpn} /Columns {w}&#34;,
         }
     )
 
