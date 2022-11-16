@@ -132,7 +132,8 @@ automatic line wrapping …</p></div>
 <dd>
 <div class="desc"><p>This module is in work-in-progress state.
 Hint tables / hint streams have not been implemented yet,
-and there are a few "TODO" comment remaining</p></div>
+and there are a few "TODO" comment remaining.
+cf …</p></div>
 </dd>
 <dt><code class="name"><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code></dt>
 <dd>
@@ -2116,6 +2117,7 @@ Default to "mm".</dd>
             checksum (bool): insert a MD5 checksum of the file content - False by default
         &#34;&#34;&#34;
         embedded_file = self.embed_file(file_path, **kwargs)
+        embedded_file.set_globally_enclosed(False)
         annotation = AnnotationDict(
             &#34;FileAttachment&#34;,
             x * self.k,
@@ -4332,7 +4334,7 @@ Default to "mm".</dd>
         self.text_color = prev_text_color
         self.underline = prev_underline
 
-    def output(self, name=&#34;&#34;, dest=&#34;&#34;):
+    def output(self, name=&#34;&#34;, dest=&#34;&#34;, linearize=False):
         &#34;&#34;&#34;
         Output PDF to some destination.
         The method first calls [close](close.md) if necessary to terminate the document.
@@ -4364,7 +4366,10 @@ Default to "mm".</dd>
                 self._insert_table_of_contents()
             if self.str_alias_nb_pages:
                 self._substitute_page_number()
-            self.buffer = OutputProducer(self).bufferize()
+            output_producer = (
+                LinearizedOutputProducer(self) if linearize else OutputProducer(self)
+            )
+            self.buffer = output_producer.bufferize()
         if name:
             if isinstance(name, os.PathLike):
                 name.write_bytes(self.buffer)
@@ -5966,6 +5971,7 @@ def file_attachment_annotation(
         checksum (bool): insert a MD5 checksum of the file content - False by default
     &#34;&#34;&#34;
     embedded_file = self.embed_file(file_path, **kwargs)
+    embedded_file.set_globally_enclosed(False)
     annotation = AnnotationDict(
         &#34;FileAttachment&#34;,
         x * self.k,
@@ -7233,7 +7239,7 @@ def offset_rendering(self):
 </details>
 </dd>
 <dt id="fpdf.FPDF.output"><code class="name flex">
-<span>def <span class="ident">output</span></span>(<span>self, name='', dest='')</span>
+<span>def <span class="ident">output</span></span>(<span>self, name='', dest='', linearize=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Output PDF to some destination.
@@ -7252,7 +7258,7 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def output(self, name=&#34;&#34;, dest=&#34;&#34;):
+<pre><code class="python">def output(self, name=&#34;&#34;, dest=&#34;&#34;, linearize=False):
     &#34;&#34;&#34;
     Output PDF to some destination.
     The method first calls [close](close.md) if necessary to terminate the document.
@@ -7284,7 +7290,10 @@ If a <code>name</code> is given, the PDF is written to a new file.</p>
             self._insert_table_of_contents()
         if self.str_alias_nb_pages:
             self._substitute_page_number()
-        self.buffer = OutputProducer(self).bufferize()
+        output_producer = (
+            LinearizedOutputProducer(self) if linearize else OutputProducer(self)
+        )
+        self.buffer = output_producer.bufferize()
     if name:
         if isinstance(name, os.PathLike):
             name.write_bytes(self.buffer)

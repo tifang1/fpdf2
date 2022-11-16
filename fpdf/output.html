@@ -554,7 +554,16 @@ class OutputProducer:
                 # recommended_glyphs=True means that adds the .notdef, .null, CR, and space glyphs
                 options = ftsubset.Options(notdef_outline=True, recommended_glyphs=True)
                 # dropping the tables previous dropped in the old ttfonts.py file #issue 418
-                options.drop_tables += [&#34;GDEF&#34;, &#34;GSUB&#34;, &#34;GPOS&#34;, &#34;MATH&#34;, &#34;hdmx&#34;]
+                options.drop_tables += [
+                    &#34;FFTM&#34;,  # FontForge Timestamp table - cf. https://github.com/PyFPDF/fpdf2/issues/600
+                    &#34;GDEF&#34;,  # Glyph Definition table = various glyph properties used in OpenType layout processing
+                    &#34;GPOS&#34;,  # Glyph Positioning table = precise control over glyph placement
+                    #          for sophisticated text layout and rendering in each script and language system
+                    &#34;GSUB&#34;,  # Glyph Substitution table = data for substition of glyphs for appropriate rendering of scripts
+                    &#34;MATH&#34;,  # Mathematical typesetting table = specific information necessary for math formula layout
+                    &#34;hdmx&#34;,  # Horizontal Device Metrics table, stores integer advance widths scaled to particular pixel sizes
+                    #          for OpenType™ fonts with TrueType outlines
+                ]
                 subsetter = ftsubset.Subsetter(options)
                 subsetter.populate(glyphs=glyph_names)
                 subsetter.subset(fonttools_font)
@@ -878,6 +887,7 @@ class OutputProducer:
             file_spec_names = [
                 f&#34;{enclose_in_parens(embedded_file.basename())} {embedded_file.file_spec().serialize()}&#34;
                 for embedded_file in fpdf.embedded_files
+                if embedded_file.globally_enclosed
             ]
             catalog_obj.names = pdf_dict(
                 {&#34;/EmbeddedFiles&#34;: pdf_dict({&#34;/Names&#34;: pdf_list(file_spec_names)})}
@@ -1304,7 +1314,16 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
                 # recommended_glyphs=True means that adds the .notdef, .null, CR, and space glyphs
                 options = ftsubset.Options(notdef_outline=True, recommended_glyphs=True)
                 # dropping the tables previous dropped in the old ttfonts.py file #issue 418
-                options.drop_tables += [&#34;GDEF&#34;, &#34;GSUB&#34;, &#34;GPOS&#34;, &#34;MATH&#34;, &#34;hdmx&#34;]
+                options.drop_tables += [
+                    &#34;FFTM&#34;,  # FontForge Timestamp table - cf. https://github.com/PyFPDF/fpdf2/issues/600
+                    &#34;GDEF&#34;,  # Glyph Definition table = various glyph properties used in OpenType layout processing
+                    &#34;GPOS&#34;,  # Glyph Positioning table = precise control over glyph placement
+                    #          for sophisticated text layout and rendering in each script and language system
+                    &#34;GSUB&#34;,  # Glyph Substitution table = data for substition of glyphs for appropriate rendering of scripts
+                    &#34;MATH&#34;,  # Mathematical typesetting table = specific information necessary for math formula layout
+                    &#34;hdmx&#34;,  # Horizontal Device Metrics table, stores integer advance widths scaled to particular pixel sizes
+                    #          for OpenType™ fonts with TrueType outlines
+                ]
                 subsetter = ftsubset.Subsetter(options)
                 subsetter.populate(glyphs=glyph_names)
                 subsetter.subset(fonttools_font)
@@ -1628,6 +1647,7 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
             file_spec_names = [
                 f&#34;{enclose_in_parens(embedded_file.basename())} {embedded_file.file_spec().serialize()}&#34;
                 for embedded_file in fpdf.embedded_files
+                if embedded_file.globally_enclosed
             ]
             catalog_obj.names = pdf_dict(
                 {&#34;/EmbeddedFiles&#34;: pdf_dict({&#34;/Names&#34;: pdf_list(file_spec_names)})}

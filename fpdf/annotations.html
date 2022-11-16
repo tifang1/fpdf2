@@ -154,6 +154,13 @@ class PDFEmbeddedFile(PDFContentStream):
         self.params = pdf_dict(params)
         self._basename = basename  # private so that it does not get serialized
         self._desc = desc  # private so that it does not get serialized
+        self._globally_enclosed = True
+
+    def globally_enclosed(self):
+        return self._globally_enclosed
+
+    def set_globally_enclosed(self, value):
+        self._globally_enclosed = value
 
     def basename(self):
         return self._basename
@@ -519,6 +526,13 @@ class FileSpec(NamedTuple):
         self.params = pdf_dict(params)
         self._basename = basename  # private so that it does not get serialized
         self._desc = desc  # private so that it does not get serialized
+        self._globally_enclosed = True
+
+    def globally_enclosed(self):
+        return self._globally_enclosed
+
+    def set_globally_enclosed(self, value):
+        self._globally_enclosed = value
 
     def basename(self):
         return self._basename
@@ -557,6 +571,32 @@ class FileSpec(NamedTuple):
 </summary>
 <pre><code class="python">def file_spec(self):
     return FileSpec(self, self._basename, self._desc)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.annotations.PDFEmbeddedFile.globally_enclosed"><code class="name flex">
+<span>def <span class="ident">globally_enclosed</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def globally_enclosed(self):
+    return self._globally_enclosed</code></pre>
+</details>
+</dd>
+<dt id="fpdf.annotations.PDFEmbeddedFile.set_globally_enclosed"><code class="name flex">
+<span>def <span class="ident">set_globally_enclosed</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_globally_enclosed(self, value):
+    self._globally_enclosed = value</code></pre>
 </details>
 </dd>
 </dl>
@@ -629,6 +669,8 @@ class FileSpec(NamedTuple):
 <ul class="">
 <li><code><a title="fpdf.annotations.PDFEmbeddedFile.basename" href="#fpdf.annotations.PDFEmbeddedFile.basename">basename</a></code></li>
 <li><code><a title="fpdf.annotations.PDFEmbeddedFile.file_spec" href="#fpdf.annotations.PDFEmbeddedFile.file_spec">file_spec</a></code></li>
+<li><code><a title="fpdf.annotations.PDFEmbeddedFile.globally_enclosed" href="#fpdf.annotations.PDFEmbeddedFile.globally_enclosed">globally_enclosed</a></code></li>
+<li><code><a title="fpdf.annotations.PDFEmbeddedFile.set_globally_enclosed" href="#fpdf.annotations.PDFEmbeddedFile.set_globally_enclosed">set_globally_enclosed</a></code></li>
 </ul>
 </li>
 </ul>
