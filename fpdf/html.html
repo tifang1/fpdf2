@@ -40,10 +40,14 @@ from html.parser import HTMLParser
 
 from .enums import XPos, YPos
 
+import re
 
 LOGGER = logging.getLogger(__name__)
 BULLET_WIN1252 = &#34;\x95&#34;  # BULLET character in Windows-1252 encoding
 DEFAULT_HEADING_SIZES = dict(h1=24, h2=18, h3=14, h4=12, h5=10, h6=8)
+LEADING_SPACE = re.compile(r&#34;^\s+&#34;)
+WHITESPACE = re.compile(r&#34;(\s)(\s*)&#34;)
+TRAILING_SPACE = re.compile(r&#34;\s$&#34;)
 
 COLOR_DICT = {
     &#34;black&#34;: &#34;#000000&#34;,
@@ -252,6 +256,9 @@ class HTML2FPDF(HTMLParser):
         self.table_line_separators = table_line_separators
         self.ul_bullet_char = ul_bullet_char
         self.style = dict(b=False, i=False, u=False)
+        self.pre_formatted = False
+        self.follows_fmt_tag = False
+        self.follows_trailing_space = False
         self.href = &#34;&#34;
         self.align = &#34;&#34;
         self.page_links = {}
@@ -292,6 +299,7 @@ class HTML2FPDF(HTMLParser):
         return int(length)
 
     def handle_data(self, data):
+        trailing_space_flag = TRAILING_SPACE.search(data)
         if self.td is not None:  # drawing a table?
             self._insert_td(data)
         elif self.table is not None:
@@ -309,15 +317,43 @@ class HTML2FPDF(HTMLParser):
                 align=self.align[0].upper(),
                 link=self.href,
             )
-        else:
-            data = data.replace(&#34;\n&#34;, &#34; &#34;)
+        elif self.pre_formatted:  # for pre blocks
+            self.pdf.write(self.h, data)
+
+        elif self.follows_fmt_tag and not self.follows_trailing_space:
+            # don&#39;t trim leading whitespace if following a format tag with no trailing whitespace
+            data = WHITESPACE.sub(whitespace_repl, data)
+            if trailing_space_flag:
+                self.follows_trailing_space = True
             if self.href:
                 self.put_link(data)
             else:
                 if self.heading_level:
                     self.pdf.start_section(data, self.heading_level - 1)
-                LOGGER.debug(&#34;write &#39;%s&#39; h=%d&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;), self.h)
+                LOGGER.debug(
+                    &#34;write &#39;%s&#39; h=%d&#34;,
+                    WHITESPACE.sub(whitespace_repl, data),
+                    self.h,
+                )
                 self.pdf.write(self.h, data)
+            self.follows_fmt_tag = False
+
+        else:
+            data = LEADING_SPACE.sub(leading_whitespace_repl, data)
+            data = WHITESPACE.sub(whitespace_repl, data)
+            self.follows_trailing_space = trailing_space_flag
+            if self.href:
+                self.put_link(data)
+            else:
+                if self.heading_level:
+                    self.pdf.start_section(data, self.heading_level - 1)
+                LOGGER.debug(
+                    &#34;write &#39;%s&#39; h=%d&#34;,
+                    WHITESPACE.sub(whitespace_repl, data),
+                    self.h,
+                )
+                self.pdf.write(self.h, data)
+            self.follows_fmt_tag = False
 
     def _insert_td(self, data=&#34;&#34;):
         self._only_imgs_in_td = False
@@ -501,9 +537,13 @@ class HTML2FPDF(HTMLParser):
                 self.align = attrs.get(&#34;align&#34;)
         if tag == &#34;hr&#34;:
             self.pdf.add_page(same=True)
+        if tag == &#34;code&#34;:
+            self.font_stack.append((self.font_face, self.font_size, self.font_color))
+            self.set_font(&#34;courier&#34;, 11)
         if tag == &#34;pre&#34;:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
             self.set_font(&#34;courier&#34;, 11)
+            self.pre_formatted = True
         if tag == &#34;blockquote&#34;:
             self.pdf.set_text_color(100, 0, 45)
             self.indent += 1
@@ -651,10 +691,15 @@ class HTML2FPDF(HTMLParser):
             self.set_font(face, size)
             self.set_text_color(*color)
             self.align = None
+        if tag == &#34;code&#34;:
+            face, size, color = self.font_stack.pop()
+            self.set_font(face, size)
+            self.set_text_color(*color)
         if tag == &#34;pre&#34;:
             face, size, color = self.font_stack.pop()
             self.set_font(face, size)
             self.set_text_color(*color)
+            self.pre_formatted = False
         if tag == &#34;blockquote&#34;:
             self.set_text_color(*self.font_color)
             self.indent -= 1
@@ -665,6 +710,7 @@ class HTML2FPDF(HTMLParser):
             tag = &#34;i&#34;
         if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
             self.set_style(tag, False)
+            self.follows_fmt_tag = True
         if tag == &#34;a&#34;:
             self.href = &#34;&#34;
         if tag == &#34;p&#34;:
@@ -715,8 +761,10 @@ class HTML2FPDF(HTMLParser):
             self.align = None
         if tag == &#34;sup&#34;:
             self.pdf.char_vpos = &#34;LINE&#34;
+            self.follows_fmt_tag = True
         if tag == &#34;sub&#34;:
             self.pdf.char_vpos = &#34;LINE&#34;
+            self.follows_fmt_tag = True
 
     def set_font(self, face=None, size=None):
         if face:
@@ -772,6 +820,33 @@ class HTML2FPDF(HTMLParser):
         raise RuntimeError(message)
 
 
+def leading_whitespace_repl(matchobj):
+    trimmed_str = &#34;&#34;
+    for char in matchobj.group(0):  # check if leading whitespace contains nbsp
+        if char == &#34;\u00a0&#34;:
+            trimmed_str += &#34;\u00a0&#34;
+        elif char == &#34;\u202f&#34;:
+            trimmed_str += &#34;\u202f&#34;
+    return trimmed_str
+
+
+def whitespace_repl(matchobj):
+    trimmed_str = &#34;&#34;
+    for char in matchobj.group(
+        1
+    ):  # allow 1 whitespace char, check for narrow no-break space
+        if char == &#34;\u202f&#34;:
+            trimmed_str += &#34;\u202f&#34;
+        else:
+            trimmed_str += &#34; &#34;
+    for char in matchobj.group(2):  # remove following whitespace char unless nbsp
+        if char == &#34;\u00a0&#34;:
+            trimmed_str += &#34;\u00a0&#34;
+        elif char == &#34;\u202f&#34;:
+            trimmed_str += &#34;\u202f&#34;
+    return trimmed_str
+
+
 class HTMLMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -818,6 +893,25 @@ class HTMLMixin:
     return r, g, b</code></pre>
 </details>
 </dd>
+<dt id="fpdf.html.leading_whitespace_repl"><code class="name flex">
+<span>def <span class="ident">leading_whitespace_repl</span></span>(<span>matchobj)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def leading_whitespace_repl(matchobj):
+    trimmed_str = &#34;&#34;
+    for char in matchobj.group(0):  # check if leading whitespace contains nbsp
+        if char == &#34;\u00a0&#34;:
+            trimmed_str += &#34;\u00a0&#34;
+        elif char == &#34;\u202f&#34;:
+            trimmed_str += &#34;\u202f&#34;
+    return trimmed_str</code></pre>
+</details>
+</dd>
 <dt id="fpdf.html.px2mm"><code class="name flex">
 <span>def <span class="ident">px2mm</span></span>(<span>px)</span>
 </code></dt>
@@ -829,6 +923,32 @@ class HTMLMixin:
 </summary>
 <pre><code class="python">def px2mm(px):
     return int(px) * 25.4 / 72</code></pre>
+</details>
+</dd>
+<dt id="fpdf.html.whitespace_repl"><code class="name flex">
+<span>def <span class="ident">whitespace_repl</span></span>(<span>matchobj)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def whitespace_repl(matchobj):
+    trimmed_str = &#34;&#34;
+    for char in matchobj.group(
+        1
+    ):  # allow 1 whitespace char, check for narrow no-break space
+        if char == &#34;\u202f&#34;:
+            trimmed_str += &#34;\u202f&#34;
+        else:
+            trimmed_str += &#34; &#34;
+    for char in matchobj.group(2):  # remove following whitespace char unless nbsp
+        if char == &#34;\u00a0&#34;:
+            trimmed_str += &#34;\u00a0&#34;
+        elif char == &#34;\u202f&#34;:
+            trimmed_str += &#34;\u202f&#34;
+    return trimmed_str</code></pre>
 </details>
 </dd>
 </dl>
@@ -894,6 +1014,9 @@ to new image URLs</dd>
         self.table_line_separators = table_line_separators
         self.ul_bullet_char = ul_bullet_char
         self.style = dict(b=False, i=False, u=False)
+        self.pre_formatted = False
+        self.follows_fmt_tag = False
+        self.follows_trailing_space = False
         self.href = &#34;&#34;
         self.align = &#34;&#34;
         self.page_links = {}
@@ -934,6 +1057,7 @@ to new image URLs</dd>
         return int(length)
 
     def handle_data(self, data):
+        trailing_space_flag = TRAILING_SPACE.search(data)
         if self.td is not None:  # drawing a table?
             self._insert_td(data)
         elif self.table is not None:
@@ -951,15 +1075,43 @@ to new image URLs</dd>
                 align=self.align[0].upper(),
                 link=self.href,
             )
-        else:
-            data = data.replace(&#34;\n&#34;, &#34; &#34;)
+        elif self.pre_formatted:  # for pre blocks
+            self.pdf.write(self.h, data)
+
+        elif self.follows_fmt_tag and not self.follows_trailing_space:
+            # don&#39;t trim leading whitespace if following a format tag with no trailing whitespace
+            data = WHITESPACE.sub(whitespace_repl, data)
+            if trailing_space_flag:
+                self.follows_trailing_space = True
             if self.href:
                 self.put_link(data)
             else:
                 if self.heading_level:
                     self.pdf.start_section(data, self.heading_level - 1)
-                LOGGER.debug(&#34;write &#39;%s&#39; h=%d&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;), self.h)
+                LOGGER.debug(
+                    &#34;write &#39;%s&#39; h=%d&#34;,
+                    WHITESPACE.sub(whitespace_repl, data),
+                    self.h,
+                )
                 self.pdf.write(self.h, data)
+            self.follows_fmt_tag = False
+
+        else:
+            data = LEADING_SPACE.sub(leading_whitespace_repl, data)
+            data = WHITESPACE.sub(whitespace_repl, data)
+            self.follows_trailing_space = trailing_space_flag
+            if self.href:
+                self.put_link(data)
+            else:
+                if self.heading_level:
+                    self.pdf.start_section(data, self.heading_level - 1)
+                LOGGER.debug(
+                    &#34;write &#39;%s&#39; h=%d&#34;,
+                    WHITESPACE.sub(whitespace_repl, data),
+                    self.h,
+                )
+                self.pdf.write(self.h, data)
+            self.follows_fmt_tag = False
 
     def _insert_td(self, data=&#34;&#34;):
         self._only_imgs_in_td = False
@@ -1143,9 +1295,13 @@ to new image URLs</dd>
                 self.align = attrs.get(&#34;align&#34;)
         if tag == &#34;hr&#34;:
             self.pdf.add_page(same=True)
+        if tag == &#34;code&#34;:
+            self.font_stack.append((self.font_face, self.font_size, self.font_color))
+            self.set_font(&#34;courier&#34;, 11)
         if tag == &#34;pre&#34;:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
             self.set_font(&#34;courier&#34;, 11)
+            self.pre_formatted = True
         if tag == &#34;blockquote&#34;:
             self.pdf.set_text_color(100, 0, 45)
             self.indent += 1
@@ -1293,10 +1449,15 @@ to new image URLs</dd>
             self.set_font(face, size)
             self.set_text_color(*color)
             self.align = None
+        if tag == &#34;code&#34;:
+            face, size, color = self.font_stack.pop()
+            self.set_font(face, size)
+            self.set_text_color(*color)
         if tag == &#34;pre&#34;:
             face, size, color = self.font_stack.pop()
             self.set_font(face, size)
             self.set_text_color(*color)
+            self.pre_formatted = False
         if tag == &#34;blockquote&#34;:
             self.set_text_color(*self.font_color)
             self.indent -= 1
@@ -1307,6 +1468,7 @@ to new image URLs</dd>
             tag = &#34;i&#34;
         if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
             self.set_style(tag, False)
+            self.follows_fmt_tag = True
         if tag == &#34;a&#34;:
             self.href = &#34;&#34;
         if tag == &#34;p&#34;:
@@ -1357,8 +1519,10 @@ to new image URLs</dd>
             self.align = None
         if tag == &#34;sup&#34;:
             self.pdf.char_vpos = &#34;LINE&#34;
+            self.follows_fmt_tag = True
         if tag == &#34;sub&#34;:
             self.pdf.char_vpos = &#34;LINE&#34;
+            self.follows_fmt_tag = True
 
     def set_font(self, face=None, size=None):
         if face:
@@ -1461,6 +1625,7 @@ to new image URLs</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def handle_data(self, data):
+    trailing_space_flag = TRAILING_SPACE.search(data)
     if self.td is not None:  # drawing a table?
         self._insert_td(data)
     elif self.table is not None:
@@ -1478,15 +1643,43 @@ to new image URLs</dd>
             align=self.align[0].upper(),
             link=self.href,
         )
-    else:
-        data = data.replace(&#34;\n&#34;, &#34; &#34;)
+    elif self.pre_formatted:  # for pre blocks
+        self.pdf.write(self.h, data)
+
+    elif self.follows_fmt_tag and not self.follows_trailing_space:
+        # don&#39;t trim leading whitespace if following a format tag with no trailing whitespace
+        data = WHITESPACE.sub(whitespace_repl, data)
+        if trailing_space_flag:
+            self.follows_trailing_space = True
         if self.href:
             self.put_link(data)
         else:
             if self.heading_level:
                 self.pdf.start_section(data, self.heading_level - 1)
-            LOGGER.debug(&#34;write &#39;%s&#39; h=%d&#34;, data.replace(&#34;\n&#34;, &#34;\\n&#34;), self.h)
-            self.pdf.write(self.h, data)</code></pre>
+            LOGGER.debug(
+                &#34;write &#39;%s&#39; h=%d&#34;,
+                WHITESPACE.sub(whitespace_repl, data),
+                self.h,
+            )
+            self.pdf.write(self.h, data)
+        self.follows_fmt_tag = False
+
+    else:
+        data = LEADING_SPACE.sub(leading_whitespace_repl, data)
+        data = WHITESPACE.sub(whitespace_repl, data)
+        self.follows_trailing_space = trailing_space_flag
+        if self.href:
+            self.put_link(data)
+        else:
+            if self.heading_level:
+                self.pdf.start_section(data, self.heading_level - 1)
+            LOGGER.debug(
+                &#34;write &#39;%s&#39; h=%d&#34;,
+                WHITESPACE.sub(whitespace_repl, data),
+                self.h,
+            )
+            self.pdf.write(self.h, data)
+        self.follows_fmt_tag = False</code></pre>
 </details>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.handle_endtag"><code class="name flex">
@@ -1510,10 +1703,15 @@ to new image URLs</dd>
         self.set_font(face, size)
         self.set_text_color(*color)
         self.align = None
+    if tag == &#34;code&#34;:
+        face, size, color = self.font_stack.pop()
+        self.set_font(face, size)
+        self.set_text_color(*color)
     if tag == &#34;pre&#34;:
         face, size, color = self.font_stack.pop()
         self.set_font(face, size)
         self.set_text_color(*color)
+        self.pre_formatted = False
     if tag == &#34;blockquote&#34;:
         self.set_text_color(*self.font_color)
         self.indent -= 1
@@ -1524,6 +1722,7 @@ to new image URLs</dd>
         tag = &#34;i&#34;
     if tag in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;):
         self.set_style(tag, False)
+        self.follows_fmt_tag = True
     if tag == &#34;a&#34;:
         self.href = &#34;&#34;
     if tag == &#34;p&#34;:
@@ -1574,8 +1773,10 @@ to new image URLs</dd>
         self.align = None
     if tag == &#34;sup&#34;:
         self.pdf.char_vpos = &#34;LINE&#34;
+        self.follows_fmt_tag = True
     if tag == &#34;sub&#34;:
-        self.pdf.char_vpos = &#34;LINE&#34;</code></pre>
+        self.pdf.char_vpos = &#34;LINE&#34;
+        self.follows_fmt_tag = True</code></pre>
 </details>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.handle_starttag"><code class="name flex">
@@ -1621,9 +1822,13 @@ to new image URLs</dd>
             self.align = attrs.get(&#34;align&#34;)
     if tag == &#34;hr&#34;:
         self.pdf.add_page(same=True)
+    if tag == &#34;code&#34;:
+        self.font_stack.append((self.font_face, self.font_size, self.font_color))
+        self.set_font(&#34;courier&#34;, 11)
     if tag == &#34;pre&#34;:
         self.font_stack.append((self.font_face, self.font_size, self.font_color))
         self.set_font(&#34;courier&#34;, 11)
+        self.pre_formatted = True
     if tag == &#34;blockquote&#34;:
         self.pdf.set_text_color(100, 0, 45)
         self.indent += 1
@@ -1981,7 +2186,9 @@ to new image URLs</dd>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="fpdf.html.color_as_decimal" href="#fpdf.html.color_as_decimal">color_as_decimal</a></code></li>
+<li><code><a title="fpdf.html.leading_whitespace_repl" href="#fpdf.html.leading_whitespace_repl">leading_whitespace_repl</a></code></li>
 <li><code><a title="fpdf.html.px2mm" href="#fpdf.html.px2mm">px2mm</a></code></li>
+<li><code><a title="fpdf.html.whitespace_repl" href="#fpdf.html.whitespace_repl">whitespace_repl</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
