@@ -146,6 +146,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/TemplatingWithJinja.html</loc>
+         <lastmod>2022-11-20</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/Text.html</loc>
          <lastmod>2022-11-20</lastmod>
          <changefreq>daily</changefreq>
