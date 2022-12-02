@@ -239,6 +239,8 @@ Default to "mm".</dd>
     MARKDOWN_BOLD_MARKER = &#34;**&#34;
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
+    MARKDOWN_LINK_REGEX = re.compile(r&#34;^\[([^][]+)\]\(([^()]+)\)(.*)$&#34;)
+    MARKDOWN_LINK_COLOR = None
 
     HTML2FPDF_CLASS = HTML2FPDF
 
@@ -2911,6 +2913,14 @@ Default to "mm".</dd>
                     underlines.append(
                         (self.x + dx + s_width, frag_width, frag.font, frag.font_size)
                     )
+                if frag.url:
+                    self.link(
+                        x=self.x + dx + s_width,
+                        y=self.y + (0.5 * h) - (0.5 * frag.font_size),
+                        w=frag_width,
+                        h=frag.font_size,
+                        link=frag.url,
+                    )
                 s_width += frag_width
 
             sl.append(&#34;ET&#34;)
@@ -3036,6 +3046,18 @@ Default to "mm".</dd>
             &#34;I&#34; in self.font_style,
             bool(self.underline),
         )
+
+        def frag():
+            gstate = self._get_current_graphics_state()
+            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
+                &#34;I&#34; if in_italics else &#34;&#34;
+            )
+            gstate[&#34;underline&#34;] = in_underline
+            nonlocal txt_frag
+            fragment = Fragment(txt_frag, gstate, self.k)
+            txt_frag = []
+            return fragment
+
         while txt:
             is_marker = txt[:2] in (
                 self.MARKDOWN_BOLD_MARKER,
@@ -3050,30 +3072,30 @@ Default to "mm".</dd>
                 and (len(txt) &lt; 3 or txt[2] != half_marker)
             ):
                 if txt_frag:
-                    gstate = self._get_current_graphics_state()
-                    gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
-                        &#34;I&#34; if in_italics else &#34;&#34;
-                    )
-                    gstate[&#34;underline&#34;] = in_underline
-                    yield Fragment(txt_frag, gstate, self.k)
+                    yield frag()
                 if txt[:2] == self.MARKDOWN_BOLD_MARKER:
                     in_bold = not in_bold
                 if txt[:2] == self.MARKDOWN_ITALICS_MARKER:
                     in_italics = not in_italics
                 if txt[:2] == self.MARKDOWN_UNDERLINE_MARKER:
                     in_underline = not in_underline
-                txt_frag = []
                 txt = txt[2:]
-            else:
-                txt_frag.append(txt[0])
-                txt = txt[1:]
+                continue
+            is_link = self.MARKDOWN_LINK_REGEX.match(txt)
+            if is_link:
+                link_text, link_url, txt = is_link.groups()
+                if txt_frag:
+                    yield frag()
+                gstate = self._get_current_graphics_state()
+                gstate[&#34;underline&#34;] = True
+                if self.MARKDOWN_LINK_COLOR:
+                    gstate[&#34;text_color&#34;] = self.MARKDOWN_LINK_COLOR
+                yield Fragment(list(link_text), gstate, self.k, url=link_url)
+                continue
+            txt_frag.append(txt[0])
+            txt = txt[1:]
         if txt_frag:
-            gstate = self._get_current_graphics_state()
-            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
-                &#34;I&#34; if in_italics else &#34;&#34;
-            )
-            gstate[&#34;underline&#34;] = in_underline
-            yield Fragment(txt_frag, gstate, self.k)
+            yield frag()
 
     def will_page_break(self, height):
         &#34;&#34;&#34;
@@ -4397,6 +4419,14 @@ Default to "mm".</dd>
 <div class="desc"></div>
 </dd>
 <dt id="fpdf.FPDF.MARKDOWN_ITALICS_MARKER"><code class="name">var <span class="ident">MARKDOWN_ITALICS_MARKER</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.FPDF.MARKDOWN_LINK_COLOR"><code class="name">var <span class="ident">MARKDOWN_LINK_COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.FPDF.MARKDOWN_LINK_REGEX"><code class="name">var <span class="ident">MARKDOWN_LINK_REGEX</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -10629,7 +10659,7 @@ when rendered in the element font style and size.</p></div>
 </dd>
 <dt id="fpdf.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, li_tag_indent=5, dd_tag_indent=10, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, **_)</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=5, dd_tag_indent=10, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, warn_on_tags_not_matching=True, **_)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -10654,7 +10684,9 @@ to new image URLs</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HTML2FPDF(HTMLParser):
-    &#34;&#34;&#34;Render basic HTML to FPDF&#34;&#34;&#34;
+    &#34;Render basic HTML to FPDF&#34;
+
+    HTML_UNCLOSED_TAGS = (&#34;br&#34;, &#34;dd&#34;, &#34;dt&#34;, &#34;hr&#34;, &#34;img&#34;, &#34;li&#34;, &#34;td&#34;, &#34;tr&#34;)
 
     def __init__(
         self,
@@ -10665,6 +10697,7 @@ to new image URLs</dd>
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         heading_sizes=None,
+        warn_on_tags_not_matching=True,
         **_,
     ):
         &#34;&#34;&#34;
@@ -10717,6 +10750,8 @@ to new image URLs</dd>
         if heading_sizes:
             self.heading_sizes.update(heading_sizes)
         self._only_imgs_in_td = False
+        self.warn_on_tags_not_matching = warn_on_tags_not_matching
+        self._tags_stack = []
 
     def width2unit(self, length):
         &#34;Handle conversion of % measures into the measurement unit used&#34;
@@ -10935,6 +10970,7 @@ to new image URLs</dd>
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+        self._tags_stack.append(tag)
         if tag == &#34;dt&#34;:
             self.pdf.ln(self.h)
             tag = &#34;b&#34;
@@ -11109,14 +11145,31 @@ to new image URLs</dd>
             self.pdf.char_vpos = &#34;SUB&#34;
 
     def handle_endtag(self, tag):
-        # Closing tag
         LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
+        while (
+            self._tags_stack
+            and tag != self._tags_stack[-1]
+            and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS
+        ):
+            self._tags_stack.pop()
+        if not self._tags_stack:
+            if self.warn_on_tags_not_matching:
+                LOGGER.warning(
+                    &#34;Unexpected HTML end tag &lt;/%s&gt;, start tag may be missing?&#34;, tag
+                )
+        elif tag == self._tags_stack[-1]:
+            self._tags_stack.pop()
+        elif self.warn_on_tags_not_matching:
+            LOGGER.warning(
+                &#34;Unexpected HTML end tag &lt;/%s&gt;, start tag was &lt;%s&gt;&#34;,
+                tag,
+                self._tags_stack[-1],
+            )
         if tag in self.heading_sizes:
             self.heading_level = None
             face, size, color = self.font_stack.pop()
-            self.pdf.ln(
-                self.h + self.h * self.heading_below
-            )  # more space below heading
+            # more space below heading:
+            self.pdf.ln(self.h + self.h * self.heading_below)
             self.set_font(face, size)
             self.set_text_color(*color)
             self.align = None
@@ -11195,6 +11248,13 @@ to new image URLs</dd>
             self.pdf.char_vpos = &#34;LINE&#34;
             self.follows_fmt_tag = True
 
+    def feed(self, data):
+        super().feed(data)
+        while self._tags_stack and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS:
+            self._tags_stack.pop()
+        if self._tags_stack and self.warn_on_tags_not_matching:
+            LOGGER.warning(&#34;Missing HTML end tag for &lt;%s&gt;&#34;, self._tags_stack[-1])
+
     def set_font(self, face=None, size=None):
         if face:
             self.font_face = face
@@ -11253,6 +11313,13 @@ to new image URLs</dd>
 <li>html.parser.HTMLParser</li>
 <li>_markupbase.ParserBase</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.HTML2FPDF.HTML_UNCLOSED_TAGS"><code class="name">var <span class="ident">HTML_UNCLOSED_TAGS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.HTML2FPDF.box_shadow"><code class="name flex">
@@ -11284,6 +11351,25 @@ to new image URLs</dd>
 </summary>
 <pre><code class="python">def error(self, message):
     raise RuntimeError(message)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.HTML2FPDF.feed"><code class="name flex">
+<span>def <span class="ident">feed</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Feed data to the parser.</p>
+<p>Call this as often as you want, with as little or as much text
+as you want (may include '\n').</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def feed(self, data):
+    super().feed(data)
+    while self._tags_stack and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS:
+        self._tags_stack.pop()
+    if self._tags_stack and self.warn_on_tags_not_matching:
+        LOGGER.warning(&#34;Missing HTML end tag for &lt;%s&gt;&#34;, self._tags_stack[-1])</code></pre>
 </details>
 </dd>
 <dt id="fpdf.HTML2FPDF.handle_data"><code class="name flex">
@@ -11363,14 +11449,31 @@ to new image URLs</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def handle_endtag(self, tag):
-    # Closing tag
     LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
+    while (
+        self._tags_stack
+        and tag != self._tags_stack[-1]
+        and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS
+    ):
+        self._tags_stack.pop()
+    if not self._tags_stack:
+        if self.warn_on_tags_not_matching:
+            LOGGER.warning(
+                &#34;Unexpected HTML end tag &lt;/%s&gt;, start tag may be missing?&#34;, tag
+            )
+    elif tag == self._tags_stack[-1]:
+        self._tags_stack.pop()
+    elif self.warn_on_tags_not_matching:
+        LOGGER.warning(
+            &#34;Unexpected HTML end tag &lt;/%s&gt;, start tag was &lt;%s&gt;&#34;,
+            tag,
+            self._tags_stack[-1],
+        )
     if tag in self.heading_sizes:
         self.heading_level = None
         face, size, color = self.font_stack.pop()
-        self.pdf.ln(
-            self.h + self.h * self.heading_below
-        )  # more space below heading
+        # more space below heading:
+        self.pdf.ln(self.h + self.h * self.heading_below)
         self.set_font(face, size)
         self.set_text_color(*color)
         self.align = None
@@ -11462,6 +11565,7 @@ to new image URLs</dd>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     attrs = dict(attrs)
     LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
+    self._tags_stack.append(tag)
     if tag == &#34;dt&#34;:
         self.pdf.ln(self.h)
         tag = &#34;b&#34;
@@ -12443,6 +12547,8 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.HTML2FPDF_CLASS" href="#fpdf.FPDF.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_BOLD_MARKER" href="#fpdf.FPDF.MARKDOWN_BOLD_MARKER">MARKDOWN_BOLD_MARKER</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
+<li><code><a title="fpdf.FPDF.MARKDOWN_LINK_COLOR" href="#fpdf.FPDF.MARKDOWN_LINK_COLOR">MARKDOWN_LINK_COLOR</a></code></li>
+<li><code><a title="fpdf.FPDF.MARKDOWN_LINK_REGEX" href="#fpdf.FPDF.MARKDOWN_LINK_REGEX">MARKDOWN_LINK_REGEX</a></code></li>
 <li><code><a title="fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER" href="#fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER">MARKDOWN_UNDERLINE_MARKER</a></code></li>
 <li><code><a title="fpdf.FPDF.accept_page_break" href="#fpdf.FPDF.accept_page_break">accept_page_break</a></code></li>
 <li><code><a title="fpdf.FPDF.add_action" href="#fpdf.FPDF.add_action">add_action</a></code></li>
@@ -12560,8 +12666,10 @@ def non_full_screen_page_mode(self):
 <li>
 <h4><code><a title="fpdf.HTML2FPDF" href="#fpdf.HTML2FPDF">HTML2FPDF</a></code></h4>
 <ul class="two-column">
+<li><code><a title="fpdf.HTML2FPDF.HTML_UNCLOSED_TAGS" href="#fpdf.HTML2FPDF.HTML_UNCLOSED_TAGS">HTML_UNCLOSED_TAGS</a></code></li>
 <li><code><a title="fpdf.HTML2FPDF.box_shadow" href="#fpdf.HTML2FPDF.box_shadow">box_shadow</a></code></li>
 <li><code><a title="fpdf.HTML2FPDF.error" href="#fpdf.HTML2FPDF.error">error</a></code></li>
+<li><code><a title="fpdf.HTML2FPDF.feed" href="#fpdf.HTML2FPDF.feed">feed</a></code></li>
 <li><code><a title="fpdf.HTML2FPDF.handle_data" href="#fpdf.HTML2FPDF.handle_data">handle_data</a></code></li>
 <li><code><a title="fpdf.HTML2FPDF.handle_endtag" href="#fpdf.HTML2FPDF.handle_endtag">handle_endtag</a></code></li>
 <li><code><a title="fpdf.HTML2FPDF.handle_starttag" href="#fpdf.HTML2FPDF.handle_starttag">handle_starttag</a></code></li>

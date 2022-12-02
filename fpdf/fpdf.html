@@ -251,6 +251,8 @@ class FPDF(GraphicsStateMixin):
     MARKDOWN_BOLD_MARKER = &#34;**&#34;
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
+    MARKDOWN_LINK_REGEX = re.compile(r&#34;^\[([^][]+)\]\(([^()]+)\)(.*)$&#34;)
+    MARKDOWN_LINK_COLOR = None
 
     HTML2FPDF_CLASS = HTML2FPDF
 
@@ -2923,6 +2925,14 @@ class FPDF(GraphicsStateMixin):
                     underlines.append(
                         (self.x + dx + s_width, frag_width, frag.font, frag.font_size)
                     )
+                if frag.url:
+                    self.link(
+                        x=self.x + dx + s_width,
+                        y=self.y + (0.5 * h) - (0.5 * frag.font_size),
+                        w=frag_width,
+                        h=frag.font_size,
+                        link=frag.url,
+                    )
                 s_width += frag_width
 
             sl.append(&#34;ET&#34;)
@@ -3048,6 +3058,18 @@ class FPDF(GraphicsStateMixin):
             &#34;I&#34; in self.font_style,
             bool(self.underline),
         )
+
+        def frag():
+            gstate = self._get_current_graphics_state()
+            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
+                &#34;I&#34; if in_italics else &#34;&#34;
+            )
+            gstate[&#34;underline&#34;] = in_underline
+            nonlocal txt_frag
+            fragment = Fragment(txt_frag, gstate, self.k)
+            txt_frag = []
+            return fragment
+
         while txt:
             is_marker = txt[:2] in (
                 self.MARKDOWN_BOLD_MARKER,
@@ -3062,30 +3084,30 @@ class FPDF(GraphicsStateMixin):
                 and (len(txt) &lt; 3 or txt[2] != half_marker)
             ):
                 if txt_frag:
-                    gstate = self._get_current_graphics_state()
-                    gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
-                        &#34;I&#34; if in_italics else &#34;&#34;
-                    )
-                    gstate[&#34;underline&#34;] = in_underline
-                    yield Fragment(txt_frag, gstate, self.k)
+                    yield frag()
                 if txt[:2] == self.MARKDOWN_BOLD_MARKER:
                     in_bold = not in_bold
                 if txt[:2] == self.MARKDOWN_ITALICS_MARKER:
                     in_italics = not in_italics
                 if txt[:2] == self.MARKDOWN_UNDERLINE_MARKER:
                     in_underline = not in_underline
-                txt_frag = []
                 txt = txt[2:]
-            else:
-                txt_frag.append(txt[0])
-                txt = txt[1:]
+                continue
+            is_link = self.MARKDOWN_LINK_REGEX.match(txt)
+            if is_link:
+                link_text, link_url, txt = is_link.groups()
+                if txt_frag:
+                    yield frag()
+                gstate = self._get_current_graphics_state()
+                gstate[&#34;underline&#34;] = True
+                if self.MARKDOWN_LINK_COLOR:
+                    gstate[&#34;text_color&#34;] = self.MARKDOWN_LINK_COLOR
+                yield Fragment(list(link_text), gstate, self.k, url=link_url)
+                continue
+            txt_frag.append(txt[0])
+            txt = txt[1:]
         if txt_frag:
-            gstate = self._get_current_graphics_state()
-            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
-                &#34;I&#34; if in_italics else &#34;&#34;
-            )
-            gstate[&#34;underline&#34;] = in_underline
-            yield Fragment(txt_frag, gstate, self.k)
+            yield frag()
 
     def will_page_break(self, height):
         &#34;&#34;&#34;
@@ -4525,6 +4547,8 @@ Default to "mm".</dd>
     MARKDOWN_BOLD_MARKER = &#34;**&#34;
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
+    MARKDOWN_LINK_REGEX = re.compile(r&#34;^\[([^][]+)\]\(([^()]+)\)(.*)$&#34;)
+    MARKDOWN_LINK_COLOR = None
 
     HTML2FPDF_CLASS = HTML2FPDF
 
@@ -7197,6 +7221,14 @@ Default to "mm".</dd>
                     underlines.append(
                         (self.x + dx + s_width, frag_width, frag.font, frag.font_size)
                     )
+                if frag.url:
+                    self.link(
+                        x=self.x + dx + s_width,
+                        y=self.y + (0.5 * h) - (0.5 * frag.font_size),
+                        w=frag_width,
+                        h=frag.font_size,
+                        link=frag.url,
+                    )
                 s_width += frag_width
 
             sl.append(&#34;ET&#34;)
@@ -7322,6 +7354,18 @@ Default to "mm".</dd>
             &#34;I&#34; in self.font_style,
             bool(self.underline),
         )
+
+        def frag():
+            gstate = self._get_current_graphics_state()
+            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
+                &#34;I&#34; if in_italics else &#34;&#34;
+            )
+            gstate[&#34;underline&#34;] = in_underline
+            nonlocal txt_frag
+            fragment = Fragment(txt_frag, gstate, self.k)
+            txt_frag = []
+            return fragment
+
         while txt:
             is_marker = txt[:2] in (
                 self.MARKDOWN_BOLD_MARKER,
@@ -7336,30 +7380,30 @@ Default to "mm".</dd>
                 and (len(txt) &lt; 3 or txt[2] != half_marker)
             ):
                 if txt_frag:
-                    gstate = self._get_current_graphics_state()
-                    gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
-                        &#34;I&#34; if in_italics else &#34;&#34;
-                    )
-                    gstate[&#34;underline&#34;] = in_underline
-                    yield Fragment(txt_frag, gstate, self.k)
+                    yield frag()
                 if txt[:2] == self.MARKDOWN_BOLD_MARKER:
                     in_bold = not in_bold
                 if txt[:2] == self.MARKDOWN_ITALICS_MARKER:
                     in_italics = not in_italics
                 if txt[:2] == self.MARKDOWN_UNDERLINE_MARKER:
                     in_underline = not in_underline
-                txt_frag = []
                 txt = txt[2:]
-            else:
-                txt_frag.append(txt[0])
-                txt = txt[1:]
+                continue
+            is_link = self.MARKDOWN_LINK_REGEX.match(txt)
+            if is_link:
+                link_text, link_url, txt = is_link.groups()
+                if txt_frag:
+                    yield frag()
+                gstate = self._get_current_graphics_state()
+                gstate[&#34;underline&#34;] = True
+                if self.MARKDOWN_LINK_COLOR:
+                    gstate[&#34;text_color&#34;] = self.MARKDOWN_LINK_COLOR
+                yield Fragment(list(link_text), gstate, self.k, url=link_url)
+                continue
+            txt_frag.append(txt[0])
+            txt = txt[1:]
         if txt_frag:
-            gstate = self._get_current_graphics_state()
-            gstate[&#34;font_style&#34;] = (&#34;B&#34; if in_bold else &#34;&#34;) + (
-                &#34;I&#34; if in_italics else &#34;&#34;
-            )
-            gstate[&#34;underline&#34;] = in_underline
-            yield Fragment(txt_frag, gstate, self.k)
+            yield frag()
 
     def will_page_break(self, height):
         &#34;&#34;&#34;
@@ -8683,6 +8727,14 @@ Default to "mm".</dd>
 <div class="desc"></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER"><code class="name">var <span class="ident">MARKDOWN_ITALICS_MARKER</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.fpdf.FPDF.MARKDOWN_LINK_COLOR"><code class="name">var <span class="ident">MARKDOWN_LINK_COLOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.fpdf.FPDF.MARKDOWN_LINK_REGEX"><code class="name">var <span class="ident">MARKDOWN_LINK_REGEX</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -14256,6 +14308,8 @@ cf. <a href="https://pyfpdf.github.io/fpdf2/HTML.html">https://pyfpdf.github.io/
 <li><code><a title="fpdf.fpdf.FPDF.HTML2FPDF_CLASS" href="#fpdf.fpdf.FPDF.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER">MARKDOWN_BOLD_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_LINK_COLOR" href="#fpdf.fpdf.FPDF.MARKDOWN_LINK_COLOR">MARKDOWN_LINK_COLOR</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_LINK_REGEX" href="#fpdf.fpdf.FPDF.MARKDOWN_LINK_REGEX">MARKDOWN_LINK_REGEX</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_UNDERLINE_MARKER">MARKDOWN_UNDERLINE_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.accept_page_break" href="#fpdf.fpdf.FPDF.accept_page_break">accept_page_break</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.add_action" href="#fpdf.fpdf.FPDF.add_action">add_action</a></code></li>
