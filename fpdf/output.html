@@ -615,8 +615,7 @@ class OutputProducer:
                 # allows searching the file and copying text from it.
                 bfChar = []
                 uni_to_new_code_char = font[&#34;subset&#34;].dict()
-                for code in uni_to_new_code_char:
-                    code_mapped = uni_to_new_code_char.get(code)
+                for code, code_mapped in uni_to_new_code_char.items():
                     if code &gt; 0xFFFF:
                         # Calculate surrogate pair
                         code_high = 0xD800 | (code - 0x10000) &gt;&gt; 10
@@ -1375,8 +1374,7 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
                 # allows searching the file and copying text from it.
                 bfChar = []
                 uni_to_new_code_char = font[&#34;subset&#34;].dict()
-                for code in uni_to_new_code_char:
-                    code_mapped = uni_to_new_code_char.get(code)
+                for code, code_mapped in uni_to_new_code_char.items():
                     if code &gt; 0xFFFF:
                         # Calculate surrogate pair
                         code_high = 0xD800 | (code - 0x10000) &gt;&gt; 10
