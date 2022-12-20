@@ -202,7 +202,7 @@ COLOR_DICT = {
 
 
 def px2mm(px):
-    return int(px) * 25.4 / 72
+    return px * 25.4 / 72
 
 
 def color_as_decimal(color=&#34;#000000&#34;):
@@ -530,8 +530,11 @@ class HTML2FPDF(HTMLParser):
             self.pdf.ln(self.h)
         if tag == &#34;p&#34;:
             self.pdf.ln(self.h)
-            if attrs:
+            if &#34;align&#34; in attrs:
                 self.align = attrs.get(&#34;align&#34;)
+            if &#34;line-height&#34; in attrs:
+                line_height = float(attrs.get(&#34;line-height&#34;))
+                self.h = px2mm(self.font_size) * line_height
         if tag in self.heading_sizes:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
             self.heading_level = int(tag[1:])
@@ -634,8 +637,8 @@ class HTML2FPDF(HTMLParser):
         if tag == &#34;tfoot&#34;:
             self.tfoot = {}
         if tag == &#34;img&#34; and &#34;src&#34; in attrs:
-            width = px2mm(attrs.get(&#34;width&#34;, 0))
-            height = px2mm(attrs.get(&#34;height&#34;, 0))
+            width = px2mm(int(attrs.get(&#34;width&#34;, 0)))
+            height = px2mm(int(attrs.get(&#34;height&#34;, 0)))
             if self.pdf.y + height &gt; self.pdf.page_break_trigger:
                 self.pdf.add_page(same=True)
             y = self.pdf.get_y()
@@ -739,6 +742,7 @@ class HTML2FPDF(HTMLParser):
         if tag == &#34;p&#34;:
             self.pdf.ln(self.h)
             self.align = &#34;&#34;
+            self.h = px2mm(self.font_size)
         if tag in (&#34;ul&#34;, &#34;ol&#34;):
             self.indent -= 1
             self.bullet.pop()
@@ -801,7 +805,7 @@ class HTML2FPDF(HTMLParser):
             self.font_face = face
         if size:
             self.font_size = size
-            self.h = size / 72 * 25.4
+            self.h = px2mm(size)
             LOGGER.debug(&#34;H %s&#34;, self.h)
         style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s)).upper()
         if (self.font_face, style) != (self.pdf.font_family, self.pdf.font_style):
@@ -952,7 +956,7 @@ class HTMLMixin:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def px2mm(px):
-    return int(px) * 25.4 / 72</code></pre>
+    return px * 25.4 / 72</code></pre>
 </details>
 </dd>
 <dt id="fpdf.html.whitespace_repl"><code class="name flex">
@@ -1318,8 +1322,11 @@ to new image URLs</dd>
             self.pdf.ln(self.h)
         if tag == &#34;p&#34;:
             self.pdf.ln(self.h)
-            if attrs:
+            if &#34;align&#34; in attrs:
                 self.align = attrs.get(&#34;align&#34;)
+            if &#34;line-height&#34; in attrs:
+                line_height = float(attrs.get(&#34;line-height&#34;))
+                self.h = px2mm(self.font_size) * line_height
         if tag in self.heading_sizes:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
             self.heading_level = int(tag[1:])
@@ -1422,8 +1429,8 @@ to new image URLs</dd>
         if tag == &#34;tfoot&#34;:
             self.tfoot = {}
         if tag == &#34;img&#34; and &#34;src&#34; in attrs:
-            width = px2mm(attrs.get(&#34;width&#34;, 0))
-            height = px2mm(attrs.get(&#34;height&#34;, 0))
+            width = px2mm(int(attrs.get(&#34;width&#34;, 0)))
+            height = px2mm(int(attrs.get(&#34;height&#34;, 0)))
             if self.pdf.y + height &gt; self.pdf.page_break_trigger:
                 self.pdf.add_page(same=True)
             y = self.pdf.get_y()
@@ -1527,6 +1534,7 @@ to new image URLs</dd>
         if tag == &#34;p&#34;:
             self.pdf.ln(self.h)
             self.align = &#34;&#34;
+            self.h = px2mm(self.font_size)
         if tag in (&#34;ul&#34;, &#34;ol&#34;):
             self.indent -= 1
             self.bullet.pop()
@@ -1589,7 +1597,7 @@ to new image URLs</dd>
             self.font_face = face
         if size:
             self.font_size = size
-            self.h = size / 72 * 25.4
+            self.h = px2mm(size)
             LOGGER.debug(&#34;H %s&#34;, self.h)
         style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s)).upper()
         if (self.font_face, style) != (self.pdf.font_family, self.pdf.font_style):
@@ -1831,6 +1839,7 @@ as you want (may include '\n').</p></div>
     if tag == &#34;p&#34;:
         self.pdf.ln(self.h)
         self.align = &#34;&#34;
+        self.h = px2mm(self.font_size)
     if tag in (&#34;ul&#34;, &#34;ol&#34;):
         self.indent -= 1
         self.bullet.pop()
@@ -1913,8 +1922,11 @@ as you want (may include '\n').</p></div>
         self.pdf.ln(self.h)
     if tag == &#34;p&#34;:
         self.pdf.ln(self.h)
-        if attrs:
+        if &#34;align&#34; in attrs:
             self.align = attrs.get(&#34;align&#34;)
+        if &#34;line-height&#34; in attrs:
+            line_height = float(attrs.get(&#34;line-height&#34;))
+            self.h = px2mm(self.font_size) * line_height
     if tag in self.heading_sizes:
         self.font_stack.append((self.font_face, self.font_size, self.font_color))
         self.heading_level = int(tag[1:])
@@ -2017,8 +2029,8 @@ as you want (may include '\n').</p></div>
     if tag == &#34;tfoot&#34;:
         self.tfoot = {}
     if tag == &#34;img&#34; and &#34;src&#34; in attrs:
-        width = px2mm(attrs.get(&#34;width&#34;, 0))
-        height = px2mm(attrs.get(&#34;height&#34;, 0))
+        width = px2mm(int(attrs.get(&#34;width&#34;, 0)))
+        height = px2mm(int(attrs.get(&#34;height&#34;, 0)))
         if self.pdf.y + height &gt; self.pdf.page_break_trigger:
             self.pdf.add_page(same=True)
         y = self.pdf.get_y()
@@ -2191,7 +2203,7 @@ as you want (may include '\n').</p></div>
         self.font_face = face
     if size:
         self.font_size = size
-        self.h = size / 72 * 25.4
+        self.h = px2mm(size)
         LOGGER.debug(&#34;H %s&#34;, self.h)
     style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.style.get(s)).upper()
     if (self.font_face, style) != (self.pdf.font_family, self.pdf.font_style):
