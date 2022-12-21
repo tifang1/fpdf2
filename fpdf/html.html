@@ -836,8 +836,7 @@ class HTML2FPDF(HTMLParser):
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
         for section in outline:
-            link = pdf.add_link()
-            pdf.set_link(link, page=section.page_number)
+            link = pdf.add_link(page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
             text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
             pdf.multi_cell(
@@ -1628,8 +1627,7 @@ to new image URLs</dd>
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
         for section in outline:
-            link = pdf.add_link()
-            pdf.set_link(link, page=section.page_number)
+            link = pdf.add_link(page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
             text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
             pdf.multi_cell(
@@ -2175,8 +2173,7 @@ as you want (may include '\n').</p></div>
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
     pdf.ln()
     for section in outline:
-        link = pdf.add_link()
-        pdf.set_link(link, page=section.page_number)
+        link = pdf.add_link(page=section.page_number)
         text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
         text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
         pdf.multi_cell(

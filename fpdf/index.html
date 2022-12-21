@@ -29,7 +29,7 @@
 <pre><code class="python">#!/usr/bin/env python
 import sys
 
-from .enums import TextMode, XPos, YPos
+from .enums import Align, TextMode, XPos, YPos
 from .fpdf import (
     FPDF,
     FPDFException,
@@ -62,6 +62,7 @@ __all__ = [
     &#34;__license__&#34;,
     # Classes
     &#34;FPDF&#34;,
+    &#34;Align&#34;,
     &#34;XPos&#34;,
     &#34;YPos&#34;,
     &#34;Template&#34;,
@@ -206,6 +207,77 @@ structural information about a document’s content …</p>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="fpdf.Align"><code class="flex name class">
+<span>class <span class="ident">Align</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines how to render text in a cell</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Align(CoerciveEnum):
+    &#34;Defines how to render text in a cell&#34;
+
+    C = intern(&#34;CENTER&#34;)
+    &#34;Center text horizontally&#34;
+
+    X = intern(&#34;X_CENTER&#34;)
+    &#34;Center text horizontally around current x position&#34;
+
+    L = intern(&#34;LEFT&#34;)
+    &#34;Left-align text&#34;
+
+    R = intern(&#34;RIGHT&#34;)
+    &#34;Right-align text&#34;
+
+    J = intern(&#34;JUSTIFY&#34;)
+    &#34;Justify text&#34;
+
+    @classmethod
+    def coerce(cls, value):
+        if value == &#34;&#34;:
+            return cls.L
+        return super(cls, cls).coerce(value)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveEnum" href="enums.html#fpdf.enums.CoerciveEnum">CoerciveEnum</a></li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.Align.C"><code class="name">var <span class="ident">C</span></code></dt>
+<dd>
+<div class="desc"><p>Center text horizontally</p></div>
+</dd>
+<dt id="fpdf.Align.J"><code class="name">var <span class="ident">J</span></code></dt>
+<dd>
+<div class="desc"><p>Justify text</p></div>
+</dd>
+<dt id="fpdf.Align.L"><code class="name">var <span class="ident">L</span></code></dt>
+<dd>
+<div class="desc"><p>Left-align text</p></div>
+</dd>
+<dt id="fpdf.Align.R"><code class="name">var <span class="ident">R</span></code></dt>
+<dd>
+<div class="desc"><p>Right-align text</p></div>
+</dd>
+<dt id="fpdf.Align.X"><code class="name">var <span class="ident">X</span></code></dt>
+<dd>
+<div class="desc"><p>Center text horizontally around current x position</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveEnum" href="enums.html#fpdf.enums.CoerciveEnum">CoerciveEnum</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveEnum.coerce" href="enums.html#fpdf.enums.CoerciveEnum.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="fpdf.FPDF"><code class="flex name class">
 <span>class <span class="ident">FPDF</span></span>
 <span>(</span><span>orientation='portrait', unit='mm', format='A4', font_cache_dir='DEPRECATED')</span>
@@ -843,6 +915,7 @@ Default to "mm".</dd>
                 contents=bytearray(),
                 duration=duration,
                 transition=transition,
+                index=self.page,
             )
             self.pages[self.page] = page
             if transition:
@@ -1958,18 +2031,36 @@ Default to "mm".</dd>
         if self.page &gt; 0:
             self._out(f&#34;BT {stretching:.2f} Tz ET&#34;)
 
-    def add_link(self):
+    def add_link(self, y=0, x=0, page=-1, zoom=&#34;null&#34;):
         &#34;&#34;&#34;
         Creates a new internal link and returns its identifier.
         An internal link is a clickable area which directs to another place within the document.
 
         The identifier can then be passed to the `FPDF.cell()`, `FPDF.write()`, `FPDF.image()`
         or `FPDF.link()` methods.
-        The destination must be defined using `FPDF.set_link()`.
+
+        Args:
+            y (float): optional ordinate of target position.
+                The default value is 0 (top of page).
+            x (float): optional abscissa of target position.
+                The default value is 0 (top of page).
+            page (int): optional number of target page.
+                -1 indicates the current page, which is the default value.
+            zoom (float): optional new zoom level after following the link.
+                Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
         &#34;&#34;&#34;
-        link_index = len(self.links) + 1
-        self.links[link_index] = DestinationXYZ(page=1, top=self.h_pt)
-        return link_index
+        link = DestinationXYZ(
+            self.page if page == -1 else page,
+            top=self.h_pt - y * self.k,
+            left=x * self.k,
+            zoom=zoom,
+        )
+        try:
+            return next(i for i, l in self.links.items() if l == link)
+        except StopIteration:
+            link_index = len(self.links) + 1
+            self.links[link_index] = link
+            return link_index
 
     def set_link(self, link, y=0, x=0, page=-1, zoom=&#34;null&#34;):
         &#34;&#34;&#34;
@@ -2006,7 +2097,7 @@ Default to "mm".</dd>
             y (float): vertical position (from the top) to the bottom side of the link rectangle
             w (float): width of the link rectangle
             h (float): height of the link rectangle
-            link: either an URL or a integer returned by `FPDF.add_link`, defining an internal link to a page
+            link: either an URL or an integer returned by `FPDF.add_link`, defining an internal link to a page
             alt_text (str): optional textual description of the link, for accessibility purposes
             border_width (int): thickness of an optional black border surrounding the link.
                 Not all PDF readers honor this: Acrobat renders it but not Sumatra.
@@ -3480,8 +3571,10 @@ Default to "mm".</dd>
         Args:
             name: either a string representing a file path to an image, an URL to an image,
                 an io.BytesIO, or a instance of `PIL.Image.Image`
-            x (float): optional horizontal position where to put the image on the page.
+            x (float, fpdf.enums.Align): optional horizontal position where to put the image on the page.
                 If not specified or equal to None, the current abscissa is used.
+                `Align.C` can also be passed to center the image horizontally;
+                and `Align.R` to place it along the right page margin
             y (float): optional vertical position where to put the image on the page.
                 If not specified or equal to None, the current ordinate is used.
                 After the call, the current ordinate is moved to the bottom of the image
@@ -3556,6 +3649,16 @@ Default to "mm".</dd>
             self.y += h
         if x is None:
             x = self.x
+        elif not isinstance(x, Number):
+            x = Align.coerce(x)
+            if x == Align.C:
+                x = (self.w - w) / 2
+            elif x == Align.R:
+                x = self.w - w - self.r_margin
+            elif x == Align.L:
+                x = self.l_margin
+            else:
+                raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)
 
         stream_content = (
             f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
@@ -4821,30 +4924,62 @@ def highlight(
 </details>
 </dd>
 <dt id="fpdf.FPDF.add_link"><code class="name flex">
-<span>def <span class="ident">add_link</span></span>(<span>self)</span>
+<span>def <span class="ident">add_link</span></span>(<span>self, y=0, x=0, page=-1, zoom='null')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Creates a new internal link and returns its identifier.
 An internal link is a clickable area which directs to another place within the document.</p>
 <p>The identifier can then be passed to the <code><a title="fpdf.FPDF.cell" href="#fpdf.FPDF.cell">FPDF.cell()</a></code>, <code><a title="fpdf.FPDF.write" href="#fpdf.FPDF.write">FPDF.write()</a></code>, <code><a title="fpdf.FPDF.image" href="#fpdf.FPDF.image">FPDF.image()</a></code>
-or <code><a title="fpdf.FPDF.link" href="#fpdf.FPDF.link">FPDF.link()</a></code> methods.
-The destination must be defined using <code><a title="fpdf.FPDF.set_link" href="#fpdf.FPDF.set_link">FPDF.set_link()</a></code>.</p></div>
+or <code><a title="fpdf.FPDF.link" href="#fpdf.FPDF.link">FPDF.link()</a></code> methods.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
+<dd>optional ordinate of target position.
+The default value is 0 (top of page).</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dd>optional abscissa of target position.
+The default value is 0 (top of page).</dd>
+<dt><strong><code>page</code></strong> :&ensp;<code>int</code></dt>
+<dd>optional number of target page.
+-1 indicates the current page, which is the default value.</dd>
+<dt><strong><code>zoom</code></strong> :&ensp;<code>float</code></dt>
+<dd>optional new zoom level after following the link.
+Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def add_link(self):
+<pre><code class="python">def add_link(self, y=0, x=0, page=-1, zoom=&#34;null&#34;):
     &#34;&#34;&#34;
     Creates a new internal link and returns its identifier.
     An internal link is a clickable area which directs to another place within the document.
 
     The identifier can then be passed to the `FPDF.cell()`, `FPDF.write()`, `FPDF.image()`
     or `FPDF.link()` methods.
-    The destination must be defined using `FPDF.set_link()`.
+
+    Args:
+        y (float): optional ordinate of target position.
+            The default value is 0 (top of page).
+        x (float): optional abscissa of target position.
+            The default value is 0 (top of page).
+        page (int): optional number of target page.
+            -1 indicates the current page, which is the default value.
+        zoom (float): optional new zoom level after following the link.
+            Currently ignored by Sumatra PDF Reader, but observed by Adobe Acrobat reader.
     &#34;&#34;&#34;
-    link_index = len(self.links) + 1
-    self.links[link_index] = DestinationXYZ(page=1, top=self.h_pt)
-    return link_index</code></pre>
+    link = DestinationXYZ(
+        self.page if page == -1 else page,
+        top=self.h_pt - y * self.k,
+        left=x * self.k,
+        zoom=zoom,
+    )
+    try:
+        return next(i for i, l in self.links.items() if l == link)
+    except StopIteration:
+        link_index = len(self.links) + 1
+        self.links[link_index] = link
+        return link_index</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.add_page"><code class="name flex">
@@ -6241,9 +6376,11 @@ in order to keep the original proportions
 <dt><strong><code>name</code></strong></dt>
 <dd>either a string representing a file path to an image, an URL to an image,
 an io.BytesIO, or a instance of <code>PIL.Image.Image</code></dd>
-<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dt><strong><code>x</code></strong> :&ensp;<code>float, <a title="fpdf.enums.Align" href="enums.html#fpdf.enums.Align">Align</a></code></dt>
 <dd>optional horizontal position where to put the image on the page.
-If not specified or equal to None, the current abscissa is used.</dd>
+If not specified or equal to None, the current abscissa is used.
+<code><a title="fpdf.Align.C" href="#fpdf.Align.C">Align.C</a></code> can also be passed to center the image horizontally;
+and <code><a title="fpdf.Align.R" href="#fpdf.Align.R">Align.R</a></code> to place it along the right page margin</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
 <dd>optional vertical position where to put the image on the page.
 If not specified or equal to None, the current ordinate is used.
@@ -6300,8 +6437,10 @@ def image(
     Args:
         name: either a string representing a file path to an image, an URL to an image,
             an io.BytesIO, or a instance of `PIL.Image.Image`
-        x (float): optional horizontal position where to put the image on the page.
+        x (float, fpdf.enums.Align): optional horizontal position where to put the image on the page.
             If not specified or equal to None, the current abscissa is used.
+            `Align.C` can also be passed to center the image horizontally;
+            and `Align.R` to place it along the right page margin
         y (float): optional vertical position where to put the image on the page.
             If not specified or equal to None, the current ordinate is used.
             After the call, the current ordinate is moved to the bottom of the image
@@ -6376,6 +6515,16 @@ def image(
         self.y += h
     if x is None:
         x = self.x
+    elif not isinstance(x, Number):
+        x = Align.coerce(x)
+        if x == Align.C:
+            x = (self.w - w) / 2
+        elif x == Align.R:
+            x = self.w - w - self.r_margin
+        elif x == Align.L:
+            x = self.l_margin
+        else:
+            raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)
 
     stream_content = (
         f&#34;q {w * self.k:.2f} 0 0 {h * self.k:.2f} {x * self.k:.2f} &#34;
@@ -6626,7 +6775,7 @@ but this method can be useful for instance to define a clickable area inside an 
 <dt><strong><code>h</code></strong> :&ensp;<code>float</code></dt>
 <dd>height of the link rectangle</dd>
 <dt><strong><code>link</code></strong></dt>
-<dd>either an URL or a integer returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>, defining an internal link to a page</dd>
+<dd>either an URL or an integer returned by <code><a title="fpdf.FPDF.add_link" href="#fpdf.FPDF.add_link">FPDF.add_link()</a></code>, defining an internal link to a page</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional textual description of the link, for accessibility purposes</dd>
 <dt><strong><code>border_width</code></strong> :&ensp;<code>int</code></dt>
@@ -6650,7 +6799,7 @@ def link(self, x, y, w, h, link, alt_text=None, border_width=0):
         y (float): vertical position (from the top) to the bottom side of the link rectangle
         w (float): width of the link rectangle
         h (float): height of the link rectangle
-        link: either an URL or a integer returned by `FPDF.add_link`, defining an internal link to a page
+        link: either an URL or an integer returned by `FPDF.add_link`, defining an internal link to a page
         alt_text (str): optional textual description of the link, for accessibility purposes
         border_width (int): thickness of an optional black border surrounding the link.
             Not all PDF readers honor this: Acrobat renders it but not Sumatra.
@@ -11295,8 +11444,7 @@ to new image URLs</dd>
         &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
         pdf.ln()
         for section in outline:
-            link = pdf.add_link()
-            pdf.set_link(link, page=section.page_number)
+            link = pdf.add_link(page=section.page_number)
             text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
             text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
             pdf.multi_cell(
@@ -11842,8 +11990,7 @@ as you want (may include '\n').</p></div>
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
     pdf.ln()
     for section in outline:
-        link = pdf.add_link()
-        pdf.set_link(link, page=section.page_number)
+        link = pdf.add_link(page=section.page_number)
         text = f&#39;{&#34; &#34; * section.level * 2} {section.name}&#39;
         text += f&#39; {&#34;.&#34; * (60 - section.level*2 - len(section.name))} {section.page_number}&#39;
         pdf.multi_cell(
@@ -12549,6 +12696,16 @@ def non_full_screen_page_mode(self):
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="fpdf.Align" href="#fpdf.Align">Align</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.Align.C" href="#fpdf.Align.C">C</a></code></li>
+<li><code><a title="fpdf.Align.J" href="#fpdf.Align.J">J</a></code></li>
+<li><code><a title="fpdf.Align.L" href="#fpdf.Align.L">L</a></code></li>
+<li><code><a title="fpdf.Align.R" href="#fpdf.Align.R">R</a></code></li>
+<li><code><a title="fpdf.Align.X" href="#fpdf.Align.X">X</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="fpdf.FPDF" href="#fpdf.FPDF">FPDF</a></code></h4>
 <ul class="">

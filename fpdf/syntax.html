@@ -351,6 +351,14 @@ class DestinationXYZ(Destination):
         self.zoom = zoom
         self.page_ref = None
 
+    def __eq__(self, dest):
+        return (
+            self.page_number == dest.page_number
+            and self.top == dest.top
+            and self.left == dest.left
+            and self.zoom == dest.zoom
+        )
+
     def __repr__(self):
         return f&#39;DestinationXYZ(page_number={self.page_number}, top={self.top}, left={self.left}, zoom=&#34;{self.zoom}&#34;, page_ref={self.page_ref})&#39;
 
@@ -582,6 +590,14 @@ inheritance.</p></div>
         self.left = left
         self.zoom = zoom
         self.page_ref = None
+
+    def __eq__(self, dest):
+        return (
+            self.page_number == dest.page_number
+            and self.top == dest.top
+            and self.left == dest.left
+            and self.zoom == dest.zoom
+        )
 
     def __repr__(self):
         return f&#39;DestinationXYZ(page_number={self.page_number}, top={self.top}, left={self.left}, zoom=&#34;{self.zoom}&#34;, page_ref={self.page_ref})&#39;

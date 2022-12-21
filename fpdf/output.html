@@ -254,6 +254,7 @@ class PDFPage(PDFObject):
         &#34;struct_parents&#34;,
         &#34;resources&#34;,
         &#34;parent&#34;,
+        &#34;_index&#34;,
         &#34;_width_pt&#34;,
         &#34;_height_pt&#34;,
     )
@@ -263,6 +264,7 @@ class PDFPage(PDFObject):
         duration,
         transition,
         contents,
+        index,
     ):
         super().__init__()
         self.type = Name(&#34;Page&#34;)
@@ -275,7 +277,11 @@ class PDFPage(PDFObject):
         self.struct_parents = None
         self.resources = None  # must always be set before calling .serialize()
         self.parent = None  # must always be set before calling .serialize()
+        self._index = index
         self._width_pt, self._height_pt = None, None
+
+    def index(self):
+        return self._index
 
     def dimensions(self):
         &#34;Return a pair (width, height) in the unit specified to FPDF constructor&#34;
@@ -400,10 +406,17 @@ class OutputProducer:
             page_obj.parent = pages_root_obj
             page_obj.resources = resources_dict_obj
             for annot in page_obj.annots:
+                page_dests = []
                 if annot.dest:
-                    dests.append(annot.dest)
+                    page_dests.append(annot.dest)
                 if annot.a and hasattr(annot.a, &#34;dest&#34;):
-                    dests.append(annot.a.dest)
+                    page_dests.append(annot.a.dest)
+                for dest in page_dests:
+                    if dest.page_number &gt; len(page_objs):
+                        raise ValueError(
+                            f&#34;Invalid reference to non-existing page {dest.page_number} present on page {page_obj.index()}: &#34;
+                        )
+                dests.extend(page_dests)
             if not page_obj.annots:
                 # Avoid serializing an empty PDFArray:
                 page_obj.annots = None
@@ -1159,10 +1172,17 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
             page_obj.parent = pages_root_obj
             page_obj.resources = resources_dict_obj
             for annot in page_obj.annots:
+                page_dests = []
                 if annot.dest:
-                    dests.append(annot.dest)
+                    page_dests.append(annot.dest)
                 if annot.a and hasattr(annot.a, &#34;dest&#34;):
-                    dests.append(annot.a.dest)
+                    page_dests.append(annot.a.dest)
+                for dest in page_dests:
+                    if dest.page_number &gt; len(page_objs):
+                        raise ValueError(
+                            f&#34;Invalid reference to non-existing page {dest.page_number} present on page {page_obj.index()}: &#34;
+                        )
+                dests.extend(page_dests)
             if not page_obj.annots:
                 # Avoid serializing an empty PDFArray:
                 page_obj.annots = None
@@ -1726,10 +1746,17 @@ plus a few other properties on PDFPage instances</p></div>
         page_obj.parent = pages_root_obj
         page_obj.resources = resources_dict_obj
         for annot in page_obj.annots:
+            page_dests = []
             if annot.dest:
-                dests.append(annot.dest)
+                page_dests.append(annot.dest)
             if annot.a and hasattr(annot.a, &#34;dest&#34;):
-                dests.append(annot.a.dest)
+                page_dests.append(annot.a.dest)
+            for dest in page_dests:
+                if dest.page_number &gt; len(page_objs):
+                    raise ValueError(
+                        f&#34;Invalid reference to non-existing page {dest.page_number} present on page {page_obj.index()}: &#34;
+                    )
+            dests.extend(page_dests)
         if not page_obj.annots:
             # Avoid serializing an empty PDFArray:
             page_obj.annots = None
@@ -2069,7 +2096,7 @@ plus a few other properties on PDFPage instances</p></div>
 </dd>
 <dt id="fpdf.output.PDFPage"><code class="flex name class">
 <span>class <span class="ident">PDFPage</span></span>
-<span>(</span><span>duration, transition, contents)</span>
+<span>(</span><span>duration, transition, contents, index)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main features of this class:
@@ -2092,6 +2119,7 @@ plus a few other properties on PDFPage instances</p></div>
         &#34;struct_parents&#34;,
         &#34;resources&#34;,
         &#34;parent&#34;,
+        &#34;_index&#34;,
         &#34;_width_pt&#34;,
         &#34;_height_pt&#34;,
     )
@@ -2101,6 +2129,7 @@ plus a few other properties on PDFPage instances</p></div>
         duration,
         transition,
         contents,
+        index,
     ):
         super().__init__()
         self.type = Name(&#34;Page&#34;)
@@ -2113,7 +2142,11 @@ plus a few other properties on PDFPage instances</p></div>
         self.struct_parents = None
         self.resources = None  # must always be set before calling .serialize()
         self.parent = None  # must always be set before calling .serialize()
+        self._index = index
         self._width_pt, self._height_pt = None, None
+
+    def index(self):
+        return self._index
 
     def dimensions(self):
         &#34;Return a pair (width, height) in the unit specified to FPDF constructor&#34;
@@ -2184,6 +2217,19 @@ plus a few other properties on PDFPage instances</p></div>
 <pre><code class="python">def dimensions(self):
     &#34;Return a pair (width, height) in the unit specified to FPDF constructor&#34;
     return self._width_pt, self._height_pt</code></pre>
+</details>
+</dd>
+<dt id="fpdf.output.PDFPage.index"><code class="name flex">
+<span>def <span class="ident">index</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def index(self):
+    return self._index</code></pre>
 </details>
 </dd>
 <dt id="fpdf.output.PDFPage.set_dimensions"><code class="name flex">
@@ -2582,6 +2628,7 @@ plus a few other properties on PDFPage instances</p></div>
 <li><code><a title="fpdf.output.PDFPage.dimensions" href="#fpdf.output.PDFPage.dimensions">dimensions</a></code></li>
 <li><code><a title="fpdf.output.PDFPage.dur" href="#fpdf.output.PDFPage.dur">dur</a></code></li>
 <li><code><a title="fpdf.output.PDFPage.group" href="#fpdf.output.PDFPage.group">group</a></code></li>
+<li><code><a title="fpdf.output.PDFPage.index" href="#fpdf.output.PDFPage.index">index</a></code></li>
 <li><code><a title="fpdf.output.PDFPage.media_box" href="#fpdf.output.PDFPage.media_box">media_box</a></code></li>
 <li><code><a title="fpdf.output.PDFPage.parent" href="#fpdf.output.PDFPage.parent">parent</a></code></li>
 <li><code><a title="fpdf.output.PDFPage.resources" href="#fpdf.output.PDFPage.resources">resources</a></code></li>
