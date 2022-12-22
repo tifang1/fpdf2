@@ -4389,7 +4389,7 @@ Default to "mm".</dd>
         }
 
     @check_page
-    def start_section(self, name, level=0):
+    def start_section(self, name, level=0, strict=True):
         &#34;&#34;&#34;
         Start a section in the document outline.
         If section_title_styles have been configured,
@@ -4401,7 +4401,7 @@ Default to "mm".</dd>
         &#34;&#34;&#34;
         if level &lt; 0:
             raise ValueError(&#39;&#34;level&#34; mut be equal or greater than zero&#39;)
-        if self._outline and level &gt; self._outline[-1].level + 1:
+        if strict and self._outline and level &gt; self._outline[-1].level + 1:
             raise ValueError(
                 f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
             )
@@ -9479,7 +9479,7 @@ def star(self, x, y, r_in, r_out, corners, rotate_degrees=0, style=None):
 </details>
 </dd>
 <dt id="fpdf.FPDF.start_section"><code class="name flex">
-<span>def <span class="ident">start_section</span></span>(<span>self, name, level=0)</span>
+<span>def <span class="ident">start_section</span></span>(<span>self, name, level=0, strict=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Start a section in the document outline.
@@ -9497,7 +9497,7 @@ render the section name visually as a title.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@check_page
-def start_section(self, name, level=0):
+def start_section(self, name, level=0, strict=True):
     &#34;&#34;&#34;
     Start a section in the document outline.
     If section_title_styles have been configured,
@@ -9509,7 +9509,7 @@ def start_section(self, name, level=0):
     &#34;&#34;&#34;
     if level &lt; 0:
         raise ValueError(&#39;&#34;level&#34; mut be equal or greater than zero&#39;)
-    if self._outline and level &gt; self._outline[-1].level + 1:
+    if strict and self._outline and level &gt; self._outline[-1].level + 1:
         raise ValueError(
             f&#34;Incoherent hierarchy: cannot start a level {level} section after a level {self._outline[-1].level} one&#34;
         )
@@ -10942,7 +10942,7 @@ to new image URLs</dd>
                 self.put_link(data)
             else:
                 if self.heading_level:
-                    self.pdf.start_section(data, self.heading_level - 1)
+                    self.pdf.start_section(data, self.heading_level - 1, strict=False)
                 LOGGER.debug(
                     &#34;write &#39;%s&#39; h=%d&#34;,
                     WHITESPACE.sub(whitespace_repl, data),
@@ -10959,7 +10959,7 @@ to new image URLs</dd>
                 self.put_link(data)
             else:
                 if self.heading_level:
-                    self.pdf.start_section(data, self.heading_level - 1)
+                    self.pdf.start_section(data, self.heading_level - 1, strict=False)
                 LOGGER.debug(
                     &#34;write &#39;%s&#39; h=%d&#34;,
                     WHITESPACE.sub(whitespace_repl, data),
@@ -11564,7 +11564,7 @@ as you want (may include '\n').</p></div>
             self.put_link(data)
         else:
             if self.heading_level:
-                self.pdf.start_section(data, self.heading_level - 1)
+                self.pdf.start_section(data, self.heading_level - 1, strict=False)
             LOGGER.debug(
                 &#34;write &#39;%s&#39; h=%d&#34;,
                 WHITESPACE.sub(whitespace_repl, data),
@@ -11581,7 +11581,7 @@ as you want (may include '\n').</p></div>
             self.put_link(data)
         else:
             if self.heading_level:
-                self.pdf.start_section(data, self.heading_level - 1)
+                self.pdf.start_section(data, self.heading_level - 1, strict=False)
             LOGGER.debug(
                 &#34;write &#39;%s&#39; h=%d&#34;,
                 WHITESPACE.sub(whitespace_repl, data),

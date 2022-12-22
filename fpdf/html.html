@@ -334,7 +334,7 @@ class HTML2FPDF(HTMLParser):
                 self.put_link(data)
             else:
                 if self.heading_level:
-                    self.pdf.start_section(data, self.heading_level - 1)
+                    self.pdf.start_section(data, self.heading_level - 1, strict=False)
                 LOGGER.debug(
                     &#34;write &#39;%s&#39; h=%d&#34;,
                     WHITESPACE.sub(whitespace_repl, data),
@@ -351,7 +351,7 @@ class HTML2FPDF(HTMLParser):
                 self.put_link(data)
             else:
                 if self.heading_level:
-                    self.pdf.start_section(data, self.heading_level - 1)
+                    self.pdf.start_section(data, self.heading_level - 1, strict=False)
                 LOGGER.debug(
                     &#34;write &#39;%s&#39; h=%d&#34;,
                     WHITESPACE.sub(whitespace_repl, data),
@@ -1125,7 +1125,7 @@ to new image URLs</dd>
                 self.put_link(data)
             else:
                 if self.heading_level:
-                    self.pdf.start_section(data, self.heading_level - 1)
+                    self.pdf.start_section(data, self.heading_level - 1, strict=False)
                 LOGGER.debug(
                     &#34;write &#39;%s&#39; h=%d&#34;,
                     WHITESPACE.sub(whitespace_repl, data),
@@ -1142,7 +1142,7 @@ to new image URLs</dd>
                 self.put_link(data)
             else:
                 if self.heading_level:
-                    self.pdf.start_section(data, self.heading_level - 1)
+                    self.pdf.start_section(data, self.heading_level - 1, strict=False)
                 LOGGER.debug(
                     &#34;write &#39;%s&#39; h=%d&#34;,
                     WHITESPACE.sub(whitespace_repl, data),
@@ -1747,7 +1747,7 @@ as you want (may include '\n').</p></div>
             self.put_link(data)
         else:
             if self.heading_level:
-                self.pdf.start_section(data, self.heading_level - 1)
+                self.pdf.start_section(data, self.heading_level - 1, strict=False)
             LOGGER.debug(
                 &#34;write &#39;%s&#39; h=%d&#34;,
                 WHITESPACE.sub(whitespace_repl, data),
@@ -1764,7 +1764,7 @@ as you want (may include '\n').</p></div>
             self.put_link(data)
         else:
             if self.heading_level:
-                self.pdf.start_section(data, self.heading_level - 1)
+                self.pdf.start_section(data, self.heading_level - 1, strict=False)
             LOGGER.debug(
                 &#34;write &#39;%s&#39; h=%d&#34;,
                 WHITESPACE.sub(whitespace_repl, data),
