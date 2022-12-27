@@ -665,9 +665,11 @@ class HTML2FPDF(HTMLParser):
                 width,
                 height,
             )
-            self.pdf.image(
+            image_info = self.pdf.image(
                 self.image_map(attrs[&#34;src&#34;]), x, y, width, height, link=self.href
             )
+            width = image_info[&#34;rendered_width&#34;]
+            height = image_info[&#34;rendered_height&#34;]
             self.pdf.set_x(x + width)
             if self.table_col_index is not None:
                 # &lt;img&gt; in a &lt;td&gt;: we grow the cell height according to the image height:
@@ -1456,9 +1458,11 @@ to new image URLs</dd>
                 width,
                 height,
             )
-            self.pdf.image(
+            image_info = self.pdf.image(
                 self.image_map(attrs[&#34;src&#34;]), x, y, width, height, link=self.href
             )
+            width = image_info[&#34;rendered_width&#34;]
+            height = image_info[&#34;rendered_height&#34;]
             self.pdf.set_x(x + width)
             if self.table_col_index is not None:
                 # &lt;img&gt; in a &lt;td&gt;: we grow the cell height according to the image height:
@@ -2055,9 +2059,11 @@ as you want (may include '\n').</p></div>
             width,
             height,
         )
-        self.pdf.image(
+        image_info = self.pdf.image(
             self.image_map(attrs[&#34;src&#34;]), x, y, width, height, link=self.href
         )
+        width = image_info[&#34;rendered_width&#34;]
+        height = image_info[&#34;rendered_height&#34;]
         self.pdf.set_x(x + width)
         if self.table_col_index is not None:
             # &lt;img&gt; in a &lt;td&gt;: we grow the cell height according to the image height:

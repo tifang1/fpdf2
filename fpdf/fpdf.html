@@ -3613,7 +3613,7 @@ class FPDF(GraphicsStateMixin):
         if link:
             self.link(x, y, w, h, link)
 
-        return info
+        return {**info, &#34;rendered_width&#34;: w, &#34;rendered_height&#34;: h}
 
     def _vector_image(
         self,
@@ -3674,6 +3674,8 @@ class FPDF(GraphicsStateMixin):
             self.set_xy(old_x, old_y)
         if link:
             self.link(x, y, w, h, link)
+
+        return {&#34;rendered_width&#34;: w, &#34;rendered_height&#34;: h}
 
     def _downscale_image(self, name, img, info, w, h):
         width_in_pt, height_in_pt = w * self.k, h * self.k
@@ -7940,7 +7942,7 @@ Default to "mm".</dd>
         if link:
             self.link(x, y, w, h, link)
 
-        return info
+        return {**info, &#34;rendered_width&#34;: w, &#34;rendered_height&#34;: h}
 
     def _vector_image(
         self,
@@ -8001,6 +8003,8 @@ Default to "mm".</dd>
             self.set_xy(old_x, old_y)
         if link:
             self.link(x, y, w, h, link)
+
+        return {&#34;rendered_width&#34;: w, &#34;rendered_height&#34;: h}
 
     def _downscale_image(self, name, img, info, w, h):
         width_in_pt, height_in_pt = w * self.k, h * self.k
@@ -10746,7 +10750,7 @@ def image(
     if link:
         self.link(x, y, w, h, link)
 
-    return info</code></pre>
+    return {**info, &#34;rendered_width&#34;: w, &#34;rendered_height&#34;: h}</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.ink_annotation"><code class="name flex">
