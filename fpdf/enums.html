@@ -26,7 +26,7 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from enum import Enum, IntEnum, Flag
+<pre><code class="python">from enum import Enum, IntEnum, Flag, IntFlag
 from sys import intern
 
 from .syntax import Name
@@ -668,6 +668,55 @@ class FontDescriptorFlags(Flag):
     &#34;&#34;&#34;
 
 
+class AccessPermission(IntFlag):
+    &#34;&#34;&#34;Permissin flags will translate as a integer on the encryption dictionary&#34;&#34;&#34;
+
+    PRINT_LOW_RES = 0b000000000100
+    &#34;&#34;&#34; Print the document &#34;&#34;&#34;
+
+    MODIFY = 0b000000001000
+    &#34;&#34;&#34; Modify the contents of the document &#34;&#34;&#34;
+
+    COPY = 0b000000010000
+    &#34;&#34;&#34; Copy or extract text and graphics from the document &#34;&#34;&#34;
+
+    ANNOTATION = 0b000000100000
+    &#34;&#34;&#34; Add or modify text annotations &#34;&#34;&#34;
+
+    FILL_FORMS = 0b000100000000
+    &#34;&#34;&#34; Fill in existing interactive form fields &#34;&#34;&#34;
+
+    COPY_FOR_ACCESSIBILITY = 0b001000000000
+    &#34;&#34;&#34; Extract text and graphics in support of accessibility to users with disabilities &#34;&#34;&#34;
+
+    ASSEMBLE = 0b010000000000
+    &#34;&#34;&#34; Insert, rotate or delete pages and create bookmarks or thumbnail images &#34;&#34;&#34;
+
+    PRINT_HIGH_RES = 0b100000000000
+    &#34;&#34;&#34; Print document at the highest resolution &#34;&#34;&#34;
+
+    @classmethod
+    def all(cls):
+        &#34;&#34;&#34;All flags enabled&#34;&#34;&#34;
+        result = 0
+        for permission in list(AccessPermission):
+            result = result | permission
+        return result
+
+    @classmethod
+    def none(cls):
+        &#34;&#34;&#34;All flags disabled&#34;&#34;&#34;
+        return 0
+
+
+class EncryptionMethod(Enum):
+    &#34;&#34;&#34;Algorithm to be used to encrypt the document&#34;&#34;&#34;
+
+    NO_ENCRYPTION = 0
+    RC4 = 1
+    AES_128 = 2
+
+
 # This enum is only used internally:
 __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 </details>
@@ -681,6 +730,135 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="fpdf.enums.AccessPermission"><code class="flex name class">
+<span>class <span class="ident">AccessPermission</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Permissin flags will translate as a integer on the encryption dictionary</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AccessPermission(IntFlag):
+    &#34;&#34;&#34;Permissin flags will translate as a integer on the encryption dictionary&#34;&#34;&#34;
+
+    PRINT_LOW_RES = 0b000000000100
+    &#34;&#34;&#34; Print the document &#34;&#34;&#34;
+
+    MODIFY = 0b000000001000
+    &#34;&#34;&#34; Modify the contents of the document &#34;&#34;&#34;
+
+    COPY = 0b000000010000
+    &#34;&#34;&#34; Copy or extract text and graphics from the document &#34;&#34;&#34;
+
+    ANNOTATION = 0b000000100000
+    &#34;&#34;&#34; Add or modify text annotations &#34;&#34;&#34;
+
+    FILL_FORMS = 0b000100000000
+    &#34;&#34;&#34; Fill in existing interactive form fields &#34;&#34;&#34;
+
+    COPY_FOR_ACCESSIBILITY = 0b001000000000
+    &#34;&#34;&#34; Extract text and graphics in support of accessibility to users with disabilities &#34;&#34;&#34;
+
+    ASSEMBLE = 0b010000000000
+    &#34;&#34;&#34; Insert, rotate or delete pages and create bookmarks or thumbnail images &#34;&#34;&#34;
+
+    PRINT_HIGH_RES = 0b100000000000
+    &#34;&#34;&#34; Print document at the highest resolution &#34;&#34;&#34;
+
+    @classmethod
+    def all(cls):
+        &#34;&#34;&#34;All flags enabled&#34;&#34;&#34;
+        result = 0
+        for permission in list(AccessPermission):
+            result = result | permission
+        return result
+
+    @classmethod
+    def none(cls):
+        &#34;&#34;&#34;All flags disabled&#34;&#34;&#34;
+        return 0</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.IntFlag</li>
+<li>builtins.int</li>
+<li>enum.Flag</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.AccessPermission.ANNOTATION"><code class="name">var <span class="ident">ANNOTATION</span></code></dt>
+<dd>
+<div class="desc"><p>Add or modify text annotations</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.ASSEMBLE"><code class="name">var <span class="ident">ASSEMBLE</span></code></dt>
+<dd>
+<div class="desc"><p>Insert, rotate or delete pages and create bookmarks or thumbnail images</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.COPY"><code class="name">var <span class="ident">COPY</span></code></dt>
+<dd>
+<div class="desc"><p>Copy or extract text and graphics from the document</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.COPY_FOR_ACCESSIBILITY"><code class="name">var <span class="ident">COPY_FOR_ACCESSIBILITY</span></code></dt>
+<dd>
+<div class="desc"><p>Extract text and graphics in support of accessibility to users with disabilities</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.FILL_FORMS"><code class="name">var <span class="ident">FILL_FORMS</span></code></dt>
+<dd>
+<div class="desc"><p>Fill in existing interactive form fields</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.MODIFY"><code class="name">var <span class="ident">MODIFY</span></code></dt>
+<dd>
+<div class="desc"><p>Modify the contents of the document</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.PRINT_HIGH_RES"><code class="name">var <span class="ident">PRINT_HIGH_RES</span></code></dt>
+<dd>
+<div class="desc"><p>Print document at the highest resolution</p></div>
+</dd>
+<dt id="fpdf.enums.AccessPermission.PRINT_LOW_RES"><code class="name">var <span class="ident">PRINT_LOW_RES</span></code></dt>
+<dd>
+<div class="desc"><p>Print the document</p></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="fpdf.enums.AccessPermission.all"><code class="name flex">
+<span>def <span class="ident">all</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>All flags enabled</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def all(cls):
+    &#34;&#34;&#34;All flags enabled&#34;&#34;&#34;
+    result = 0
+    for permission in list(AccessPermission):
+        result = result | permission
+    return result</code></pre>
+</details>
+</dd>
+<dt id="fpdf.enums.AccessPermission.none"><code class="name flex">
+<span>def <span class="ident">none</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>All flags disabled</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def none(cls):
+    &#34;&#34;&#34;All flags disabled&#34;&#34;&#34;
+    return 0</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.enums.Align"><code class="flex name class">
 <span>class <span class="ident">Align</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -1562,6 +1740,43 @@ def coerce(cls, value):
 </ul>
 </li>
 </ul>
+</dd>
+<dt id="fpdf.enums.EncryptionMethod"><code class="flex name class">
+<span>class <span class="ident">EncryptionMethod</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Algorithm to be used to encrypt the document</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class EncryptionMethod(Enum):
+    &#34;&#34;&#34;Algorithm to be used to encrypt the document&#34;&#34;&#34;
+
+    NO_ENCRYPTION = 0
+    RC4 = 1
+    AES_128 = 2</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.EncryptionMethod.AES_128"><code class="name">var <span class="ident">AES_128</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.EncryptionMethod.NO_ENCRYPTION"><code class="name">var <span class="ident">NO_ENCRYPTION</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="fpdf.enums.EncryptionMethod.RC4"><code class="name">var <span class="ident">RC4</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 <dt id="fpdf.enums.FileAttachmentAnnotationName"><code class="flex name class">
 <span>class <span class="ident">FileAttachmentAnnotationName</span></span>
@@ -2685,6 +2900,21 @@ corner."</p></div>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="fpdf.enums.AccessPermission" href="#fpdf.enums.AccessPermission">AccessPermission</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.AccessPermission.ANNOTATION" href="#fpdf.enums.AccessPermission.ANNOTATION">ANNOTATION</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.ASSEMBLE" href="#fpdf.enums.AccessPermission.ASSEMBLE">ASSEMBLE</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.COPY" href="#fpdf.enums.AccessPermission.COPY">COPY</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.COPY_FOR_ACCESSIBILITY" href="#fpdf.enums.AccessPermission.COPY_FOR_ACCESSIBILITY">COPY_FOR_ACCESSIBILITY</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.FILL_FORMS" href="#fpdf.enums.AccessPermission.FILL_FORMS">FILL_FORMS</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.MODIFY" href="#fpdf.enums.AccessPermission.MODIFY">MODIFY</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.PRINT_HIGH_RES" href="#fpdf.enums.AccessPermission.PRINT_HIGH_RES">PRINT_HIGH_RES</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.PRINT_LOW_RES" href="#fpdf.enums.AccessPermission.PRINT_LOW_RES">PRINT_LOW_RES</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.all" href="#fpdf.enums.AccessPermission.all">all</a></code></li>
+<li><code><a title="fpdf.enums.AccessPermission.none" href="#fpdf.enums.AccessPermission.none">none</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="fpdf.enums.Align" href="#fpdf.enums.Align">Align</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.enums.Align.C" href="#fpdf.enums.Align.C">C</a></code></li>
@@ -2777,6 +3007,14 @@ corner."</p></div>
 <li><code><a title="fpdf.enums.Corner.BOTTOM_RIGHT" href="#fpdf.enums.Corner.BOTTOM_RIGHT">BOTTOM_RIGHT</a></code></li>
 <li><code><a title="fpdf.enums.Corner.TOP_LEFT" href="#fpdf.enums.Corner.TOP_LEFT">TOP_LEFT</a></code></li>
 <li><code><a title="fpdf.enums.Corner.TOP_RIGHT" href="#fpdf.enums.Corner.TOP_RIGHT">TOP_RIGHT</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.EncryptionMethod" href="#fpdf.enums.EncryptionMethod">EncryptionMethod</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.EncryptionMethod.AES_128" href="#fpdf.enums.EncryptionMethod.AES_128">AES_128</a></code></li>
+<li><code><a title="fpdf.enums.EncryptionMethod.NO_ENCRYPTION" href="#fpdf.enums.EncryptionMethod.NO_ENCRYPTION">NO_ENCRYPTION</a></code></li>
+<li><code><a title="fpdf.enums.EncryptionMethod.RC4" href="#fpdf.enums.EncryptionMethod.RC4">RC4</a></code></li>
 </ul>
 </li>
 <li>

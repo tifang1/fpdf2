@@ -73,7 +73,7 @@ class NumberTree(PDFObject):
         super().__init__()
         self.nums = defaultdict(list)  # {struct_parent_id -&gt; struct_elems}
 
-    def serialize(self, obj_dict=None):
+    def serialize(self, obj_dict=None, _security_handler=None):
         newline = &#34;\n&#34;
         serialized_nums = &#34;\n&#34;.join(
             f&#34;{struct_parent_id} [{newline.join(struct_elem.ref for struct_elem in struct_elems)}]&#34;
@@ -223,7 +223,7 @@ and names) be specified as direct objects</p></div>
         super().__init__()
         self.nums = defaultdict(list)  # {struct_parent_id -&gt; struct_elems}
 
-    def serialize(self, obj_dict=None):
+    def serialize(self, obj_dict=None, _security_handler=None):
         newline = &#34;\n&#34;
         serialized_nums = &#34;\n&#34;.join(
             f&#34;{struct_parent_id} [{newline.join(struct_elem.ref for struct_elem in struct_elems)}]&#34;

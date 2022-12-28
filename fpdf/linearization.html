@@ -94,7 +94,7 @@ class PDFXrefAndTrailer(ContentWithoutID):
     def is_main_xref(self):
         return bool(self.first_xref)
 
-    def serialize(self):
+    def serialize(self, _security_handler=None):
         builder = self.output_builder
         out = []
         self.startxref = str(len(builder.buffer))
@@ -636,7 +636,7 @@ class LinearizedOutputProducer(OutputProducer):
     def is_main_xref(self):
         return bool(self.first_xref)
 
-    def serialize(self):
+    def serialize(self, _security_handler=None):
         builder = self.output_builder
         out = []
         self.startxref = str(len(builder.buffer))
@@ -733,7 +733,7 @@ def is_main_xref(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
+<pre><code class="python">def serialize(self, _security_handler=None):
     builder = self.output_builder
     out = []
     self.startxref = str(len(builder.buffer))

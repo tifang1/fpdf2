@@ -184,9 +184,11 @@ def iobj_ref(n):
     return f&#34;{n} 0 R&#34;
 
 
-def create_stream(stream):
+def create_stream(stream, encryption_handler=None, obj_id=None):
     if isinstance(stream, (bytearray, bytes)):
         stream = str(stream, &#34;latin-1&#34;)
+    if encryption_handler:
+        encryption_handler.encrypt(stream, obj_id)
     return &#34;\n&#34;.join([&#34;stream&#34;, stream, &#34;endstream&#34;])
 
 
@@ -235,13 +237,15 @@ class PDFObject:
     def ref(self):
         return iobj_ref(self.id)
 
-    def serialize(self, obj_dict=None):
+    def serialize(self, obj_dict=None, _security_handler=None):
         &#34;Serialize the PDF object as an obj&lt;&lt;/&gt;&gt;endobj text block&#34;
         output = []
         output.append(f&#34;{self.id} 0 obj&#34;)
         output.append(&#34;&lt;&lt;&#34;)
         if not obj_dict:
             obj_dict = self._build_obj_dict()
+        if _security_handler:
+            obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler)
         output.append(create_dictionary_string(obj_dict, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
         output.append(&#34;&gt;&gt;&#34;)
         content_stream = self.content_stream()
@@ -263,6 +267,18 @@ class PDFObject:
         &#34;&#34;&#34;
         return build_obj_dict({key: getattr(self, key) for key in dir(self)})
 
+    def _encrypt_obj_dict(self, obj_dict, security_handler):
+        &#34;&#34;&#34;Encrypt the strings present in the object dictionary&#34;&#34;&#34;
+        for key in obj_dict:
+            string = obj_dict[key]
+            if (
+                isinstance(string, str)
+                and string.startswith(&#34;(&#34;)
+                and string.endswith(&#34;)&#34;)
+            ):
+                obj_dict[key] = security_handler.encrypt(string[1:-1], self.id)
+        return obj_dict
+
 
 class PDFContentStream(PDFObject):
     def __init__(self, contents, compress=False):
@@ -274,6 +290,11 @@ class PDFContentStream(PDFObject):
     # method override
     def content_stream(self):
         return self._contents
+
+    def encrypt(self, security_handler):
+        # print(&#39;encrypting &#39;, self.id)
+        self._contents = security_handler.encrypt(self._contents, self.id)
+        self.length = len(self._contents)
 
 
 def build_obj_dict(key_values):
@@ -500,7 +521,7 @@ and prefixed with a slash character "/".</p></div>
 </details>
 </dd>
 <dt id="fpdf.syntax.create_stream"><code class="name flex">
-<span>def <span class="ident">create_stream</span></span>(<span>stream)</span>
+<span>def <span class="ident">create_stream</span></span>(<span>stream, encryption_handler=None, obj_id=None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -508,9 +529,11 @@ and prefixed with a slash character "/".</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def create_stream(stream):
+<pre><code class="python">def create_stream(stream, encryption_handler=None, obj_id=None):
     if isinstance(stream, (bytearray, bytes)):
         stream = str(stream, &#34;latin-1&#34;)
+    if encryption_handler:
+        encryption_handler.encrypt(stream, obj_id)
     return &#34;\n&#34;.join([&#34;stream&#34;, stream, &#34;endstream&#34;])</code></pre>
 </details>
 </dd>
@@ -763,7 +786,12 @@ The argument must be an iterable if specified.</p></div>
 
     # method override
     def content_stream(self):
-        return self._contents</code></pre>
+        return self._contents
+
+    def encrypt(self, security_handler):
+        # print(&#39;encrypting &#39;, self.id)
+        self._contents = security_handler.encrypt(self._contents, self.id)
+        self.length = len(self._contents)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -777,6 +805,24 @@ The argument must be an iterable if specified.</p></div>
 <li><a title="fpdf.output.PDFXObject" href="output.html#fpdf.output.PDFXObject">PDFXObject</a></li>
 <li><a title="fpdf.output.PDFXmpMetadata" href="output.html#fpdf.output.PDFXmpMetadata">PDFXmpMetadata</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.syntax.PDFContentStream.encrypt"><code class="name flex">
+<span>def <span class="ident">encrypt</span></span>(<span>self, security_handler)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encrypt(self, security_handler):
+    # print(&#39;encrypting &#39;, self.id)
+    self._contents = security_handler.encrypt(self._contents, self.id)
+    self.length = len(self._contents)</code></pre>
+</details>
+</dd>
+</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="fpdf.syntax.PDFObject" href="#fpdf.syntax.PDFObject">PDFObject</a></b></code>:
@@ -825,13 +871,15 @@ The argument must be an iterable if specified.</p></div>
     def ref(self):
         return iobj_ref(self.id)
 
-    def serialize(self, obj_dict=None):
+    def serialize(self, obj_dict=None, _security_handler=None):
         &#34;Serialize the PDF object as an obj&lt;&lt;/&gt;&gt;endobj text block&#34;
         output = []
         output.append(f&#34;{self.id} 0 obj&#34;)
         output.append(&#34;&lt;&lt;&#34;)
         if not obj_dict:
             obj_dict = self._build_obj_dict()
+        if _security_handler:
+            obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler)
         output.append(create_dictionary_string(obj_dict, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
         output.append(&#34;&gt;&gt;&#34;)
         content_stream = self.content_stream()
@@ -851,11 +899,24 @@ The argument must be an iterable if specified.</p></div>
         The property names are converted from snake_case to CamelCase,
         and prefixed with a slash character &#34;/&#34;.
         &#34;&#34;&#34;
-        return build_obj_dict({key: getattr(self, key) for key in dir(self)})</code></pre>
+        return build_obj_dict({key: getattr(self, key) for key in dir(self)})
+
+    def _encrypt_obj_dict(self, obj_dict, security_handler):
+        &#34;&#34;&#34;Encrypt the strings present in the object dictionary&#34;&#34;&#34;
+        for key in obj_dict:
+            string = obj_dict[key]
+            if (
+                isinstance(string, str)
+                and string.startswith(&#34;(&#34;)
+                and string.endswith(&#34;)&#34;)
+            ):
+                obj_dict[key] = security_handler.encrypt(string[1:-1], self.id)
+        return obj_dict</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="fpdf.annotations.PDFAnnotation" href="annotations.html#fpdf.annotations.PDFAnnotation">PDFAnnotation</a></li>
+<li><a title="fpdf.encryption.EncryptionDictionary" href="encryption.html#fpdf.encryption.EncryptionDictionary">EncryptionDictionary</a></li>
 <li><a title="fpdf.linearization.PDFLinearization" href="linearization.html#fpdf.linearization.PDFLinearization">PDFLinearization</a></li>
 <li><a title="fpdf.outline.OutlineDictionary" href="outline.html#fpdf.outline.OutlineDictionary">OutlineDictionary</a></li>
 <li><a title="fpdf.outline.OutlineItemDictionary" href="outline.html#fpdf.outline.OutlineItemDictionary">OutlineItemDictionary</a></li>
@@ -929,13 +990,15 @@ def ref(self):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self, obj_dict=None):
+<pre><code class="python">def serialize(self, obj_dict=None, _security_handler=None):
     &#34;Serialize the PDF object as an obj&lt;&lt;/&gt;&gt;endobj text block&#34;
     output = []
     output.append(f&#34;{self.id} 0 obj&#34;)
     output.append(&#34;&lt;&lt;&#34;)
     if not obj_dict:
         obj_dict = self._build_obj_dict()
+    if _security_handler:
+        obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler)
     output.append(create_dictionary_string(obj_dict, open_dict=&#34;&#34;, close_dict=&#34;&#34;))
     output.append(&#34;&gt;&gt;&#34;)
     content_stream = self.content_stream()
@@ -1084,6 +1147,9 @@ but then there can be a risk of badly encoding some unicode strings - cf. issue 
 </li>
 <li>
 <h4><code><a title="fpdf.syntax.PDFContentStream" href="#fpdf.syntax.PDFContentStream">PDFContentStream</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.syntax.PDFContentStream.encrypt" href="#fpdf.syntax.PDFContentStream.encrypt">encrypt</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="fpdf.syntax.PDFObject" href="#fpdf.syntax.PDFObject">PDFObject</a></code></h4>

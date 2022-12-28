@@ -96,6 +96,10 @@ __all__ = [
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="fpdf.encryption" href="encryption.html">fpdf.encryption</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="fpdf.enums" href="enums.html">fpdf.enums</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -436,6 +440,7 @@ Default to "mm".</dd>
         self.compress = True  # switch enabling pages content compression
         self.pdf_version = &#34;1.3&#34;  # Set default PDF version No.
         self.creation_date = datetime.now(timezone.utc)
+        self._security_handler = None
 
         self._current_draw_context = None
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
@@ -447,6 +452,26 @@ Default to "mm".</dd>
 
         # final buffer holding the PDF document in-memory - defined only after calling output():
         self.buffer = None
+
+    def set_encryption(
+        self,
+        owner_password,
+        user_password=None,
+        encryption_method=None,
+        permissions=AccessPermission.all(),
+        encrypt_metadata=False,
+    ):
+        &#34;&#34;&#34; &#34;
+        Creates a security handler that will be used at output() to encrypt the document streams and strings
+        &#34;&#34;&#34;
+        self._security_handler = StandardSecurityHandler(
+            self,
+            owner_password=owner_password,
+            user_password=user_password,
+            permission=permissions,
+            encryption_method=encryption_method,
+            encrypt_metadata=encrypt_metadata,
+        )
 
     def write_html(self, text, *args, **kwargs):
         &#34;&#34;&#34;
@@ -8316,6 +8341,37 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
         self._out(self.draw_color.serialize().upper())</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.set_encryption"><code class="name flex">
+<span>def <span class="ident">set_encryption</span></span>(<span>self, owner_password, user_password=None, encryption_method=None, permissions=AccessPermission.PRINT_HIGH_RES|ASSEMBLE|COPY_FOR_ACCESSIBILITY|FILL_FORMS|ANNOTATION|COPY|MODIFY|PRINT_LOW_RES, encrypt_metadata=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>"
+Creates a security handler that will be used at output() to encrypt the document streams and strings</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_encryption(
+    self,
+    owner_password,
+    user_password=None,
+    encryption_method=None,
+    permissions=AccessPermission.all(),
+    encrypt_metadata=False,
+):
+    &#34;&#34;&#34; &#34;
+    Creates a security handler that will be used at output() to encrypt the document streams and strings
+    &#34;&#34;&#34;
+    self._security_handler = StandardSecurityHandler(
+        self,
+        owner_password=owner_password,
+        user_password=user_password,
+        permission=permissions,
+        encryption_method=encryption_method,
+        encrypt_metadata=encrypt_metadata,
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.set_fill_color"><code class="name flex">
 <span>def <span class="ident">set_fill_color</span></span>(<span>self, r, g=-1, b=-1)</span>
 </code></dt>
@@ -12672,6 +12728,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.annotations" href="annotations.html">fpdf.annotations</a></code></li>
 <li><code><a title="fpdf.deprecation" href="deprecation.html">fpdf.deprecation</a></code></li>
 <li><code><a title="fpdf.drawing" href="drawing.html">fpdf.drawing</a></code></li>
+<li><code><a title="fpdf.encryption" href="encryption.html">fpdf.encryption</a></code></li>
 <li><code><a title="fpdf.enums" href="enums.html">fpdf.enums</a></code></li>
 <li><code><a title="fpdf.errors" href="errors.html">fpdf.errors</a></code></li>
 <li><code><a title="fpdf.fonts" href="fonts.html">fpdf.fonts</a></code></li>
@@ -12787,6 +12844,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.set_display_mode" href="#fpdf.FPDF.set_display_mode">set_display_mode</a></code></li>
 <li><code><a title="fpdf.FPDF.set_doc_option" href="#fpdf.FPDF.set_doc_option">set_doc_option</a></code></li>
 <li><code><a title="fpdf.FPDF.set_draw_color" href="#fpdf.FPDF.set_draw_color">set_draw_color</a></code></li>
+<li><code><a title="fpdf.FPDF.set_encryption" href="#fpdf.FPDF.set_encryption">set_encryption</a></code></li>
 <li><code><a title="fpdf.FPDF.set_fill_color" href="#fpdf.FPDF.set_fill_color">set_fill_color</a></code></li>
 <li><code><a title="fpdf.FPDF.set_font" href="#fpdf.FPDF.set_font">set_font</a></code></li>
 <li><code><a title="fpdf.FPDF.set_font_size" href="#fpdf.FPDF.set_font_size">set_font_size</a></code></li>
