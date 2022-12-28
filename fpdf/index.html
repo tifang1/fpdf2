@@ -457,12 +457,25 @@ Default to "mm".</dd>
         self,
         owner_password,
         user_password=None,
-        encryption_method=None,
+        encryption_method=EncryptionMethod.RC4,
         permissions=AccessPermission.all(),
         encrypt_metadata=False,
     ):
         &#34;&#34;&#34; &#34;
-        Creates a security handler that will be used at output() to encrypt the document streams and strings
+        Activate encryption of the document content.
+
+        Args:
+            owner_password (str): mandatory. The owner password allows to perform any change on the document,
+                including removing all encryption and access permissions.
+            user_password (str): optional. If a user password is set, the content of the document will be encrypted
+                and a password prompt displayed when a user opens the document.
+                The document will only be displayed after either the user or owner password is entered.
+            encryption_method (fpdf.enums.EncryptionMethod, str): algorithm to be used to encrypt the document.
+                Defaults to RC4.
+            permissions (fpdf.enums.AccessPermission): specify access permissions granted
+                when the document is opened with user access. Defaults to ALL.
+            encrypt_metadata (bool): whether to also encrypt document metadata (author, creation date, etc.).
+                Defaults to False.
         &#34;&#34;&#34;
         self._security_handler = StandardSecurityHandler(
             self,
@@ -1810,7 +1823,7 @@ Default to "mm".</dd>
         if not fname:
             raise ValueError(&#39;&#34;fname&#34; parameter is required&#39;)
 
-        ext = splitext(str(fname))[1]
+        ext = splitext(str(fname))[1].lower()
         if ext not in (&#34;.otf&#34;, &#34;.otc&#34;, &#34;.ttf&#34;, &#34;.ttc&#34;):
             raise ValueError(
                 f&#34;Unsupported font file extension: {ext}.&#34;
@@ -4782,7 +4795,7 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
     if not fname:
         raise ValueError(&#39;&#34;fname&#34; parameter is required&#39;)
 
-    ext = splitext(str(fname))[1]
+    ext = splitext(str(fname))[1].lower()
     if ext not in (&#34;.otf&#34;, &#34;.otc&#34;, &#34;.ttf&#34;, &#34;.ttc&#34;):
         raise ValueError(
             f&#34;Unsupported font file extension: {ext}.&#34;
@@ -8342,11 +8355,30 @@ Else, this indicates the grey level. The value must be between 0 and 255.</dd>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_encryption"><code class="name flex">
-<span>def <span class="ident">set_encryption</span></span>(<span>self, owner_password, user_password=None, encryption_method=None, permissions=AccessPermission.PRINT_HIGH_RES|ASSEMBLE|COPY_FOR_ACCESSIBILITY|FILL_FORMS|ANNOTATION|COPY|MODIFY|PRINT_LOW_RES, encrypt_metadata=False)</span>
+<span>def <span class="ident">set_encryption</span></span>(<span>self, owner_password, user_password=None, encryption_method=EncryptionMethod.RC4, permissions=AccessPermission.PRINT_HIGH_RES|ASSEMBLE|COPY_FOR_ACCESSIBILITY|FILL_FORMS|ANNOTATION|COPY|MODIFY|PRINT_LOW_RES, encrypt_metadata=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>"
-Creates a security handler that will be used at output() to encrypt the document streams and strings</p></div>
+Activate encryption of the document content.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>owner_password</code></strong> :&ensp;<code>str</code></dt>
+<dd>mandatory. The owner password allows to perform any change on the document,
+including removing all encryption and access permissions.</dd>
+<dt><strong><code>user_password</code></strong> :&ensp;<code>str</code></dt>
+<dd>optional. If a user password is set, the content of the document will be encrypted
+and a password prompt displayed when a user opens the document.
+The document will only be displayed after either the user or owner password is entered.</dd>
+<dt><strong><code>encryption_method</code></strong> :&ensp;<code><a title="fpdf.enums.EncryptionMethod" href="enums.html#fpdf.enums.EncryptionMethod">EncryptionMethod</a>, str</code></dt>
+<dd>algorithm to be used to encrypt the document.
+Defaults to RC4.</dd>
+<dt><strong><code>permissions</code></strong> :&ensp;<code><a title="fpdf.enums.AccessPermission" href="enums.html#fpdf.enums.AccessPermission">AccessPermission</a></code></dt>
+<dd>specify access permissions granted
+when the document is opened with user access. Defaults to ALL.</dd>
+<dt><strong><code>encrypt_metadata</code></strong> :&ensp;<code>bool</code></dt>
+<dd>whether to also encrypt document metadata (author, creation date, etc.).
+Defaults to False.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -8355,12 +8387,25 @@ Creates a security handler that will be used at output() to encrypt the document
     self,
     owner_password,
     user_password=None,
-    encryption_method=None,
+    encryption_method=EncryptionMethod.RC4,
     permissions=AccessPermission.all(),
     encrypt_metadata=False,
 ):
     &#34;&#34;&#34; &#34;
-    Creates a security handler that will be used at output() to encrypt the document streams and strings
+    Activate encryption of the document content.
+
+    Args:
+        owner_password (str): mandatory. The owner password allows to perform any change on the document,
+            including removing all encryption and access permissions.
+        user_password (str): optional. If a user password is set, the content of the document will be encrypted
+            and a password prompt displayed when a user opens the document.
+            The document will only be displayed after either the user or owner password is entered.
+        encryption_method (fpdf.enums.EncryptionMethod, str): algorithm to be used to encrypt the document.
+            Defaults to RC4.
+        permissions (fpdf.enums.AccessPermission): specify access permissions granted
+            when the document is opened with user access. Defaults to ALL.
+        encrypt_metadata (bool): whether to also encrypt document metadata (author, creation date, etc.).
+            Defaults to False.
     &#34;&#34;&#34;
     self._security_handler = StandardSecurityHandler(
         self,

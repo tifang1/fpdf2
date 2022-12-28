@@ -44,9 +44,7 @@ class SignatureFlag(IntEnum):
 
 
 class CoerciveEnum(Enum):
-    &#34;&#34;&#34;
-    An enumeration that provides a helper to coerce strings into enumeration members.
-    &#34;&#34;&#34;
+    &#34;An enumeration that provides a helper to coerce strings into enumeration members.&#34;
 
     @classmethod
     def coerce(cls, value):
@@ -328,9 +326,7 @@ class TextMarkupType(CoerciveEnum):
 
 
 class BlendMode(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the named standard named blend functions supported by PDF.
-    &#34;&#34;&#34;
+    &#34;An enumeration of the named standard named blend functions supported by PDF.&#34;
 
     NORMAL = Name(&#34;Normal&#34;)
     &#39;&#39;&#39;&#34;Selects the source color, ignoring the backdrop.&#34;&#39;&#39;&#39;
@@ -541,9 +537,7 @@ class PathPaintRule(CoerciveEnum):
 
 
 class ClippingPathIntersectionRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the PDF drawing directives that define a path as a clipping path.
-    &#34;&#34;&#34;
+    &#34;An enumeration of the PDF drawing directives that define a path as a clipping path.&#34;
 
     NONZERO = &#34;W&#34;
     &#34;&#34;&#34;
@@ -617,9 +611,7 @@ class StrokeJoinStyle(CoerciveIntEnum):
 
 
 class PDFStyleKeys(Enum):
-    &#34;&#34;&#34;
-    An enumeration of the graphics state parameter dictionary keys.
-    &#34;&#34;&#34;
+    &#34;An enumeration of the graphics state parameter dictionary keys.&#34;
 
     FILL_ALPHA = Name(&#34;ca&#34;)
     BLEND_MODE = Name(&#34;BM&#34;)  # shared between stroke and fill
@@ -669,35 +661,35 @@ class FontDescriptorFlags(Flag):
 
 
 class AccessPermission(IntFlag):
-    &#34;&#34;&#34;Permissin flags will translate as a integer on the encryption dictionary&#34;&#34;&#34;
+    &#34;Permission flags will translate as an integer on the encryption dictionary&#34;
 
     PRINT_LOW_RES = 0b000000000100
-    &#34;&#34;&#34; Print the document &#34;&#34;&#34;
+    &#34;Print the document&#34;
 
     MODIFY = 0b000000001000
-    &#34;&#34;&#34; Modify the contents of the document &#34;&#34;&#34;
+    &#34;Modify the contents of the document&#34;
 
     COPY = 0b000000010000
-    &#34;&#34;&#34; Copy or extract text and graphics from the document &#34;&#34;&#34;
+    &#34;Copy or extract text and graphics from the document&#34;
 
     ANNOTATION = 0b000000100000
-    &#34;&#34;&#34; Add or modify text annotations &#34;&#34;&#34;
+    &#34;Add or modify text annotations&#34;
 
     FILL_FORMS = 0b000100000000
-    &#34;&#34;&#34; Fill in existing interactive form fields &#34;&#34;&#34;
+    &#34;Fill in existing interactive form fields&#34;
 
     COPY_FOR_ACCESSIBILITY = 0b001000000000
-    &#34;&#34;&#34; Extract text and graphics in support of accessibility to users with disabilities &#34;&#34;&#34;
+    &#34;Extract text and graphics in support of accessibility to users with disabilities&#34;
 
     ASSEMBLE = 0b010000000000
-    &#34;&#34;&#34; Insert, rotate or delete pages and create bookmarks or thumbnail images &#34;&#34;&#34;
+    &#34;Insert, rotate or delete pages and create bookmarks or thumbnail images&#34;
 
     PRINT_HIGH_RES = 0b100000000000
-    &#34;&#34;&#34; Print document at the highest resolution &#34;&#34;&#34;
+    &#34;Print document at the highest resolution&#34;
 
     @classmethod
     def all(cls):
-        &#34;&#34;&#34;All flags enabled&#34;&#34;&#34;
+        &#34;All flags enabled&#34;
         result = 0
         for permission in list(AccessPermission):
             result = result | permission
@@ -705,12 +697,12 @@ class AccessPermission(IntFlag):
 
     @classmethod
     def none(cls):
-        &#34;&#34;&#34;All flags disabled&#34;&#34;&#34;
+        &#34;All flags disabled&#34;
         return 0
 
 
 class EncryptionMethod(Enum):
-    &#34;&#34;&#34;Algorithm to be used to encrypt the document&#34;&#34;&#34;
+    &#34;Algorithm to be used to encrypt the document&#34;
 
     NO_ENCRYPTION = 0
     RC4 = 1
@@ -735,41 +727,41 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Permissin flags will translate as a integer on the encryption dictionary</p></div>
+<div class="desc"><p>Permission flags will translate as an integer on the encryption dictionary</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AccessPermission(IntFlag):
-    &#34;&#34;&#34;Permissin flags will translate as a integer on the encryption dictionary&#34;&#34;&#34;
+    &#34;Permission flags will translate as an integer on the encryption dictionary&#34;
 
     PRINT_LOW_RES = 0b000000000100
-    &#34;&#34;&#34; Print the document &#34;&#34;&#34;
+    &#34;Print the document&#34;
 
     MODIFY = 0b000000001000
-    &#34;&#34;&#34; Modify the contents of the document &#34;&#34;&#34;
+    &#34;Modify the contents of the document&#34;
 
     COPY = 0b000000010000
-    &#34;&#34;&#34; Copy or extract text and graphics from the document &#34;&#34;&#34;
+    &#34;Copy or extract text and graphics from the document&#34;
 
     ANNOTATION = 0b000000100000
-    &#34;&#34;&#34; Add or modify text annotations &#34;&#34;&#34;
+    &#34;Add or modify text annotations&#34;
 
     FILL_FORMS = 0b000100000000
-    &#34;&#34;&#34; Fill in existing interactive form fields &#34;&#34;&#34;
+    &#34;Fill in existing interactive form fields&#34;
 
     COPY_FOR_ACCESSIBILITY = 0b001000000000
-    &#34;&#34;&#34; Extract text and graphics in support of accessibility to users with disabilities &#34;&#34;&#34;
+    &#34;Extract text and graphics in support of accessibility to users with disabilities&#34;
 
     ASSEMBLE = 0b010000000000
-    &#34;&#34;&#34; Insert, rotate or delete pages and create bookmarks or thumbnail images &#34;&#34;&#34;
+    &#34;Insert, rotate or delete pages and create bookmarks or thumbnail images&#34;
 
     PRINT_HIGH_RES = 0b100000000000
-    &#34;&#34;&#34; Print document at the highest resolution &#34;&#34;&#34;
+    &#34;Print document at the highest resolution&#34;
 
     @classmethod
     def all(cls):
-        &#34;&#34;&#34;All flags enabled&#34;&#34;&#34;
+        &#34;All flags enabled&#34;
         result = 0
         for permission in list(AccessPermission):
             result = result | permission
@@ -777,7 +769,7 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 
     @classmethod
     def none(cls):
-        &#34;&#34;&#34;All flags disabled&#34;&#34;&#34;
+        &#34;All flags disabled&#34;
         return 0</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -835,7 +827,7 @@ __pdoc__ = {&#34;DocumentState&#34;: False}</code></pre>
 </summary>
 <pre><code class="python">@classmethod
 def all(cls):
-    &#34;&#34;&#34;All flags enabled&#34;&#34;&#34;
+    &#34;All flags enabled&#34;
     result = 0
     for permission in list(AccessPermission):
         result = result | permission
@@ -853,7 +845,7 @@ def all(cls):
 </summary>
 <pre><code class="python">@classmethod
 def none(cls):
-    &#34;&#34;&#34;All flags disabled&#34;&#34;&#34;
+    &#34;All flags disabled&#34;
     return 0</code></pre>
 </details>
 </dd>
@@ -1105,9 +1097,7 @@ The annotation may be displayed or printed but should not respond to mouse click
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class BlendMode(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the named standard named blend functions supported by PDF.
-    &#34;&#34;&#34;
+    &#34;An enumeration of the named standard named blend functions supported by PDF.&#34;
 
     NORMAL = Name(&#34;Normal&#34;)
     &#39;&#39;&#39;&#34;Selects the source color, ignoring the backdrop.&#34;&#39;&#39;&#39;
@@ -1352,9 +1342,7 @@ similar to shining a diffused spotlight on the backdrop."</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ClippingPathIntersectionRule(CoerciveEnum):
-    &#34;&#34;&#34;
-    An enumeration of the PDF drawing directives that define a path as a clipping path.
-    &#34;&#34;&#34;
+    &#34;An enumeration of the PDF drawing directives that define a path as a clipping path.&#34;
 
     NONZERO = &#34;W&#34;
     &#34;&#34;&#34;
@@ -1424,9 +1412,7 @@ path; otherwise, it is inside."</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CoerciveEnum(Enum):
-    &#34;&#34;&#34;
-    An enumeration that provides a helper to coerce strings into enumeration members.
-    &#34;&#34;&#34;
+    &#34;An enumeration that provides a helper to coerce strings into enumeration members.&#34;
 
     @classmethod
     def coerce(cls, value):
@@ -1752,7 +1738,7 @@ def coerce(cls, value):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class EncryptionMethod(Enum):
-    &#34;&#34;&#34;Algorithm to be used to encrypt the document&#34;&#34;&#34;
+    &#34;Algorithm to be used to encrypt the document&#34;
 
     NO_ENCRYPTION = 0
     RC4 = 1
@@ -1983,9 +1969,7 @@ path; otherwise, it is inside."</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class PDFStyleKeys(Enum):
-    &#34;&#34;&#34;
-    An enumeration of the graphics state parameter dictionary keys.
-    &#34;&#34;&#34;
+    &#34;An enumeration of the graphics state parameter dictionary keys.&#34;
 
     FILL_ALPHA = Name(&#34;ca&#34;)
     BLEND_MODE = Name(&#34;BM&#34;)  # shared between stroke and fill

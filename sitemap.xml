@@ -56,6 +56,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/Encryption.html</loc>
+         <lastmod>2022-12-28</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/FAQ.html</loc>
          <lastmod>2022-12-28</lastmod>
          <changefreq>daily</changefreq>
@@ -222,11 +227,6 @@
     </url>
     <url>
          <loc>https://pyfpdf.github.io/fpdf2/UsageInWebAPI.html</loc>
-         <lastmod>2022-12-28</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://pyfpdf.github.io/fpdf2/encryption.html</loc>
          <lastmod>2022-12-28</lastmod>
          <changefreq>daily</changefreq>
     </url>

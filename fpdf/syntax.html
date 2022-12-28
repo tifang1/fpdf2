@@ -292,7 +292,6 @@ class PDFContentStream(PDFObject):
         return self._contents
 
     def encrypt(self, security_handler):
-        # print(&#39;encrypting &#39;, self.id)
         self._contents = security_handler.encrypt(self._contents, self.id)
         self.length = len(self._contents)
 
@@ -789,7 +788,6 @@ The argument must be an iterable if specified.</p></div>
         return self._contents
 
     def encrypt(self, security_handler):
-        # print(&#39;encrypting &#39;, self.id)
         self._contents = security_handler.encrypt(self._contents, self.id)
         self.length = len(self._contents)</code></pre>
 </details>
@@ -817,7 +815,6 @@ The argument must be an iterable if specified.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def encrypt(self, security_handler):
-    # print(&#39;encrypting &#39;, self.id)
     self._contents = security_handler.encrypt(self._contents, self.id)
     self.length = len(self._contents)</code></pre>
 </details>
