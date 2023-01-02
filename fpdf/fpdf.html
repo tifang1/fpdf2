@@ -3532,6 +3532,7 @@ class FPDF(GraphicsStateMixin):
         link=&#34;&#34;,
         title=None,
         alt_text=None,
+        dims=None,
     ):
         &#34;&#34;&#34;
         Put an image on the page.
@@ -3568,6 +3569,11 @@ class FPDF(GraphicsStateMixin):
             title (str): optional. Currently, never seem rendered by PDF readers.
             alt_text (str): optional alternative text describing the image,
                 for accessibility purposes. Displayed by some PDF readers on hover.
+            dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
+                before storing it in the PDF. Note that those are the **intrinsic** image dimensions,
+                but the image will still be rendered on the page with the width (`w`) and height (`h`)
+                provided as parameters. Note also that the `.oversized_images` attribute of FPDF
+                provides an automated way to auto-adjust those intrinsic image dimensions.
         &#34;&#34;&#34;
         if type:
             warnings.warn(
@@ -3601,7 +3607,7 @@ class FPDF(GraphicsStateMixin):
         else:
             if not img:
                 img = load_image(name)
-            info = get_img_info(img, self.image_filter)
+            info = get_img_info(img, self.image_filter, dims)
             info[&#34;i&#34;] = len(self.images) + 1
             info[&#34;usages&#34;] = 1
             self.images[name] = info
@@ -3617,7 +3623,7 @@ class FPDF(GraphicsStateMixin):
         elif h == 0:
             h = w * info[&#34;h&#34;] / info[&#34;w&#34;]
 
-        if self.oversized_images and info[&#34;usages&#34;] == 1:
+        if self.oversized_images and info[&#34;usages&#34;] == 1 and not dims:
             info = self._downscale_image(name, img, info, w, h)
 
         # Flowing mode
@@ -7895,6 +7901,7 @@ Default to "mm".</dd>
         link=&#34;&#34;,
         title=None,
         alt_text=None,
+        dims=None,
     ):
         &#34;&#34;&#34;
         Put an image on the page.
@@ -7931,6 +7938,11 @@ Default to "mm".</dd>
             title (str): optional. Currently, never seem rendered by PDF readers.
             alt_text (str): optional alternative text describing the image,
                 for accessibility purposes. Displayed by some PDF readers on hover.
+            dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
+                before storing it in the PDF. Note that those are the **intrinsic** image dimensions,
+                but the image will still be rendered on the page with the width (`w`) and height (`h`)
+                provided as parameters. Note also that the `.oversized_images` attribute of FPDF
+                provides an automated way to auto-adjust those intrinsic image dimensions.
         &#34;&#34;&#34;
         if type:
             warnings.warn(
@@ -7964,7 +7976,7 @@ Default to "mm".</dd>
         else:
             if not img:
                 img = load_image(name)
-            info = get_img_info(img, self.image_filter)
+            info = get_img_info(img, self.image_filter, dims)
             info[&#34;i&#34;] = len(self.images) + 1
             info[&#34;usages&#34;] = 1
             self.images[name] = info
@@ -7980,7 +7992,7 @@ Default to "mm".</dd>
         elif h == 0:
             h = w * info[&#34;h&#34;] / info[&#34;w&#34;]
 
-        if self.oversized_images and info[&#34;usages&#34;] == 1:
+        if self.oversized_images and info[&#34;usages&#34;] == 1 and not dims:
             info = self._downscale_image(name, img, info, w, h)
 
         # Flowing mode
@@ -10642,7 +10654,7 @@ def highlight(
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.image"><code class="name flex">
-<span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='', title=None, alt_text=None)</span>
+<span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='', title=None, alt_text=None, dims=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Put an image on the page.</p>
@@ -10686,6 +10698,12 @@ Pass <code>pdf.eph</code> to scale horizontally to the full page height.</dd>
 <dt><strong><code>alt_text</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional alternative text describing the image,
 for accessibility purposes. Displayed by some PDF readers on hover.</dd>
+<dt><strong><code>dims</code></strong> :&ensp;<code>Tuple[float]</code></dt>
+<dd>optional dimensions as a tuple (width, height) to resize the image
+before storing it in the PDF. Note that those are the <strong>intrinsic</strong> image dimensions,
+but the image will still be rendered on the page with the width (<code>w</code>) and height (<code>h</code>)
+provided as parameters. Note also that the <code>.oversized_images</code> attribute of FPDF
+provides an automated way to auto-adjust those intrinsic image dimensions.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -10703,6 +10721,7 @@ def image(
     link=&#34;&#34;,
     title=None,
     alt_text=None,
+    dims=None,
 ):
     &#34;&#34;&#34;
     Put an image on the page.
@@ -10739,6 +10758,11 @@ def image(
         title (str): optional. Currently, never seem rendered by PDF readers.
         alt_text (str): optional alternative text describing the image,
             for accessibility purposes. Displayed by some PDF readers on hover.
+        dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
+            before storing it in the PDF. Note that those are the **intrinsic** image dimensions,
+            but the image will still be rendered on the page with the width (`w`) and height (`h`)
+            provided as parameters. Note also that the `.oversized_images` attribute of FPDF
+            provides an automated way to auto-adjust those intrinsic image dimensions.
     &#34;&#34;&#34;
     if type:
         warnings.warn(
@@ -10772,7 +10796,7 @@ def image(
     else:
         if not img:
             img = load_image(name)
-        info = get_img_info(img, self.image_filter)
+        info = get_img_info(img, self.image_filter, dims)
         info[&#34;i&#34;] = len(self.images) + 1
         info[&#34;usages&#34;] = 1
         self.images[name] = info
@@ -10788,7 +10812,7 @@ def image(
     elif h == 0:
         h = w * info[&#34;h&#34;] / info[&#34;w&#34;]
 
-    if self.oversized_images and info[&#34;usages&#34;] == 1:
+    if self.oversized_images and info[&#34;usages&#34;] == 1 and not dims:
         info = self._downscale_image(name, img, info, w, h)
 
     # Flowing mode
