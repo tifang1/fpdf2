@@ -2558,6 +2558,40 @@ Default to "mm".</dd>
 
     @check_page
     @contextmanager
+    def skew(self, ax=0, ay=0, x=None, y=None):
+        &#34;&#34;&#34;
+        This method allows to perform a skew transformation originating from a given center.
+        It must be used as a context-manager using `with`:
+
+            with skew(ax=15, ay=15, x=x, y=y):
+                pdf.something()
+
+        The skew transformation affects all elements which are printed inside the indented
+        context (with the exception of clickable areas).
+
+        Args:
+            ax (float): angle of skew in the horizontal direction in degrees
+            ay (float): angle of skew in the vertical direction in degrees
+            x (float): abscissa of the center of the skew transformation
+            y (float): ordinate of the center of the skew transformation
+        &#34;&#34;&#34;
+        lim_val = 2**32
+        if x is None:
+            x = self.x
+        if y is None:
+            y = self.y
+        ax = max(min(math.tan(ax * (math.pi / 180)), lim_val), -lim_val)
+        ay = max(min(math.tan(ay * (math.pi / 180)), lim_val), -lim_val)
+        cx, cy = x * self.k, (self.h - y) * self.k
+        with self.local_context():
+            self._out(
+                f&#34;1 {ay:.5f} {ax:.5f} 1 {cx:.2f} {cy:.2f} cm &#34;
+                f&#34;1 0 0 1 -{cx:.2f} -{cy:.2f} cm&#34;
+            )
+            yield
+
+    @check_page
+    @contextmanager
     def local_context(
         self,
         font_family=None,
@@ -9452,6 +9486,67 @@ a recipient to contact the signer to verify the signature</dd>
     )</code></pre>
 </details>
 </dd>
+<dt id="fpdf.FPDF.skew"><code class="name flex">
+<span>def <span class="ident">skew</span></span>(<span>self, ax=0, ay=0, x=None, y=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method allows to perform a skew transformation originating from a given center.
+It must be used as a context-manager using <code>with</code>:</p>
+<pre><code>with skew(ax=15, ay=15, x=x, y=y):
+    pdf.something()
+</code></pre>
+<p>The skew transformation affects all elements which are printed inside the indented
+context (with the exception of clickable areas).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ax</code></strong> :&ensp;<code>float</code></dt>
+<dd>angle of skew in the horizontal direction in degrees</dd>
+<dt><strong><code>ay</code></strong> :&ensp;<code>float</code></dt>
+<dd>angle of skew in the vertical direction in degrees</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
+<dd>abscissa of the center of the skew transformation</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
+<dd>ordinate of the center of the skew transformation</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@check_page
+@contextmanager
+def skew(self, ax=0, ay=0, x=None, y=None):
+    &#34;&#34;&#34;
+    This method allows to perform a skew transformation originating from a given center.
+    It must be used as a context-manager using `with`:
+
+        with skew(ax=15, ay=15, x=x, y=y):
+            pdf.something()
+
+    The skew transformation affects all elements which are printed inside the indented
+    context (with the exception of clickable areas).
+
+    Args:
+        ax (float): angle of skew in the horizontal direction in degrees
+        ay (float): angle of skew in the vertical direction in degrees
+        x (float): abscissa of the center of the skew transformation
+        y (float): ordinate of the center of the skew transformation
+    &#34;&#34;&#34;
+    lim_val = 2**32
+    if x is None:
+        x = self.x
+    if y is None:
+        y = self.y
+    ax = max(min(math.tan(ax * (math.pi / 180)), lim_val), -lim_val)
+    ay = max(min(math.tan(ay * (math.pi / 180)), lim_val), -lim_val)
+    cx, cy = x * self.k, (self.h - y) * self.k
+    with self.local_context():
+        self._out(
+            f&#34;1 {ay:.5f} {ax:.5f} 1 {cx:.2f} {cy:.2f} cm &#34;
+            f&#34;1 0 0 1 -{cx:.2f} -{cy:.2f} cm&#34;
+        )
+        yield</code></pre>
+</details>
+</dd>
 <dt id="fpdf.FPDF.solid_arc"><code class="name flex">
 <span>def <span class="ident">solid_arc</span></span>(<span>self, x, y, a, start_angle, end_angle, b=None, inclination=0, clockwise=False, style=None)</span>
 </code></dt>
@@ -12934,6 +13029,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.set_y" href="#fpdf.FPDF.set_y">set_y</a></code></li>
 <li><code><a title="fpdf.FPDF.sign" href="#fpdf.FPDF.sign">sign</a></code></li>
 <li><code><a title="fpdf.FPDF.sign_pkcs12" href="#fpdf.FPDF.sign_pkcs12">sign_pkcs12</a></code></li>
+<li><code><a title="fpdf.FPDF.skew" href="#fpdf.FPDF.skew">skew</a></code></li>
 <li><code><a title="fpdf.FPDF.solid_arc" href="#fpdf.FPDF.solid_arc">solid_arc</a></code></li>
 <li><code><a title="fpdf.FPDF.star" href="#fpdf.FPDF.star">star</a></code></li>
 <li><code><a title="fpdf.FPDF.start_section" href="#fpdf.FPDF.start_section">start_section</a></code></li>
