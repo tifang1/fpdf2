@@ -583,6 +583,18 @@ class OutputProducer:
                     cmap[unicode] for unicode in uni_to_new_code_char if unicode in cmap
                 ]
 
+                missing_glyphs = [
+                    chr(unicode)
+                    for unicode in uni_to_new_code_char
+                    if unicode not in cmap
+                ]
+                if len(missing_glyphs) &gt; 0:
+                    LOGGER.warning(
+                        &#34;Font %s is missing the following glyphs: %s&#34;,
+                        fontname,
+                        &#34;, &#34;.join(missing_glyphs),
+                    )
+
                 # 2. make a subset
                 # notdef_outline=True means that keeps the white box for the .notdef glyph
                 # recommended_glyphs=True means that adds the .notdef, .null, CR, and space glyphs
@@ -1390,6 +1402,18 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
                 glyph_names = [
                     cmap[unicode] for unicode in uni_to_new_code_char if unicode in cmap
                 ]
+
+                missing_glyphs = [
+                    chr(unicode)
+                    for unicode in uni_to_new_code_char
+                    if unicode not in cmap
+                ]
+                if len(missing_glyphs) &gt; 0:
+                    LOGGER.warning(
+                        &#34;Font %s is missing the following glyphs: %s&#34;,
+                        fontname,
+                        &#34;, &#34;.join(missing_glyphs),
+                    )
 
                 # 2. make a subset
                 # notdef_outline=True means that keeps the white box for the .notdef glyph
