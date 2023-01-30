@@ -41,16 +41,30 @@ class Action(ABC):
         &#34;&#34;&#34;
         self.next = next_action
 
-    def serialize(self):
+    def serialize(self, _security_handler=None, _obj_id=None):
         raise NotImplementedError
 
-    def _serialize(self, key_values=None):
+    def _serialize(self, key_values=None, _security_handler=None, _obj_id=None):
         if key_values is None:
             key_values = {}
         if self.next:
             key_values[&#34;Next&#34;] = self.next
         obj_dict = build_obj_dict(key_values)
+        if _security_handler:
+            obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler, _obj_id)
         return create_dictionary_string(obj_dict, field_join=&#34; &#34;)
+
+    def _encrypt_obj_dict(self, obj_dict, security_handler, obj_id):
+        &#34;&#34;&#34;Encrypt the strings present in the object dictionary&#34;&#34;&#34;
+        for key in obj_dict:
+            string = obj_dict[key]
+            if (
+                isinstance(string, str)
+                and string.startswith(&#34;(&#34;)
+                and string.endswith(&#34;)&#34;)
+            ):
+                obj_dict[key] = security_handler.encrypt(string[1:-1], obj_id)
+        return obj_dict
 
 
 class URIAction(Action):
@@ -58,8 +72,12 @@ class URIAction(Action):
         super().__init__(next)
         self.uri = uri
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)})
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )
 
 
 class NamedAction(Action):
@@ -69,8 +87,12 @@ class NamedAction(Action):
             warnings.warn(&#34;Non-standard named action added&#34;)
         self.action_name = action_name
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/Named&#34;, &#34;n&#34;: f&#34;/{self.action_name}&#34;})
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/Named&#34;, &#34;n&#34;: f&#34;/{self.action_name}&#34;},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )
 
 
 class GoToAction(Action):
@@ -80,8 +102,12 @@ class GoToAction(Action):
         super().__init__(next_action)
         self.dest = dest
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/GoTo&#34;, &#34;d&#34;: self.dest})
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/GoTo&#34;, &#34;d&#34;: self.dest},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )
 
 
 class GoToRemoteAction(Action):
@@ -90,9 +116,11 @@ class GoToRemoteAction(Action):
         self.file = file
         self.dest = dest
 
-    def serialize(self):
+    def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest}
+            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
         )
 
 
@@ -103,8 +131,12 @@ class LaunchAction(Action):
         super().__init__(next_action)
         self.file = file
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)})
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )
 
 
 # Annotation &amp; actions that we tested implementing,
@@ -146,16 +178,30 @@ inheritance.</p>
         &#34;&#34;&#34;
         self.next = next_action
 
-    def serialize(self):
+    def serialize(self, _security_handler=None, _obj_id=None):
         raise NotImplementedError
 
-    def _serialize(self, key_values=None):
+    def _serialize(self, key_values=None, _security_handler=None, _obj_id=None):
         if key_values is None:
             key_values = {}
         if self.next:
             key_values[&#34;Next&#34;] = self.next
         obj_dict = build_obj_dict(key_values)
-        return create_dictionary_string(obj_dict, field_join=&#34; &#34;)</code></pre>
+        if _security_handler:
+            obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler, _obj_id)
+        return create_dictionary_string(obj_dict, field_join=&#34; &#34;)
+
+    def _encrypt_obj_dict(self, obj_dict, security_handler, obj_id):
+        &#34;&#34;&#34;Encrypt the strings present in the object dictionary&#34;&#34;&#34;
+        for key in obj_dict:
+            string = obj_dict[key]
+            if (
+                isinstance(string, str)
+                and string.startswith(&#34;(&#34;)
+                and string.endswith(&#34;)&#34;)
+            ):
+                obj_dict[key] = security_handler.encrypt(string[1:-1], obj_id)
+        return obj_dict</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -180,7 +226,7 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
+<pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -205,8 +251,12 @@ inheritance.</p>
         super().__init__(next_action)
         self.dest = dest
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/GoTo&#34;, &#34;d&#34;: self.dest})</code></pre>
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/GoTo&#34;, &#34;d&#34;: self.dest},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -224,8 +274,12 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
-    return super()._serialize({&#34;s&#34;: &#34;/GoTo&#34;, &#34;d&#34;: self.dest})</code></pre>
+<pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
+    return super()._serialize(
+        {&#34;s&#34;: &#34;/GoTo&#34;, &#34;d&#34;: self.dest},
+        _security_handler=_security_handler,
+        _obj_id=_obj_id,
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -249,9 +303,11 @@ inheritance.</p>
         self.file = file
         self.dest = dest
 
-    def serialize(self):
+    def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest}
+            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
         )</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -270,9 +326,11 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
+<pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     return super()._serialize(
-        {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest}
+        {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest},
+        _security_handler=_security_handler,
+        _obj_id=_obj_id,
     )</code></pre>
 </details>
 </dd>
@@ -297,8 +355,12 @@ inheritance.</p>
         super().__init__(next_action)
         self.file = file
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)})</code></pre>
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -316,8 +378,12 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
-    return super()._serialize({&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)})</code></pre>
+<pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
+    return super()._serialize(
+        {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)},
+        _security_handler=_security_handler,
+        _obj_id=_obj_id,
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -342,8 +408,12 @@ inheritance.</p>
             warnings.warn(&#34;Non-standard named action added&#34;)
         self.action_name = action_name
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/Named&#34;, &#34;n&#34;: f&#34;/{self.action_name}&#34;})</code></pre>
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/Named&#34;, &#34;n&#34;: f&#34;/{self.action_name}&#34;},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -361,8 +431,12 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
-    return super()._serialize({&#34;s&#34;: &#34;/Named&#34;, &#34;n&#34;: f&#34;/{self.action_name}&#34;})</code></pre>
+<pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
+    return super()._serialize(
+        {&#34;s&#34;: &#34;/Named&#34;, &#34;n&#34;: f&#34;/{self.action_name}&#34;},
+        _security_handler=_security_handler,
+        _obj_id=_obj_id,
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -385,8 +459,12 @@ inheritance.</p>
         super().__init__(next)
         self.uri = uri
 
-    def serialize(self):
-        return super()._serialize({&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)})</code></pre>
+    def serialize(self, _security_handler=None, _obj_id=None):
+        return super()._serialize(
+            {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)},
+            _security_handler=_security_handler,
+            _obj_id=_obj_id,
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -404,8 +482,12 @@ inheritance.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def serialize(self):
-    return super()._serialize({&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)})</code></pre>
+<pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
+    return super()._serialize(
+        {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)},
+        _security_handler=_security_handler,
+        _obj_id=_obj_id,
+    )</code></pre>
 </details>
 </dd>
 </dl>
