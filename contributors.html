@@ -22,6 +22,20 @@
 
     const contributors = [
     {
+        name: 'eabase',
+        contributions: [],
+        location: 'Between the radio ether and you.',
+        pulls: 0,
+        issues: 2,
+    },
+    {
+        name: 'mrchoke',
+        contributions: [],
+        location: 'Thailand',
+        pulls: 0,
+        issues: 1,
+    },
+    {
         name: 'andersonhc',
         contributions: ['question', 'code', 'research', 'bug'],
         location: 'Montreal, Canada',
@@ -723,7 +737,7 @@
                 if (contributor.location) {
                     popupHtml += `${contributor.location}<br>`;
                 }
-                if (contributor.contributions) {
+                if (contributor.contributions.length) {
                     popupHtml += `Contributions: ${contributor.contributions.map(c => `<span title="${c}">${EMOJI_KEY[c]}</span>`).join(" - ")}<br>`;
                 }
                 if (contributor.issues || contributor.pulls) {
