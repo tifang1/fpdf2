@@ -3621,6 +3621,7 @@ Default to "mm".</dd>
         title=None,
         alt_text=None,
         dims=None,
+        keep_aspect_ratio=False,
     ):
         &#34;&#34;&#34;
         Put an image on the page.
@@ -3630,6 +3631,7 @@ Default to "mm".</dd>
         * one explicit dimension, the other being calculated automatically
           in order to keep the original proportions
         * no explicit dimension, in which case the image is put at 72 dpi.
+        * explicit width and height (expressed in user units) and `keep_aspect_ratio=True`
 
         **Remarks**:
         * if an image is used several times, only one copy is embedded in the file.
@@ -3662,6 +3664,9 @@ Default to "mm".</dd>
                 but the image will still be rendered on the page with the width (`w`) and height (`h`)
                 provided as parameters. Note also that the `.oversized_images` attribute of FPDF
                 provides an automated way to auto-adjust those intrinsic image dimensions.
+            keep_aspect_ratio (bool): ensure the image fits in the rectangle defined by `x`, `y`, `w` &amp; `h`
+                while preserving its original aspect ratio. Defaults to False.
+                Only meaningful if both `w` &amp; `h` are provided.
 
         Returns: an instance of `ImageInfo`
         &#34;&#34;&#34;
@@ -3693,6 +3698,15 @@ Default to "mm".</dd>
         if self.oversized_images and info[&#34;usages&#34;] == 1 and not dims:
             info = self._downscale_image(name, img, info, w, h)
 
+        if keep_aspect_ratio:
+            ratio = info.width / info.height
+            if h * ratio &lt; w:
+                x += (w - h * ratio) / 2
+                w = h * ratio
+            else:  # =&gt; too wide, limiting width:
+                y += (h - w / ratio) / 2
+                h = w / ratio
+
         # Flowing mode
         if y is None:
             self._perform_page_break_if_need_be(h)
@@ -3701,6 +3715,10 @@ Default to "mm".</dd>
         if x is None:
             x = self.x
         elif not isinstance(x, Number):
+            if keep_aspect_ratio:
+                raise ValueError(
+                    &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
+                )
             x = Align.coerce(x)
             if x == Align.C:
                 x = (self.w - w) / 2
@@ -6472,7 +6490,7 @@ def highlight(
 </details>
 </dd>
 <dt id="fpdf.FPDF.image"><code class="name flex">
-<span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='', title=None, alt_text=None, dims=None)</span>
+<span>def <span class="ident">image</span></span>(<span>self, name, x=None, y=None, w=0, h=0, type='', link='', title=None, alt_text=None, dims=None, keep_aspect_ratio=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Put an image on the page.</p>
@@ -6480,7 +6498,8 @@ def highlight(
 * explicit width and height (expressed in user units)
 * one explicit dimension, the other being calculated automatically
 in order to keep the original proportions
-* no explicit dimension, in which case the image is put at 72 dpi.</p>
+* no explicit dimension, in which case the image is put at 72 dpi.
+* explicit width and height (expressed in user units) and <code>keep_aspect_ratio=True</code></p>
 <p><strong>Remarks</strong>:
 * if an image is used several times, only one copy is embedded in the file.
 * when using an animated GIF, only the first frame is used.</p>
@@ -6522,6 +6541,10 @@ before storing it in the PDF. Note that those are the <strong>intrinsic</strong>
 but the image will still be rendered on the page with the width (<code>w</code>) and height (<code>h</code>)
 provided as parameters. Note also that the <code>.oversized_images</code> attribute of FPDF
 provides an automated way to auto-adjust those intrinsic image dimensions.</dd>
+<dt><strong><code>keep_aspect_ratio</code></strong> :&ensp;<code>bool</code></dt>
+<dd>ensure the image fits in the rectangle defined by <code>x</code>, <code>y</code>, <code>w</code> &amp; <code>h</code>
+while preserving its original aspect ratio. Defaults to False.
+Only meaningful if both <code>w</code> &amp; <code>h</code> are provided.</dd>
 </dl>
 <p>Returns: an instance of <code>ImageInfo</code></p></div>
 <details class="source">
@@ -6541,6 +6564,7 @@ def image(
     title=None,
     alt_text=None,
     dims=None,
+    keep_aspect_ratio=False,
 ):
     &#34;&#34;&#34;
     Put an image on the page.
@@ -6550,6 +6574,7 @@ def image(
     * one explicit dimension, the other being calculated automatically
       in order to keep the original proportions
     * no explicit dimension, in which case the image is put at 72 dpi.
+    * explicit width and height (expressed in user units) and `keep_aspect_ratio=True`
 
     **Remarks**:
     * if an image is used several times, only one copy is embedded in the file.
@@ -6582,6 +6607,9 @@ def image(
             but the image will still be rendered on the page with the width (`w`) and height (`h`)
             provided as parameters. Note also that the `.oversized_images` attribute of FPDF
             provides an automated way to auto-adjust those intrinsic image dimensions.
+        keep_aspect_ratio (bool): ensure the image fits in the rectangle defined by `x`, `y`, `w` &amp; `h`
+            while preserving its original aspect ratio. Defaults to False.
+            Only meaningful if both `w` &amp; `h` are provided.
 
     Returns: an instance of `ImageInfo`
     &#34;&#34;&#34;
@@ -6613,6 +6641,15 @@ def image(
     if self.oversized_images and info[&#34;usages&#34;] == 1 and not dims:
         info = self._downscale_image(name, img, info, w, h)
 
+    if keep_aspect_ratio:
+        ratio = info.width / info.height
+        if h * ratio &lt; w:
+            x += (w - h * ratio) / 2
+            w = h * ratio
+        else:  # =&gt; too wide, limiting width:
+            y += (h - w / ratio) / 2
+            h = w / ratio
+
     # Flowing mode
     if y is None:
         self._perform_page_break_if_need_be(h)
@@ -6621,6 +6658,10 @@ def image(
     if x is None:
         x = self.x
     elif not isinstance(x, Number):
+        if keep_aspect_ratio:
+            raise ValueError(
+                &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
+            )
         x = Align.coerce(x)
         if x == Align.C:
             x = (self.w - w) / 2
