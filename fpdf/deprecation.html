@@ -31,6 +31,13 @@ from types import ModuleType
 
 
 class WarnOnDeprecatedModuleAttributes(ModuleType):
+    def __call__(self):
+        raise TypeError(
+            &#34;You tried to instantied the fpdf module.&#34;
+            &#34; You probably want to import the FPDF class instead:&#34;
+            &#34; from fpdf import FPDF&#34;
+        )
+
     def __getattr__(self, name):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
@@ -78,6 +85,13 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class WarnOnDeprecatedModuleAttributes(ModuleType):
+    def __call__(self):
+        raise TypeError(
+            &#34;You tried to instantied the fpdf module.&#34;
+            &#34; You probably want to import the FPDF class instead:&#34;
+            &#34; from fpdf import FPDF&#34;
+        )
+
     def __getattr__(self, name):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(

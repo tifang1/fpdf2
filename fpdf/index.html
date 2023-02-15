@@ -49,6 +49,9 @@ FPDF_VERSION = _FPDF_VERSION
 FPDF_FONT_DIR = _FPDF_FONT_DIR
 &#34;&#34;&#34;This is the location of where to look for fonts.&#34;&#34;&#34;
 
+# Pattern from sir Guido Von Rossum: https://stackoverflow.com/a/72911884/636849
+# &gt; a module can define a class with the desired functionality, and then at
+# &gt; the end, replace itself in sys.modules with an instance of that class
 sys.modules[__name__].__class__ = WarnOnDeprecatedModuleAttributes
 
 __license__ = &#34;LGPL 3.0&#34;

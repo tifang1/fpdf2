@@ -4614,6 +4614,9 @@ def _is_svg(bytes):
     return bytes.startswith(b&#34;&lt;?xml &#34;) or bytes.startswith(b&#34;&lt;svg &#34;)
 
 
+# Pattern from sir Guido Von Rossum: https://stackoverflow.com/a/72911884/636849
+# &gt; a module can define a class with the desired functionality, and then at
+# &gt; the end, replace itself in sys.modules with an instance of that class
 sys.modules[__name__].__class__ = WarnOnDeprecatedModuleAttributes
 
 
@@ -4624,6 +4627,7 @@ __all__ = [
     &#34;XPos&#34;,
     &#34;YPos&#34;,
     &#34;get_page_format&#34;,
+    &#34;ImageInfo&#34;,
     &#34;TextMode&#34;,
     &#34;TitleStyle&#34;,
     &#34;PAGE_FORMATS&#34;,
@@ -10911,7 +10915,7 @@ provides an automated way to auto-adjust those intrinsic image dimensions.</dd>
 while preserving its original aspect ratio. Defaults to False.
 Only meaningful if both <code>w</code> &amp; <code>h</code> are provided.</dd>
 </dl>
-<p>Returns: an instance of <code>ImageInfo</code></p></div>
+<p>Returns: an instance of <code><a title="fpdf.fpdf.ImageInfo" href="#fpdf.fpdf.ImageInfo">ImageInfo</a></code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -12144,7 +12148,7 @@ an io.BytesIO, or a instance of <code>PIL.Image.Image</code></dd>
 <dd>optional dimensions as a tuple (width, height) to resize the image
 before storing it in the PDF.</dd>
 </dl>
-<p>Returns: an instance of <code>ImageInfo</code></p></div>
+<p>Returns: an instance of <code><a title="fpdf.fpdf.ImageInfo" href="#fpdf.fpdf.ImageInfo">ImageInfo</a></code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -14596,6 +14600,103 @@ cf. <a href="https://pyfpdf.github.io/fpdf2/HTML.html">https://pyfpdf.github.io/
 </li>
 </ul>
 </dd>
+<dt id="fpdf.fpdf.ImageInfo"><code class="flex name class">
+<span>class <span class="ident">ImageInfo</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Information about a raster image used in the PDF document</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ImageInfo(dict):
+    &#34;Information about a raster image used in the PDF document&#34;
+
+    @property
+    def width(self):
+        &#34;Intrinsic image width&#34;
+        return self[&#34;w&#34;]
+
+    @property
+    def height(self):
+        &#34;Intrinsic image height&#34;
+        return self[&#34;h&#34;]
+
+    @property
+    def rendered_width(self):
+        &#34;Only available if the image has been placed on the document&#34;
+        return self[&#34;rendered_width&#34;]
+
+    @property
+    def rendered_height(self):
+        &#34;Only available if the image has been placed on the document&#34;
+        return self[&#34;rendered_height&#34;]
+
+    def __str__(self):
+        d = {k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;smask&#34;) else v) for k, v in self.items()}
+        return f&#34;ImageInfo({d})&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.dict</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.fpdf.ImageInfo.height"><code class="name">var <span class="ident">height</span></code></dt>
+<dd>
+<div class="desc"><p>Intrinsic image height</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def height(self):
+    &#34;Intrinsic image height&#34;
+    return self[&#34;h&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.ImageInfo.rendered_height"><code class="name">var <span class="ident">rendered_height</span></code></dt>
+<dd>
+<div class="desc"><p>Only available if the image has been placed on the document</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def rendered_height(self):
+    &#34;Only available if the image has been placed on the document&#34;
+    return self[&#34;rendered_height&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.ImageInfo.rendered_width"><code class="name">var <span class="ident">rendered_width</span></code></dt>
+<dd>
+<div class="desc"><p>Only available if the image has been placed on the document</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def rendered_width(self):
+    &#34;Only available if the image has been placed on the document&#34;
+    return self[&#34;rendered_width&#34;]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fpdf.ImageInfo.width"><code class="name">var <span class="ident">width</span></code></dt>
+<dd>
+<div class="desc"><p>Intrinsic image width</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def width(self):
+    &#34;Intrinsic image width&#34;
+    return self[&#34;w&#34;]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.fpdf.TextMode"><code class="flex name class">
 <span>class <span class="ident">TextMode</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -15017,6 +15118,15 @@ cf. <a href="https://pyfpdf.github.io/fpdf2/HTML.html">https://pyfpdf.github.io/
 <li><code><a title="fpdf.fpdf.FPDF.will_page_break" href="#fpdf.fpdf.FPDF.will_page_break">will_page_break</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.write" href="#fpdf.fpdf.FPDF.write">write</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.write_html" href="#fpdf.fpdf.FPDF.write_html">write_html</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.fpdf.ImageInfo" href="#fpdf.fpdf.ImageInfo">ImageInfo</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.fpdf.ImageInfo.height" href="#fpdf.fpdf.ImageInfo.height">height</a></code></li>
+<li><code><a title="fpdf.fpdf.ImageInfo.rendered_height" href="#fpdf.fpdf.ImageInfo.rendered_height">rendered_height</a></code></li>
+<li><code><a title="fpdf.fpdf.ImageInfo.rendered_width" href="#fpdf.fpdf.ImageInfo.rendered_width">rendered_width</a></code></li>
+<li><code><a title="fpdf.fpdf.ImageInfo.width" href="#fpdf.fpdf.ImageInfo.width">width</a></code></li>
 </ul>
 </li>
 <li>
