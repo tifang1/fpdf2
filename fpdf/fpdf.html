@@ -97,6 +97,7 @@ from .enums import (
     FontDescriptorFlags,
     AccessPermission,
     CharVPos,
+    WrapMode,
 )
 from .errors import FPDFException, FPDFPageFormatException, FPDFUnicodeEncodingException
 from .fonts import fpdf_charwidths
@@ -3279,6 +3280,7 @@ class FPDF(GraphicsStateMixin):
         print_sh=False,
         new_x=XPos.RIGHT,
         new_y=YPos.NEXT,
+        wrapmode: WrapMode = WrapMode.WORD,
     ):
         &#34;&#34;&#34;
         This method allows printing text with line breaks. They can be automatic
@@ -3315,6 +3317,8 @@ class FPDF(GraphicsStateMixin):
                 of text as bold / italics / underlined. Default to False.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
+            wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
+                &#34;CHAR&#34; for character based line wrapping.
 
         Using `new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size` is
         useful to build tables with multiline text in cells.
@@ -3322,6 +3326,7 @@ class FPDF(GraphicsStateMixin):
         Returns: a boolean indicating if page break was triggered,
             or if `split_only == True`: `txt` splitted into lines in an array
         &#34;&#34;&#34;
+        wrapmode = WrapMode.coerce(wrapmode)
         if isinstance(w, str) or isinstance(h, str):
             raise ValueError(
                 &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
@@ -3389,6 +3394,7 @@ class FPDF(GraphicsStateMixin):
             styled_text_fragments,
             justify=(align == Align.J),
             print_sh=print_sh,
+            wrapmode=wrapmode,
         )
         text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
         while (text_line) is not None:
@@ -3504,7 +3510,12 @@ class FPDF(GraphicsStateMixin):
 
     @check_page
     def write(
-        self, h: float = None, txt: str = &#34;&#34;, link: str = &#34;&#34;, print_sh: bool = False
+        self,
+        h: float = None,
+        txt: str = &#34;&#34;,
+        link: str = &#34;&#34;,
+        print_sh: bool = False,
+        wrapmode: WrapMode = WrapMode.WORD,
     ):
         &#34;&#34;&#34;
         Prints text from the current position.
@@ -3520,7 +3531,10 @@ class FPDF(GraphicsStateMixin):
                 (identifier returned by `FPDF.add_link`) or external URL.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
+            wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
+                &#34;CHAR&#34; for character based line wrapping.
         &#34;&#34;&#34;
+        wrapmode = WrapMode.coerce(wrapmode)
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
         if isinstance(h, str):
@@ -3539,6 +3553,7 @@ class FPDF(GraphicsStateMixin):
         multi_line_break = MultiLineBreak(
             styled_text_fragments,
             print_sh=print_sh,
+            wrapmode=wrapmode,
         )
         # first line from current x position to right margin
         first_width = self.w - self.x - self.r_margin
@@ -7755,6 +7770,7 @@ Default to "mm".</dd>
         print_sh=False,
         new_x=XPos.RIGHT,
         new_y=YPos.NEXT,
+        wrapmode: WrapMode = WrapMode.WORD,
     ):
         &#34;&#34;&#34;
         This method allows printing text with line breaks. They can be automatic
@@ -7791,6 +7807,8 @@ Default to "mm".</dd>
                 of text as bold / italics / underlined. Default to False.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
+            wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
+                &#34;CHAR&#34; for character based line wrapping.
 
         Using `new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size` is
         useful to build tables with multiline text in cells.
@@ -7798,6 +7816,7 @@ Default to "mm".</dd>
         Returns: a boolean indicating if page break was triggered,
             or if `split_only == True`: `txt` splitted into lines in an array
         &#34;&#34;&#34;
+        wrapmode = WrapMode.coerce(wrapmode)
         if isinstance(w, str) or isinstance(h, str):
             raise ValueError(
                 &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
@@ -7865,6 +7884,7 @@ Default to "mm".</dd>
             styled_text_fragments,
             justify=(align == Align.J),
             print_sh=print_sh,
+            wrapmode=wrapmode,
         )
         text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
         while (text_line) is not None:
@@ -7980,7 +8000,12 @@ Default to "mm".</dd>
 
     @check_page
     def write(
-        self, h: float = None, txt: str = &#34;&#34;, link: str = &#34;&#34;, print_sh: bool = False
+        self,
+        h: float = None,
+        txt: str = &#34;&#34;,
+        link: str = &#34;&#34;,
+        print_sh: bool = False,
+        wrapmode: WrapMode = WrapMode.WORD,
     ):
         &#34;&#34;&#34;
         Prints text from the current position.
@@ -7996,7 +8021,10 @@ Default to "mm".</dd>
                 (identifier returned by `FPDF.add_link`) or external URL.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
+            wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
+                &#34;CHAR&#34; for character based line wrapping.
         &#34;&#34;&#34;
+        wrapmode = WrapMode.coerce(wrapmode)
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
         if isinstance(h, str):
@@ -8015,6 +8043,7 @@ Default to "mm".</dd>
         multi_line_break = MultiLineBreak(
             styled_text_fragments,
             print_sh=print_sh,
+            wrapmode=wrapmode,
         )
         # first line from current x position to right margin
         first_width = self.w - self.x - self.r_margin
@@ -11567,7 +11596,7 @@ def local_context(
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.multi_cell"><code class="name flex">
-<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align=Align.J, fill=False, split_only=False, link='', ln='DEPRECATED', max_line_height=None, markdown=False, print_sh=False, new_x=XPos.RIGHT, new_y=YPos.NEXT)</span>
+<span>def <span class="ident">multi_cell</span></span>(<span>self, w, h=None, txt='', border=0, align=Align.J, fill=False, split_only=False, link='', ln='DEPRECATED', max_line_height=None, markdown=False, print_sh=False, new_x=XPos.RIGHT, new_y=YPos.NEXT, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = WrapMode.WORD)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This method allows printing text with line breaks. They can be automatic
@@ -11618,6 +11647,9 @@ of text as bold / italics / underlined. Default to False.</dd>
 <dt><strong><code>print_sh</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Treat a soft-hyphen (\u00ad) as a normal printable
 character, instead of a line breaking opportunity. Default value: False</dd>
+<dt><strong><code>wrapmode</code></strong> :&ensp;<code><a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a></code></dt>
+<dd>"WORD" for word based line wrapping (default),
+"CHAR" for character based line wrapping.</dd>
 </dl>
 <p>Using <code>new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size</code> is
 useful to build tables with multiline text in cells.</p>
@@ -11644,6 +11676,7 @@ def multi_cell(
     print_sh=False,
     new_x=XPos.RIGHT,
     new_y=YPos.NEXT,
+    wrapmode: WrapMode = WrapMode.WORD,
 ):
     &#34;&#34;&#34;
     This method allows printing text with line breaks. They can be automatic
@@ -11680,6 +11713,8 @@ def multi_cell(
             of text as bold / italics / underlined. Default to False.
         print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
             character, instead of a line breaking opportunity. Default value: False
+        wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
+            &#34;CHAR&#34; for character based line wrapping.
 
     Using `new_x=XPos.RIGHT, new_y=XPos.TOP, maximum height=pdf.font_size` is
     useful to build tables with multiline text in cells.
@@ -11687,6 +11722,7 @@ def multi_cell(
     Returns: a boolean indicating if page break was triggered,
         or if `split_only == True`: `txt` splitted into lines in an array
     &#34;&#34;&#34;
+    wrapmode = WrapMode.coerce(wrapmode)
     if isinstance(w, str) or isinstance(h, str):
         raise ValueError(
             &#34;Parameter &#39;w&#39; and &#39;h&#39; must be numbers, not strings.&#34;
@@ -11754,6 +11790,7 @@ def multi_cell(
         styled_text_fragments,
         justify=(align == Align.J),
         print_sh=print_sh,
+        wrapmode=wrapmode,
     )
     text_line = multi_line_break.get_line_of_given_width(maximum_allowed_width)
     while (text_line) is not None:
@@ -14500,7 +14537,7 @@ based on its height and the current ordinate (<code>y</code> position).</p>
 </details>
 </dd>
 <dt id="fpdf.fpdf.FPDF.write"><code class="name flex">
-<span>def <span class="ident">write</span></span>(<span>self, h: float = None, txt: str = '', link: str = '', print_sh: bool = False)</span>
+<span>def <span class="ident">write</span></span>(<span>self, h: float = None, txt: str = '', link: str = '', print_sh: bool = False, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = WrapMode.WORD)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Prints text from the current position.
@@ -14520,6 +14557,9 @@ Upon method exit, the current position is left just at the end of the text.</p>
 <dt><strong><code>print_sh</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Treat a soft-hyphen (\u00ad) as a normal printable
 character, instead of a line breaking opportunity. Default value: False</dd>
+<dt><strong><code>wrapmode</code></strong> :&ensp;<code><a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a></code></dt>
+<dd>"WORD" for word based line wrapping (default),
+"CHAR" for character based line wrapping.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -14527,7 +14567,12 @@ character, instead of a line breaking opportunity. Default value: False</dd>
 </summary>
 <pre><code class="python">@check_page
 def write(
-    self, h: float = None, txt: str = &#34;&#34;, link: str = &#34;&#34;, print_sh: bool = False
+    self,
+    h: float = None,
+    txt: str = &#34;&#34;,
+    link: str = &#34;&#34;,
+    print_sh: bool = False,
+    wrapmode: WrapMode = WrapMode.WORD,
 ):
     &#34;&#34;&#34;
     Prints text from the current position.
@@ -14543,7 +14588,10 @@ def write(
             (identifier returned by `FPDF.add_link`) or external URL.
         print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
             character, instead of a line breaking opportunity. Default value: False
+        wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
+            &#34;CHAR&#34; for character based line wrapping.
     &#34;&#34;&#34;
+    wrapmode = WrapMode.coerce(wrapmode)
     if not self.font_family:
         raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
     if isinstance(h, str):
@@ -14562,6 +14610,7 @@ def write(
     multi_line_break = MultiLineBreak(
         styled_text_fragments,
         print_sh=print_sh,
+        wrapmode=wrapmode,
     )
     # first line from current x position to right margin
     first_width = self.w - self.x - self.r_margin

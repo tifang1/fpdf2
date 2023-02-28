@@ -41,7 +41,7 @@ They may change at any time without prior warning or any deprecation period.
 
 from typing import NamedTuple, Any, Union, Sequence
 
-from .enums import CharVPos
+from .enums import CharVPos, WrapMode
 from .errors import FPDFException
 
 SOFT_HYPHEN = &#34;\u00ad&#34;
@@ -339,6 +339,22 @@ class CurrentLine:
             self.width += character_width
             active_fragment.characters.append(character)
 
+    def trim_trailing_spaces(self):
+        if not self.fragments:
+            return
+        last_frag = self.fragments[-1]
+        last_char = last_frag.characters[-1]
+        while last_char == &#34; &#34;:
+            char_width = last_frag.get_character_width(&#34; &#34;)
+            self.width -= char_width
+            last_frag.trim(-1)
+            if not last_frag.characters:
+                del self.fragments[-1]
+            if not self.fragments:
+                return
+            last_frag = self.fragments[-1]
+            last_char = last_frag.characters[-1]
+
     def _apply_automatic_hint(self, break_hint: Union[SpaceHint, HyphenHint]):
         &#34;&#34;&#34;
         This function mutates the current_line, applying one of the states
@@ -397,10 +413,12 @@ class MultiLineBreak:
         styled_text_fragments: Sequence,
         justify: bool = False,
         print_sh: bool = False,
+        wrapmode: WrapMode = WrapMode.WORD,
     ):
         self.styled_text_fragments = styled_text_fragments
         self.justify = justify
         self.print_sh = print_sh
+        self.wrapmode = wrapmode
         self.fragment_index = 0
         self.character_index = 0
         self.idx_last_forced_break = None
@@ -438,8 +456,13 @@ class MultiLineBreak:
                 return current_line.manual_break(trailing_nl=True)
 
             if current_line.width + character_width &gt; maximum_width:
-                if character == SPACE:
+                if character == SPACE:  # must come first, always drop a current space.
                     self.character_index += 1
+                    return current_line.manual_break(self.justify)
+                if self.wrapmode == WrapMode.CHAR:
+                    # If the line ends with one or more spaces, then we want to get rid of them
+                    # so it can be justified correctly.
+                    current_line.trim_trailing_spaces()
                     return current_line.manual_break(self.justify)
                 if current_line.automatic_break_possible():
                     (
@@ -581,6 +604,22 @@ normally, instead of triggering a line break. Default: False</p></div>
         if character != SOFT_HYPHEN or self.print_sh:
             self.width += character_width
             active_fragment.characters.append(character)
+
+    def trim_trailing_spaces(self):
+        if not self.fragments:
+            return
+        last_frag = self.fragments[-1]
+        last_char = last_frag.characters[-1]
+        while last_char == &#34; &#34;:
+            char_width = last_frag.get_character_width(&#34; &#34;)
+            self.width -= char_width
+            last_frag.trim(-1)
+            if not last_frag.characters:
+                del self.fragments[-1]
+            if not self.fragments:
+                return
+            last_frag = self.fragments[-1]
+            last_char = last_frag.characters[-1]
 
     def _apply_automatic_hint(self, break_hint: Union[SpaceHint, HyphenHint]):
         &#34;&#34;&#34;
@@ -764,6 +803,32 @@ normally, instead of triggering a line break. Default: False</p></div>
         justify=(self.number_of_spaces &gt; 0) and justify,
         trailing_nl=trailing_nl,
     )</code></pre>
+</details>
+</dd>
+<dt id="fpdf.line_break.CurrentLine.trim_trailing_spaces"><code class="name flex">
+<span>def <span class="ident">trim_trailing_spaces</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def trim_trailing_spaces(self):
+    if not self.fragments:
+        return
+    last_frag = self.fragments[-1]
+    last_char = last_frag.characters[-1]
+    while last_char == &#34; &#34;:
+        char_width = last_frag.get_character_width(&#34; &#34;)
+        self.width -= char_width
+        last_frag.trim(-1)
+        if not last_frag.characters:
+            del self.fragments[-1]
+        if not self.fragments:
+            return
+        last_frag = self.fragments[-1]
+        last_char = last_frag.characters[-1]</code></pre>
 </details>
 </dd>
 </dl>
@@ -1352,7 +1417,7 @@ precedence over the start/end arguments.</dd>
 </dd>
 <dt id="fpdf.line_break.MultiLineBreak"><code class="flex name class">
 <span>class <span class="ident">MultiLineBreak</span></span>
-<span>(</span><span>styled_text_fragments: Sequence, justify: bool = False, print_sh: bool = False)</span>
+<span>(</span><span>styled_text_fragments: Sequence, justify: bool = False, print_sh: bool = False, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = WrapMode.WORD)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -1366,10 +1431,12 @@ precedence over the start/end arguments.</dd>
         styled_text_fragments: Sequence,
         justify: bool = False,
         print_sh: bool = False,
+        wrapmode: WrapMode = WrapMode.WORD,
     ):
         self.styled_text_fragments = styled_text_fragments
         self.justify = justify
         self.print_sh = print_sh
+        self.wrapmode = wrapmode
         self.fragment_index = 0
         self.character_index = 0
         self.idx_last_forced_break = None
@@ -1407,8 +1474,13 @@ precedence over the start/end arguments.</dd>
                 return current_line.manual_break(trailing_nl=True)
 
             if current_line.width + character_width &gt; maximum_width:
-                if character == SPACE:
+                if character == SPACE:  # must come first, always drop a current space.
                     self.character_index += 1
+                    return current_line.manual_break(self.justify)
+                if self.wrapmode == WrapMode.CHAR:
+                    # If the line ends with one or more spaces, then we want to get rid of them
+                    # so it can be justified correctly.
+                    current_line.trim_trailing_spaces()
                     return current_line.manual_break(self.justify)
                 if current_line.automatic_break_possible():
                     (
@@ -1492,8 +1564,13 @@ precedence over the start/end arguments.</dd>
             return current_line.manual_break(trailing_nl=True)
 
         if current_line.width + character_width &gt; maximum_width:
-            if character == SPACE:
+            if character == SPACE:  # must come first, always drop a current space.
                 self.character_index += 1
+                return current_line.manual_break(self.justify)
+            if self.wrapmode == WrapMode.CHAR:
+                # If the line ends with one or more spaces, then we want to get rid of them
+                # so it can be justified correctly.
+                current_line.trim_trailing_spaces()
                 return current_line.manual_break(self.justify)
             if current_line.automatic_break_possible():
                 (
@@ -1655,6 +1732,7 @@ precedence over the start/end arguments.</dd>
 <li><code><a title="fpdf.line_break.CurrentLine.automatic_break" href="#fpdf.line_break.CurrentLine.automatic_break">automatic_break</a></code></li>
 <li><code><a title="fpdf.line_break.CurrentLine.automatic_break_possible" href="#fpdf.line_break.CurrentLine.automatic_break_possible">automatic_break_possible</a></code></li>
 <li><code><a title="fpdf.line_break.CurrentLine.manual_break" href="#fpdf.line_break.CurrentLine.manual_break">manual_break</a></code></li>
+<li><code><a title="fpdf.line_break.CurrentLine.trim_trailing_spaces" href="#fpdf.line_break.CurrentLine.trim_trailing_spaces">trim_trailing_spaces</a></code></li>
 </ul>
 </li>
 <li>
