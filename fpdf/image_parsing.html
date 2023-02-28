@@ -31,9 +31,11 @@ from io import BytesIO
 from math import ceil
 from urllib.request import urlopen
 from pathlib import Path
+import logging
 
 try:
     from PIL import Image, TiffImagePlugin
+    from PIL import ImageCms
 
     try:
         from PIL.Image import Resampling
@@ -47,6 +49,7 @@ except ImportError:
 from .errors import FPDFException
 
 
+LOGGER = logging.getLogger(__name__)
 SUPPORTED_IMAGE_FILTERS = (&#34;AUTO&#34;, &#34;FlateDecode&#34;, &#34;DCTDecode&#34;, &#34;JPXDecode&#34;)
 
 
@@ -339,6 +342,24 @@ TIFFBitRevTable = [
 ]
 
 
+def is_iccp_valid(iccp, filename):
+    &#34;Checks the validity of an ICC profile&#34;
+    try:
+        profile = ImageCms.getOpenProfile(BytesIO(iccp))
+    except ImageCms.PyCMSError:
+        LOGGER.warning(&#34;Invalid ICC Profile in file %s&#34;, filename)
+        return False
+    color_space = profile.profile.xcolor_space.strip()
+    if color_space not in (&#34;GRAY&#34;, &#34;RGB&#34;):
+        LOGGER.warning(
+            &#34;Unsupported color space %s in ICC Profile of file %s - cf. issue #711&#34;,
+            color_space,
+            filename,
+        )
+        return False
+    return True
+
+
 def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
     Args:
@@ -381,6 +402,11 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     w, h = img.size
     info = {}
 
+    iccp = None
+    if &#34;icc_profile&#34; in img.info:
+        if is_iccp_valid(img.info[&#34;icc_profile&#34;], filename):
+            iccp = img.info[&#34;icc_profile&#34;]
+
     if img_raw_data is not None and not img_altered:
         # if we can use the original image bytes directly we do (JPEG and group4 TIFF only):
         if img.format == &#34;JPEG&#34; and image_filter == &#34;DCTDecode&#34;:
@@ -393,6 +419,8 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
                 &#34;w&#34;: w,
                 &#34;h&#34;: h,
                 &#34;cs&#34;: colspace,
+                &#34;iccp&#34;: iccp,
+                &#34;dpn&#34;: dpn,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
                 &#34;dp&#34;: f&#34;/Predictor 15 /Colors {dpn} /Columns {w}&#34;,
@@ -434,6 +462,8 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
                 &#34;data&#34;: ccittrawdata,
                 &#34;w&#34;: w,
                 &#34;h&#34;: h,
+                &#34;iccp&#34;: None,
+                &#34;dpn&#34;: dpn,
                 &#34;cs&#34;: colspace,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
@@ -505,7 +535,9 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
             &#34;w&#34;: w,
             &#34;h&#34;: h,
             &#34;cs&#34;: colspace,
+            &#34;iccp&#34;: iccp,
             &#34;bpc&#34;: bpc,
+            &#34;dpn&#34;: dpn,
             &#34;f&#34;: image_filter,
             &#34;dp&#34;: dp,
         }
@@ -766,6 +798,11 @@ def _has_alpha(img, alpha_channel):
     w, h = img.size
     info = {}
 
+    iccp = None
+    if &#34;icc_profile&#34; in img.info:
+        if is_iccp_valid(img.info[&#34;icc_profile&#34;], filename):
+            iccp = img.info[&#34;icc_profile&#34;]
+
     if img_raw_data is not None and not img_altered:
         # if we can use the original image bytes directly we do (JPEG and group4 TIFF only):
         if img.format == &#34;JPEG&#34; and image_filter == &#34;DCTDecode&#34;:
@@ -778,6 +815,8 @@ def _has_alpha(img, alpha_channel):
                 &#34;w&#34;: w,
                 &#34;h&#34;: h,
                 &#34;cs&#34;: colspace,
+                &#34;iccp&#34;: iccp,
+                &#34;dpn&#34;: dpn,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
                 &#34;dp&#34;: f&#34;/Predictor 15 /Colors {dpn} /Columns {w}&#34;,
@@ -819,6 +858,8 @@ def _has_alpha(img, alpha_channel):
                 &#34;data&#34;: ccittrawdata,
                 &#34;w&#34;: w,
                 &#34;h&#34;: h,
+                &#34;iccp&#34;: None,
+                &#34;dpn&#34;: dpn,
                 &#34;cs&#34;: colspace,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
@@ -890,13 +931,42 @@ def _has_alpha(img, alpha_channel):
             &#34;w&#34;: w,
             &#34;h&#34;: h,
             &#34;cs&#34;: colspace,
+            &#34;iccp&#34;: iccp,
             &#34;bpc&#34;: bpc,
+            &#34;dpn&#34;: dpn,
             &#34;f&#34;: image_filter,
             &#34;dp&#34;: dp,
         }
     )
 
     return info</code></pre>
+</details>
+</dd>
+<dt id="fpdf.image_parsing.is_iccp_valid"><code class="name flex">
+<span>def <span class="ident">is_iccp_valid</span></span>(<span>iccp, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks the validity of an ICC profile</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_iccp_valid(iccp, filename):
+    &#34;Checks the validity of an ICC profile&#34;
+    try:
+        profile = ImageCms.getOpenProfile(BytesIO(iccp))
+    except ImageCms.PyCMSError:
+        LOGGER.warning(&#34;Invalid ICC Profile in file %s&#34;, filename)
+        return False
+    color_space = profile.profile.xcolor_space.strip()
+    if color_space not in (&#34;GRAY&#34;, &#34;RGB&#34;):
+        LOGGER.warning(
+            &#34;Unsupported color space %s in ICC Profile of file %s - cf. issue #711&#34;,
+            color_space,
+            filename,
+        )
+        return False
+    return True</code></pre>
 </details>
 </dd>
 <dt id="fpdf.image_parsing.load_image"><code class="name flex">
@@ -1051,6 +1121,7 @@ It always return a BytesIO buffer.</p></div>
 <ul class="">
 <li><code><a title="fpdf.image_parsing.ccitt_payload_location_from_pil" href="#fpdf.image_parsing.ccitt_payload_location_from_pil">ccitt_payload_location_from_pil</a></code></li>
 <li><code><a title="fpdf.image_parsing.get_img_info" href="#fpdf.image_parsing.get_img_info">get_img_info</a></code></li>
+<li><code><a title="fpdf.image_parsing.is_iccp_valid" href="#fpdf.image_parsing.is_iccp_valid">is_iccp_valid</a></code></li>
 <li><code><a title="fpdf.image_parsing.load_image" href="#fpdf.image_parsing.load_image">load_image</a></code></li>
 <li><code><a title="fpdf.image_parsing.transcode_monochrome" href="#fpdf.image_parsing.transcode_monochrome">transcode_monochrome</a></code></li>
 </ul>
