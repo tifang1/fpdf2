@@ -501,7 +501,8 @@ class MultiLineBreak:
             self.character_index = last_character_index
             return CurrentLine().manual_break(self.justify)
         if current_line.width:
-            return current_line.manual_break()</code></pre>
+            return current_line.manual_break()
+        return None</code></pre>
 </details>
 </section>
 <section>
@@ -1519,7 +1520,8 @@ precedence over the start/end arguments.</dd>
             self.character_index = last_character_index
             return CurrentLine().manual_break(self.justify)
         if current_line.width:
-            return current_line.manual_break()</code></pre>
+            return current_line.manual_break()
+        return None</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -1609,7 +1611,8 @@ precedence over the start/end arguments.</dd>
         self.character_index = last_character_index
         return CurrentLine().manual_break(self.justify)
     if current_line.width:
-        return current_line.manual_break()</code></pre>
+        return current_line.manual_break()
+    return None</code></pre>
 </details>
 </dd>
 </dl>
