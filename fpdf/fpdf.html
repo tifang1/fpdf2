@@ -1826,7 +1826,7 @@ class FPDF(GraphicsStateMixin):
         if fontkey in self.fonts or fontkey in self.core_fonts:
             warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
             return
-        font = ttLib.TTFont(font_file_path, fontNumber=0)
+        font = ttLib.TTFont(font_file_path, fontNumber=0, lazy=True)
 
         scale = 1000 / font[&#34;head&#34;].unitsPerEm
         default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
@@ -6396,7 +6396,7 @@ Default to "mm".</dd>
         if fontkey in self.fonts or fontkey in self.core_fonts:
             warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
             return
-        font = ttLib.TTFont(font_file_path, fontNumber=0)
+        font = ttLib.TTFont(font_file_path, fontNumber=0, lazy=True)
 
         scale = 1000 / font[&#34;head&#34;].unitsPerEm
         default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
@@ -9576,7 +9576,7 @@ If the file is not found, it will be searched in <code>FPDF_FONT_DIR</code>.</dd
     if fontkey in self.fonts or fontkey in self.core_fonts:
         warnings.warn(f&#34;Core font or font already added &#39;{fontkey}&#39;: doing nothing&#34;)
         return
-    font = ttLib.TTFont(font_file_path, fontNumber=0)
+    font = ttLib.TTFont(font_file_path, fontNumber=0, lazy=True)
 
     scale = 1000 / font[&#34;head&#34;].unitsPerEm
     default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
