@@ -446,6 +446,7 @@ Default to "mm".</dd>
         self.creation_date = datetime.now(timezone.utc)
         self._security_handler = None
         self._fallback_font_ids = []
+        self._fallback_font_exact_match = False
 
         self._current_draw_context = None
         self._drawing_graphics_state_registry = drawing.GraphicsStateDictRegistry()
@@ -1926,6 +1927,7 @@ Default to "mm".</dd>
             &#34;cw&#34;: char_widths,
             &#34;ttffile&#34;: font_file_path,
             &#34;fontkey&#34;: fontkey,
+            &#34;emphasis&#34;: TextEmphasis.coerce(style),
             &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
             &#34;cmap&#34;: font_cmap,
         }
@@ -2012,6 +2014,7 @@ Default to "mm".</dd>
                 &#34;ut&#34;: 50,
                 &#34;cw&#34;: fpdf_charwidths[fontkey],
                 &#34;fontkey&#34;: fontkey,
+                &#34;emphasis&#34;: TextEmphasis.coerce(style),
             }
 
         # Select it
@@ -2069,7 +2072,19 @@ Default to "mm".</dd>
         if self.page &gt; 0:
             self._out(f&#34;BT {stretching:.2f} Tz ET&#34;)
 
-    def set_fallback_fonts(self, fallback_fonts):
+    def set_fallback_fonts(self, fallback_fonts, exact_match=True):
+        &#34;&#34;&#34;
+        Allows you to specify a list of fonts to be used if any character is not available on the font currently set.
+        Detailed documentation: https://pyfpdf.github.io/fpdf2/Unicode.html#fallback-fonts
+
+        Args:
+            fallback_fonts: sequence of fallback font IDs
+            exact_match (bool): when a glyph cannot be rendered uing the current font,
+                fpdf2 will look for a fallback font matching the current character emphasis (bold/italics).
+                If it does not find such matching font, and `exact_match` is True, no fallback font will be used.
+                If it does not find such matching font, and `exact_match` is False, a fallback font will still be used.
+                To get even more control over this logic, you can also override `FPDF.get_fallback_font()`
+        &#34;&#34;&#34;
         fallback_font_ids = []
         for fallback_font in fallback_fonts:
             found = False
@@ -2083,6 +2098,7 @@ Default to "mm".</dd>
                     f&#34;Undefined fallback font: {fallback_font} - Use FPDF.add_font() beforehand&#34;
                 )
         self._fallback_font_ids = tuple(fallback_font_ids)
+        self._fallback_font_exact_match = exact_match
 
     def add_link(self, y=0, x=0, page=-1, zoom=&#34;null&#34;):
         &#34;&#34;&#34;
@@ -3233,9 +3249,7 @@ Default to "mm".</dd>
                         Fragment(txt_frag, self._get_current_graphics_state(), self.k)
                     )
                     txt_frag = []
-                fallback_font = self._get_fallback_font(
-                    char=char, style=self.font_style
-                )
+                fallback_font = self.get_fallback_font(char, self.font_style)
                 if fallback_font:
                     gstate = self._get_current_graphics_state()
                     gstate[&#34;font_family&#34;] = fallback_font
@@ -3252,16 +3266,33 @@ Default to "mm".</dd>
             )
         return tuple(fragments)
 
-    def _get_fallback_font(self, char, style=&#34;&#34;):
-        &#34;returns which fallback font has the requested glyph&#34;
-        if not self._fallback_font_ids:
+    def get_fallback_font(self, char, style=&#34;&#34;):
+        &#34;&#34;&#34;
+        Returns which fallback font has the requested glyph.
+        This method can be overriden to provide more control than the `select_mode` parameter
+        of `FPDF.set_fallback_fonts()` provides.
+        &#34;&#34;&#34;
+        emphasis = TextEmphasis.coerce(style)
+        fonts_with_char = [
+            font_id
+            for font_id in self._fallback_font_ids
+            if ord(char) in self.fonts[font_id][&#34;cmap&#34;]
+        ]
+        if not fonts_with_char:
             return None
-        for font in self._fallback_font_ids:
-            if not self.fonts[font][&#34;fontkey&#34;].endswith(style):
-                continue
-            if ord(char) in self.fonts[font][&#34;cmap&#34;]:
-                return font
-        return None
+        font_with_matching_emphasis = next(
+            (
+                font
+                for font in fonts_with_char
+                if self.fonts[font][&#34;emphasis&#34;] == emphasis
+            ),
+            None,
+        )
+        if font_with_matching_emphasis:
+            return font_with_matching_emphasis
+        if self._fallback_font_exact_match:
+            return None
+        return fonts_with_char[0]
 
     def _markdown_parse(self, txt):
         &#34;Split some text into fragments based on styling: **bold**, __italics__, --underlined--&#34;
@@ -3324,7 +3355,7 @@ Default to "mm".</dd>
                 continue
             if self.is_ttf_font and txt[0] != &#34;\n&#34; and not ord(txt[0]) in font_glyphs:
                 style = (&#34;B&#34; if in_bold else &#34;&#34;) + (&#34;I&#34; if in_italics else &#34;&#34;)
-                fallback_font = self._get_fallback_font(char=txt[0], style=style)
+                fallback_font = self.get_fallback_font(txt[0], style)
                 if fallback_font:
                     if txt_frag:
                         yield frag()
@@ -5106,6 +5137,7 @@ If the file is not found, it will be searched in <code><a title="fpdf.FPDF_FONT_
         &#34;cw&#34;: char_widths,
         &#34;ttffile&#34;: font_file_path,
         &#34;fontkey&#34;: fontkey,
+        &#34;emphasis&#34;: TextEmphasis.coerce(style),
         &#34;subset&#34;: SubsetMap(map(ord, sbarr)),
         &#34;cmap&#34;: font_cmap,
     }</code></pre>
@@ -6444,6 +6476,46 @@ in a subclass to implement your own rendering logic.</p></div>
     The default implementation performs nothing: you have to override this method
     in a subclass to implement your own rendering logic.
     &#34;&#34;&#34;</code></pre>
+</details>
+</dd>
+<dt id="fpdf.FPDF.get_fallback_font"><code class="name flex">
+<span>def <span class="ident">get_fallback_font</span></span>(<span>self, char, style='')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns which fallback font has the requested glyph.
+This method can be overriden to provide more control than the <code>select_mode</code> parameter
+of <code><a title="fpdf.FPDF.set_fallback_fonts" href="#fpdf.FPDF.set_fallback_fonts">FPDF.set_fallback_fonts()</a></code> provides.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_fallback_font(self, char, style=&#34;&#34;):
+    &#34;&#34;&#34;
+    Returns which fallback font has the requested glyph.
+    This method can be overriden to provide more control than the `select_mode` parameter
+    of `FPDF.set_fallback_fonts()` provides.
+    &#34;&#34;&#34;
+    emphasis = TextEmphasis.coerce(style)
+    fonts_with_char = [
+        font_id
+        for font_id in self._fallback_font_ids
+        if ord(char) in self.fonts[font_id][&#34;cmap&#34;]
+    ]
+    if not fonts_with_char:
+        return None
+    font_with_matching_emphasis = next(
+        (
+            font
+            for font in fonts_with_char
+            if self.fonts[font][&#34;emphasis&#34;] == emphasis
+        ),
+        None,
+    )
+    if font_with_matching_emphasis:
+        return font_with_matching_emphasis
+    if self._fallback_font_exact_match:
+        return None
+    return fonts_with_char[0]</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.get_string_width"><code class="name flex">
@@ -8731,15 +8803,39 @@ Defaults to False.</dd>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_fallback_fonts"><code class="name flex">
-<span>def <span class="ident">set_fallback_fonts</span></span>(<span>self, fallback_fonts)</span>
+<span>def <span class="ident">set_fallback_fonts</span></span>(<span>self, fallback_fonts, exact_match=True)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Allows you to specify a list of fonts to be used if any character is not available on the font currently set.
+Detailed documentation: <a href="https://pyfpdf.github.io/fpdf2/Unicode.html#fallback-fonts">https://pyfpdf.github.io/fpdf2/Unicode.html#fallback-fonts</a></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>fallback_fonts</code></strong></dt>
+<dd>sequence of fallback font IDs</dd>
+<dt><strong><code>exact_match</code></strong> :&ensp;<code>bool</code></dt>
+<dd>when a glyph cannot be rendered uing the current font,
+fpdf2 will look for a fallback font matching the current character emphasis (bold/italics).
+If it does not find such matching font, and <code>exact_match</code> is True, no fallback font will be used.
+If it does not find such matching font, and <code>exact_match</code> is False, a fallback font will still be used.
+To get even more control over this logic, you can also override <code><a title="fpdf.FPDF.get_fallback_font" href="#fpdf.FPDF.get_fallback_font">FPDF.get_fallback_font()</a></code></dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def set_fallback_fonts(self, fallback_fonts):
+<pre><code class="python">def set_fallback_fonts(self, fallback_fonts, exact_match=True):
+    &#34;&#34;&#34;
+    Allows you to specify a list of fonts to be used if any character is not available on the font currently set.
+    Detailed documentation: https://pyfpdf.github.io/fpdf2/Unicode.html#fallback-fonts
+
+    Args:
+        fallback_fonts: sequence of fallback font IDs
+        exact_match (bool): when a glyph cannot be rendered uing the current font,
+            fpdf2 will look for a fallback font matching the current character emphasis (bold/italics).
+            If it does not find such matching font, and `exact_match` is True, no fallback font will be used.
+            If it does not find such matching font, and `exact_match` is False, a fallback font will still be used.
+            To get even more control over this logic, you can also override `FPDF.get_fallback_font()`
+    &#34;&#34;&#34;
     fallback_font_ids = []
     for fallback_font in fallback_fonts:
         found = False
@@ -8752,7 +8848,8 @@ Defaults to False.</dd>
             raise FPDFException(
                 f&#34;Undefined fallback font: {fallback_font} - Use FPDF.add_font() beforehand&#34;
             )
-    self._fallback_font_ids = tuple(fallback_font_ids)</code></pre>
+    self._fallback_font_ids = tuple(fallback_font_ids)
+    self._fallback_font_exact_match = exact_match</code></pre>
 </details>
 </dd>
 <dt id="fpdf.FPDF.set_fill_color"><code class="name flex">
@@ -8910,6 +9007,7 @@ Bold and italic styles do not apply to Symbol and ZapfDingbats fonts.</dd>
             &#34;ut&#34;: 50,
             &#34;cw&#34;: fpdf_charwidths[fontkey],
             &#34;fontkey&#34;: fontkey,
+            &#34;emphasis&#34;: TextEmphasis.coerce(style),
         }
 
     # Select it
@@ -13285,6 +13383,7 @@ def non_full_screen_page_mode(self):
 <li><code><a title="fpdf.FPDF.file_attachment_annotation" href="#fpdf.FPDF.file_attachment_annotation">file_attachment_annotation</a></code></li>
 <li><code><a title="fpdf.FPDF.file_id" href="#fpdf.FPDF.file_id">file_id</a></code></li>
 <li><code><a title="fpdf.FPDF.footer" href="#fpdf.FPDF.footer">footer</a></code></li>
+<li><code><a title="fpdf.FPDF.get_fallback_font" href="#fpdf.FPDF.get_fallback_font">get_fallback_font</a></code></li>
 <li><code><a title="fpdf.FPDF.get_string_width" href="#fpdf.FPDF.get_string_width">get_string_width</a></code></li>
 <li><code><a title="fpdf.FPDF.get_x" href="#fpdf.FPDF.get_x">get_x</a></code></li>
 <li><code><a title="fpdf.FPDF.get_y" href="#fpdf.FPDF.get_y">get_y</a></code></li>

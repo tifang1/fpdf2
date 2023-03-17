@@ -127,6 +127,47 @@ class CoerciveIntEnum(IntEnum):
         raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)
 
 
+class CoerciveIntFlag(IntFlag):
+    &#34;&#34;&#34;
+    Enumerated constants that can be combined using the bitwise operators,
+    with a helper to coerce strings and integers into enumeration members.
+    &#34;&#34;&#34;
+
+    @classmethod
+    def coerce(cls, value):
+        &#34;&#34;&#34;
+        Attempt to coerce `value` into a member of this enumeration.
+        If value is already a member of this enumeration it is returned unchanged.
+        Otherwise, if it is a string, attempt to convert it (case insensitively, by
+        upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
+        convert it as an enumeration value.
+        Otherwise, an exception is raised.
+        Args:
+            value (IntEnum, str, int): the value to be coerced.
+        Raises:
+            ValueError: if `value` is an int but not a member of this enumeration.
+            ValueError: if `value` is a string but not a member by name.
+            TypeError: if `value`&#39;s type is neither a member of the enumeration nor an
+                int or a string.
+        &#34;&#34;&#34;
+        if isinstance(value, cls):
+            return value
+
+        if isinstance(value, str):
+            try:
+                flags = cls[value[0].upper()]
+                for char in value[1:]:
+                    flags = flags | cls[char.upper()]
+                return flags
+            except KeyError:
+                raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;) from None
+
+        if isinstance(value, int):
+            return cls(value)
+
+        raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)
+
+
 class WrapMode(CoerciveEnum):
     &#34;Defines how to break and wrap lines in multi-line text.&#34;
     WORD = intern(&#34;WORD&#34;)
@@ -176,6 +217,42 @@ class Align(CoerciveEnum):
     def coerce(cls, value):
         if value == &#34;&#34;:
             return cls.L
+        return super(cls, cls).coerce(value)
+
+
+class TextEmphasis(CoerciveIntFlag):
+    &#34;&#34;&#34;
+    Indicates use of bold / italics / underline.
+    This enum values can be combined with &amp; and | operators:
+        style = B | I
+    &#34;&#34;&#34;
+
+    B = 1
+    &#34;Bold&#34;
+
+    I = 2
+    &#34;Italics&#34;
+
+    U = 4
+    &#34;Underline&#34;
+
+    @property
+    def style(self):
+        return &#34;&#34;.join(
+            name for name, value in self.__class__.__members__.items() if value &amp; self
+        )
+
+    @classmethod
+    def coerce(cls, value):
+        if isinstance(value, str):
+            if value == &#34;&#34;:
+                return 0
+            if value.upper() == &#34;BOLD&#34;:
+                return cls.B
+            if value.upper() == &#34;ITALICS&#34;:
+                return cls.I
+            if value.upper() == &#34;UNDERLINE&#34;:
+                return cls.U
         return super(cls, cls).coerce(value)
 
 
@@ -1689,6 +1766,136 @@ def coerce(cls, value):
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.enums.CoerciveIntFlag"><code class="flex name class">
+<span>class <span class="ident">CoerciveIntFlag</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Enumerated constants that can be combined using the bitwise operators,
+with a helper to coerce strings and integers into enumeration members.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CoerciveIntFlag(IntFlag):
+    &#34;&#34;&#34;
+    Enumerated constants that can be combined using the bitwise operators,
+    with a helper to coerce strings and integers into enumeration members.
+    &#34;&#34;&#34;
+
+    @classmethod
+    def coerce(cls, value):
+        &#34;&#34;&#34;
+        Attempt to coerce `value` into a member of this enumeration.
+        If value is already a member of this enumeration it is returned unchanged.
+        Otherwise, if it is a string, attempt to convert it (case insensitively, by
+        upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
+        convert it as an enumeration value.
+        Otherwise, an exception is raised.
+        Args:
+            value (IntEnum, str, int): the value to be coerced.
+        Raises:
+            ValueError: if `value` is an int but not a member of this enumeration.
+            ValueError: if `value` is a string but not a member by name.
+            TypeError: if `value`&#39;s type is neither a member of the enumeration nor an
+                int or a string.
+        &#34;&#34;&#34;
+        if isinstance(value, cls):
+            return value
+
+        if isinstance(value, str):
+            try:
+                flags = cls[value[0].upper()]
+                for char in value[1:]:
+                    flags = flags | cls[char.upper()]
+                return flags
+            except KeyError:
+                raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;) from None
+
+        if isinstance(value, int):
+            return cls(value)
+
+        raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.IntFlag</li>
+<li>builtins.int</li>
+<li>enum.Flag</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.TextEmphasis" href="#fpdf.enums.TextEmphasis">TextEmphasis</a></li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="fpdf.enums.CoerciveIntFlag.coerce"><code class="name flex">
+<span>def <span class="ident">coerce</span></span>(<span>value)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Attempt to coerce <code>value</code> into a member of this enumeration.
+If value is already a member of this enumeration it is returned unchanged.
+Otherwise, if it is a string, attempt to convert it (case insensitively, by
+upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
+convert it as an enumeration value.
+Otherwise, an exception is raised.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>value</code></strong> :&ensp;<code>IntEnum, str, int</code></dt>
+<dd>the value to be coerced.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>if <code>value</code> is an int but not a member of this enumeration.</dd>
+<dt><code>ValueError</code></dt>
+<dd>if <code>value</code> is a string but not a member by name.</dd>
+<dt><code>TypeError</code></dt>
+<dd>if <code>value</code>'s type is neither a member of the enumeration nor an
+int or a string.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def coerce(cls, value):
+    &#34;&#34;&#34;
+    Attempt to coerce `value` into a member of this enumeration.
+    If value is already a member of this enumeration it is returned unchanged.
+    Otherwise, if it is a string, attempt to convert it (case insensitively, by
+    upcasing) as an enumeration name. Otherwise, if it is an int, attempt to
+    convert it as an enumeration value.
+    Otherwise, an exception is raised.
+    Args:
+        value (IntEnum, str, int): the value to be coerced.
+    Raises:
+        ValueError: if `value` is an int but not a member of this enumeration.
+        ValueError: if `value` is a string but not a member by name.
+        TypeError: if `value`&#39;s type is neither a member of the enumeration nor an
+            int or a string.
+    &#34;&#34;&#34;
+    if isinstance(value, cls):
+        return value
+
+    if isinstance(value, str):
+        try:
+            flags = cls[value[0].upper()]
+            for char in value[1:]:
+                flags = flags | cls[char.upper()]
+            return flags
+        except KeyError:
+            raise ValueError(f&#34;{value} is not a valid {cls.__name__}&#34;) from None
+
+    if isinstance(value, int):
+        return cls(value)
+
+    raise TypeError(f&#34;{value} cannot convert to a {cls.__name__}&#34;)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.enums.Corner"><code class="flex name class">
 <span>class <span class="ident">Corner</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -2602,6 +2809,102 @@ corner."</p></div>
 </li>
 </ul>
 </dd>
+<dt id="fpdf.enums.TextEmphasis"><code class="flex name class">
+<span>class <span class="ident">TextEmphasis</span></span>
+<span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Indicates use of bold / italics / underline.
+This enum values can be combined with &amp; and | operators:
+style = B | I</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TextEmphasis(CoerciveIntFlag):
+    &#34;&#34;&#34;
+    Indicates use of bold / italics / underline.
+    This enum values can be combined with &amp; and | operators:
+        style = B | I
+    &#34;&#34;&#34;
+
+    B = 1
+    &#34;Bold&#34;
+
+    I = 2
+    &#34;Italics&#34;
+
+    U = 4
+    &#34;Underline&#34;
+
+    @property
+    def style(self):
+        return &#34;&#34;.join(
+            name for name, value in self.__class__.__members__.items() if value &amp; self
+        )
+
+    @classmethod
+    def coerce(cls, value):
+        if isinstance(value, str):
+            if value == &#34;&#34;:
+                return 0
+            if value.upper() == &#34;BOLD&#34;:
+                return cls.B
+            if value.upper() == &#34;ITALICS&#34;:
+                return cls.I
+            if value.upper() == &#34;UNDERLINE&#34;:
+                return cls.U
+        return super(cls, cls).coerce(value)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.enums.CoerciveIntFlag" href="#fpdf.enums.CoerciveIntFlag">CoerciveIntFlag</a></li>
+<li>enum.IntFlag</li>
+<li>builtins.int</li>
+<li>enum.Flag</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.enums.TextEmphasis.B"><code class="name">var <span class="ident">B</span></code></dt>
+<dd>
+<div class="desc"><p>Bold</p></div>
+</dd>
+<dt id="fpdf.enums.TextEmphasis.I"><code class="name">var <span class="ident">I</span></code></dt>
+<dd>
+<div class="desc"><p>Italics</p></div>
+</dd>
+<dt id="fpdf.enums.TextEmphasis.U"><code class="name">var <span class="ident">U</span></code></dt>
+<dd>
+<div class="desc"><p>Underline</p></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.enums.TextEmphasis.style"><code class="name">var <span class="ident">style</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def style(self):
+    return &#34;&#34;.join(
+        name for name, value in self.__class__.__members__.items() if value &amp; self
+    )</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.enums.CoerciveIntFlag" href="#fpdf.enums.CoerciveIntFlag">CoerciveIntFlag</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.enums.CoerciveIntFlag.coerce" href="#fpdf.enums.CoerciveIntFlag.coerce">coerce</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="fpdf.enums.TextMarkupType"><code class="flex name class">
 <span>class <span class="ident">TextMarkupType</span></span>
 <span>(</span><span>value, names=None, *, module=None, qualname=None, type=None, start=1)</span>
@@ -3040,6 +3343,12 @@ corner."</p></div>
 </ul>
 </li>
 <li>
+<h4><code><a title="fpdf.enums.CoerciveIntFlag" href="#fpdf.enums.CoerciveIntFlag">CoerciveIntFlag</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.CoerciveIntFlag.coerce" href="#fpdf.enums.CoerciveIntFlag.coerce">coerce</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="fpdf.enums.Corner" href="#fpdf.enums.Corner">Corner</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.enums.Corner.BOTTOM_LEFT" href="#fpdf.enums.Corner.BOTTOM_LEFT">BOTTOM_LEFT</a></code></li>
@@ -3160,6 +3469,15 @@ corner."</p></div>
 <li><code><a title="fpdf.enums.StrokeJoinStyle.BEVEL" href="#fpdf.enums.StrokeJoinStyle.BEVEL">BEVEL</a></code></li>
 <li><code><a title="fpdf.enums.StrokeJoinStyle.MITER" href="#fpdf.enums.StrokeJoinStyle.MITER">MITER</a></code></li>
 <li><code><a title="fpdf.enums.StrokeJoinStyle.ROUND" href="#fpdf.enums.StrokeJoinStyle.ROUND">ROUND</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.enums.TextEmphasis" href="#fpdf.enums.TextEmphasis">TextEmphasis</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.enums.TextEmphasis.B" href="#fpdf.enums.TextEmphasis.B">B</a></code></li>
+<li><code><a title="fpdf.enums.TextEmphasis.I" href="#fpdf.enums.TextEmphasis.I">I</a></code></li>
+<li><code><a title="fpdf.enums.TextEmphasis.U" href="#fpdf.enums.TextEmphasis.U">U</a></code></li>
+<li><code><a title="fpdf.enums.TextEmphasis.style" href="#fpdf.enums.TextEmphasis.style">style</a></code></li>
 </ul>
 </li>
 <li>
