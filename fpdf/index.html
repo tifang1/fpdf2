@@ -12832,6 +12832,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
             &#34;creator&#34;,
             &#34;keywords&#34;,
         ):
+            # nosemgrep: python.lang.security.dangerous-globals-use.dangerous-globals-use
             if not isinstance(locals()[arg], str):
                 raise TypeError(f&#39;Argument &#34;{arg}&#34; must be of type str.&#39;)
         pdf = FPDF(format=format, orientation=orientation, unit=unit)
