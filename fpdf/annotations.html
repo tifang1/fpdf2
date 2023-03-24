@@ -131,6 +131,12 @@ class AnnotationDict(AnnotationMixin):
         )
         return pdf_dict(obj_dict)
 
+    def __repr__(self):
+        keys = [key for key in dir(self) if not key.startswith(&#34;__&#34;)]
+        d = {key: getattr(self, key) for key in keys}
+        d = {key: value for key, value in d.items() if not callable(value)}
+        return f&#34;AnnotationDict(**{d})&#34;
+
 
 class PDFEmbeddedFile(PDFContentStream):
     def __init__(
@@ -236,7 +242,13 @@ class FileSpec(NamedTuple):
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )
-        return pdf_dict(obj_dict)</code></pre>
+        return pdf_dict(obj_dict)
+
+    def __repr__(self):
+        keys = [key for key in dir(self) if not key.startswith(&#34;__&#34;)]
+        d = {key: getattr(self, key) for key in keys}
+        d = {key: value for key, value in d.items() if not callable(value)}
+        return f&#34;AnnotationDict(**{d})&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
