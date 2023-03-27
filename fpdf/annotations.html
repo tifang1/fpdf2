@@ -32,8 +32,15 @@ from typing import NamedTuple, Tuple, Union
 
 from .actions import Action
 from .enums import AnnotationFlag, AnnotationName, FileAttachmentAnnotationName
-from .util import enclose_in_parens, format_date
-from .syntax import build_obj_dict, Destination, Name, PDFObject, PDFContentStream
+from .util import enclose_in_parens
+from .syntax import (
+    build_obj_dict,
+    Destination,
+    Name,
+    PDFContentStream,
+    PDFDate,
+    PDFObject,
+)
 from .syntax import create_dictionary_string as pdf_dict
 from .syntax import create_list_string as pdf_list
 from .syntax import iobj_ref as pdf_ref
@@ -78,7 +85,7 @@ class AnnotationMixin:
         self.dest = dest
         self.c = f&#34;[{color[0]} {color[1]} {color[2]}]&#34; if color else None
         self.t = enclose_in_parens(title) if title else None
-        self.m = format_date(modification_time) if modification_time else None
+        self.m = PDFDate(modification_time) if modification_time else None
         self.quad_points = (
             pdf_list(f&#34;{quad_point:.2f}&#34; for quad_point in quad_points)
             if quad_points
@@ -153,9 +160,9 @@ class PDFEmbeddedFile(PDFContentStream):
         self.type = Name(&#34;EmbeddedFile&#34;)
         params = {&#34;/Size&#34;: len(contents)}
         if creation_date:
-            params[&#34;/CreationDate&#34;] = format_date(creation_date, with_tz=True)
+            params[&#34;/CreationDate&#34;] = PDFDate(creation_date, with_tz=True).serialize()
         if modification_date:
-            params[&#34;/ModDate&#34;] = format_date(modification_date, with_tz=True)
+            params[&#34;/ModDate&#34;] = PDFDate(modification_date, with_tz=True).serialize()
         if checksum:
             file_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)
             file_hash.update(self._contents)
@@ -392,7 +399,7 @@ class FileSpec(NamedTuple):
         self.dest = dest
         self.c = f&#34;[{color[0]} {color[1]} {color[2]}]&#34; if color else None
         self.t = enclose_in_parens(title) if title else None
-        self.m = format_date(modification_time) if modification_time else None
+        self.m = PDFDate(modification_time) if modification_time else None
         self.quad_points = (
             pdf_list(f&#34;{quad_point:.2f}&#34; for quad_point in quad_points)
             if quad_points
@@ -539,9 +546,9 @@ class FileSpec(NamedTuple):
         self.type = Name(&#34;EmbeddedFile&#34;)
         params = {&#34;/Size&#34;: len(contents)}
         if creation_date:
-            params[&#34;/CreationDate&#34;] = format_date(creation_date, with_tz=True)
+            params[&#34;/CreationDate&#34;] = PDFDate(creation_date, with_tz=True).serialize()
         if modification_date:
-            params[&#34;/ModDate&#34;] = format_date(modification_date, with_tz=True)
+            params[&#34;/ModDate&#34;] = PDFDate(modification_date, with_tz=True).serialize()
         if checksum:
             file_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)
             file_hash.update(self._contents)

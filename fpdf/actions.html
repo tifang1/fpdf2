@@ -49,22 +49,8 @@ class Action(ABC):
             key_values = {}
         if self.next:
             key_values[&#34;Next&#34;] = self.next
-        obj_dict = build_obj_dict(key_values)
-        if _security_handler:
-            obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler, _obj_id)
+        obj_dict = build_obj_dict(key_values, _security_handler, _obj_id)
         return create_dictionary_string(obj_dict, field_join=&#34; &#34;)
-
-    def _encrypt_obj_dict(self, obj_dict, security_handler, obj_id):
-        &#34;&#34;&#34;Encrypt the strings present in the object dictionary&#34;&#34;&#34;
-        for key in obj_dict:
-            string = obj_dict[key]
-            if (
-                isinstance(string, str)
-                and string.startswith(&#34;(&#34;)
-                and string.endswith(&#34;)&#34;)
-            ):
-                obj_dict[key] = security_handler.encrypt(string[1:-1], obj_id)
-        return obj_dict
 
 
 class URIAction(Action):
@@ -186,22 +172,8 @@ inheritance.</p>
             key_values = {}
         if self.next:
             key_values[&#34;Next&#34;] = self.next
-        obj_dict = build_obj_dict(key_values)
-        if _security_handler:
-            obj_dict = self._encrypt_obj_dict(obj_dict, _security_handler, _obj_id)
-        return create_dictionary_string(obj_dict, field_join=&#34; &#34;)
-
-    def _encrypt_obj_dict(self, obj_dict, security_handler, obj_id):
-        &#34;&#34;&#34;Encrypt the strings present in the object dictionary&#34;&#34;&#34;
-        for key in obj_dict:
-            string = obj_dict[key]
-            if (
-                isinstance(string, str)
-                and string.startswith(&#34;(&#34;)
-                and string.endswith(&#34;)&#34;)
-            ):
-                obj_dict[key] = security_handler.encrypt(string[1:-1], obj_id)
-        return obj_dict</code></pre>
+        obj_dict = build_obj_dict(key_values, _security_handler, _obj_id)
+        return create_dictionary_string(obj_dict, field_join=&#34; &#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">

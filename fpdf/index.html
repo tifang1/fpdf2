@@ -4274,7 +4274,7 @@ Default to "mm".</dd>
             value=Signature(
                 contact_info=contact_info,
                 location=location,
-                m=format_date(self._sign_time),
+                m=PDFDate(self._sign_time),
                 reason=reason,
             ),
         )
@@ -4602,7 +4602,7 @@ Default to "mm".</dd>
         Args:
             render_toc_function (function): a function that will be invoked to render the ToC.
                 This function will receive 2 parameters: `pdf`, an instance of FPDF, and `outline`,
-                a list of `OutlineSection`.
+                a list of `fpdf.outline.OutlineSection`.
             pages (int): the number of pages that the Table of Contents will span,
                 including the current one that will. As many page breaks as the value of this argument
                 will occur immediately after calling this method.
@@ -6947,7 +6947,7 @@ and reserve some vertical space right now in order to insert it.</p>
 <dt><strong><code>render_toc_function</code></strong> :&ensp;<code>function</code></dt>
 <dd>a function that will be invoked to render the ToC.
 This function will receive 2 parameters: <code>pdf</code>, an instance of FPDF, and <code><a title="fpdf.outline" href="outline.html">fpdf.outline</a></code>,
-a list of <code>OutlineSection</code>.</dd>
+a list of <code><a title="fpdf.outline.OutlineSection" href="outline.html#fpdf.outline.OutlineSection">OutlineSection</a></code>.</dd>
 <dt><strong><code>pages</code></strong> :&ensp;<code>int</code></dt>
 <dd>the number of pages that the Table of Contents will span,
 including the current one that will. As many page breaks as the value of this argument
@@ -6966,7 +6966,7 @@ def insert_toc_placeholder(self, render_toc_function, pages=1):
     Args:
         render_toc_function (function): a function that will be invoked to render the ToC.
             This function will receive 2 parameters: `pdf`, an instance of FPDF, and `outline`,
-            a list of `OutlineSection`.
+            a list of `fpdf.outline.OutlineSection`.
         pages (int): the number of pages that the Table of Contents will span,
             including the current one that will. As many page breaks as the value of this argument
             will occur immediately after calling this method.
@@ -9791,7 +9791,7 @@ def sign(
         value=Signature(
             contact_info=contact_info,
             location=location,
-            m=format_date(self._sign_time),
+            m=PDFDate(self._sign_time),
             reason=reason,
         ),
     )

@@ -27,6 +27,7 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import hashlib
+import logging
 import math
 from os import urandom
 
@@ -43,6 +44,9 @@ try:
     import_error = None
 except ImportError as error:
     import_error = error
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class ARC4:
@@ -209,6 +213,7 @@ class StandardSecurityHandler:
     def encrypt_string(self, string, obj_id):
         if self.encryption_method == EncryptionMethod.NO_ENCRYPTION:
             return PDFString(string).serialize()
+        LOGGER.debug(&#34;Encrypting string: %s&#34;, string)
         return f&#34;&lt;{bytes(self.encrypt_bytes(string.encode(&#39;latin-1&#39;), obj_id)).hex().upper()}&gt;&#34;
 
     def encrypt_stream(self, stream, obj_id):
@@ -689,6 +694,7 @@ The PDF trailer must reference this object (/Encrypt)</p></div>
     def encrypt_string(self, string, obj_id):
         if self.encryption_method == EncryptionMethod.NO_ENCRYPTION:
             return PDFString(string).serialize()
+        LOGGER.debug(&#34;Encrypting string: %s&#34;, string)
         return f&#34;&lt;{bytes(self.encrypt_bytes(string.encode(&#39;latin-1&#39;), obj_id)).hex().upper()}&gt;&#34;
 
     def encrypt_stream(self, stream, obj_id):
@@ -913,6 +919,7 @@ Generation ID is fixed as 0. Will need to revisit if the application start chang
 <pre><code class="python">def encrypt_string(self, string, obj_id):
     if self.encryption_method == EncryptionMethod.NO_ENCRYPTION:
         return PDFString(string).serialize()
+    LOGGER.debug(&#34;Encrypting string: %s&#34;, string)
     return f&#34;&lt;{bytes(self.encrypt_bytes(string.encode(&#39;latin-1&#39;), obj_id)).hex().upper()}&gt;&#34;</code></pre>
 </details>
 </dd>
