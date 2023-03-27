@@ -43,14 +43,6 @@ def buffer_subst(buffer, placeholder, value):
     return buffer
 
 
-def enclose_in_parens(s):
-    &#34;&#34;&#34;Format a text string&#34;&#34;&#34;
-    if s:
-        assert isinstance(s, str)
-        return f&#34;({escape_parens(s)})&#34;
-    return &#34;&#34;
-
-
 def escape_parens(s):
     &#34;&#34;&#34;Add a backslash character before , ( and )&#34;&#34;&#34;
     if isinstance(s, str):
@@ -66,15 +58,6 @@ def escape_parens(s):
         .replace(b&#34;(&#34;, b&#34;\\(&#34;)
         .replace(b&#34;\r&#34;, b&#34;\\r&#34;)
     )
-
-
-# shortcut to bytes conversion (b prefix)
-def b(s):
-    if isinstance(s, str):
-        return s.encode(&#34;latin1&#34;)
-    if isinstance(s, int):
-        return bytes([s])  # http://bugs.python.org/issue4588
-    raise ValueError(f&#34;Invalid input: {s}&#34;)
 
 
 def get_scale_factor(unit: Union[str, Number]) -&gt; float:
@@ -248,23 +231,6 @@ def get_pillow_allocated_memory() -&gt; str:
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="fpdf.util.b"><code class="name flex">
-<span>def <span class="ident">b</span></span>(<span>s)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def b(s):
-    if isinstance(s, str):
-        return s.encode(&#34;latin1&#34;)
-    if isinstance(s, int):
-        return bytes([s])  # http://bugs.python.org/issue4588
-    raise ValueError(f&#34;Invalid input: {s}&#34;)</code></pre>
-</details>
-</dd>
 <dt id="fpdf.util.buffer_subst"><code class="name flex">
 <span>def <span class="ident">buffer_subst</span></span>(<span>buffer, placeholder, value)</span>
 </code></dt>
@@ -322,23 +288,6 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
             map(lambda i: convert_unit(i, 1, unit_conversion_factor), to_convert)
         )
     return to_convert / unit_conversion_factor</code></pre>
-</details>
-</dd>
-<dt id="fpdf.util.enclose_in_parens"><code class="name flex">
-<span>def <span class="ident">enclose_in_parens</span></span>(<span>s)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Format a text string</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def enclose_in_parens(s):
-    &#34;&#34;&#34;Format a text string&#34;&#34;&#34;
-    if s:
-        assert isinstance(s, str)
-        return f&#34;({escape_parens(s)})&#34;
-    return &#34;&#34;</code></pre>
 </details>
 </dd>
 <dt id="fpdf.util.escape_parens"><code class="name flex">
@@ -622,10 +571,8 @@ From experiments, not very reliable</p></div>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="fpdf.util.b" href="#fpdf.util.b">b</a></code></li>
 <li><code><a title="fpdf.util.buffer_subst" href="#fpdf.util.buffer_subst">buffer_subst</a></code></li>
 <li><code><a title="fpdf.util.convert_unit" href="#fpdf.util.convert_unit">convert_unit</a></code></li>
-<li><code><a title="fpdf.util.enclose_in_parens" href="#fpdf.util.enclose_in_parens">enclose_in_parens</a></code></li>
 <li><code><a title="fpdf.util.escape_parens" href="#fpdf.util.escape_parens">escape_parens</a></code></li>
 <li><code><a title="fpdf.util.get_gc_managed_objs_total_size" href="#fpdf.util.get_gc_managed_objs_total_size">get_gc_managed_objs_total_size</a></code></li>
 <li><code><a title="fpdf.util.get_mem_usage" href="#fpdf.util.get_mem_usage">get_mem_usage</a></code></li>

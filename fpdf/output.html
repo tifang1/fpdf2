@@ -49,7 +49,6 @@ from .syntax import (
 from .syntax import create_dictionary_string as pdf_dict
 from .syntax import create_list_string as pdf_list
 from .syntax import iobj_ref as pdf_ref
-from .util import enclose_in_parens
 
 from fontTools import ttLib
 from fontTools import subset as ftsubset
@@ -125,11 +124,11 @@ class PDFFontDescriptor(PDFObject):
 
 
 class CIDSystemInfo(PDFObject):
-    def __init__(self, registry, ordering, supplement):
+    def __init__(self):
         super().__init__()
-        self.registry = enclose_in_parens(registry)
-        self.ordering = enclose_in_parens(ordering)
-        self.supplement = supplement
+        self.registry = PDFString(&#34;Adobe&#34;, encrypt=True)
+        self.ordering = PDFString(&#34;UCS&#34;, encrypt=True)
+        self.supplement = 0
 
 
 class PDFInfo(PDFObject):
@@ -173,7 +172,7 @@ class PDFCatalog(PDFObject):
     ):
         super().__init__()
         self.type = Name(&#34;Catalog&#34;)
-        self.lang = enclose_in_parens(lang) if lang else None
+        self.lang = PDFString(lang) if lang else None
         self.page_layout = page_layout
         self.page_mode = page_mode
         self.viewer_preferences = viewer_preferences
@@ -724,9 +723,7 @@ class OutputProducer:
                 self._add_pdf_obj(to_unicode_obj, &#34;fonts&#34;)
                 composite_font_obj.to_unicode = to_unicode_obj
 
-                cid_system_info_obj = CIDSystemInfo(
-                    registry=&#34;Adobe&#34;, ordering=&#34;UCS&#34;, supplement=0
-                )
+                cid_system_info_obj = CIDSystemInfo()
                 self._add_pdf_obj(cid_system_info_obj, &#34;fonts&#34;)
                 cid_font_obj.c_i_d_system_info = cid_system_info_obj
 
@@ -926,7 +923,7 @@ class OutputProducer:
         creation_date = None
         if fpdf.creation_date:
             try:
-                creation_date = PDFDate(fpdf.creation_date, with_tz=True)
+                creation_date = PDFDate(fpdf.creation_date, with_tz=True, encrypt=True)
             except Exception as error:
                 raise FPDFException(
                     f&#34;Could not format date: {fpdf.creation_date}&#34;
@@ -994,7 +991,7 @@ class OutputProducer:
             catalog_obj.mark_info = pdf_dict({&#34;/Marked&#34;: &#34;true&#34;})
         if fpdf.embedded_files:
             file_spec_names = [
-                f&#34;{enclose_in_parens(embedded_file.basename())} {embedded_file.file_spec().serialize()}&#34;
+                f&#34;{PDFString(embedded_file.basename()).serialize()} {embedded_file.file_spec().serialize()}&#34;
                 for embedded_file in fpdf.embedded_files
                 if embedded_file.globally_enclosed
             ]
@@ -1157,7 +1154,6 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
 </dd>
 <dt id="fpdf.output.CIDSystemInfo"><code class="flex name class">
 <span>class <span class="ident">CIDSystemInfo</span></span>
-<span>(</span><span>registry, ordering, supplement)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Main features of this class:
@@ -1168,11 +1164,11 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class CIDSystemInfo(PDFObject):
-    def __init__(self, registry, ordering, supplement):
+    def __init__(self):
         super().__init__()
-        self.registry = enclose_in_parens(registry)
-        self.ordering = enclose_in_parens(ordering)
-        self.supplement = supplement</code></pre>
+        self.registry = PDFString(&#34;Adobe&#34;, encrypt=True)
+        self.ordering = PDFString(&#34;UCS&#34;, encrypt=True)
+        self.supplement = 0</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -1576,9 +1572,7 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
                 self._add_pdf_obj(to_unicode_obj, &#34;fonts&#34;)
                 composite_font_obj.to_unicode = to_unicode_obj
 
-                cid_system_info_obj = CIDSystemInfo(
-                    registry=&#34;Adobe&#34;, ordering=&#34;UCS&#34;, supplement=0
-                )
+                cid_system_info_obj = CIDSystemInfo()
                 self._add_pdf_obj(cid_system_info_obj, &#34;fonts&#34;)
                 cid_font_obj.c_i_d_system_info = cid_system_info_obj
 
@@ -1778,7 +1772,7 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
         creation_date = None
         if fpdf.creation_date:
             try:
-                creation_date = PDFDate(fpdf.creation_date, with_tz=True)
+                creation_date = PDFDate(fpdf.creation_date, with_tz=True, encrypt=True)
             except Exception as error:
                 raise FPDFException(
                     f&#34;Could not format date: {fpdf.creation_date}&#34;
@@ -1846,7 +1840,7 @@ def _sizeof_fmt(num, suffix=&#34;B&#34;):
             catalog_obj.mark_info = pdf_dict({&#34;/Marked&#34;: &#34;true&#34;})
         if fpdf.embedded_files:
             file_spec_names = [
-                f&#34;{enclose_in_parens(embedded_file.basename())} {embedded_file.file_spec().serialize()}&#34;
+                f&#34;{PDFString(embedded_file.basename()).serialize()} {embedded_file.file_spec().serialize()}&#34;
                 for embedded_file in fpdf.embedded_files
                 if embedded_file.globally_enclosed
             ]
@@ -2020,7 +2014,7 @@ plus a few other properties on PDFPage instances</p></div>
     ):
         super().__init__()
         self.type = Name(&#34;Catalog&#34;)
-        self.lang = enclose_in_parens(lang) if lang else None
+        self.lang = PDFString(lang) if lang else None
         self.page_layout = page_layout
         self.page_mode = page_mode
         self.viewer_preferences = viewer_preferences

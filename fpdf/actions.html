@@ -29,8 +29,7 @@
 <pre><code class="python">from abc import ABC
 import warnings
 
-from .util import enclose_in_parens
-from .syntax import build_obj_dict, create_dictionary_string
+from .syntax import PDFString, build_obj_dict, create_dictionary_string
 
 
 class Action(ABC):
@@ -60,7 +59,7 @@ class URIAction(Action):
 
     def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)},
+            {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: PDFString(self.uri, encrypt=True)},
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )
@@ -104,7 +103,7 @@ class GoToRemoteAction(Action):
 
     def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest},
+            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: PDFString(self.file, encrypt=True), &#34;d&#34;: self.dest},
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )
@@ -119,7 +118,7 @@ class LaunchAction(Action):
 
     def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)},
+            {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: PDFString(self.file, encrypt=True)},
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )
@@ -277,7 +276,7 @@ inheritance.</p>
 
     def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest},
+            {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: PDFString(self.file, encrypt=True), &#34;d&#34;: self.dest},
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )</code></pre>
@@ -300,7 +299,7 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     return super()._serialize(
-        {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: enclose_in_parens(self.file), &#34;d&#34;: self.dest},
+        {&#34;s&#34;: &#34;/GoToR&#34;, &#34;f&#34;: PDFString(self.file, encrypt=True), &#34;d&#34;: self.dest},
         _security_handler=_security_handler,
         _obj_id=_obj_id,
     )</code></pre>
@@ -329,7 +328,7 @@ inheritance.</p>
 
     def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)},
+            {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: PDFString(self.file, encrypt=True)},
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )</code></pre>
@@ -352,7 +351,7 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     return super()._serialize(
-        {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: enclose_in_parens(self.file)},
+        {&#34;s&#34;: &#34;/Launch&#34;, &#34;f&#34;: PDFString(self.file, encrypt=True)},
         _security_handler=_security_handler,
         _obj_id=_obj_id,
     )</code></pre>
@@ -433,7 +432,7 @@ inheritance.</p>
 
     def serialize(self, _security_handler=None, _obj_id=None):
         return super()._serialize(
-            {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)},
+            {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: PDFString(self.uri, encrypt=True)},
             _security_handler=_security_handler,
             _obj_id=_obj_id,
         )</code></pre>
@@ -456,7 +455,7 @@ inheritance.</p>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     return super()._serialize(
-        {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: enclose_in_parens(self.uri)},
+        {&#34;s&#34;: &#34;/URI&#34;, &#34;u_r_i&#34;: PDFString(self.uri, encrypt=True)},
         _security_handler=_security_handler,
         _obj_id=_obj_id,
     )</code></pre>
