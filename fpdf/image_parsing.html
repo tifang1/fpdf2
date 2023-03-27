@@ -25,6 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L1-L451" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import base64, zlib
 from io import BytesIO
@@ -87,7 +88,7 @@ TIFFBitRevTable = [
 def load_image(filename):
     &#34;&#34;&#34;
     This method is used to load external resources, such as images.
-    It is automatically called when resource added to document by `FPDF.image()`.
+    It is automatically called when resource added to document by `fpdf.FPDF.image()`.
     It always return a BytesIO buffer.
     &#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
@@ -494,6 +495,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L325-L346" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -535,6 +537,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L107-L298" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
@@ -738,6 +741,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L89-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -762,16 +766,17 @@ def _has_alpha(img, alpha_channel):
 </code></dt>
 <dd>
 <div class="desc"><p>This method is used to load external resources, such as images.
-It is automatically called when resource added to document by <code>FPDF.image()</code>.
+It is automatically called when resource added to document by <code><a title="fpdf.FPDF.image" href="index.html#fpdf.FPDF.image">FPDF.image()</a></code>.
 It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L59-L79" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
     This method is used to load external resources, such as images.
-    It is automatically called when resource added to document by `FPDF.image()`.
+    It is automatically called when resource added to document by `fpdf.FPDF.image()`.
     It always return a BytesIO buffer.
     &#34;&#34;&#34;
     # if a bytesio instance is passed in, use it as is.
@@ -799,6 +804,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L349-L399" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -867,6 +873,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/image_parsing.py#L301-L322" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;

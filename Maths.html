@@ -90,25 +90,20 @@
 <span class=n>rows</span> <span class=o>=</span> <span class=n>df</span><span class=o>.</span><span class=n>values</span><span class=o>.</span><span class=n>tolist</span><span class=p>()</span>  <span class=c1># Get list of dataframe rows</span>
 <span class=n>data</span> <span class=o>=</span> <span class=n>columns</span> <span class=o>+</span> <span class=n>rows</span>  <span class=c1># Combine columns and rows in one list</span>
 
-<span class=c1># Start pdf creating</span>
 <span class=n>pdf</span> <span class=o>=</span> <span class=n>FPDF</span><span class=p>()</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s2>&quot;Times&quot;</span><span class=p>,</span> <span class=n>size</span><span class=o>=</span><span class=mi>10</span><span class=p>)</span>
-<span class=n>line_height</span> <span class=o>=</span> <span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span> <span class=o>*</span> <span class=mf>2.5</span>
-<span class=n>col_width</span> <span class=o>=</span> <span class=n>pdf</span><span class=o>.</span><span class=n>epw</span> <span class=o>/</span> <span class=mi>4</span>  <span class=c1># distribute content evenly</span>
-
-<span class=k>for</span> <span class=n>row</span> <span class=ow>in</span> <span class=n>data</span><span class=p>:</span>
-    <span class=k>for</span> <span class=n>datum</span> <span class=ow>in</span> <span class=n>row</span><span class=p>:</span>
-        <span class=n>pdf</span><span class=o>.</span><span class=n>multi_cell</span><span class=p>(</span>
-            <span class=n>col_width</span><span class=p>,</span>
-            <span class=n>line_height</span><span class=p>,</span>
-            <span class=n>datum</span><span class=p>,</span>
-            <span class=n>border</span><span class=o>=</span><span class=mi>1</span><span class=p>,</span>
-            <span class=n>new_y</span><span class=o>=</span><span class=s2>&quot;TOP&quot;</span><span class=p>,</span>
-            <span class=n>max_line_height</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span><span class=p>,</span>
-        <span class=p>)</span>
-    <span class=n>pdf</span><span class=o>.</span><span class=n>ln</span><span class=p>(</span><span class=n>line_height</span><span class=p>)</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>(</span><span class=s2>&quot;table_with_cells.pdf&quot;</span><span class=p>)</span>
+<span class=k>with</span> <span class=n>pdf</span><span class=o>.</span><span class=n>table</span><span class=p>(</span><span class=n>borders_layout</span><span class=o>=</span><span class=s2>&quot;MINIMAL&quot;</span><span class=p>,</span>
+               <span class=n>cell_fill_color</span><span class=o>=</span><span class=mi>200</span><span class=p>,</span>  <span class=c1># grey</span>
+               <span class=n>cell_fill_mode</span><span class=o>=</span><span class=s2>&quot;ROWS&quot;</span><span class=p>,</span>
+               <span class=n>line_height</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span> <span class=o>*</span> <span class=mf>2.5</span><span class=p>,</span>
+               <span class=n>text_align</span><span class=o>=</span><span class=s2>&quot;CENTER&quot;</span><span class=p>,</span>
+               <span class=n>width</span><span class=o>=</span><span class=mi>160</span><span class=p>)</span> <span class=k>as</span> <span class=n>table</span><span class=p>:</span>
+    <span class=k>for</span> <span class=n>data_row</span> <span class=ow>in</span> <span class=n>data</span><span class=p>:</span>
+        <span class=n>row</span> <span class=o>=</span> <span class=n>table</span><span class=o>.</span><span class=n>row</span><span class=p>()</span>
+        <span class=k>for</span> <span class=n>datum</span> <span class=ow>in</span> <span class=n>data_row</span><span class=p>:</span>
+            <span class=n>row</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>datum</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>(</span><span class=s2>&quot;table_from_pandas.pdf&quot;</span><span class=p>)</span>
 </code></pre></div></p> <p>Result: <img alt src=table-pandas.png></p> <h2 id=mathematical-formulas>Mathematical formulas<a class=headerlink href=#mathematical-formulas title="Permanent link">&para;</a></h2> <p><code>fpdf2</code> can only insert mathematical formula in the form of <strong>images</strong>. The following sections will explaing how to generate and embed such images.</p> <h3 id=using-google-charts-api>Using Google Charts API<a class=headerlink href=#using-google-charts-api title="Permanent link">&para;</a></h3> <p>Official documentation: <a href=https://developers.google.com/chart/infographics/docs/formulas>Google Charts Infographics - Mathematical Formulas</a>.</p> <p>Example:</p> <div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>io</span> <span class=kn>import</span> <span class=n>BytesIO</span>
 <span class=kn>from</span> <span class=nn>urllib.parse</span> <span class=kn>import</span> <span class=n>quote</span>
 <span class=kn>from</span> <span class=nn>urllib.request</span> <span class=kn>import</span> <span class=n>urlopen</span>

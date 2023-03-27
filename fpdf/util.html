@@ -25,6 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L1-L196" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import gc, os, warnings
 from numbers import Number
@@ -125,11 +126,11 @@ def get_mem_usage(prefix) -&gt; str:
     # heap_size, stack_size = get_process_heap_and_stack_sizes()
     # objs_size_sum = get_gc_managed_objs_total_size()
     pillow = get_pillow_allocated_memory()
+    # malloc_stats = &#34;Malloc stats: &#34; + get_pymalloc_allocated_over_total_size()
+    malloc_stats = &#34;&#34;
     if is_tracing():
-        malloc_stats = get_tracemalloc_traced_memory()
-    else:
-        malloc_stats = get_pymalloc_allocated_over_total_size()
-    return f&#34;{prefix:&lt;40} Malloc stats: {malloc_stats} | Pillow: {pillow} | Process RSS: {rss}&#34;
+        malloc_stats = &#34;Malloc stats: &#34; + get_tracemalloc_traced_memory()
+    return f&#34;{prefix:&lt;40} {malloc_stats} | Pillow: {pillow} | Process RSS: {rss}&#34;
 
 
 def get_process_rss() -&gt; str:
@@ -150,7 +151,7 @@ def get_process_rss_as_mib() -&gt; Union[Number, None]:
                 / 1024
                 / 1024
             )
-    except FileNotFoundError:  # This file only exists under Linux
+    except FileNotFoundError:  # /proc files only exist under Linux
         return None
 
 
@@ -239,6 +240,7 @@ def get_pillow_allocated_memory() -&gt; str:
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L10-L15" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def buffer_subst(buffer, placeholder, value):
     buffer_size = len(buffer)
@@ -264,6 +266,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L60-L82" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def convert_unit(
     to_convert: Union[float, int, Iterable[Union[float, int, Iterable]]],
@@ -298,6 +301,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L18-L32" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def escape_parens(s):
     &#34;&#34;&#34;Add a backslash character before , ( and )&#34;&#34;&#34;
@@ -324,6 +328,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L171-L181" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_gc_managed_objs_total_size() -&gt; str:
     &#34;From experiments, not very reliable&#34;
@@ -346,6 +351,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L94-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_mem_usage(prefix) -&gt; str:
     _collected_count = gc.collect()
@@ -353,11 +359,11 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
     # heap_size, stack_size = get_process_heap_and_stack_sizes()
     # objs_size_sum = get_gc_managed_objs_total_size()
     pillow = get_pillow_allocated_memory()
+    # malloc_stats = &#34;Malloc stats: &#34; + get_pymalloc_allocated_over_total_size()
+    malloc_stats = &#34;&#34;
     if is_tracing():
-        malloc_stats = get_tracemalloc_traced_memory()
-    else:
-        malloc_stats = get_pymalloc_allocated_over_total_size()
-    return f&#34;{prefix:&lt;40} Malloc stats: {malloc_stats} | Pillow: {pillow} | Process RSS: {rss}&#34;</code></pre>
+        malloc_stats = &#34;Malloc stats: &#34; + get_tracemalloc_traced_memory()
+    return f&#34;{prefix:&lt;40} {malloc_stats} | Pillow: {pillow} | Process RSS: {rss}&#34;</code></pre>
 </details>
 </dd>
 <dt id="fpdf.util.get_pillow_allocated_memory"><code class="name flex">
@@ -368,6 +374,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L190-L196" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_pillow_allocated_memory() -&gt; str:
     # pylint: disable=c-extension-no-member,import-outside-toplevel
@@ -386,6 +393,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L129-L147" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_process_heap_and_stack_sizes() -&gt; Tuple[str]:
     heap_size_in_mib, stack_size_in_mib = &#34;&lt;unavailable&gt;&#34;, &#34;&lt;unavailable&gt;&#34;
@@ -416,6 +424,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L107-L111" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_process_rss() -&gt; str:
     rss_as_mib = get_process_rss_as_mib()
@@ -432,6 +441,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L114-L126" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_process_rss_as_mib() -&gt; Union[Number, None]:
     &#34;Inspired by psutil source code&#34;
@@ -444,7 +454,7 @@ new_unit (str, float, int): A unit accepted by fpdf.FPDF or a number</p>
                 / 1024
                 / 1024
             )
-    except FileNotFoundError:  # This file only exists under Linux
+    except FileNotFoundError:  # /proc files only exist under Linux
         return None</code></pre>
 </details>
 </dd>
@@ -457,6 +467,7 @@ From experiments, not very reliable</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L150-L168" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_pymalloc_allocated_over_total_size() -&gt; Tuple[str]:
     &#34;&#34;&#34;
@@ -499,6 +510,7 @@ From experiments, not very reliable</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L35-L57" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_scale_factor(unit: Union[str, Number]) -&gt; float:
     &#34;&#34;&#34;
@@ -533,6 +545,7 @@ From experiments, not very reliable</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L184-L187" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_tracemalloc_traced_memory() -&gt; str:
     &#34;Requires python -X tracemalloc&#34;
@@ -548,6 +561,7 @@ From experiments, not very reliable</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/0579097951177ba61ac196c1f0765abea710cdb9/fpdf/util.py#L90-L91" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def print_mem_usage(prefix):
     print(get_mem_usage(prefix))</code></pre>
