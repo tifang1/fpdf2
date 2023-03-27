@@ -226,6 +226,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/Tutorial-%E0%A6%AC%E0%A6%BE%E0%A6%82%E0%A6%B2%E0%A6%BE.html</loc>
+         <lastmod>2023-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/Tutorial.html</loc>
          <lastmod>2023-03-27</lastmod>
          <changefreq>daily</changefreq>
