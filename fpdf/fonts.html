@@ -28,7 +28,7 @@ Includes the definition of the character widths of all PDF standard fonts.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/fonts.py#L1-L2634" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/fonts.py#L1-L2641" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Font-related classes &amp; constants.
@@ -45,9 +45,16 @@ from .enums import TextEmphasis
 class FontFace:
     &#34;&#34;&#34;
     Represent basic font styling properties.
-    This is a subset of `fpdf.graphics_state.GraphicState` properties.
+    This is a subset of `fpdf.graphics_state.GraphicsStateMixin` properties.
     &#34;&#34;&#34;
 
+    __slots__ = (  # RAM usage optimization
+        &#34;family&#34;,
+        &#34;emphasis&#34;,
+        &#34;size_pt&#34;,
+        &#34;color&#34;,
+        &#34;fill_color&#34;,
+    )
     family: Optional[str]
     emphasis: Optional[TextEmphasis]
     size_pt: Optional[int]
@@ -2681,19 +2688,26 @@ CORE_FONTS_CHARWIDTHS[&#34;zapfdingbats&#34;] = {
 </code></dt>
 <dd>
 <div class="desc"><p>Represent basic font styling properties.
-This is a subset of <code>fpdf.graphics_state.GraphicState</code> properties.</p></div>
+This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin">GraphicsStateMixin</a></code> properties.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/fonts.py#L12-L35" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/fonts.py#L12-L42" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class FontFace:
     &#34;&#34;&#34;
     Represent basic font styling properties.
-    This is a subset of `fpdf.graphics_state.GraphicState` properties.
+    This is a subset of `fpdf.graphics_state.GraphicsStateMixin` properties.
     &#34;&#34;&#34;
 
+    __slots__ = (  # RAM usage optimization
+        &#34;family&#34;,
+        &#34;emphasis&#34;,
+        &#34;size_pt&#34;,
+        &#34;color&#34;,
+        &#34;fill_color&#34;,
+    )
     family: Optional[str]
     emphasis: Optional[TextEmphasis]
     size_pt: Optional[int]
@@ -2716,27 +2730,27 @@ class FontFace:
 <ul class="hlist">
 <li><a title="fpdf.fpdf.TitleStyle" href="fpdf.html#fpdf.fpdf.TitleStyle">TitleStyle</a></li>
 </ul>
-<h3>Class variables</h3>
+<h3>Instance variables</h3>
 <dl>
 <dt id="fpdf.fonts.FontFace.color"><code class="name">var <span class="ident">color</span> : Union[int, tuple, <a title="fpdf.drawing.DeviceGray" href="drawing.html#fpdf.drawing.DeviceGray">DeviceGray</a>, <a title="fpdf.drawing.DeviceRGB" href="drawing.html#fpdf.drawing.DeviceRGB">DeviceRGB</a>, ForwardRef(None)]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="fpdf.fonts.FontFace.emphasis"><code class="name">var <span class="ident">emphasis</span> : Optional[<a title="fpdf.enums.TextEmphasis" href="enums.html#fpdf.enums.TextEmphasis">TextEmphasis</a>]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="fpdf.fonts.FontFace.family"><code class="name">var <span class="ident">family</span> : Optional[str]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="fpdf.fonts.FontFace.fill_color"><code class="name">var <span class="ident">fill_color</span> : Union[int, tuple, <a title="fpdf.drawing.DeviceGray" href="drawing.html#fpdf.drawing.DeviceGray">DeviceGray</a>, <a title="fpdf.drawing.DeviceRGB" href="drawing.html#fpdf.drawing.DeviceRGB">DeviceRGB</a>, ForwardRef(None)]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="fpdf.fonts.FontFace.size_pt"><code class="name">var <span class="ident">size_pt</span> : Optional[int]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>

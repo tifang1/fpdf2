@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>fpdf.syntax API documentation</title>
-<meta name="description" content="**PDF Syntax Helpers** …" />
+<meta name="description" content="Classes &amp; functions that represent core elements of the PDF syntax …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,7 +22,7 @@
 <h1 class="title">Module <code>fpdf.syntax</code></h1>
 </header>
 <section id="section-intro">
-<p><strong>PDF Syntax Helpers</strong></p>
+<p>Classes &amp; functions that represent core elements of the PDF syntax</p>
 <p>Functions in this module take variable input and produce PDF Syntax features.</p>
 <p>Most of what happens in a PDF happens in objects, which are formatted like so:</p>
 <pre><code>3 0 obj
@@ -73,9 +73,9 @@ endobj
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L1-L366" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L1-L368" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;**PDF Syntax Helpers**
+<pre><code class="python">&#34;&#34;&#34;Classes &amp; functions that represent core elements of the PDF syntax
 
 Functions in this module take variable input and produce PDF Syntax features.
 
@@ -218,6 +218,8 @@ class PDFObject:
     * delay ID assignement
     * implement serializing
     &#34;&#34;&#34;
+
+    # Note: several child classes use __slots__ to save up some memory
 
     # pylint: disable=redefined-builtin
     def __init__(self):
@@ -460,7 +462,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L220-L247" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L222-L249" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def build_obj_dict(key_values, _security_handler=None, _obj_id=None):
     &#34;&#34;&#34;
@@ -500,7 +502,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L250-L251" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L252-L253" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def camel_case(snake_case):
     return &#34;&#34;.join(x for x in snake_case.title() if x != &#34;_&#34;)</code></pre>
@@ -514,7 +516,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L69-L70" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L69-L70" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def clear_empty_fields(d):
     return {k: v for k, v in d.items() if v}</code></pre>
@@ -534,7 +536,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L73-L99" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L73-L99" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def create_dictionary_string(
     dict_,
@@ -573,7 +575,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L102-L104" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L102-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def create_list_string(list_):
     &#34;&#34;&#34;format list of strings as PDF array&#34;&#34;&#34;
@@ -588,7 +590,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L112-L117" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L112-L117" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def create_stream(stream, encryption_handler=None, obj_id=None):
     if isinstance(stream, (bytearray, bytes)):
@@ -606,7 +608,7 @@ and prefixed with a slash character "/".</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L107-L109" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L107-L109" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def iobj_ref(n):
     &#34;&#34;&#34;format an indirect PDF Object reference from its id number&#34;&#34;&#34;
@@ -627,7 +629,7 @@ inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L338-L340" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L340-L342" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Destination(ABC):
     def serialize(self, _security_handler=None, _obj_id=None):
@@ -651,7 +653,7 @@ inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L339-L340" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L341-L342" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     raise NotImplementedError</code></pre>
@@ -669,7 +671,7 @@ inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L343-L366" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L345-L368" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DestinationXYZ(Destination):
     def __init__(self, page, top, left=0, zoom=&#34;null&#34;):
@@ -711,7 +713,7 @@ inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L362-L366" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L364-L368" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     left = round(self.left, 2) if isinstance(self.left, float) else self.left
@@ -731,7 +733,7 @@ inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L124-L135" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L124-L135" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Name(str):
     &#34;&#34;&#34;str subclass signifying a PDF name, which are emitted differently than normal strings.&#34;&#34;&#34;
@@ -767,7 +769,7 @@ inheritance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L131-L135" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L131-L135" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None) -&gt; str:
     escaped = self.NAME_ESC.sub(
@@ -789,7 +791,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L319-L334" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L321-L336" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFArray(list):
     def serialize(self, _security_handler=None, _obj_id=None):
@@ -822,7 +824,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L320-L334" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L322-L336" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     if all(isinstance(elem, str) for elem in self):
@@ -854,7 +856,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L198-L217" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L200-L219" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFContentStream(PDFObject):
     def __init__(self, contents, compress=False):
@@ -917,7 +919,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L288-L316" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L290-L318" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFDate:
     def __init__(self, date: datetime, with_tz=False, encrypt=False):
@@ -959,7 +961,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L303-L316" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L305-L318" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     if self.with_tz:
@@ -989,7 +991,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L138-L195" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L138-L197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFObject:
     &#34;&#34;&#34;
@@ -997,6 +999,8 @@ The argument must be an iterable if specified.</p></div>
     * delay ID assignement
     * implement serializing
     &#34;&#34;&#34;
+
+    # Note: several child classes use __slots__ to save up some memory
 
     # pylint: disable=redefined-builtin
     def __init__(self):
@@ -1079,7 +1083,7 @@ The argument must be an iterable if specified.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L149-L155" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L151-L157" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def id(self):
@@ -1096,7 +1100,7 @@ def id(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L161-L163" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L163-L165" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def ref(self):
@@ -1114,7 +1118,7 @@ def ref(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L180-L182" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L182-L184" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def content_stream(self):
     &#34;Subclasses can override this method to indicate the presence of a content stream&#34;
@@ -1129,7 +1133,7 @@ def ref(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L165-L178" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L167-L180" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, obj_dict=None, _security_handler=None):
     &#34;Serialize the PDF object as an obj&lt;&lt;/&gt;&gt;endobj text block&#34;
@@ -1166,7 +1170,7 @@ errors defaults to 'strict'.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L254-L285" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L256-L287" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFString(str):
     USE_HEX_ENCODING = True
@@ -1223,7 +1227,7 @@ but then there can be a risk of badly encoding some unicode strings - cf. issue 
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L271-L285" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L273-L287" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def serialize(self, _security_handler=None, _obj_id=None):
     if _security_handler and self.encrypt:
@@ -1253,7 +1257,7 @@ but then there can be a risk of badly encoding some unicode strings - cf. issue 
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/615db585a53dde9af5874fb0a58f33ee7f84aa2b/fpdf/syntax.py#L120-L121" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/ee7e9ad5b8a35bede7bdf1416177d24d8ca965ec/fpdf/syntax.py#L120-L121" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Raw(str):
     &#34;&#34;&#34;str subclass signifying raw data to be directly emitted to PDF without transformation.&#34;&#34;&#34;</code></pre>
