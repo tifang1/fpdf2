@@ -28,7 +28,7 @@ Includes the definition of the character widths of all PDF standard fonts.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/b30b8d35a099c5eec9c7fa7218f1855a4a07f254/fpdf/fonts.py#L1-L2641" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/eb2b0af880152789c6bcf43b1c28a2ceb08d6607/fpdf/fonts.py#L1-L2641" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Font-related classes &amp; constants.
@@ -56,7 +56,7 @@ class FontFace:
         &#34;fill_color&#34;,
     )
     family: Optional[str]
-    emphasis: Optional[TextEmphasis]
+    emphasis: Optional[TextEmphasis]  # can be a combination: B | U
     size_pt: Optional[int]
     # Colors are single number grey scales or (red, green, blue) tuples:
     color: Optional[Union[int, tuple, DeviceGray, DeviceRGB]]
@@ -2692,7 +2692,7 @@ This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/b30b8d35a099c5eec9c7fa7218f1855a4a07f254/fpdf/fonts.py#L12-L42" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/eb2b0af880152789c6bcf43b1c28a2ceb08d6607/fpdf/fonts.py#L12-L42" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class FontFace:
@@ -2709,7 +2709,7 @@ class FontFace:
         &#34;fill_color&#34;,
     )
     family: Optional[str]
-    emphasis: Optional[TextEmphasis]
+    emphasis: Optional[TextEmphasis]  # can be a combination: B | U
     size_pt: Optional[int]
     # Colors are single number grey scales or (red, green, blue) tuples:
     color: Optional[Union[int, tuple, DeviceGray, DeviceRGB]]
