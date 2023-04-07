@@ -21,6 +21,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/CombineWithChartingLibs.html</loc>
+         <lastmod>2023-04-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/CombineWithPdfrw.html</loc>
          <lastmod>2023-04-07</lastmod>
          <changefreq>daily</changefreq>
