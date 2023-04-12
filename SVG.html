@@ -50,7 +50,7 @@
 
 <span class=c1># Convert the SVG chart to a PNG image in a BytesIO object</span>
 <span class=n>img_bytesio</span> <span class=o>=</span> <span class=n>BytesIO</span><span class=p>()</span>
-<span class=n>cairosvg</span><span class=o>.</span><span class=n>svg2png</span><span class=p>(</span><span class=n>svg_img</span><span class=p>,</span> <span class=n>write_to</span><span class=o>=</span><span class=n>img_bytesio</span><span class=p>)</span>
+<span class=n>cairosvg</span><span class=o>.</span><span class=n>svg2png</span><span class=p>(</span><span class=n>svg_img</span><span class=p>,</span> <span class=n>write_to</span><span class=o>=</span><span class=n>img_bytesio</span><span class=p>,</span> <span class=n>dpi</span><span class=o>=</span><span class=mi>96</span><span class=p>)</span>
 
 <span class=c1># Set the position and size of the image in the PDF</span>
 <span class=n>x</span> <span class=o>=</span> <span class=mi>50</span>
@@ -84,11 +84,10 @@ cannot load library &#39;libcairo-2.dll&#39;: error 0x7e
 <span class=n>bar_chart</span><span class=o>.</span><span class=n>add</span><span class=p>(</span><span class=s1>&#39;Product B&#39;</span><span class=p>,</span> <span class=p>[</span><span class=mi>750</span><span class=p>,</span> <span class=mi>1000</span><span class=p>,</span> <span class=mi>1250</span><span class=p>,</span> <span class=mi>1500</span><span class=p>,</span> <span class=mi>1750</span><span class=p>])</span>
 <span class=n>svg_img</span> <span class=o>=</span> <span class=n>bar_chart</span><span class=o>.</span><span class=n>render</span><span class=p>()</span>
 
-<span class=c1># Convert the SVG chart to a PNG image in a BytesIO object</span>
-<span class=n>svg_root</span> <span class=o>=</span> <span class=n>etree</span><span class=o>.</span><span class=n>fromstring</span><span class=p>(</span><span class=n>svg_img</span><span class=p>)</span>
-<span class=n>drawing</span> <span class=o>=</span> <span class=n>SvgRenderer</span><span class=p>(</span><span class=n>svg_img</span><span class=p>)</span><span class=o>.</span><span class=n>render</span><span class=p>(</span><span class=n>svg_root</span><span class=p>)</span>
-<span class=n>drawing_img_byte</span> <span class=o>=</span> <span class=n>renderPM</span><span class=o>.</span><span class=n>drawToString</span><span class=p>(</span><span class=n>drawing</span><span class=p>,</span> <span class=n>fmt</span><span class=o>=</span><span class=s1>&#39;PNG&#39;</span><span class=p>)</span>
-<span class=n>img_bytesio</span> <span class=o>=</span> <span class=n>io</span><span class=o>.</span><span class=n>BytesIO</span><span class=p>(</span><span class=n>drawing_img_byte</span><span class=p>)</span>
+<span class=c1># Convert the SVG chart to a JPEG image in a BytesIO object</span>
+<span class=n>drawing</span> <span class=o>=</span> <span class=n>SvgRenderer</span><span class=p>(</span><span class=s1>&#39;&#39;</span><span class=p>)</span><span class=o>.</span><span class=n>render</span><span class=p>(</span><span class=n>etree</span><span class=o>.</span><span class=n>fromstring</span><span class=p>(</span><span class=n>svg_img</span><span class=p>))</span>
+<span class=n>jpg_img_bytes</span> <span class=o>=</span> <span class=n>renderPM</span><span class=o>.</span><span class=n>drawToString</span><span class=p>(</span><span class=n>drawing</span><span class=p>,</span> <span class=n>fmt</span><span class=o>=</span><span class=s1>&#39;JPG&#39;</span><span class=p>,</span> <span class=n>dpi</span><span class=o>=</span><span class=mi>72</span><span class=p>)</span>
+<span class=n>img_bytesio</span> <span class=o>=</span> <span class=n>io</span><span class=o>.</span><span class=n>BytesIO</span><span class=p>(</span><span class=n>jpg_img_bytes</span><span class=p>)</span>
 
 <span class=c1># Set the position and size of the image in the PDF</span>
 <span class=n>x</span> <span class=o>=</span> <span class=mi>50</span>
