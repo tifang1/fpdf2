@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L1-L451" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L1-L453" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import base64, zlib
 from io import BytesIO
@@ -137,7 +137,7 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
     Args:
         filename: in a format that can be passed to load_image
-        img: optional `BytesIO` or `PIL.Image.Image` instance
+        img: optional `bytes`, `BytesIO` or `PIL.Image.Image` instance
         image_filter (str): one of the SUPPORTED_IMAGE_FILTERS
     &#34;&#34;&#34;
     if Image is None:
@@ -150,6 +150,8 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
         img = Image.open(img_raw_data)
         is_pil_img = False
     elif not isinstance(img, Image.Image):
+        if isinstance(img, bytes):
+            img = BytesIO(img)
         img_raw_data = img
         img = Image.open(img_raw_data)
         is_pil_img = False
@@ -495,7 +497,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L325-L346" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L327-L348" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -530,20 +532,20 @@ def _has_alpha(img, alpha_channel):
 <dt><strong><code>filename</code></strong></dt>
 <dd>in a format that can be passed to load_image</dd>
 <dt><strong><code>img</code></strong></dt>
-<dd>optional <code>BytesIO</code> or <code>PIL.Image.Image</code> instance</dd>
+<dd>optional <code>bytes</code>, <code>BytesIO</code> or <code>PIL.Image.Image</code> instance</dd>
 <dt><strong><code>image_filter</code></strong> :&ensp;<code>str</code></dt>
 <dd>one of the SUPPORTED_IMAGE_FILTERS</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L107-L298" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L107-L300" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
     Args:
         filename: in a format that can be passed to load_image
-        img: optional `BytesIO` or `PIL.Image.Image` instance
+        img: optional `bytes`, `BytesIO` or `PIL.Image.Image` instance
         image_filter (str): one of the SUPPORTED_IMAGE_FILTERS
     &#34;&#34;&#34;
     if Image is None:
@@ -556,6 +558,8 @@ def _has_alpha(img, alpha_channel):
         img = Image.open(img_raw_data)
         is_pil_img = False
     elif not isinstance(img, Image.Image):
+        if isinstance(img, bytes):
+            img = BytesIO(img)
         img_raw_data = img
         img = Image.open(img_raw_data)
         is_pil_img = False
@@ -741,7 +745,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L89-L104" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L89-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -771,7 +775,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L59-L79" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L59-L79" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
@@ -804,7 +808,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L349-L399" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L351-L401" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -873,7 +877,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/393580e6a4a10bd9b92e3b82d628eb31c3517ae0/fpdf/image_parsing.py#L301-L322" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/e6e08b6f444d171c7347e63392f67f3ed8e19304/fpdf/image_parsing.py#L303-L324" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
