@@ -26,7 +26,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L1-L711" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L1-L713" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;HTML renderer&#34;
 
@@ -236,6 +236,7 @@ class HTML2FPDF(HTMLParser):
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         heading_sizes=None,
+        pre_code_font=&#34;courier&#34;,
         warn_on_tags_not_matching=True,
         **_,
     ):
@@ -274,6 +275,7 @@ class HTML2FPDF(HTMLParser):
         self.heading_below = 0.2  # extra space below heading, relative to font size
         if heading_sizes:
             self.heading_sizes.update(heading_sizes)
+        self.pre_code_font = pre_code_font
         self.warn_on_tags_not_matching = warn_on_tags_not_matching
         self._tags_stack = []
         # &lt;table&gt;-related properties:
@@ -405,10 +407,10 @@ class HTML2FPDF(HTMLParser):
             self.pdf.add_page(same=True)
         if tag == &#34;code&#34;:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
-            self.set_font(&#34;courier&#34;, 11)
+            self.set_font(self.pre_code_font, 11)
         if tag == &#34;pre&#34;:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
-            self.set_font(&#34;courier&#34;, 11)
+            self.set_font(self.pre_code_font, 11)
             self.pre_formatted = True
         if tag == &#34;blockquote&#34;:
             self.pdf.set_text_color(100, 0, 45)
@@ -756,7 +758,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L176-L192" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L176-L192" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def color_as_decimal(color=&#34;#000000&#34;):
     if not color:
@@ -785,7 +787,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L676-L683" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L678-L685" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def leading_whitespace_repl(matchobj):
     trimmed_str = &#34;&#34;
@@ -805,7 +807,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L172-L173" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L172-L173" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def px2mm(px):
     return px * 25.4 / 72</code></pre>
@@ -819,7 +821,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L686-L700" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L688-L702" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def whitespace_repl(matchobj):
     trimmed_str = &#34;&#34;
@@ -845,7 +847,7 @@ class HTMLMixin:
 <dl>
 <dt id="fpdf.html.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, li_tag_indent=5, dd_tag_indent=10, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, warn_on_tags_not_matching=True, **_)</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=5, dd_tag_indent=10, table_line_separators=False, ul_bullet_char='\x95', heading_sizes=None, pre_code_font='courier', warn_on_tags_not_matching=True, **_)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -868,7 +870,7 @@ to new image URLs</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L195-L673" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L195-L675" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
@@ -884,6 +886,7 @@ to new image URLs</dd>
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         heading_sizes=None,
+        pre_code_font=&#34;courier&#34;,
         warn_on_tags_not_matching=True,
         **_,
     ):
@@ -922,6 +925,7 @@ to new image URLs</dd>
         self.heading_below = 0.2  # extra space below heading, relative to font size
         if heading_sizes:
             self.heading_sizes.update(heading_sizes)
+        self.pre_code_font = pre_code_font
         self.warn_on_tags_not_matching = warn_on_tags_not_matching
         self._tags_stack = []
         # &lt;table&gt;-related properties:
@@ -1053,10 +1057,10 @@ to new image URLs</dd>
             self.pdf.add_page(same=True)
         if tag == &#34;code&#34;:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
-            self.set_font(&#34;courier&#34;, 11)
+            self.set_font(self.pre_code_font, 11)
         if tag == &#34;pre&#34;:
             self.font_stack.append((self.font_face, self.font_size, self.font_color))
-            self.set_font(&#34;courier&#34;, 11)
+            self.set_font(self.pre_code_font, 11)
             self.pre_formatted = True
         if tag == &#34;blockquote&#34;:
             self.pdf.set_text_color(100, 0, 45)
@@ -1372,7 +1376,7 @@ to new image URLs</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L672-L673" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L674-L675" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def error(self, message):
     raise RuntimeError(message)</code></pre>
@@ -1388,7 +1392,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L616-L621" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L618-L623" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def feed(self, data):
     super().feed(data)
@@ -1406,7 +1410,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L257-L333" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L259-L335" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_data(self, data):
     trailing_space_flag = TRAILING_SPACE.search(data)
@@ -1495,7 +1499,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L526-L614" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L528-L616" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_endtag(self, tag):
     LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
@@ -1596,7 +1600,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L335-L524" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L337-L526" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     attrs = dict(attrs)
@@ -1641,10 +1645,10 @@ as you want (may include '\n').</p></div>
         self.pdf.add_page(same=True)
     if tag == &#34;code&#34;:
         self.font_stack.append((self.font_face, self.font_size, self.font_color))
-        self.set_font(&#34;courier&#34;, 11)
+        self.set_font(self.pre_code_font, 11)
     if tag == &#34;pre&#34;:
         self.font_stack.append((self.font_face, self.font_size, self.font_color))
-        self.set_font(&#34;courier&#34;, 11)
+        self.set_font(self.pre_code_font, 11)
         self.pre_formatted = True
     if tag == &#34;blockquote&#34;:
         self.pdf.set_text_color(100, 0, 45)
@@ -1798,7 +1802,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L647-L653" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L649-L655" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def put_link(self, txt):
     # Put a hyperlink
@@ -1817,7 +1821,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L655-L669" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L657-L671" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render_toc(self, pdf, outline):
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
@@ -1844,7 +1848,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L623-L634" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L625-L636" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_font(self, face=None, size=None):
     if face:
@@ -1868,7 +1872,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L636-L642" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L638-L644" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_style(self, tag=None, enable=False):
     # Modify style and select corresponding font
@@ -1887,7 +1891,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L644-L645" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L646-L647" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_text_color(self, r=None, g=0, b=0):
     self.pdf.set_text_color(r, g, b)</code></pre>
@@ -1904,7 +1908,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/bdd46387aba61e94e39914510017aba2e35130c3/fpdf/html.py#L703-L711" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/html.py#L705-L713" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     def __init__(self, *args, **kwargs):
