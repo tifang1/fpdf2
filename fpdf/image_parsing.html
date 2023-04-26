@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L1-L453" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L1-L464" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import base64, zlib
 from io import BytesIO
@@ -144,6 +144,7 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
         raise EnvironmentError(&#34;Pillow not available - fpdf2 cannot insert images&#34;)
 
     is_pil_img = True
+    jpeg_inverted = False  # flag to check whether a cmyk image is jpeg or not, if set to True the decode array is inverted in output.py
     img_raw_data = None
     if not img or isinstance(img, (Path, str)):
         img_raw_data = load_image(filename)
@@ -175,7 +176,7 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     if img.mode in (&#34;P&#34;, &#34;PA&#34;) and image_filter != &#34;FlateDecode&#34;:
         img = img.convert(&#34;RGBA&#34;)
 
-    if img.mode not in (&#34;1&#34;, &#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
+    if img.mode not in (&#34;1&#34;, &#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;, &#34;CMYK&#34;):
         img = img.convert(&#34;RGBA&#34;)
         img_altered = True
 
@@ -190,7 +191,11 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     if img_raw_data is not None and not img_altered:
         # if we can use the original image bytes directly we do (JPEG and group4 TIFF only):
         if img.format == &#34;JPEG&#34; and image_filter == &#34;DCTDecode&#34;:
-            dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
+            if img.mode in (&#34;RGB&#34;, &#34;RGBA&#34;):
+                dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
+            elif img.mode == &#34;CMYK&#34;:
+                dpn, bpc, colspace = 4, 8, &#34;DeviceCMYK&#34;
+                jpeg_inverted = True
             if img.mode == &#34;L&#34;:
                 dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
             img_raw_data.seek(0)
@@ -203,6 +208,7 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
                 &#34;dpn&#34;: dpn,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
+                &#34;inverted&#34;: jpeg_inverted,
                 &#34;dp&#34;: f&#34;/Predictor 15 /Colors {dpn} /Columns {w}&#34;,
             }
         # We can directly copy the data out of a CCITT Group 4 encoded TIFF, if it
@@ -247,6 +253,7 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
                 &#34;cs&#34;: colspace,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
+                &#34;inverted&#34;: jpeg_inverted,
                 &#34;dp&#34;: f&#34;/BlackIs1 {str(not inverted).lower()} /Columns {w} /K -1 /Rows {h}&#34;,
             }
 
@@ -292,6 +299,9 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
             &#34;JPXDecode&#34;,
         ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
+    elif img.mode == &#34;CMYK&#34;:
+        dpn, bpc, colspace = 4, 8, &#34;DeviceCMYK&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;RGB&#34;:
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
         info[&#34;data&#34;] = _to_data(img, image_filter)
@@ -322,6 +332,7 @@ def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
             &#34;bpc&#34;: bpc,
             &#34;dpn&#34;: dpn,
             &#34;f&#34;: image_filter,
+            &#34;inverted&#34;: jpeg_inverted,
             &#34;dp&#34;: dp,
         }
     )
@@ -497,7 +508,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L327-L348" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L338-L359" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -539,7 +550,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L107-L300" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L107-L311" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
@@ -552,6 +563,7 @@ def _has_alpha(img, alpha_channel):
         raise EnvironmentError(&#34;Pillow not available - fpdf2 cannot insert images&#34;)
 
     is_pil_img = True
+    jpeg_inverted = False  # flag to check whether a cmyk image is jpeg or not, if set to True the decode array is inverted in output.py
     img_raw_data = None
     if not img or isinstance(img, (Path, str)):
         img_raw_data = load_image(filename)
@@ -583,7 +595,7 @@ def _has_alpha(img, alpha_channel):
     if img.mode in (&#34;P&#34;, &#34;PA&#34;) and image_filter != &#34;FlateDecode&#34;:
         img = img.convert(&#34;RGBA&#34;)
 
-    if img.mode not in (&#34;1&#34;, &#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;):
+    if img.mode not in (&#34;1&#34;, &#34;L&#34;, &#34;LA&#34;, &#34;RGB&#34;, &#34;RGBA&#34;, &#34;P&#34;, &#34;PA&#34;, &#34;CMYK&#34;):
         img = img.convert(&#34;RGBA&#34;)
         img_altered = True
 
@@ -598,7 +610,11 @@ def _has_alpha(img, alpha_channel):
     if img_raw_data is not None and not img_altered:
         # if we can use the original image bytes directly we do (JPEG and group4 TIFF only):
         if img.format == &#34;JPEG&#34; and image_filter == &#34;DCTDecode&#34;:
-            dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
+            if img.mode in (&#34;RGB&#34;, &#34;RGBA&#34;):
+                dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
+            elif img.mode == &#34;CMYK&#34;:
+                dpn, bpc, colspace = 4, 8, &#34;DeviceCMYK&#34;
+                jpeg_inverted = True
             if img.mode == &#34;L&#34;:
                 dpn, bpc, colspace = 1, 8, &#34;DeviceGray&#34;
             img_raw_data.seek(0)
@@ -611,6 +627,7 @@ def _has_alpha(img, alpha_channel):
                 &#34;dpn&#34;: dpn,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
+                &#34;inverted&#34;: jpeg_inverted,
                 &#34;dp&#34;: f&#34;/Predictor 15 /Colors {dpn} /Columns {w}&#34;,
             }
         # We can directly copy the data out of a CCITT Group 4 encoded TIFF, if it
@@ -655,6 +672,7 @@ def _has_alpha(img, alpha_channel):
                 &#34;cs&#34;: colspace,
                 &#34;bpc&#34;: bpc,
                 &#34;f&#34;: image_filter,
+                &#34;inverted&#34;: jpeg_inverted,
                 &#34;dp&#34;: f&#34;/BlackIs1 {str(not inverted).lower()} /Columns {w} /K -1 /Rows {h}&#34;,
             }
 
@@ -700,6 +718,9 @@ def _has_alpha(img, alpha_channel):
             &#34;JPXDecode&#34;,
         ):
             info[&#34;smask&#34;] = _to_data(img, image_filter, select_slice=alpha_channel)
+    elif img.mode == &#34;CMYK&#34;:
+        dpn, bpc, colspace = 4, 8, &#34;DeviceCMYK&#34;
+        info[&#34;data&#34;] = _to_data(img, image_filter)
     elif img.mode == &#34;RGB&#34;:
         dpn, bpc, colspace = 3, 8, &#34;DeviceRGB&#34;
         info[&#34;data&#34;] = _to_data(img, image_filter)
@@ -730,6 +751,7 @@ def _has_alpha(img, alpha_channel):
             &#34;bpc&#34;: bpc,
             &#34;dpn&#34;: dpn,
             &#34;f&#34;: image_filter,
+            &#34;inverted&#34;: jpeg_inverted,
             &#34;dp&#34;: dp,
         }
     )
@@ -745,7 +767,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L89-L104" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L89-L104" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -775,7 +797,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L59-L79" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L59-L79" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
@@ -808,7 +830,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L351-L401" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L362-L412" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -877,7 +899,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/c55f1e3a1b75191a3b1f79d44d60f004f6bf78e5/fpdf/image_parsing.py#L303-L324" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/33b9444d5820ab04b512b6bf626af58bd32e8c31/fpdf/image_parsing.py#L314-L335" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
