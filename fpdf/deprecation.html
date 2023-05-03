@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/4d1dd4761747e22ce70f1ce84df416934da5e60e/fpdf/deprecation.py#L1-L36" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/37fc30f14481a56ab362dbca3dd6e4c45ab8f043/fpdf/deprecation.py#L1-L38" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import warnings
 from types import ModuleType
@@ -34,6 +34,7 @@ from types import ModuleType
 class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __call__(self):
         raise TypeError(
+            # pylint: disable=implicit-str-concat
             &#34;You tried to instantied the fpdf module.&#34;
             &#34; You probably want to import the FPDF class instead:&#34;
             &#34; from fpdf import FPDF&#34;
@@ -42,6 +43,7 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __getattr__(self, name):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
+                # pylint: disable=implicit-str-concat
                 &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
                 &#34; have been deprecated in favour of&#34;
                 &#34; FPDF(font_cache_dir=...)&#34;,
@@ -49,12 +51,12 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
                 stacklevel=2,
             )
             return None
-        # pylint: disable=no-member
         return super().__getattribute__(name)
 
     def __setattr__(self, name, value):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
+                # pylint: disable=implicit-str-concat
                 &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
                 &#34; have been deprecated in favour of&#34;
                 &#34; FPDF(font_cache_dir=...)&#34;,
@@ -84,11 +86,12 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/4d1dd4761747e22ce70f1ce84df416934da5e60e/fpdf/deprecation.py#L5-L36" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/37fc30f14481a56ab362dbca3dd6e4c45ab8f043/fpdf/deprecation.py#L5-L38" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __call__(self):
         raise TypeError(
+            # pylint: disable=implicit-str-concat
             &#34;You tried to instantied the fpdf module.&#34;
             &#34; You probably want to import the FPDF class instead:&#34;
             &#34; from fpdf import FPDF&#34;
@@ -97,6 +100,7 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __getattr__(self, name):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
+                # pylint: disable=implicit-str-concat
                 &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
                 &#34; have been deprecated in favour of&#34;
                 &#34; FPDF(font_cache_dir=...)&#34;,
@@ -104,12 +108,12 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
                 stacklevel=2,
             )
             return None
-        # pylint: disable=no-member
         return super().__getattribute__(name)
 
     def __setattr__(self, name, value):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
+                # pylint: disable=implicit-str-concat
                 &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
                 &#34; have been deprecated in favour of&#34;
                 &#34; FPDF(font_cache_dir=...)&#34;,
