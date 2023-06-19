@@ -27,6 +27,8 @@ This can also be enabled programmatically with `warnings.simplefilter('default',
 - [`FPDF.image()`](https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.image): allowing images path starting with `data` to be passed as input
 ### Deprecated
 - the `center` optional parameter of [`FPDF.cell()`](https://pyfpdf.github.io/fpdf2/fpdf/fpdf.html#fpdf.fpdf.FPDF.cell) is **no more** deprecated, as it allows for horizontal positioning, which is different from text alignment control with `align="C"`
+### Changed
+- useless trailing zeros in the PDF content streams have been removed, which makes the size of the generated PDF files slightly smaller
 
 ## [2.7.4] - 2023-04-28
 ### Added
