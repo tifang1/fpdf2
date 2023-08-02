@@ -28,7 +28,7 @@ Includes the definition of the character widths of all PDF standard fonts.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L1-L2833" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L1-L3060" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Font-related classes &amp; constants.
@@ -36,15 +36,22 @@ Includes the definition of the character widths of all PDF standard fonts.
 &#34;&#34;&#34;
 import re
 
+from bisect import bisect_left
 from collections import defaultdict
 from dataclasses import dataclass, replace
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 from fontTools import ttLib
+
+try:
+    import uharfbuzz as hb
+except ImportError:
+    hb = None
 
 from .drawing import DeviceGray, DeviceRGB
 from .enums import FontDescriptorFlags, TextEmphasis
 from .syntax import Name, PDFObject
+from .util import escape_parens
 
 
 @dataclass
@@ -93,6 +100,14 @@ class CoreFont:
         self.fontkey = fontkey
         self.emphasis = TextEmphasis.coerce(style)
 
+    def get_text_width(self, text, font_size_pt, _):
+        return (len(text), sum(self.cw[c] for c in text) * font_size_pt * 0.001)
+
+    # Disabling this check - method kept as is to have same method/signature on CoreConf and TTFFont:
+    # pylint: disable=no-self-use
+    def encode_text(self, text):
+        return f&#34;({escape_parens(text)}) Tj&#34;
+
     def __repr__(self):
         return f&#34;CoreFont(i={self.i}, fontkey={self.fontkey})&#34;
 
@@ -103,14 +118,19 @@ class TTFFont:
         &#34;type&#34;,
         &#34;name&#34;,
         &#34;desc&#34;,
+        &#34;glyph_ids&#34;,
+        &#34;hbfont&#34;,
         &#34;up&#34;,
         &#34;ut&#34;,
         &#34;cw&#34;,
         &#34;ttffile&#34;,
         &#34;fontkey&#34;,
         &#34;emphasis&#34;,
+        &#34;scale&#34;,
         &#34;subset&#34;,
         &#34;cmap&#34;,
+        &#34;ttfont&#34;,
+        &#34;missing_glyphs&#34;,
     )
 
     def __init__(self, fpdf, font_file_path, fontkey, style):
@@ -119,67 +139,219 @@ class TTFFont:
         self.ttffile = font_file_path
         self.fontkey = fontkey
 
-        font = ttLib.TTFont(self.ttffile, fontNumber=0, lazy=True)
+        # recalcTimestamp=False means that it doesn&#39;t modify the &#34;modified&#34; timestamp in head table
+        # if we leave recalcTimestamp=True the tests will break every time
+        self.ttfont = ttLib.TTFont(
+            self.ttffile, recalcTimestamp=False, fontNumber=0, lazy=True
+        )
 
-        scale = 1000 / font[&#34;head&#34;].unitsPerEm
-        default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
+        self.scale = 1000 / self.ttfont[&#34;head&#34;].unitsPerEm
+        default_width = round(self.scale * self.ttfont[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
 
         try:
-            cap_height = font[&#34;OS/2&#34;].sCapHeight
+            cap_height = self.ttfont[&#34;OS/2&#34;].sCapHeight
         except AttributeError:
-            cap_height = font[&#34;hhea&#34;].ascent
+            cap_height = self.ttfont[&#34;hhea&#34;].ascent
 
         # entry for the PDF font descriptor specifying various characteristics of the font
         flags = FontDescriptorFlags.SYMBOLIC
-        if font[&#34;post&#34;].isFixedPitch:
+        if self.ttfont[&#34;post&#34;].isFixedPitch:
             flags |= FontDescriptorFlags.FIXED_PITCH
-        if font[&#34;post&#34;].italicAngle != 0:
+        if self.ttfont[&#34;post&#34;].italicAngle != 0:
             flags |= FontDescriptorFlags.ITALIC
-        if font[&#34;OS/2&#34;].usWeightClass &gt;= 600:
+        if self.ttfont[&#34;OS/2&#34;].usWeightClass &gt;= 600:
             flags |= FontDescriptorFlags.FORCE_BOLD
 
         self.desc = PDFFontDescriptor(
-            ascent=round(font[&#34;hhea&#34;].ascent * scale),
-            descent=round(font[&#34;hhea&#34;].descent * scale),
-            cap_height=round(cap_height * scale),
+            ascent=round(self.ttfont[&#34;hhea&#34;].ascent * self.scale),
+            descent=round(self.ttfont[&#34;hhea&#34;].descent * self.scale),
+            cap_height=round(cap_height * self.scale),
             flags=flags,
             font_b_box=(
-                f&#34;[{font[&#39;head&#39;].xMin * scale:.0f} {font[&#39;head&#39;].yMin * scale:.0f}&#34;
-                f&#34; {font[&#39;head&#39;].xMax * scale:.0f} {font[&#39;head&#39;].yMax * scale:.0f}]&#34;
+                f&#34;[{self.ttfont[&#39;head&#39;].xMin * self.scale:.0f} {self.ttfont[&#39;head&#39;].yMin * self.scale:.0f}&#34;
+                f&#34; {self.ttfont[&#39;head&#39;].xMax * self.scale:.0f} {self.ttfont[&#39;head&#39;].yMax * self.scale:.0f}]&#34;
             ),
-            italic_angle=int(font[&#34;post&#34;].italicAngle),
-            stem_v=round(50 + int(pow((font[&#34;OS/2&#34;].usWeightClass / 65), 2))),
+            italic_angle=int(self.ttfont[&#34;post&#34;].italicAngle),
+            stem_v=round(50 + int(pow((self.ttfont[&#34;OS/2&#34;].usWeightClass / 65), 2))),
             missing_width=default_width,
         )
 
         # a map unicode_char -&gt; char_width
         self.cw = defaultdict(lambda: default_width)
-        self.cmap = tuple(font.getBestCmap().keys())
+
+        # fonttools cmap = unicode char to glyph name
+        # saving only the keys we have a tuple with
+        # the unicode characters available on the font
+        self.cmap = tuple(self.ttfont.getBestCmap().keys())
+
+        # saving a list of glyph ids to char to allow
+        # subset by unicode (regular) and by glyph
+        # (shaped with harfbuz)
+        self.glyph_ids = {}
+
         for char in self.cmap:
             # take glyph associated to char
-            glyph = font.getBestCmap()[char]
+            glyph = self.ttfont.getBestCmap()[char]
 
             # take width associated to glyph
-            w = font[&#34;hmtx&#34;].metrics[glyph][0]
+            w = self.ttfont[&#34;hmtx&#34;].metrics[glyph][0]
 
             # probably this check could be deleted
             if w == 65535:
                 w = 0
 
-            self.cw[char] = round(scale * w + 0.001)  # ROUND_HALF_UP
+            self.cw[char] = round(self.scale * w + 0.001)  # ROUND_HALF_UP
+
+            self.glyph_ids[char] = self.ttfont.getGlyphID(glyph)
+
+        self.missing_glyphs = []
 
         # include numbers in the subset! (if alias present)
         # ensure that alias is mapped 1-by-1 additionally (must be replaceable)
-        sbarr = &#34;\x00 &#34;
+        sbarr = &#34;\x00 \r\n&#34;
         if fpdf.str_alias_nb_pages:
             sbarr += &#34;0123456789&#34;
             sbarr += fpdf.str_alias_nb_pages
 
-        self.name = re.sub(&#34;[ ()]&#34;, &#34;&#34;, font[&#34;name&#34;].getBestFullName())
-        self.up = round(font[&#34;post&#34;].underlinePosition * scale)
-        self.ut = round(font[&#34;post&#34;].underlineThickness * scale)
+        self.name = re.sub(&#34;[ ()]&#34;, &#34;&#34;, self.ttfont[&#34;name&#34;].getBestFullName())
+        self.up = round(self.ttfont[&#34;post&#34;].underlinePosition * self.scale)
+        self.ut = round(self.ttfont[&#34;post&#34;].underlineThickness * self.scale)
         self.emphasis = TextEmphasis.coerce(style)
-        self.subset = SubsetMap([ord(char) for char in sbarr])
+        self.subset = SubsetMap(self, [ord(char) for char in sbarr])
+
+    def __repr__(self):
+        return f&#34;TTFFont(i={self.i}, fontkey={self.fontkey})&#34;
+
+    def close(self):
+        self.ttfont.close()
+        self.hbfont = None
+
+    def get_text_width(self, text, font_size_pt, text_shaping_parms):
+        if text_shaping_parms:
+            return self.shaped_text_width(text, font_size_pt, text_shaping_parms)
+        return (len(text), sum(self.cw[ord(c)] for c in text) * font_size_pt * 0.001)
+
+    def shaped_text_width(self, text, font_size_pt, text_shaping_parms):
+        &#34;&#34;&#34;
+        When texts are shaped, the length of a string is not always the sum of all individual character widths
+        This method will invoke harfbuzz to perform the text shaping and return the sum of &#34;x_advance&#34;
+        and &#34;x_offset&#34; for each glyph. This method works for &#34;left to right&#34; or &#34;right to left&#34; texts.
+        &#34;&#34;&#34;
+        _, glyph_positions = self.perform_harfbuzz_shaping(
+            text, font_size_pt, text_shaping_parms
+        )
+        text_width = 0
+        for pos in glyph_positions:
+            text_width += (
+                round(self.scale * (pos.x_advance + pos.x_offset) + 0.001)
+                * font_size_pt
+                * 0.001
+            )
+        return (len(glyph_positions), text_width)
+
+    # Disabling this check - looks like cython confuses pylint:
+    # pylint: disable=no-member
+    def perform_harfbuzz_shaping(self, text, font_size_pt, text_shaping_parms):
+        &#34;&#34;&#34;
+        This method invokes Harfbuzz to perform text shaping of the input string
+        &#34;&#34;&#34;
+        if not hasattr(self, &#34;hbfont&#34;):
+            self.hbfont = hb.Font(hb.Face(hb.Blob.from_file_path(self.ttffile)))
+        self.hbfont.ptem = font_size_pt
+        buf = hb.Buffer()
+        buf.cluster_level = 1
+        buf.add_str(&#34;&#34;.join(text))
+        features = text_shaping_parms[&#34;features&#34;]
+        if (
+            text_shaping_parms[&#34;direction&#34;]
+            or text_shaping_parms[&#34;script&#34;]
+            or text_shaping_parms[&#34;language&#34;]
+        ):
+            buf.direction = text_shaping_parms[&#34;direction&#34;]
+            buf.script = text_shaping_parms[&#34;script&#34;]
+            buf.language = text_shaping_parms[&#34;language&#34;]
+        else:
+            buf.guess_segment_properties()
+        hb.shape(self.hbfont, buf, features)
+        return buf.glyph_infos, buf.glyph_positions
+
+    def encode_text(self, text):
+        txt_mapped = &#34;&#34;
+        for char in text:
+            uni = ord(char)
+            # Instead of adding the actual character to the stream its code is
+            # mapped to a position in the font&#39;s subset
+            txt_mapped += chr(self.subset.pick(uni))
+        return f&#39;({escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))}) Tj&#39;
+
+    def shape_text(self, text, font_size_pt, text_shaping_parms):
+        &#34;&#34;&#34;
+        This method will invoke harfbuzz for text shaping, include the mapping code
+        of the glyphs on the subset and map input characters to the cluster codes
+        &#34;&#34;&#34;
+        if len(text) == 0:
+            return []
+        glyph_infos, glyph_positions = self.perform_harfbuzz_shaping(
+            text, font_size_pt, text_shaping_parms
+        )
+        text_info = []
+
+        # Find cluster gaps
+        # Ex: text = &#34;ABCD&#34;
+        # glyph infos has cluster: 0, 2, 3 - it means A and B are together on the first glyph
+        # (ligature or substitution) - the glyph should have both unicodes and it should be translated
+        # properly on the CID to GID mapping
+        #
+        def get_cluster_from_text_index(cluster_list, index):
+            pos = bisect_left(cluster_list, index)
+            if pos == 0:
+                return cluster_list[0]
+            if pos == len(cluster_list) or cluster_list[pos] != index:
+                return cluster_list[pos - 1]
+            return cluster_list[pos]
+
+        cluster_list = list(sorted(int(gi.cluster) for gi in glyph_infos))
+        cluster_mapping = {}
+        for i in range(len(text)):
+            cl = get_cluster_from_text_index(cluster_list, i)
+            if cl in cluster_mapping:
+                cluster_mapping[cl].append(i)
+            else:
+                cluster_mapping[cl] = [i]
+
+        for cluster_seq, gi in enumerate(glyph_infos):
+            unicode = []
+            if gi.cluster in cluster_mapping:
+                unicode = [ord(text[i]) for i in cluster_mapping[gi.cluster]]
+                cluster_mapping.pop(gi.cluster)
+
+            gname = self.ttfont.getGlyphName(gi.codepoint)
+            gwidth = round(self.scale * self.ttfont[&#34;hmtx&#34;].metrics[gname][0])
+            glyph = self.subset.get_glyph(
+                glyph=gi.codepoint,
+                unicode=tuple(unicode),
+                glyph_name=gname,
+                glyph_width=gwidth,
+            )
+            force_positioning = False
+            if (
+                gwidth != glyph_positions[cluster_seq].x_advance
+                or glyph_positions[cluster_seq].x_offset != 0
+                or glyph_positions[cluster_seq].y_offset != 0
+                or glyph_positions[cluster_seq].y_advance != 0
+            ):
+                force_positioning = True
+            text_info.append(
+                {
+                    &#34;mapped_char&#34;: self.subset.pick_glyph(glyph),
+                    &#34;x_advance&#34;: glyph_positions[cluster_seq].x_advance,
+                    &#34;y_advance&#34;: glyph_positions[cluster_seq].y_advance,
+                    &#34;x_offset&#34;: glyph_positions[cluster_seq].x_offset,
+                    &#34;y_offset&#34;: glyph_positions[cluster_seq].y_offset,
+                    &#34;force_positioning&#34;: force_positioning,
+                }
+            )
+        return text_info
 
 
 class PDFFontDescriptor(PDFObject):
@@ -207,6 +379,21 @@ class PDFFontDescriptor(PDFObject):
         self.font_name = None
 
 
+@dataclass(order=True, frozen=True)
+class Glyph:
+    &#34;&#34;&#34;
+    This represents one glyph on the font
+    Unicode is a tuple because ligatures or character substitution
+    can map a sequence of unicode characters to a single glyph
+    &#34;&#34;&#34;
+
+    __slots__ = [&#34;glyph_id&#34;, &#34;unicode&#34;, &#34;glyph_name&#34;, &#34;glyph_width&#34;]
+    glyph_id: int
+    unicode: Tuple
+    glyph_name: str
+    glyph_width: int
+
+
 class SubsetMap:
     &#34;&#34;&#34;Holds a mapping of used characters and their position in the font&#39;s subset
 
@@ -218,34 +405,74 @@ class SubsetMap:
     the lowest possible representation.
     &#34;&#34;&#34;
 
-    def __init__(self, identities: List[int]):
+    def __init__(self, font: TTFFont, identities: List[int]):
         super().__init__()
         self._next = 0
+        self.font = font
 
         # sort list to ease deletion once _next
         # becomes higher than first reservation
         self._reserved = sorted(identities)
 
         # int(x) to ensure values are integers
-        self._map = {x: int(x) for x in self._reserved}
+        self._map = {}
+        for x in self._reserved:
+            glyph = self.get_glyph(unicode=x)
+            if glyph:
+                self._map[glyph] = int(x)
 
     def __len__(self):
         return len(self._map)
 
     def pick(self, unicode: int):
-        if not unicode in self._map:
+        glyph = self.get_glyph(unicode=unicode)
+        if glyph is None and unicode not in self.font.missing_glyphs:
+            self.font.missing_glyphs.append(unicode)
+        return self.pick_glyph(glyph)
+
+    def pick_glyph(self, glyph):
+        if (glyph) and (glyph not in self._map):
             while self._next in self._reserved:
                 self._next += 1
                 if self._next &gt; self._reserved[0]:
                     del self._reserved[0]
-
-            self._map[unicode] = self._next
+            self._map[glyph] = self._next
             self._next += 1
-
-        return self._map.get(unicode)
+        return self._map.get(glyph)
 
     def dict(self):
         return self._map.copy()
+
+    def get_glyph(
+        self, glyph=None, unicode=None, glyph_name=None, glyph_width=None
+    ) -&gt; Glyph:
+        if glyph:
+            return Glyph(glyph, tuple(unicode), glyph_name, glyph_width)
+        if isinstance(unicode, int) and unicode in self.font.glyph_ids.keys():
+            return Glyph(
+                self.font.glyph_ids[unicode],
+                tuple([unicode]),
+                self.font.ttfont.getBestCmap()[unicode],
+                self.font.cw[unicode],
+            )
+        if unicode == 0x00:
+            return Glyph(self.font.cmap[0], tuple([0x00]), &#34;.notdef&#34;, 0)
+        return None
+
+    def get_glyph_by_id(self, cid) -&gt; Glyph:
+        for glyph in self._map:
+            if glyph.glyph_id == cid:
+                return glyph
+        return None
+
+    def get_glyph_by_unicode(self, cid) -&gt; Glyph:
+        for glyph in self._map:
+            if glyph.unicode[0] == cid:
+                return glyph
+        return None
+
+    def get_all_glyph_names(self):
+        return [glyph.glyph_name for glyph in self._map]
 
 
 # Standard fonts
@@ -2883,7 +3110,7 @@ CORE_FONTS_CHARWIDTHS[&#34;zapfdingbats&#34;] = {
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L51-L65" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L58-L80" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CoreFont:
     __slots__ = (&#34;i&#34;, &#34;type&#34;, &#34;name&#34;, &#34;up&#34;, &#34;ut&#34;, &#34;cw&#34;, &#34;fontkey&#34;, &#34;emphasis&#34;)
@@ -2897,6 +3124,14 @@ CORE_FONTS_CHARWIDTHS[&#34;zapfdingbats&#34;] = {
         self.cw = CORE_FONTS_CHARWIDTHS[fontkey]
         self.fontkey = fontkey
         self.emphasis = TextEmphasis.coerce(style)
+
+    def get_text_width(self, text, font_size_pt, _):
+        return (len(text), sum(self.cw[c] for c in text) * font_size_pt * 0.001)
+
+    # Disabling this check - method kept as is to have same method/signature on CoreConf and TTFFont:
+    # pylint: disable=no-self-use
+    def encode_text(self, text):
+        return f&#34;({escape_parens(text)}) Tj&#34;
 
     def __repr__(self):
         return f&#34;CoreFont(i={self.i}, fontkey={self.fontkey})&#34;</code></pre>
@@ -2936,6 +3171,37 @@ CORE_FONTS_CHARWIDTHS[&#34;zapfdingbats&#34;] = {
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 </dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.fonts.CoreFont.encode_text"><code class="name flex">
+<span>def <span class="ident">encode_text</span></span>(<span>self, text)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L76-L77" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def encode_text(self, text):
+    return f&#34;({escape_parens(text)}) Tj&#34;</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.CoreFont.get_text_width"><code class="name flex">
+<span>def <span class="ident">get_text_width</span></span>(<span>self, text, font_size_pt, _)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L71-L72" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_text_width(self, text, font_size_pt, _):
+    return (len(text), sum(self.cw[c] for c in text) * font_size_pt * 0.001)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="fpdf.fonts.FontFace"><code class="flex name class">
 <span>class <span class="ident">FontFace</span></span>
@@ -2947,7 +3213,7 @@ This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L18-L48" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L25-L55" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class FontFace:
@@ -3081,6 +3347,53 @@ assert c1.x == 3 and c1.y == 2</p></div>
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.fonts.Glyph"><code class="flex name class">
+<span>class <span class="ident">Glyph</span></span>
+<span>(</span><span>glyph_id: int, unicode: Tuple, glyph_name: str, glyph_width: int)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This represents one glyph on the font
+Unicode is a tuple because ligatures or character substitution
+can map a sequence of unicode characters to a single glyph</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L350-L362" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass(order=True, frozen=True)
+class Glyph:
+    &#34;&#34;&#34;
+    This represents one glyph on the font
+    Unicode is a tuple because ligatures or character substitution
+    can map a sequence of unicode characters to a single glyph
+    &#34;&#34;&#34;
+
+    __slots__ = [&#34;glyph_id&#34;, &#34;unicode&#34;, &#34;glyph_name&#34;, &#34;glyph_width&#34;]
+    glyph_id: int
+    unicode: Tuple
+    glyph_name: str
+    glyph_width: int</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="fpdf.fonts.Glyph.glyph_id"><code class="name">var <span class="ident">glyph_id</span> : int</code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.fonts.Glyph.glyph_name"><code class="name">var <span class="ident">glyph_name</span> : str</code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.fonts.Glyph.glyph_width"><code class="name">var <span class="ident">glyph_width</span> : int</code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.fonts.Glyph.unicode"><code class="name">var <span class="ident">unicode</span> : Tuple</code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.fonts.PDFFontDescriptor"><code class="flex name class">
 <span>class <span class="ident">PDFFontDescriptor</span></span>
 <span>(</span><span>ascent, descent, cap_height, flags, font_b_box, italic_angle, stem_v, missing_width)</span>
@@ -3092,7 +3405,7 @@ assert c1.x == 3 and c1.y == 2</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L153-L175" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L325-L347" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFFontDescriptor(PDFObject):
     def __init__(
@@ -3134,7 +3447,7 @@ assert c1.x == 3 and c1.y == 2</p></div>
 </dd>
 <dt id="fpdf.fonts.SubsetMap"><code class="flex name class">
 <span>class <span class="ident">SubsetMap</span></span>
-<span>(</span><span>identities: List[int])</span>
+<span>(</span><span>font: <a title="fpdf.fonts.TTFFont" href="#fpdf.fonts.TTFFont">TTFFont</a>, identities: List[int])</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Holds a mapping of used characters and their position in the font's subset</p>
@@ -3147,7 +3460,7 @@ the lowest possible representation.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L178-L216" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L365-L443" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SubsetMap:
     &#34;&#34;&#34;Holds a mapping of used characters and their position in the font&#39;s subset
@@ -3160,34 +3473,74 @@ the lowest possible representation.</p></div>
     the lowest possible representation.
     &#34;&#34;&#34;
 
-    def __init__(self, identities: List[int]):
+    def __init__(self, font: TTFFont, identities: List[int]):
         super().__init__()
         self._next = 0
+        self.font = font
 
         # sort list to ease deletion once _next
         # becomes higher than first reservation
         self._reserved = sorted(identities)
 
         # int(x) to ensure values are integers
-        self._map = {x: int(x) for x in self._reserved}
+        self._map = {}
+        for x in self._reserved:
+            glyph = self.get_glyph(unicode=x)
+            if glyph:
+                self._map[glyph] = int(x)
 
     def __len__(self):
         return len(self._map)
 
     def pick(self, unicode: int):
-        if not unicode in self._map:
+        glyph = self.get_glyph(unicode=unicode)
+        if glyph is None and unicode not in self.font.missing_glyphs:
+            self.font.missing_glyphs.append(unicode)
+        return self.pick_glyph(glyph)
+
+    def pick_glyph(self, glyph):
+        if (glyph) and (glyph not in self._map):
             while self._next in self._reserved:
                 self._next += 1
                 if self._next &gt; self._reserved[0]:
                     del self._reserved[0]
-
-            self._map[unicode] = self._next
+            self._map[glyph] = self._next
             self._next += 1
-
-        return self._map.get(unicode)
+        return self._map.get(glyph)
 
     def dict(self):
-        return self._map.copy()</code></pre>
+        return self._map.copy()
+
+    def get_glyph(
+        self, glyph=None, unicode=None, glyph_name=None, glyph_width=None
+    ) -&gt; Glyph:
+        if glyph:
+            return Glyph(glyph, tuple(unicode), glyph_name, glyph_width)
+        if isinstance(unicode, int) and unicode in self.font.glyph_ids.keys():
+            return Glyph(
+                self.font.glyph_ids[unicode],
+                tuple([unicode]),
+                self.font.ttfont.getBestCmap()[unicode],
+                self.font.cw[unicode],
+            )
+        if unicode == 0x00:
+            return Glyph(self.font.cmap[0], tuple([0x00]), &#34;.notdef&#34;, 0)
+        return None
+
+    def get_glyph_by_id(self, cid) -&gt; Glyph:
+        for glyph in self._map:
+            if glyph.glyph_id == cid:
+                return glyph
+        return None
+
+    def get_glyph_by_unicode(self, cid) -&gt; Glyph:
+        for glyph in self._map:
+            if glyph.unicode[0] == cid:
+                return glyph
+        return None
+
+    def get_all_glyph_names(self):
+        return [glyph.glyph_name for glyph in self._map]</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -3199,10 +3552,85 @@ the lowest possible representation.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L215-L216" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L411-L412" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def dict(self):
     return self._map.copy()</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.SubsetMap.get_all_glyph_names"><code class="name flex">
+<span>def <span class="ident">get_all_glyph_names</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L442-L443" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_all_glyph_names(self):
+    return [glyph.glyph_name for glyph in self._map]</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.SubsetMap.get_glyph"><code class="name flex">
+<span>def <span class="ident">get_glyph</span></span>(<span>self, glyph=None, unicode=None, glyph_name=None, glyph_width=None) ‑> <a title="fpdf.fonts.Glyph" href="#fpdf.fonts.Glyph">Glyph</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L414-L428" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_glyph(
+    self, glyph=None, unicode=None, glyph_name=None, glyph_width=None
+) -&gt; Glyph:
+    if glyph:
+        return Glyph(glyph, tuple(unicode), glyph_name, glyph_width)
+    if isinstance(unicode, int) and unicode in self.font.glyph_ids.keys():
+        return Glyph(
+            self.font.glyph_ids[unicode],
+            tuple([unicode]),
+            self.font.ttfont.getBestCmap()[unicode],
+            self.font.cw[unicode],
+        )
+    if unicode == 0x00:
+        return Glyph(self.font.cmap[0], tuple([0x00]), &#34;.notdef&#34;, 0)
+    return None</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.SubsetMap.get_glyph_by_id"><code class="name flex">
+<span>def <span class="ident">get_glyph_by_id</span></span>(<span>self, cid) ‑> <a title="fpdf.fonts.Glyph" href="#fpdf.fonts.Glyph">Glyph</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L430-L434" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_glyph_by_id(self, cid) -&gt; Glyph:
+    for glyph in self._map:
+        if glyph.glyph_id == cid:
+            return glyph
+    return None</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.SubsetMap.get_glyph_by_unicode"><code class="name flex">
+<span>def <span class="ident">get_glyph_by_unicode</span></span>(<span>self, cid) ‑> <a title="fpdf.fonts.Glyph" href="#fpdf.fonts.Glyph">Glyph</a></span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L436-L440" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_glyph_by_unicode(self, cid) -&gt; Glyph:
+    for glyph in self._map:
+        if glyph.unicode[0] == cid:
+            return glyph
+    return None</code></pre>
 </details>
 </dd>
 <dt id="fpdf.fonts.SubsetMap.pick"><code class="name flex">
@@ -3213,19 +3641,34 @@ the lowest possible representation.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L203-L213" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L395-L399" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def pick(self, unicode: int):
-    if not unicode in self._map:
+    glyph = self.get_glyph(unicode=unicode)
+    if glyph is None and unicode not in self.font.missing_glyphs:
+        self.font.missing_glyphs.append(unicode)
+    return self.pick_glyph(glyph)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.SubsetMap.pick_glyph"><code class="name flex">
+<span>def <span class="ident">pick_glyph</span></span>(<span>self, glyph)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L401-L409" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def pick_glyph(self, glyph):
+    if (glyph) and (glyph not in self._map):
         while self._next in self._reserved:
             self._next += 1
             if self._next &gt; self._reserved[0]:
                 del self._reserved[0]
-
-        self._map[unicode] = self._next
+        self._map[glyph] = self._next
         self._next += 1
-
-    return self._map.get(unicode)</code></pre>
+    return self._map.get(glyph)</code></pre>
 </details>
 </dd>
 </dl>
@@ -3239,7 +3682,7 @@ the lowest possible representation.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/PyFPDF/fpdf2/blob/95b43fb26ec2e1ede477c90f1ab15132370b59c9/fpdf/fonts.py#L68-L150" class="git-link">Browse git</a>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L83-L322" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TTFFont:
     __slots__ = (
@@ -3247,14 +3690,19 @@ the lowest possible representation.</p></div>
         &#34;type&#34;,
         &#34;name&#34;,
         &#34;desc&#34;,
+        &#34;glyph_ids&#34;,
+        &#34;hbfont&#34;,
         &#34;up&#34;,
         &#34;ut&#34;,
         &#34;cw&#34;,
         &#34;ttffile&#34;,
         &#34;fontkey&#34;,
         &#34;emphasis&#34;,
+        &#34;scale&#34;,
         &#34;subset&#34;,
         &#34;cmap&#34;,
+        &#34;ttfont&#34;,
+        &#34;missing_glyphs&#34;,
     )
 
     def __init__(self, fpdf, font_file_path, fontkey, style):
@@ -3263,67 +3711,219 @@ the lowest possible representation.</p></div>
         self.ttffile = font_file_path
         self.fontkey = fontkey
 
-        font = ttLib.TTFont(self.ttffile, fontNumber=0, lazy=True)
+        # recalcTimestamp=False means that it doesn&#39;t modify the &#34;modified&#34; timestamp in head table
+        # if we leave recalcTimestamp=True the tests will break every time
+        self.ttfont = ttLib.TTFont(
+            self.ttffile, recalcTimestamp=False, fontNumber=0, lazy=True
+        )
 
-        scale = 1000 / font[&#34;head&#34;].unitsPerEm
-        default_width = round(scale * font[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
+        self.scale = 1000 / self.ttfont[&#34;head&#34;].unitsPerEm
+        default_width = round(self.scale * self.ttfont[&#34;hmtx&#34;].metrics[&#34;.notdef&#34;][0])
 
         try:
-            cap_height = font[&#34;OS/2&#34;].sCapHeight
+            cap_height = self.ttfont[&#34;OS/2&#34;].sCapHeight
         except AttributeError:
-            cap_height = font[&#34;hhea&#34;].ascent
+            cap_height = self.ttfont[&#34;hhea&#34;].ascent
 
         # entry for the PDF font descriptor specifying various characteristics of the font
         flags = FontDescriptorFlags.SYMBOLIC
-        if font[&#34;post&#34;].isFixedPitch:
+        if self.ttfont[&#34;post&#34;].isFixedPitch:
             flags |= FontDescriptorFlags.FIXED_PITCH
-        if font[&#34;post&#34;].italicAngle != 0:
+        if self.ttfont[&#34;post&#34;].italicAngle != 0:
             flags |= FontDescriptorFlags.ITALIC
-        if font[&#34;OS/2&#34;].usWeightClass &gt;= 600:
+        if self.ttfont[&#34;OS/2&#34;].usWeightClass &gt;= 600:
             flags |= FontDescriptorFlags.FORCE_BOLD
 
         self.desc = PDFFontDescriptor(
-            ascent=round(font[&#34;hhea&#34;].ascent * scale),
-            descent=round(font[&#34;hhea&#34;].descent * scale),
-            cap_height=round(cap_height * scale),
+            ascent=round(self.ttfont[&#34;hhea&#34;].ascent * self.scale),
+            descent=round(self.ttfont[&#34;hhea&#34;].descent * self.scale),
+            cap_height=round(cap_height * self.scale),
             flags=flags,
             font_b_box=(
-                f&#34;[{font[&#39;head&#39;].xMin * scale:.0f} {font[&#39;head&#39;].yMin * scale:.0f}&#34;
-                f&#34; {font[&#39;head&#39;].xMax * scale:.0f} {font[&#39;head&#39;].yMax * scale:.0f}]&#34;
+                f&#34;[{self.ttfont[&#39;head&#39;].xMin * self.scale:.0f} {self.ttfont[&#39;head&#39;].yMin * self.scale:.0f}&#34;
+                f&#34; {self.ttfont[&#39;head&#39;].xMax * self.scale:.0f} {self.ttfont[&#39;head&#39;].yMax * self.scale:.0f}]&#34;
             ),
-            italic_angle=int(font[&#34;post&#34;].italicAngle),
-            stem_v=round(50 + int(pow((font[&#34;OS/2&#34;].usWeightClass / 65), 2))),
+            italic_angle=int(self.ttfont[&#34;post&#34;].italicAngle),
+            stem_v=round(50 + int(pow((self.ttfont[&#34;OS/2&#34;].usWeightClass / 65), 2))),
             missing_width=default_width,
         )
 
         # a map unicode_char -&gt; char_width
         self.cw = defaultdict(lambda: default_width)
-        self.cmap = tuple(font.getBestCmap().keys())
+
+        # fonttools cmap = unicode char to glyph name
+        # saving only the keys we have a tuple with
+        # the unicode characters available on the font
+        self.cmap = tuple(self.ttfont.getBestCmap().keys())
+
+        # saving a list of glyph ids to char to allow
+        # subset by unicode (regular) and by glyph
+        # (shaped with harfbuz)
+        self.glyph_ids = {}
+
         for char in self.cmap:
             # take glyph associated to char
-            glyph = font.getBestCmap()[char]
+            glyph = self.ttfont.getBestCmap()[char]
 
             # take width associated to glyph
-            w = font[&#34;hmtx&#34;].metrics[glyph][0]
+            w = self.ttfont[&#34;hmtx&#34;].metrics[glyph][0]
 
             # probably this check could be deleted
             if w == 65535:
                 w = 0
 
-            self.cw[char] = round(scale * w + 0.001)  # ROUND_HALF_UP
+            self.cw[char] = round(self.scale * w + 0.001)  # ROUND_HALF_UP
+
+            self.glyph_ids[char] = self.ttfont.getGlyphID(glyph)
+
+        self.missing_glyphs = []
 
         # include numbers in the subset! (if alias present)
         # ensure that alias is mapped 1-by-1 additionally (must be replaceable)
-        sbarr = &#34;\x00 &#34;
+        sbarr = &#34;\x00 \r\n&#34;
         if fpdf.str_alias_nb_pages:
             sbarr += &#34;0123456789&#34;
             sbarr += fpdf.str_alias_nb_pages
 
-        self.name = re.sub(&#34;[ ()]&#34;, &#34;&#34;, font[&#34;name&#34;].getBestFullName())
-        self.up = round(font[&#34;post&#34;].underlinePosition * scale)
-        self.ut = round(font[&#34;post&#34;].underlineThickness * scale)
+        self.name = re.sub(&#34;[ ()]&#34;, &#34;&#34;, self.ttfont[&#34;name&#34;].getBestFullName())
+        self.up = round(self.ttfont[&#34;post&#34;].underlinePosition * self.scale)
+        self.ut = round(self.ttfont[&#34;post&#34;].underlineThickness * self.scale)
         self.emphasis = TextEmphasis.coerce(style)
-        self.subset = SubsetMap([ord(char) for char in sbarr])</code></pre>
+        self.subset = SubsetMap(self, [ord(char) for char in sbarr])
+
+    def __repr__(self):
+        return f&#34;TTFFont(i={self.i}, fontkey={self.fontkey})&#34;
+
+    def close(self):
+        self.ttfont.close()
+        self.hbfont = None
+
+    def get_text_width(self, text, font_size_pt, text_shaping_parms):
+        if text_shaping_parms:
+            return self.shaped_text_width(text, font_size_pt, text_shaping_parms)
+        return (len(text), sum(self.cw[ord(c)] for c in text) * font_size_pt * 0.001)
+
+    def shaped_text_width(self, text, font_size_pt, text_shaping_parms):
+        &#34;&#34;&#34;
+        When texts are shaped, the length of a string is not always the sum of all individual character widths
+        This method will invoke harfbuzz to perform the text shaping and return the sum of &#34;x_advance&#34;
+        and &#34;x_offset&#34; for each glyph. This method works for &#34;left to right&#34; or &#34;right to left&#34; texts.
+        &#34;&#34;&#34;
+        _, glyph_positions = self.perform_harfbuzz_shaping(
+            text, font_size_pt, text_shaping_parms
+        )
+        text_width = 0
+        for pos in glyph_positions:
+            text_width += (
+                round(self.scale * (pos.x_advance + pos.x_offset) + 0.001)
+                * font_size_pt
+                * 0.001
+            )
+        return (len(glyph_positions), text_width)
+
+    # Disabling this check - looks like cython confuses pylint:
+    # pylint: disable=no-member
+    def perform_harfbuzz_shaping(self, text, font_size_pt, text_shaping_parms):
+        &#34;&#34;&#34;
+        This method invokes Harfbuzz to perform text shaping of the input string
+        &#34;&#34;&#34;
+        if not hasattr(self, &#34;hbfont&#34;):
+            self.hbfont = hb.Font(hb.Face(hb.Blob.from_file_path(self.ttffile)))
+        self.hbfont.ptem = font_size_pt
+        buf = hb.Buffer()
+        buf.cluster_level = 1
+        buf.add_str(&#34;&#34;.join(text))
+        features = text_shaping_parms[&#34;features&#34;]
+        if (
+            text_shaping_parms[&#34;direction&#34;]
+            or text_shaping_parms[&#34;script&#34;]
+            or text_shaping_parms[&#34;language&#34;]
+        ):
+            buf.direction = text_shaping_parms[&#34;direction&#34;]
+            buf.script = text_shaping_parms[&#34;script&#34;]
+            buf.language = text_shaping_parms[&#34;language&#34;]
+        else:
+            buf.guess_segment_properties()
+        hb.shape(self.hbfont, buf, features)
+        return buf.glyph_infos, buf.glyph_positions
+
+    def encode_text(self, text):
+        txt_mapped = &#34;&#34;
+        for char in text:
+            uni = ord(char)
+            # Instead of adding the actual character to the stream its code is
+            # mapped to a position in the font&#39;s subset
+            txt_mapped += chr(self.subset.pick(uni))
+        return f&#39;({escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))}) Tj&#39;
+
+    def shape_text(self, text, font_size_pt, text_shaping_parms):
+        &#34;&#34;&#34;
+        This method will invoke harfbuzz for text shaping, include the mapping code
+        of the glyphs on the subset and map input characters to the cluster codes
+        &#34;&#34;&#34;
+        if len(text) == 0:
+            return []
+        glyph_infos, glyph_positions = self.perform_harfbuzz_shaping(
+            text, font_size_pt, text_shaping_parms
+        )
+        text_info = []
+
+        # Find cluster gaps
+        # Ex: text = &#34;ABCD&#34;
+        # glyph infos has cluster: 0, 2, 3 - it means A and B are together on the first glyph
+        # (ligature or substitution) - the glyph should have both unicodes and it should be translated
+        # properly on the CID to GID mapping
+        #
+        def get_cluster_from_text_index(cluster_list, index):
+            pos = bisect_left(cluster_list, index)
+            if pos == 0:
+                return cluster_list[0]
+            if pos == len(cluster_list) or cluster_list[pos] != index:
+                return cluster_list[pos - 1]
+            return cluster_list[pos]
+
+        cluster_list = list(sorted(int(gi.cluster) for gi in glyph_infos))
+        cluster_mapping = {}
+        for i in range(len(text)):
+            cl = get_cluster_from_text_index(cluster_list, i)
+            if cl in cluster_mapping:
+                cluster_mapping[cl].append(i)
+            else:
+                cluster_mapping[cl] = [i]
+
+        for cluster_seq, gi in enumerate(glyph_infos):
+            unicode = []
+            if gi.cluster in cluster_mapping:
+                unicode = [ord(text[i]) for i in cluster_mapping[gi.cluster]]
+                cluster_mapping.pop(gi.cluster)
+
+            gname = self.ttfont.getGlyphName(gi.codepoint)
+            gwidth = round(self.scale * self.ttfont[&#34;hmtx&#34;].metrics[gname][0])
+            glyph = self.subset.get_glyph(
+                glyph=gi.codepoint,
+                unicode=tuple(unicode),
+                glyph_name=gname,
+                glyph_width=gwidth,
+            )
+            force_positioning = False
+            if (
+                gwidth != glyph_positions[cluster_seq].x_advance
+                or glyph_positions[cluster_seq].x_offset != 0
+                or glyph_positions[cluster_seq].y_offset != 0
+                or glyph_positions[cluster_seq].y_advance != 0
+            ):
+                force_positioning = True
+            text_info.append(
+                {
+                    &#34;mapped_char&#34;: self.subset.pick_glyph(glyph),
+                    &#34;x_advance&#34;: glyph_positions[cluster_seq].x_advance,
+                    &#34;y_advance&#34;: glyph_positions[cluster_seq].y_advance,
+                    &#34;x_offset&#34;: glyph_positions[cluster_seq].x_offset,
+                    &#34;y_offset&#34;: glyph_positions[cluster_seq].y_offset,
+                    &#34;force_positioning&#34;: force_positioning,
+                }
+            )
+        return text_info</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -3347,11 +3947,27 @@ the lowest possible representation.</p></div>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="fpdf.fonts.TTFFont.glyph_ids"><code class="name">var <span class="ident">glyph_ids</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.fonts.TTFFont.hbfont"><code class="name">var <span class="ident">hbfont</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="fpdf.fonts.TTFFont.i"><code class="name">var <span class="ident">i</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
+<dt id="fpdf.fonts.TTFFont.missing_glyphs"><code class="name">var <span class="ident">missing_glyphs</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
 <dt id="fpdf.fonts.TTFFont.name"><code class="name">var <span class="ident">name</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.fonts.TTFFont.scale"><code class="name">var <span class="ident">scale</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -3360,6 +3976,10 @@ the lowest possible representation.</p></div>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
 <dt id="fpdf.fonts.TTFFont.ttffile"><code class="name">var <span class="ident">ttffile</span></code></dt>
+<dd>
+<div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+<dt id="fpdf.fonts.TTFFont.ttfont"><code class="name">var <span class="ident">ttfont</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
 </dd>
@@ -3374,6 +3994,207 @@ the lowest possible representation.</p></div>
 <dt id="fpdf.fonts.TTFFont.ut"><code class="name">var <span class="ident">ut</span></code></dt>
 <dd>
 <div class="desc"><p>Return an attribute of instance, which is of type owner.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.fonts.TTFFont.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L193-L195" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def close(self):
+    self.ttfont.close()
+    self.hbfont = None</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.TTFFont.encode_text"><code class="name flex">
+<span>def <span class="ident">encode_text</span></span>(<span>self, text)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L246-L253" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def encode_text(self, text):
+    txt_mapped = &#34;&#34;
+    for char in text:
+        uni = ord(char)
+        # Instead of adding the actual character to the stream its code is
+        # mapped to a position in the font&#39;s subset
+        txt_mapped += chr(self.subset.pick(uni))
+    return f&#39;({escape_parens(txt_mapped.encode(&#34;utf-16-be&#34;).decode(&#34;latin-1&#34;))}) Tj&#39;</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.TTFFont.get_text_width"><code class="name flex">
+<span>def <span class="ident">get_text_width</span></span>(<span>self, text, font_size_pt, text_shaping_parms)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L197-L200" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_text_width(self, text, font_size_pt, text_shaping_parms):
+    if text_shaping_parms:
+        return self.shaped_text_width(text, font_size_pt, text_shaping_parms)
+    return (len(text), sum(self.cw[ord(c)] for c in text) * font_size_pt * 0.001)</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.TTFFont.perform_harfbuzz_shaping"><code class="name flex">
+<span>def <span class="ident">perform_harfbuzz_shaping</span></span>(<span>self, text, font_size_pt, text_shaping_parms)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method invokes Harfbuzz to perform text shaping of the input string</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L222-L244" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def perform_harfbuzz_shaping(self, text, font_size_pt, text_shaping_parms):
+    &#34;&#34;&#34;
+    This method invokes Harfbuzz to perform text shaping of the input string
+    &#34;&#34;&#34;
+    if not hasattr(self, &#34;hbfont&#34;):
+        self.hbfont = hb.Font(hb.Face(hb.Blob.from_file_path(self.ttffile)))
+    self.hbfont.ptem = font_size_pt
+    buf = hb.Buffer()
+    buf.cluster_level = 1
+    buf.add_str(&#34;&#34;.join(text))
+    features = text_shaping_parms[&#34;features&#34;]
+    if (
+        text_shaping_parms[&#34;direction&#34;]
+        or text_shaping_parms[&#34;script&#34;]
+        or text_shaping_parms[&#34;language&#34;]
+    ):
+        buf.direction = text_shaping_parms[&#34;direction&#34;]
+        buf.script = text_shaping_parms[&#34;script&#34;]
+        buf.language = text_shaping_parms[&#34;language&#34;]
+    else:
+        buf.guess_segment_properties()
+    hb.shape(self.hbfont, buf, features)
+    return buf.glyph_infos, buf.glyph_positions</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.TTFFont.shape_text"><code class="name flex">
+<span>def <span class="ident">shape_text</span></span>(<span>self, text, font_size_pt, text_shaping_parms)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method will invoke harfbuzz for text shaping, include the mapping code
+of the glyphs on the subset and map input characters to the cluster codes</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L255-L322" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def shape_text(self, text, font_size_pt, text_shaping_parms):
+    &#34;&#34;&#34;
+    This method will invoke harfbuzz for text shaping, include the mapping code
+    of the glyphs on the subset and map input characters to the cluster codes
+    &#34;&#34;&#34;
+    if len(text) == 0:
+        return []
+    glyph_infos, glyph_positions = self.perform_harfbuzz_shaping(
+        text, font_size_pt, text_shaping_parms
+    )
+    text_info = []
+
+    # Find cluster gaps
+    # Ex: text = &#34;ABCD&#34;
+    # glyph infos has cluster: 0, 2, 3 - it means A and B are together on the first glyph
+    # (ligature or substitution) - the glyph should have both unicodes and it should be translated
+    # properly on the CID to GID mapping
+    #
+    def get_cluster_from_text_index(cluster_list, index):
+        pos = bisect_left(cluster_list, index)
+        if pos == 0:
+            return cluster_list[0]
+        if pos == len(cluster_list) or cluster_list[pos] != index:
+            return cluster_list[pos - 1]
+        return cluster_list[pos]
+
+    cluster_list = list(sorted(int(gi.cluster) for gi in glyph_infos))
+    cluster_mapping = {}
+    for i in range(len(text)):
+        cl = get_cluster_from_text_index(cluster_list, i)
+        if cl in cluster_mapping:
+            cluster_mapping[cl].append(i)
+        else:
+            cluster_mapping[cl] = [i]
+
+    for cluster_seq, gi in enumerate(glyph_infos):
+        unicode = []
+        if gi.cluster in cluster_mapping:
+            unicode = [ord(text[i]) for i in cluster_mapping[gi.cluster]]
+            cluster_mapping.pop(gi.cluster)
+
+        gname = self.ttfont.getGlyphName(gi.codepoint)
+        gwidth = round(self.scale * self.ttfont[&#34;hmtx&#34;].metrics[gname][0])
+        glyph = self.subset.get_glyph(
+            glyph=gi.codepoint,
+            unicode=tuple(unicode),
+            glyph_name=gname,
+            glyph_width=gwidth,
+        )
+        force_positioning = False
+        if (
+            gwidth != glyph_positions[cluster_seq].x_advance
+            or glyph_positions[cluster_seq].x_offset != 0
+            or glyph_positions[cluster_seq].y_offset != 0
+            or glyph_positions[cluster_seq].y_advance != 0
+        ):
+            force_positioning = True
+        text_info.append(
+            {
+                &#34;mapped_char&#34;: self.subset.pick_glyph(glyph),
+                &#34;x_advance&#34;: glyph_positions[cluster_seq].x_advance,
+                &#34;y_advance&#34;: glyph_positions[cluster_seq].y_advance,
+                &#34;x_offset&#34;: glyph_positions[cluster_seq].x_offset,
+                &#34;y_offset&#34;: glyph_positions[cluster_seq].y_offset,
+                &#34;force_positioning&#34;: force_positioning,
+            }
+        )
+    return text_info</code></pre>
+</details>
+</dd>
+<dt id="fpdf.fonts.TTFFont.shaped_text_width"><code class="name flex">
+<span>def <span class="ident">shaped_text_width</span></span>(<span>self, text, font_size_pt, text_shaping_parms)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>When texts are shaped, the length of a string is not always the sum of all individual character widths
+This method will invoke harfbuzz to perform the text shaping and return the sum of "x_advance"
+and "x_offset" for each glyph. This method works for "left to right" or "right to left" texts.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/PyFPDF/fpdf2/blob/bd3df6d08f596583142f864c5c5b1d4041c3a61f/fpdf/fonts.py#L202-L218" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def shaped_text_width(self, text, font_size_pt, text_shaping_parms):
+    &#34;&#34;&#34;
+    When texts are shaped, the length of a string is not always the sum of all individual character widths
+    This method will invoke harfbuzz to perform the text shaping and return the sum of &#34;x_advance&#34;
+    and &#34;x_offset&#34; for each glyph. This method works for &#34;left to right&#34; or &#34;right to left&#34; texts.
+    &#34;&#34;&#34;
+    _, glyph_positions = self.perform_harfbuzz_shaping(
+        text, font_size_pt, text_shaping_parms
+    )
+    text_width = 0
+    for pos in glyph_positions:
+        text_width += (
+            round(self.scale * (pos.x_advance + pos.x_offset) + 0.001)
+            * font_size_pt
+            * 0.001
+        )
+    return (len(glyph_positions), text_width)</code></pre>
+</details>
 </dd>
 </dl>
 </dd>
@@ -3398,7 +4219,9 @@ the lowest possible representation.</p></div>
 <ul class="two-column">
 <li><code><a title="fpdf.fonts.CoreFont.cw" href="#fpdf.fonts.CoreFont.cw">cw</a></code></li>
 <li><code><a title="fpdf.fonts.CoreFont.emphasis" href="#fpdf.fonts.CoreFont.emphasis">emphasis</a></code></li>
+<li><code><a title="fpdf.fonts.CoreFont.encode_text" href="#fpdf.fonts.CoreFont.encode_text">encode_text</a></code></li>
 <li><code><a title="fpdf.fonts.CoreFont.fontkey" href="#fpdf.fonts.CoreFont.fontkey">fontkey</a></code></li>
+<li><code><a title="fpdf.fonts.CoreFont.get_text_width" href="#fpdf.fonts.CoreFont.get_text_width">get_text_width</a></code></li>
 <li><code><a title="fpdf.fonts.CoreFont.i" href="#fpdf.fonts.CoreFont.i">i</a></code></li>
 <li><code><a title="fpdf.fonts.CoreFont.name" href="#fpdf.fonts.CoreFont.name">name</a></code></li>
 <li><code><a title="fpdf.fonts.CoreFont.type" href="#fpdf.fonts.CoreFont.type">type</a></code></li>
@@ -3418,27 +4241,52 @@ the lowest possible representation.</p></div>
 </ul>
 </li>
 <li>
+<h4><code><a title="fpdf.fonts.Glyph" href="#fpdf.fonts.Glyph">Glyph</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.fonts.Glyph.glyph_id" href="#fpdf.fonts.Glyph.glyph_id">glyph_id</a></code></li>
+<li><code><a title="fpdf.fonts.Glyph.glyph_name" href="#fpdf.fonts.Glyph.glyph_name">glyph_name</a></code></li>
+<li><code><a title="fpdf.fonts.Glyph.glyph_width" href="#fpdf.fonts.Glyph.glyph_width">glyph_width</a></code></li>
+<li><code><a title="fpdf.fonts.Glyph.unicode" href="#fpdf.fonts.Glyph.unicode">unicode</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="fpdf.fonts.PDFFontDescriptor" href="#fpdf.fonts.PDFFontDescriptor">PDFFontDescriptor</a></code></h4>
 </li>
 <li>
 <h4><code><a title="fpdf.fonts.SubsetMap" href="#fpdf.fonts.SubsetMap">SubsetMap</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.fonts.SubsetMap.dict" href="#fpdf.fonts.SubsetMap.dict">dict</a></code></li>
+<li><code><a title="fpdf.fonts.SubsetMap.get_all_glyph_names" href="#fpdf.fonts.SubsetMap.get_all_glyph_names">get_all_glyph_names</a></code></li>
+<li><code><a title="fpdf.fonts.SubsetMap.get_glyph" href="#fpdf.fonts.SubsetMap.get_glyph">get_glyph</a></code></li>
+<li><code><a title="fpdf.fonts.SubsetMap.get_glyph_by_id" href="#fpdf.fonts.SubsetMap.get_glyph_by_id">get_glyph_by_id</a></code></li>
+<li><code><a title="fpdf.fonts.SubsetMap.get_glyph_by_unicode" href="#fpdf.fonts.SubsetMap.get_glyph_by_unicode">get_glyph_by_unicode</a></code></li>
 <li><code><a title="fpdf.fonts.SubsetMap.pick" href="#fpdf.fonts.SubsetMap.pick">pick</a></code></li>
+<li><code><a title="fpdf.fonts.SubsetMap.pick_glyph" href="#fpdf.fonts.SubsetMap.pick_glyph">pick_glyph</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="fpdf.fonts.TTFFont" href="#fpdf.fonts.TTFFont">TTFFont</a></code></h4>
-<ul class="two-column">
+<ul class="">
+<li><code><a title="fpdf.fonts.TTFFont.close" href="#fpdf.fonts.TTFFont.close">close</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.cmap" href="#fpdf.fonts.TTFFont.cmap">cmap</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.cw" href="#fpdf.fonts.TTFFont.cw">cw</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.desc" href="#fpdf.fonts.TTFFont.desc">desc</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.emphasis" href="#fpdf.fonts.TTFFont.emphasis">emphasis</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.encode_text" href="#fpdf.fonts.TTFFont.encode_text">encode_text</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.fontkey" href="#fpdf.fonts.TTFFont.fontkey">fontkey</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.get_text_width" href="#fpdf.fonts.TTFFont.get_text_width">get_text_width</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.glyph_ids" href="#fpdf.fonts.TTFFont.glyph_ids">glyph_ids</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.hbfont" href="#fpdf.fonts.TTFFont.hbfont">hbfont</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.i" href="#fpdf.fonts.TTFFont.i">i</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.missing_glyphs" href="#fpdf.fonts.TTFFont.missing_glyphs">missing_glyphs</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.name" href="#fpdf.fonts.TTFFont.name">name</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.perform_harfbuzz_shaping" href="#fpdf.fonts.TTFFont.perform_harfbuzz_shaping">perform_harfbuzz_shaping</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.scale" href="#fpdf.fonts.TTFFont.scale">scale</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.shape_text" href="#fpdf.fonts.TTFFont.shape_text">shape_text</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.shaped_text_width" href="#fpdf.fonts.TTFFont.shaped_text_width">shaped_text_width</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.subset" href="#fpdf.fonts.TTFFont.subset">subset</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.ttffile" href="#fpdf.fonts.TTFFont.ttffile">ttffile</a></code></li>
+<li><code><a title="fpdf.fonts.TTFFont.ttfont" href="#fpdf.fonts.TTFFont.ttfont">ttfont</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.type" href="#fpdf.fonts.TTFFont.type">type</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.up" href="#fpdf.fonts.TTFFont.up">up</a></code></li>
 <li><code><a title="fpdf.fonts.TTFFont.ut" href="#fpdf.fonts.TTFFont.ut">ut</a></code></li>
