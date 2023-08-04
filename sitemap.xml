@@ -81,6 +81,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://pyfpdf.github.io/fpdf2/History.html</loc>
+         <lastmod>2023-08-04</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://pyfpdf.github.io/fpdf2/Images.html</loc>
          <lastmod>2023-08-04</lastmod>
          <changefreq>daily</changefreq>
