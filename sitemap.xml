@@ -36,6 +36,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://py-pdf.github.io/fpdf2/CombineWithPypdf.html</loc>
+         <lastmod>2023-08-13</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://py-pdf.github.io/fpdf2/DatabaseStorage.html</loc>
          <lastmod>2023-08-13</lastmod>
          <changefreq>daily</changefreq>
