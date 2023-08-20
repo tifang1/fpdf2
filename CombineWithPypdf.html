@@ -14,11 +14,11 @@
     <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
     <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s2>&quot;times&quot;</span><span class=p>,</span> <span class=s2>&quot;B&quot;</span><span class=p>,</span> <span class=mi>30</span><span class=p>)</span>
     <span class=n>pdf</span><span class=o>.</span><span class=n>text</span><span class=p>(</span><span class=mi>50</span><span class=p>,</span> <span class=mi>150</span><span class=p>,</span> <span class=s2>&quot;Hello World!&quot;</span><span class=p>)</span>
-    <span class=k>return</span> <span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>()</span>
+    <span class=k>return</span> <span class=n>io</span><span class=o>.</span><span class=n>BytesIO</span><span class=p>(</span><span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>())</span>
 
 
 <span class=n>reader</span> <span class=o>=</span> <span class=n>PdfReader</span><span class=p>(</span><span class=n>IN_FILEPATH</span><span class=p>)</span>
-<span class=n>page_overlay</span> <span class=o>=</span> <span class=n>PdfReader</span><span class=p>(</span><span class=n>io</span><span class=o>.</span><span class=n>BytesIO</span><span class=p>(</span><span class=n>new_content</span><span class=p>()))</span><span class=o>.</span><span class=n>pages</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+<span class=n>page_overlay</span> <span class=o>=</span> <span class=n>PdfReader</span><span class=p>(</span><span class=n>new_content</span><span class=p>())</span><span class=o>.</span><span class=n>pages</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
 <span class=n>reader</span><span class=o>.</span><span class=n>pages</span><span class=p>[</span><span class=n>ON_PAGE_INDEX</span><span class=p>]</span><span class=o>.</span><span class=n>merge_page</span><span class=p>(</span><span class=n>page2</span><span class=o>=</span><span class=n>page_overlay</span><span class=p>)</span>
 
 <span class=n>writer</span> <span class=o>=</span> <span class=n>PdfWriter</span><span class=p>()</span>
@@ -28,14 +28,14 @@
 <span class=kn>import</span> <span class=nn>io</span><span class=o>,</span> <span class=nn>sys</span>
 
 <span class=kn>from</span> <span class=nn>fpdf</span> <span class=kn>import</span> <span class=n>FPDF</span>
-<span class=kn>from</span> <span class=nn>PyPDF2</span> <span class=kn>import</span> <span class=n>PdfMerger</span>
+<span class=kn>from</span> <span class=nn>pypdf</span> <span class=kn>import</span> <span class=n>PdfReader</span><span class=p>,</span> <span class=n>PdfWriter</span>
 
 <span class=n>IN_FILEPATH</span> <span class=o>=</span> <span class=n>sys</span><span class=o>.</span><span class=n>argv</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span>
 <span class=n>OUT_FILEPATH</span> <span class=o>=</span> <span class=n>sys</span><span class=o>.</span><span class=n>argv</span><span class=p>[</span><span class=mi>2</span><span class=p>]</span>
 <span class=n>ON_PAGE_INDEX</span> <span class=o>=</span> <span class=mi>2</span>  <span class=c1># Index at which the page will be inserted (starts at zero)</span>
 
 
-<span class=k>def</span> <span class=nf>new_page</span><span class=p>():</span>
+<span class=k>def</span> <span class=nf>build_page</span><span class=p>():</span>
     <span class=n>pdf</span> <span class=o>=</span> <span class=n>FPDF</span><span class=p>()</span>
     <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
     <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s2>&quot;times&quot;</span><span class=p>,</span> <span class=s2>&quot;B&quot;</span><span class=p>,</span> <span class=mi>19</span><span class=p>)</span>
@@ -43,10 +43,10 @@
     <span class=k>return</span> <span class=n>io</span><span class=o>.</span><span class=n>BytesIO</span><span class=p>(</span><span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>())</span>
 
 
-<span class=n>merger</span> <span class=o>=</span> <span class=n>PdfMerger</span><span class=p>()</span>
-<span class=n>merger</span><span class=o>.</span><span class=n>merge</span><span class=p>(</span><span class=n>position</span><span class=o>=</span><span class=mi>0</span><span class=p>,</span> <span class=n>fileobj</span><span class=o>=</span><span class=n>IN_FILEPATH</span><span class=p>)</span>
-<span class=n>merger</span><span class=o>.</span><span class=n>merge</span><span class=p>(</span><span class=n>position</span><span class=o>=</span><span class=n>ON_PAGE_INDEX</span><span class=p>,</span> <span class=n>fileobj</span><span class=o>=</span><span class=n>new_page</span><span class=p>())</span>
-<span class=n>merger</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>OUT_FILEPATH</span><span class=p>)</span>
+<span class=n>writer</span> <span class=o>=</span> <span class=n>PdfWriter</span><span class=p>(</span><span class=n>clone_from</span><span class=o>=</span><span class=n>IN_FILEPATH</span><span class=p>)</span>
+<span class=n>new_page</span> <span class=o>=</span> <span class=n>PdfReader</span><span class=p>(</span><span class=n>build_page</span><span class=p>())</span><span class=o>.</span><span class=n>pages</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span>
+<span class=n>writer</span><span class=o>.</span><span class=n>insert_page</span><span class=p>(</span><span class=n>new_page</span><span class=p>,</span> <span class=n>index</span><span class=o>=</span><span class=n>ON_PAGE_INDEX</span><span class=p>)</span>
+<span class=n>writer</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>OUT_FILEPATH</span><span class=p>)</span>
 </code></pre></div> <h2 id=altering-with-pypdf-a-document-generated-with-fpdf2>Altering with pypdf a document generated with fpdf2<a class=headerlink href=#altering-with-pypdf-a-document-generated-with-fpdf2 title="Permanent link">&para;</a></h2> <p>A document created with <code>fpdf2</code> can the be edited with <code>pypdf</code> by passing its <code>.output()</code> to a <code>pypdf.PdfReader</code>: <div class=highlight><pre><span></span><code><span class=kn>import</span> <span class=nn>io</span>
 <span class=kn>from</span> <span class=nn>fpdf</span> <span class=kn>import</span> <span class=n>FPDF</span>
 <span class=kn>from</span> <span class=nn>pypdf</span> <span class=kn>import</span> <span class=n>PdfReader</span>
