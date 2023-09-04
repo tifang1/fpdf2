@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>fpdf.html API documentation</title>
-<meta name="description" content="HTML renderer" />
+<meta name="description" content="HTML renderer …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,12 +23,21 @@
 </header>
 <section id="section-intro">
 <p>HTML renderer</p>
+<p>The contents of this module are internal to fpdf2, and not part of the public API.
+They may change at any time without prior warning or any deprecation period,
+in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L1-L738" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L1-L744" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">&#34;HTML renderer&#34;
+<pre><code class="python">&#34;&#34;&#34;
+HTML renderer
+
+The contents of this module are internal to fpdf2, and not part of the public API.
+They may change at any time without prior warning or any deprecation period,
+in non-backward-compatible ways.
+&#34;&#34;&#34;
 
 import logging, warnings
 from html.parser import HTMLParser
@@ -783,7 +792,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L177-L193" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L183-L199" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def color_as_decimal(color=&#34;#000000&#34;):
     if not color:
@@ -812,7 +821,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L697-L704" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L703-L710" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def leading_whitespace_repl(matchobj):
     trimmed_str = &#34;&#34;
@@ -832,7 +841,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L173-L174" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L179-L180" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def px2mm(px):
     return px * 25.4 / 72</code></pre>
@@ -846,7 +855,7 @@ class HTMLMixin:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L707-L721" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L713-L727" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def whitespace_repl(matchobj):
     trimmed_str = &#34;&#34;
@@ -903,7 +912,7 @@ to new image URLs</dd>
       <details class="source">
         <summary>
             <span>Expand source code</span>
-              <a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L196-L694" class="git-link">Browse git</a>
+              <a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L202-L700" class="git-link">Browse git</a>
         </summary>
         <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
@@ -1427,7 +1436,7 @@ to new image URLs</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L693-L694" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L699-L700" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def error(self, message):
     raise RuntimeError(message)</code></pre>
@@ -1443,7 +1452,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L636-L641" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L642-L647" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def feed(self, data):
     super().feed(data)
@@ -1461,7 +1470,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L263-L349" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L269-L355" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_data(self, data):
     trailing_space_flag = TRAILING_SPACE.search(data)
@@ -1560,7 +1569,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L546-L634" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L552-L640" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_endtag(self, tag):
     LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
@@ -1661,7 +1670,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L351-L544" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L357-L550" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     attrs = dict(attrs)
@@ -1867,7 +1876,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L667-L673" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L673-L679" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def put_link(self, txt):
     # Put a hyperlink
@@ -1886,7 +1895,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L676-L690" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L682-L696" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render_toc(self, pdf, outline):
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
@@ -1913,7 +1922,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L643-L654" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L649-L660" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_font(self, face=None, size=None):
     if face:
@@ -1937,7 +1946,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L656-L662" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L662-L668" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_style(self, tag=None, enable=False):
     # Modify style and select corresponding font
@@ -1956,7 +1965,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L664-L665" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L670-L671" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_text_color(self, r=None, g=0, b=0):
     self.pdf.set_text_color(r, g, b)</code></pre>
@@ -1974,7 +1983,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b74a5906e4f114557ae26316ab5298c51ad6e858/fpdf/html.py#L724-L738" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5bc458eb895e5b4e0fb22571d7ccd35331421b9f/fpdf/html.py#L730-L744" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     &#34;&#34;&#34;
