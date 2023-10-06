@@ -29,7 +29,7 @@ in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6a1e9cd640eda85fec39146d9ecc3108e0b11bea/fpdf/deprecation.py#L1-L70" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c9a3c0b540c1784acc9c5e1f2fe1c98924a602cc/fpdf/deprecation.py#L1-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Utilities to manage deprecation errors &amp; warnings.
@@ -49,7 +49,6 @@ from types import ModuleType
 class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __call__(self):
         raise TypeError(
-            # pylint: disable=implicit-str-concat
             &#34;You tried to instantied the fpdf module.&#34;
             &#34; You probably want to import the FPDF class instead:&#34;
             &#34; from fpdf import FPDF&#34;
@@ -58,10 +57,11 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __getattr__(self, name):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
-                # pylint: disable=implicit-str-concat
-                &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
-                &#34; have been deprecated in favour of&#34;
-                &#34; FPDF(font_cache_dir=...)&#34;,
+                (
+                    &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
+                    &#34; have been deprecated in favour of&#34;
+                    &#34; FPDF(font_cache_dir=...)&#34;
+                ),
                 DeprecationWarning,
                 stacklevel=get_stack_level(),
             )
@@ -71,10 +71,11 @@ class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __setattr__(self, name, value):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
-                # pylint: disable=implicit-str-concat
-                &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
-                &#34; have been deprecated in favour of&#34;
-                &#34; FPDF(font_cache_dir=...)&#34;,
+                (
+                    &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
+                    &#34; have been deprecated in favour of&#34;
+                    &#34; FPDF(font_cache_dir=...)&#34;
+                ),
                 DeprecationWarning,
                 stacklevel=get_stack_level(),
             )
@@ -118,7 +119,7 @@ def get_stack_level() -&gt; int:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6a1e9cd640eda85fec39146d9ecc3108e0b11bea/fpdf/deprecation.py#L52-L70" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c9a3c0b540c1784acc9c5e1f2fe1c98924a602cc/fpdf/deprecation.py#L53-L71" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_stack_level() -&gt; int:
     &#34;&#34;&#34;Get the first place in the call stack that is not inside fpdf2&#34;&#34;&#34;
@@ -156,12 +157,11 @@ def get_stack_level() -&gt; int:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6a1e9cd640eda85fec39146d9ecc3108e0b11bea/fpdf/deprecation.py#L16-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c9a3c0b540c1784acc9c5e1f2fe1c98924a602cc/fpdf/deprecation.py#L16-L50" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class WarnOnDeprecatedModuleAttributes(ModuleType):
     def __call__(self):
         raise TypeError(
-            # pylint: disable=implicit-str-concat
             &#34;You tried to instantied the fpdf module.&#34;
             &#34; You probably want to import the FPDF class instead:&#34;
             &#34; from fpdf import FPDF&#34;
@@ -170,10 +170,11 @@ def get_stack_level() -&gt; int:
     def __getattr__(self, name):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
-                # pylint: disable=implicit-str-concat
-                &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
-                &#34; have been deprecated in favour of&#34;
-                &#34; FPDF(font_cache_dir=...)&#34;,
+                (
+                    &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
+                    &#34; have been deprecated in favour of&#34;
+                    &#34; FPDF(font_cache_dir=...)&#34;
+                ),
                 DeprecationWarning,
                 stacklevel=get_stack_level(),
             )
@@ -183,10 +184,11 @@ def get_stack_level() -&gt; int:
     def __setattr__(self, name, value):
         if name in (&#34;FPDF_CACHE_DIR&#34;, &#34;FPDF_CACHE_MODE&#34;):
             warnings.warn(
-                # pylint: disable=implicit-str-concat
-                &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
-                &#34; have been deprecated in favour of&#34;
-                &#34; FPDF(font_cache_dir=...)&#34;,
+                (
+                    &#34;fpdf.FPDF_CACHE_DIR &amp; fpdf.FPDF_CACHE_MODE&#34;
+                    &#34; have been deprecated in favour of&#34;
+                    &#34; FPDF(font_cache_dir=...)&#34;
+                ),
                 DeprecationWarning,
                 stacklevel=get_stack_level(),
             )
