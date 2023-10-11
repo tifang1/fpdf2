@@ -8,10 +8,10 @@
     <span class=k>if</span> <span class=n>i</span> <span class=o>==</span> <span class=mi>6</span><span class=p>:</span>
         <span class=n>pdf</span><span class=o>.</span><span class=n>set_page_background</span><span class=p>(</span><span class=s1>&#39;image_path.png&#39;</span><span class=p>)</span>
     <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>(</span><span class=nb>format</span><span class=o>=</span><span class=p>(</span><span class=mi>210</span> <span class=o>*</span> <span class=p>(</span><span class=mi>1</span> <span class=o>-</span> <span class=n>i</span><span class=o>/</span><span class=mi>10</span><span class=p>),</span> <span class=mi>297</span> <span class=o>*</span> <span class=p>(</span><span class=mi>1</span> <span class=o>-</span> <span class=n>i</span><span class=o>/</span><span class=mi>10</span><span class=p>)))</span>
-    <span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=nb>str</span><span class=p>(</span><span class=n>i</span><span class=p>))</span>
+    <span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=nb>str</span><span class=p>(</span><span class=n>i</span><span class=p>))</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_page_background</span><span class=p>(</span><span class=kc>None</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>(</span><span class=n>same</span><span class=o>=</span><span class=kc>True</span><span class=p>)</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;9&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;9&quot;</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>(</span><span class=s2>&quot;varying_format.pdf&quot;</span><span class=p>)</span>
 </code></pre></div> <p>Similarly, an <code>orientation</code> parameter can be provided to the <a href=fpdf/fpdf.html#fpdf.fpdf.FPDF.add_page><code>add_page</code></a> method.</p> <h2 id=page-layout-zoom-level>Page layout &amp; zoom level<a class=headerlink href=#page-layout-zoom-level title="Permanent link">&para;</a></h2> <p><a href=fpdf/fpdf.html#fpdf.FPDF.set_display_mode><code>set_display_mode()</code></a> allows to set the <strong>zoom level</strong>: pages can be displayed entirely on screen, occupy the full width of the window, use the real size, be scaled by a specific zooming factor or use the viewer default (configured in its <em>Preferences</em> menu).</p> <p>The <strong>page layout</strong> can also be specified: single page at a time, continuous display, two columns or viewer default.</p> <div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>fpdf</span> <span class=kn>import</span> <span class=n>FPDF</span>
 
@@ -19,9 +19,9 @@
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_display_mode</span><span class=p>(</span><span class=n>zoom</span><span class=o>=</span><span class=s2>&quot;default&quot;</span><span class=p>,</span> <span class=n>layout</span><span class=o>=</span><span class=s2>&quot;TWO_COLUMN_LEFT&quot;</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s2>&quot;helvetica&quot;</span><span class=p>,</span> <span class=n>size</span><span class=o>=</span><span class=mi>30</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;page 1&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;page 1&quot;</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;page 2&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;page 2&quot;</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>(</span><span class=s2>&quot;two-column.pdf&quot;</span><span class=p>)</span>
 </code></pre></div> <h2 id=viewer-preferences>Viewer preferences<a class=headerlink href=#viewer-preferences title="Permanent link">&para;</a></h2> <div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>fpdf</span> <span class=kn>import</span> <span class=n>FPDF</span><span class=p>,</span> <span class=n>ViewerPreferences</span>
 
@@ -37,9 +37,9 @@
 <span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s2>&quot;helvetica&quot;</span><span class=p>,</span> <span class=n>size</span><span class=o>=</span><span class=mi>30</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;page 1&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;page 1&quot;</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;page 2&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;page 2&quot;</span><span class=p>)</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>(</span><span class=s2>&quot;viewer-prefs.pdf&quot;</span><span class=p>)</span>
 </code></pre></div> <h2 id=full-screen>Full screen<a class=headerlink href=#full-screen title="Permanent link">&para;</a></h2> <div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>fpdf</span> <span class=kn>import</span> <span class=n>FPDF</span>
 

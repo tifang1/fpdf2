@@ -16,7 +16,7 @@
 <span class=n>pdf</span> <span class=o>=</span> <span class=n>FPDF</span><span class=p>()</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s2>&quot;Helvetica&quot;</span><span class=p>,</span> <span class=n>size</span><span class=o>=</span><span class=mi>24</span><span class=p>)</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;My name is Bobby&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;My name is Bobby&quot;</span><span class=p>)</span>
 <span class=n>new_user</span> <span class=o>=</span> <span class=n>User</span><span class=p>(</span><span class=n>name</span><span class=o>=</span><span class=s2>&quot;Bobby&quot;</span><span class=p>,</span> <span class=n>pdf</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>())</span>
 
 <span class=n>Session</span> <span class=o>=</span> <span class=n>sessionmaker</span><span class=p>(</span><span class=n>bind</span><span class=o>=</span><span class=n>engine</span><span class=p>)</span>
