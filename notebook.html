@@ -38,7 +38,7 @@
 <span class=n>pdf</span> <span class=o>=</span> <span class=n>FPDF</span><span class=p>()</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>add_page</span><span class=p>()</span>
 <span class=n>pdf</span><span class=o>.</span><span class=n>set_font</span><span class=p>(</span><span class=s1>&#39;helvetica&#39;</span><span class=p>,</span> <span class=n>size</span><span class=o>=</span><span class=mi>48</span><span class=p>)</span>
-<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>txt</span><span class=o>=</span><span class=s2>&quot;hello world&quot;</span><span class=p>)</span>
+<span class=n>pdf</span><span class=o>.</span><span class=n>cell</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=s2>&quot;hello world&quot;</span><span class=p>)</span>
 <span class=n>pdf_bytes</span> <span class=o>=</span> <span class=n>pdf</span><span class=o>.</span><span class=n>output</span><span class=p>()</span>
 </code></pre></div> </div> </div> <div class="cell border-box-sizing code_cell rendered"> <div class=input> <div class=highlight><pre><span></span><code><span class=c1># Display the PDF in the notebook by embedding it as HTML content:</span>
 <span class=n>WIDTH</span><span class=p>,</span> <span class=n>HEIGHT</span> <span class=o>=</span> <span class=mi>800</span><span class=p>,</span> <span class=mi>400</span> 
