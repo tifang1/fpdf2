@@ -29,7 +29,7 @@ in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L1-L939" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L1-L980" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Utilities to parse SVG graphics into fpdf.drawing objects.
@@ -59,6 +59,7 @@ from .drawing import (
     GraphicsContext,
     GraphicsStyle,
     PaintedPath,
+    ClippingPath,
     Transform,
 )
 
@@ -362,15 +363,17 @@ class ShapeBuilder:
     &#34;&#34;&#34;A namespace within which methods for converting basic shapes can be looked up.&#34;&#34;&#34;
 
     @staticmethod
-    def new_path(tag):
+    def new_path(tag, clipping_path: bool = False):
         &#34;&#34;&#34;Create a new path with the appropriate styles.&#34;&#34;&#34;
         path = PaintedPath()
+        if clipping_path:
+            path = ClippingPath()
         apply_styles(path, tag)
 
         return path
 
     @classmethod
-    def rect(cls, tag):
+    def rect(cls, tag, clipping_path: bool = False):
         &#34;&#34;&#34;Convert an SVG &lt;rect&gt; into a PDF path.&#34;&#34;&#34;
         # svg rect is wound clockwise
         if &#34;x&#34; in tag.attrib:
@@ -420,25 +423,25 @@ class ShapeBuilder:
         if ry &gt; (height / 2):
             ry = height / 2
 
-        path = cls.new_path(tag)
+        path = cls.new_path(tag, clipping_path)
 
         path.rectangle(x, y, width, height, rx, ry)
         return path
 
     @classmethod
-    def circle(cls, tag):
+    def circle(cls, tag, clipping_path: bool = False):
         &#34;&#34;&#34;Convert an SVG &lt;circle&gt; into a PDF path.&#34;&#34;&#34;
         cx = float(tag.attrib.get(&#34;cx&#34;, 0))
         cy = float(tag.attrib.get(&#34;cy&#34;, 0))
         r = float(tag.attrib[&#34;r&#34;])
 
-        path = cls.new_path(tag)
+        path = cls.new_path(tag, clipping_path)
 
         path.circle(cx, cy, r)
         return path
 
     @classmethod
-    def ellipse(cls, tag):
+    def ellipse(cls, tag, clipping_path: bool = False):
         &#34;&#34;&#34;Convert an SVG &lt;ellipse&gt; into a PDF path.&#34;&#34;&#34;
         cx = float(tag.attrib.get(&#34;cx&#34;, 0))
         cy = float(tag.attrib.get(&#34;cy&#34;, 0))
@@ -446,7 +449,7 @@ class ShapeBuilder:
         rx = tag.attrib.get(&#34;rx&#34;, &#34;auto&#34;)
         ry = tag.attrib.get(&#34;ry&#34;, &#34;auto&#34;)
 
-        path = cls.new_path(tag)
+        path = cls.new_path(tag, clipping_path)
 
         if (rx == ry == &#34;auto&#34;) or (rx == 0) or (ry == 0):
             return path
@@ -490,11 +493,11 @@ class ShapeBuilder:
         return path
 
     @classmethod
-    def polygon(cls, tag):
+    def polygon(cls, tag, clipping_path: bool = False):
         &#34;&#34;&#34;Convert an SVG &lt;polygon&gt; into a PDF path.&#34;&#34;&#34;
         points = tag.attrib[&#34;points&#34;]
 
-        path = cls.new_path(tag)
+        path = cls.new_path(tag, clipping_path)
 
         points = &#34;M&#34; + points + &#34;Z&#34;
         svg_path_converter(path, points)
@@ -699,6 +702,12 @@ class SVGObject:
         self.convert_graphics(svg_tree)
 
     @force_nodocument
+    def update_xref(self, key, referenced):
+        if key:
+            key = &#34;#&#34; + key if not key.startswith(&#34;#&#34;) else key
+            self.cross_references[key] = referenced
+
+    @force_nodocument
     def extract_shape_info(self, root_tag):
         &#34;&#34;&#34;Collect shape info from the given SVG.&#34;&#34;&#34;
 
@@ -892,7 +901,15 @@ class SVGObject:
                 self.build_group(child)
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 self.build_path(child)
-            # We could/should also support &lt;defs&gt; that are rect, circle, ellipse, line, polyline, polygon...
+            elif child.tag in shape_tags:
+                self.build_shape(child)
+            if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;clipPath&#34;):
+                try:
+                    clip_id = child.attrib[&#34;id&#34;]
+                except KeyError:
+                    clip_id = None
+                for child_ in child:
+                    self.build_clipping_path(child_, clip_id)
 
     # this assumes xrefs only reference already-defined ids.
     # I don&#39;t know if this is required by the SVG spec.
@@ -902,7 +919,7 @@ class SVGObject:
         pdf_group = GraphicsContext()
         apply_styles(pdf_group, xref)
 
-        for candidate in xmlns_lookup(&#34;xlink&#34;, &#34;href&#34;):
+        for candidate in xmlns_lookup(&#34;xlink&#34;, &#34;href&#34;, &#34;id&#34;):
             try:
                 ref = xref.attrib[candidate]
                 break
@@ -934,22 +951,23 @@ class SVGObject:
             pdf_group = GraphicsContext()
             apply_styles(pdf_group, group)
 
+        # handle defs before anything else
+        for child in [
+            child for child in group if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;defs&#34;)
+        ]:
+            self.handle_defs(child)
+
         for child in group:
-            if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;defs&#34;):
-                self.handle_defs(child)
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;g&#34;):
                 pdf_group.add_item(self.build_group(child))
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 pdf_group.add_item(self.build_path(child))
             elif child.tag in shape_tags:
-                pdf_group.add_item(getattr(ShapeBuilder, shape_tags[child.tag])(child))
+                pdf_group.add_item(self.build_shape(child))
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;use&#34;):
                 pdf_group.add_item(self.build_xref(child))
 
-        try:
-            self.cross_references[&#34;#&#34; + group.attrib[&#34;id&#34;]] = pdf_group
-        except KeyError:
-            pass
+        self.update_xref(group.attrib.get(&#34;id&#34;), pdf_group)
 
         return pdf_group
 
@@ -958,18 +976,41 @@ class SVGObject:
         &#34;&#34;&#34;Convert an SVG &lt;path&gt; tag into a PDF path object.&#34;&#34;&#34;
         pdf_path = PaintedPath()
         apply_styles(pdf_path, path)
+        self.apply_clipping_path(pdf_path, path)
 
-        svg_path = path.attrib.get(&#34;d&#34;, None)
+        svg_path = path.attrib.get(&#34;d&#34;)
 
         if svg_path is not None:
             svg_path_converter(pdf_path, svg_path)
 
-        try:
-            self.cross_references[&#34;#&#34; + path.attrib[&#34;id&#34;]] = pdf_path
-        except KeyError:
-            pass
+        self.update_xref(path.attrib.get(&#34;id&#34;), pdf_path)
 
-        return pdf_path</code></pre>
+        return pdf_path
+
+    @force_nodocument
+    def build_shape(self, shape):
+        &#34;&#34;&#34;Convert an SVG shape tag into a PDF path object. Necessary to make xref (because ShapeBuilder doesn&#39;t have access to this object.)&#34;&#34;&#34;
+        shape_path = getattr(ShapeBuilder, shape_tags[shape.tag])(shape)
+        self.apply_clipping_path(shape_path, shape)
+
+        self.update_xref(shape.attrib.get(&#34;id&#34;), shape_path)
+
+        return shape_path
+
+    @force_nodocument
+    def build_clipping_path(self, shape, clip_id):
+        clipping_path_shape = getattr(ShapeBuilder, shape_tags[shape.tag])(shape, True)
+
+        self.update_xref(clip_id, clipping_path_shape)
+
+        return clipping_path_shape
+
+    @force_nodocument
+    def apply_clipping_path(self, stylable, svg_element):
+        clipping_path = svg_element.attrib.get(&#34;clip-path&#34;)
+        if clipping_path:
+            clipping_path_id = re.search(r&#34;url\((\#\w+)\)&#34;, clipping_path)
+            stylable.clipping_path = self.cross_references[clipping_path_id[1]]</code></pre>
 </details>
 </section>
 <section>
@@ -995,7 +1036,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L571-L623" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L574-L626" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PathPen(BasePen):
     def __init__(self, pdf_path, *args, **kwargs):
@@ -1069,7 +1110,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L604-L616" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L607-L619" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def arcTo(self, rx, ry, rotation, arc, sweep, end):
     self.pdf_path.arc_to(
@@ -1097,7 +1138,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L634-L939" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L637-L980" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SVGObject:
     &#34;&#34;&#34;
@@ -1132,6 +1173,12 @@ that are referenced as components are looked up by their name.</p></div>
 
         self.extract_shape_info(svg_tree)
         self.convert_graphics(svg_tree)
+
+    @force_nodocument
+    def update_xref(self, key, referenced):
+        if key:
+            key = &#34;#&#34; + key if not key.startswith(&#34;#&#34;) else key
+            self.cross_references[key] = referenced
 
     @force_nodocument
     def extract_shape_info(self, root_tag):
@@ -1327,7 +1374,15 @@ that are referenced as components are looked up by their name.</p></div>
                 self.build_group(child)
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 self.build_path(child)
-            # We could/should also support &lt;defs&gt; that are rect, circle, ellipse, line, polyline, polygon...
+            elif child.tag in shape_tags:
+                self.build_shape(child)
+            if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;clipPath&#34;):
+                try:
+                    clip_id = child.attrib[&#34;id&#34;]
+                except KeyError:
+                    clip_id = None
+                for child_ in child:
+                    self.build_clipping_path(child_, clip_id)
 
     # this assumes xrefs only reference already-defined ids.
     # I don&#39;t know if this is required by the SVG spec.
@@ -1337,7 +1392,7 @@ that are referenced as components are looked up by their name.</p></div>
         pdf_group = GraphicsContext()
         apply_styles(pdf_group, xref)
 
-        for candidate in xmlns_lookup(&#34;xlink&#34;, &#34;href&#34;):
+        for candidate in xmlns_lookup(&#34;xlink&#34;, &#34;href&#34;, &#34;id&#34;):
             try:
                 ref = xref.attrib[candidate]
                 break
@@ -1369,22 +1424,23 @@ that are referenced as components are looked up by their name.</p></div>
             pdf_group = GraphicsContext()
             apply_styles(pdf_group, group)
 
+        # handle defs before anything else
+        for child in [
+            child for child in group if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;defs&#34;)
+        ]:
+            self.handle_defs(child)
+
         for child in group:
-            if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;defs&#34;):
-                self.handle_defs(child)
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;g&#34;):
                 pdf_group.add_item(self.build_group(child))
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;path&#34;):
                 pdf_group.add_item(self.build_path(child))
             elif child.tag in shape_tags:
-                pdf_group.add_item(getattr(ShapeBuilder, shape_tags[child.tag])(child))
+                pdf_group.add_item(self.build_shape(child))
             if child.tag in xmlns_lookup(&#34;svg&#34;, &#34;use&#34;):
                 pdf_group.add_item(self.build_xref(child))
 
-        try:
-            self.cross_references[&#34;#&#34; + group.attrib[&#34;id&#34;]] = pdf_group
-        except KeyError:
-            pass
+        self.update_xref(group.attrib.get(&#34;id&#34;), pdf_group)
 
         return pdf_group
 
@@ -1393,18 +1449,41 @@ that are referenced as components are looked up by their name.</p></div>
         &#34;&#34;&#34;Convert an SVG &lt;path&gt; tag into a PDF path object.&#34;&#34;&#34;
         pdf_path = PaintedPath()
         apply_styles(pdf_path, path)
+        self.apply_clipping_path(pdf_path, path)
 
-        svg_path = path.attrib.get(&#34;d&#34;, None)
+        svg_path = path.attrib.get(&#34;d&#34;)
 
         if svg_path is not None:
             svg_path_converter(pdf_path, svg_path)
 
-        try:
-            self.cross_references[&#34;#&#34; + path.attrib[&#34;id&#34;]] = pdf_path
-        except KeyError:
-            pass
+        self.update_xref(path.attrib.get(&#34;id&#34;), pdf_path)
 
-        return pdf_path</code></pre>
+        return pdf_path
+
+    @force_nodocument
+    def build_shape(self, shape):
+        &#34;&#34;&#34;Convert an SVG shape tag into a PDF path object. Necessary to make xref (because ShapeBuilder doesn&#39;t have access to this object.)&#34;&#34;&#34;
+        shape_path = getattr(ShapeBuilder, shape_tags[shape.tag])(shape)
+        self.apply_clipping_path(shape_path, shape)
+
+        self.update_xref(shape.attrib.get(&#34;id&#34;), shape_path)
+
+        return shape_path
+
+    @force_nodocument
+    def build_clipping_path(self, shape, clip_id):
+        clipping_path_shape = getattr(ShapeBuilder, shape_tags[shape.tag])(shape, True)
+
+        self.update_xref(clip_id, clipping_path_shape)
+
+        return clipping_path_shape
+
+    @force_nodocument
+    def apply_clipping_path(self, stylable, svg_element):
+        clipping_path = svg_element.attrib.get(&#34;clip-path&#34;)
+        if clipping_path:
+            clipping_path_id = re.search(r&#34;url\((\#\w+)\)&#34;, clipping_path)
+            stylable.clipping_path = self.cross_references[clipping_path_id[1]]</code></pre>
 </details>
 <h3>Static methods</h3>
 <dl>
@@ -1429,7 +1508,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L639-L654" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L642-L657" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@classmethod
 def from_file(cls, filename, *args, encoding=&#34;utf-8&#34;, **kwargs):
@@ -1473,7 +1552,7 @@ written.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L826-L850" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L835-L859" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def draw_to_page(self, pdf, x=None, y=None, debug_stream=None):
     &#34;&#34;&#34;
@@ -1525,7 +1604,7 @@ viewbox aspect ratio does not match that of the viewport.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L720-L740" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L729-L749" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transform_to_page_viewport(self, pdf, align_viewbox=True):
     &#34;&#34;&#34;
@@ -1584,7 +1663,7 @@ converted from the SVG, scaled to the given viewport size.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/99e4d6d61a3d978daad987dcffd9056030a603ae/fpdf/svg.py#L742-L824" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eac6120c98a3a9d26d3639b961e2a9077caacf69/fpdf/svg.py#L751-L833" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transform_to_rect_viewport(
     self, scale, width, height, align_viewbox=True, ignore_svg_top_attrs=False
