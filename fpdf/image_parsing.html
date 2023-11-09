@@ -25,9 +25,10 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L1-L570" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L1-L581" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import base64, zlib
+from dataclasses import dataclass
 from io import BytesIO
 from math import ceil
 from urllib.request import urlopen
@@ -53,8 +54,15 @@ from .errors import FPDFException
 from .svg import SVGObject
 
 
+@dataclass
+class ImageSettings:
+    # Passed to zlib.compress() - In range 0-9 - Default is currently equivalent to 6:
+    compression_level: int = -1
+
+
 LOGGER = logging.getLogger(__name__)
 SUPPORTED_IMAGE_FILTERS = (&#34;AUTO&#34;, &#34;FlateDecode&#34;, &#34;DCTDecode&#34;, &#34;JPXDecode&#34;)
+SETTINGS = ImageSettings()
 
 # fmt: off
 TIFFBitRevTable = [
@@ -192,7 +200,10 @@ def load_image(filename):
 
 def _decode_base64_image(base64Image):
     &#34;Decode the base 64 image string into an io byte stream.&#34;
-    imageData = base64Image.split(&#34;base64,&#34;)[1]
+    frags = base64Image.split(&#34;base64,&#34;)
+    if len(frags) != 2:
+        raise NotImplementedError(&#34;Unsupported non-base64 image data&#34;)
+    imageData = frags[1]
     decodedData = base64.b64decode(imageData)
     return BytesIO(decodedData)
 
@@ -591,7 +602,7 @@ def _to_zdata(img, remove_slice=None, select_slice=None):
         data_with_padding.extend(b&#34;\0&#34;)
         data_with_padding.extend(data[i : i + row_size])
 
-    return zlib.compress(data_with_padding)
+    return zlib.compress(data_with_padding, level=SETTINGS.compression_level)
 
 
 def _has_alpha(img, alpha_channel):
@@ -614,7 +625,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L444-L465" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L455-L476" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -656,7 +667,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L203-L417" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L214-L428" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
@@ -883,7 +894,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L189-L200" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L200-L211" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_svg_info(filename, img):
     svg = SVGObject(img.getvalue())
@@ -907,7 +918,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L171-L186" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L182-L197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -937,7 +948,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L141-L161" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L149-L169" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
@@ -970,7 +981,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L468-L518" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L479-L529" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -1040,7 +1051,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L62-L119" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L70-L127" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -1120,7 +1131,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L106-L119" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L114-L127" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@staticmethod
 def x_by_align(x, w, pdf, keep_aspect_ratio):
@@ -1147,7 +1158,7 @@ def x_by_align(x, w, pdf, keep_aspect_ratio):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L71-L74" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L79-L82" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def height(self):
@@ -1161,7 +1172,7 @@ def height(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L81-L84" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L89-L92" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def rendered_height(self):
@@ -1175,7 +1186,7 @@ def rendered_height(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L76-L79" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L84-L87" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def rendered_width(self):
@@ -1189,7 +1200,7 @@ def rendered_width(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L66-L69" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L74-L77" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def width(self):
@@ -1209,7 +1220,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L90-L104" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L98-L112" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def scale_inside_box(self, x, y, w, h):
     &#34;&#34;&#34;
@@ -1230,6 +1241,30 @@ In the reduced dimension it will be centered within the available space.</p></di
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.image_parsing.ImageSettings"><code class="flex name class">
+<span>class <span class="ident">ImageSettings</span></span>
+<span>(</span><span>compression_level: int = -1)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>ImageSettings(compression_level: int = -1)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@dataclass
+class ImageSettings:
+    # Passed to zlib.compress() - In range 0-9 - Default is currently equivalent to 6:
+    compression_level: int = -1</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="fpdf.image_parsing.ImageSettings.compression_level"><code class="name">var <span class="ident">compression_level</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.image_parsing.RasterImageInfo"><code class="flex name class">
 <span>class <span class="ident">RasterImageInfo</span></span>
 <span>(</span><span>*args, **kwargs)</span>
@@ -1239,7 +1274,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L122-L133" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L130-L141" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -1269,7 +1304,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L125-L133" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L133-L141" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def size_in_document_units(self, w, h, k):
     if w == 0 and h == 0:  # Put image at 72 dpi
@@ -1305,7 +1340,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L136-L138" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L144-L146" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -1338,7 +1373,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/011be8a3148264e840b20029dc2fe47fd30f3bdc/fpdf/image_parsing.py#L420-L441" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/031f3e7adf7c3af525ee04c04e3fb9ac4e39e6b5/fpdf/image_parsing.py#L431-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
@@ -1399,6 +1434,12 @@ In the reduced dimension it will be centered within the available space.</p></di
 <li><code><a title="fpdf.image_parsing.ImageInfo.scale_inside_box" href="#fpdf.image_parsing.ImageInfo.scale_inside_box">scale_inside_box</a></code></li>
 <li><code><a title="fpdf.image_parsing.ImageInfo.width" href="#fpdf.image_parsing.ImageInfo.width">width</a></code></li>
 <li><code><a title="fpdf.image_parsing.ImageInfo.x_by_align" href="#fpdf.image_parsing.ImageInfo.x_by_align">x_by_align</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.image_parsing.ImageSettings" href="#fpdf.image_parsing.ImageSettings">ImageSettings</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.image_parsing.ImageSettings.compression_level" href="#fpdf.image_parsing.ImageSettings.compression_level">compression_level</a></code></li>
 </ul>
 </li>
 <li>
