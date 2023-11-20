@@ -32,6 +32,7 @@ Gives direct access to some classes defined in submodules:</p>
 <li><code><a title="fpdf.enums.XPos" href="enums.html#fpdf.enums.XPos">XPos</a></code></li>
 <li><code><a title="fpdf.enums.YPos" href="enums.html#fpdf.enums.YPos">YPos</a></code></li>
 <li><code><a title="fpdf.errors.FPDFException" href="errors.html#fpdf.errors.FPDFException">FPDFException</a></code></li>
+<li><code><a title="fpdf.fonts.FontFace" href="fonts.html#fpdf.fonts.FontFace">FontFace</a></code></li>
 <li><code><a title="fpdf.fpdf.TitleStyle" href="fpdf.html#fpdf.fpdf.TitleStyle">TitleStyle</a></code></li>
 <li><code><a title="fpdf.prefs.ViewerPreferences" href="prefs.html#fpdf.prefs.ViewerPreferences">ViewerPreferences</a></code></li>
 <li><code><a title="fpdf.template.Template" href="template.html#fpdf.template.Template">Template</a></code></li>
@@ -40,7 +41,7 @@ Gives direct access to some classes defined in submodules:</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1aa87bf7683c38492edd8d7d86bc9738c1232074/fpdf/__init__.py#L1-L70" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/5b7b6a4eff33a5a300e08276f49c0cb372c01074/fpdf/__init__.py#L1-L73" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Root module.
@@ -52,6 +53,7 @@ Gives direct access to some classes defined in submodules:
 * `fpdf.enums.XPos`
 * `fpdf.enums.YPos`
 * `fpdf.errors.FPDFException`
+* `fpdf.fonts.FontFace`
 * `fpdf.fpdf.TitleStyle`
 * `fpdf.prefs.ViewerPreferences`
 * `fpdf.template.Template`
@@ -68,6 +70,7 @@ from .fpdf import (
     FPDF_FONT_DIR as _FPDF_FONT_DIR,
     FPDF_VERSION as _FPDF_VERSION,
 )
+from .fonts import FontFace
 from .html import HTMLMixin, HTML2FPDF
 from .prefs import ViewerPreferences
 from .template import Template, FlexTemplate
@@ -95,6 +98,7 @@ __all__ = [
     # Classes:
     &#34;FPDF&#34;,
     &#34;FPDFException&#34;,
+    &#34;FontFace&#34;,
     &#34;Align&#34;,
     &#34;TextMode&#34;,
     &#34;XPos&#34;,
