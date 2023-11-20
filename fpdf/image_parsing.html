@@ -25,9 +25,9 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L1-L581" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L1-L572" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">import base64, zlib
+<pre><code class="python">import base64, hashlib, io, zlib
 from dataclasses import dataclass
 from io import BytesIO
 from math import ceil
@@ -49,8 +49,8 @@ try:
 except ImportError:
     Image = None
 
-from .enums import Align
 from .errors import FPDFException
+from .image_datastructures import ImageCache, RasterImageInfo, VectorImageInfo
 from .svg import SVGObject
 
 
@@ -96,83 +96,74 @@ TIFFBitRevTable = [
 # fmt: on
 
 
-class ImageInfo(dict):
-    &#34;&#34;&#34;Information about an image used in the PDF document (base class).
-    We subclass this to distinguish between raster and vector images.&#34;&#34;&#34;
+def preload_image(image_cache: ImageCache, name, dims=None):
+    &#34;&#34;&#34;
+    Read an image and load it into memory.
+    For raster images: Following this call, the image is inserted in `.images`,
+    and following calls to this method (or `FPDF.image`) will return (or re-use)
+    the same cached values, without re-reading the image.
+    For vector images: The data is loaded and the metadata extracted.
 
-    @property
-    def width(self):
-        &#34;Intrinsic image width&#34;
-        return self[&#34;w&#34;]
+    Args:
+        name: either a string representing a file path to an image, an URL to an image,
+            an io.BytesIO, or a instance of `PIL.Image.Image`
+        dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
+            (raster only) before storing it in the PDF.
 
-    @property
-    def height(self):
-        &#34;Intrinsic image height&#34;
-        return self[&#34;h&#34;]
+    Returns: A tuple, consisting of the name, the image data, and an instance of a
+        subclass of `ImageInfo`,
+    &#34;&#34;&#34;
+    # Identify and load SVG data.
+    if str(name).endswith(&#34;.svg&#34;):
+        return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
+    if isinstance(name, bytes) and _is_svg(name.strip()):
+        return get_svg_info(name, io.BytesIO(name), image_cache=image_cache)
+    if isinstance(name, io.BytesIO) and _is_svg(name.getvalue().strip()):
+        return get_svg_info(&#34;vector_image&#34;, name, image_cache=image_cache)
 
-    @property
-    def rendered_width(self):
-        &#34;Only available if the image has been placed on the document&#34;
-        return self[&#34;rendered_width&#34;]
-
-    @property
-    def rendered_height(self):
-        &#34;Only available if the image has been placed on the document&#34;
-        return self[&#34;rendered_height&#34;]
-
-    def __str__(self):
-        d = {k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;smask&#34;) else v) for k, v in self.items()}
-        return f&#34;self.__class__.__name__({d})&#34;
-
-    def scale_inside_box(self, x, y, w, h):
-        &#34;&#34;&#34;
-        Make an image fit within a bounding box, maintaining its proportions.
-        In the reduced dimension it will be centered within the available space.
-        &#34;&#34;&#34;
-        ratio = self.width / self.height
-        if h * ratio &lt; w:
-            new_w = h * ratio
-            new_h = h
-            x += (w - new_w) / 2
-        else:  # =&gt; too wide, limiting width:
-            new_h = w / ratio
-            new_w = w
-            y += (h - new_h) / 2
-        return x, y, new_w, new_h
-
-    @staticmethod
-    def x_by_align(x, w, pdf, keep_aspect_ratio):
-        if keep_aspect_ratio:
-            raise ValueError(
-                &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
+    # Load raster data.
+    if isinstance(name, str):
+        img = None
+    elif isinstance(name, Image.Image):
+        bytes_ = name.tobytes()
+        img_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        img_hash.update(bytes_)
+        name, img = img_hash.hexdigest(), name
+    elif isinstance(name, (bytes, io.BytesIO)):
+        bytes_ = name.getvalue() if isinstance(name, io.BytesIO) else name
+        bytes_ = bytes_.strip()
+        img_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        img_hash.update(bytes_)
+        name, img = img_hash.hexdigest(), name
+    else:
+        name, img = str(name), name
+    info = image_cache.images.get(name)
+    if info:
+        info[&#34;usages&#34;] += 1
+    else:
+        info = get_img_info(name, img, image_cache.image_filter, dims)
+        info[&#34;i&#34;] = len(image_cache.images) + 1
+        info[&#34;usages&#34;] = 1
+        info[&#34;iccp_i&#34;] = None
+        iccp = info.get(&#34;iccp&#34;)
+        if iccp:
+            LOGGER.debug(
+                &#34;ICC profile found for image %s - It will be inserted in the PDF document&#34;,
+                name,
             )
-        x = Align.coerce(x)
-        if x == Align.C:
-            return (pdf.w - w) / 2
-        if x == Align.R:
-            return pdf.w - w - pdf.r_margin
-        if x == Align.L:
-            return pdf.l_margin
-        raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)
+            if iccp in image_cache.icc_profiles:
+                info[&#34;iccp_i&#34;] = image_cache.icc_profiles[iccp]
+            else:
+                iccp_i = len(image_cache.icc_profiles)
+                image_cache.icc_profiles[iccp] = iccp_i
+                info[&#34;iccp_i&#34;] = iccp_i
+            info[&#34;iccp&#34;] = None
+        image_cache.images[name] = info
+    return name, img, info
 
 
-class RasterImageInfo(ImageInfo):
-    &#34;Information about a raster image used in the PDF document&#34;
-
-    def size_in_document_units(self, w, h, k):
-        if w == 0 and h == 0:  # Put image at 72 dpi
-            w = self[&#34;w&#34;] / k
-            h = self[&#34;h&#34;] / k
-        elif w == 0:
-            w = h * self[&#34;w&#34;] / self[&#34;h&#34;]
-        elif h == 0:
-            h = w * self[&#34;h&#34;] / self[&#34;w&#34;]
-        return w, h
-
-
-class VectorImageInfo(ImageInfo):
-    &#34;Information about a vector image used in the PDF document&#34;
-    # pass
+def _is_svg(bytes_):
+    return bytes_.startswith(b&#34;&lt;?xml &#34;) or bytes_.startswith(b&#34;&lt;svg &#34;)
 
 
 def load_image(filename):
@@ -226,8 +217,8 @@ def is_iccp_valid(iccp, filename):
     return True
 
 
-def get_svg_info(filename, img):
-    svg = SVGObject(img.getvalue())
+def get_svg_info(filename, img, image_cache):
+    svg = SVGObject(img.getvalue(), image_cache=image_cache)
     if svg.viewbox:
         _, _, w, h = svg.viewbox
     else:
@@ -625,7 +616,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L455-L476" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L446-L467" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -667,7 +658,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L214-L428" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L205-L419" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
@@ -887,17 +878,17 @@ def _has_alpha(img, alpha_channel):
 </details>
 </dd>
 <dt id="fpdf.image_parsing.get_svg_info"><code class="name flex">
-<span>def <span class="ident">get_svg_info</span></span>(<span>filename, img)</span>
+<span>def <span class="ident">get_svg_info</span></span>(<span>filename, img, image_cache)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L200-L211" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L191-L202" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def get_svg_info(filename, img):
-    svg = SVGObject(img.getvalue())
+<pre><code class="python">def get_svg_info(filename, img, image_cache):
+    svg = SVGObject(img.getvalue(), image_cache=image_cache)
     if svg.viewbox:
         _, _, w, h = svg.viewbox
     else:
@@ -918,7 +909,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L182-L197" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L173-L188" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -948,7 +939,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L149-L169" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L140-L160" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
@@ -973,6 +964,97 @@ It always return a BytesIO buffer.</p></div>
         return BytesIO(local_file.read())</code></pre>
 </details>
 </dd>
+<dt id="fpdf.image_parsing.preload_image"><code class="name flex">
+<span>def <span class="ident">preload_image</span></span>(<span>image_cache: <a title="fpdf.image_datastructures.ImageCache" href="image_datastructures.html#fpdf.image_datastructures.ImageCache">ImageCache</a>, name, dims=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Read an image and load it into memory.
+For raster images: Following this call, the image is inserted in <code>.images</code>,
+and following calls to this method (or <code>FPDF.image</code>) will return (or re-use)
+the same cached values, without re-reading the image.
+For vector images: The data is loaded and the metadata extracted.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>either a string representing a file path to an image, an URL to an image,
+an io.BytesIO, or a instance of <code>PIL.Image.Image</code></dd>
+<dt><strong><code>dims</code></strong> :&ensp;<code>Tuple[float]</code></dt>
+<dd>optional dimensions as a tuple (width, height) to resize the image
+(raster only) before storing it in the PDF.</dd>
+</dl>
+<p>Returns: A tuple, consisting of the name, the image data, and an instance of a
+subclass of <code>ImageInfo</code>,</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L70-L133" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def preload_image(image_cache: ImageCache, name, dims=None):
+    &#34;&#34;&#34;
+    Read an image and load it into memory.
+    For raster images: Following this call, the image is inserted in `.images`,
+    and following calls to this method (or `FPDF.image`) will return (or re-use)
+    the same cached values, without re-reading the image.
+    For vector images: The data is loaded and the metadata extracted.
+
+    Args:
+        name: either a string representing a file path to an image, an URL to an image,
+            an io.BytesIO, or a instance of `PIL.Image.Image`
+        dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
+            (raster only) before storing it in the PDF.
+
+    Returns: A tuple, consisting of the name, the image data, and an instance of a
+        subclass of `ImageInfo`,
+    &#34;&#34;&#34;
+    # Identify and load SVG data.
+    if str(name).endswith(&#34;.svg&#34;):
+        return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
+    if isinstance(name, bytes) and _is_svg(name.strip()):
+        return get_svg_info(name, io.BytesIO(name), image_cache=image_cache)
+    if isinstance(name, io.BytesIO) and _is_svg(name.getvalue().strip()):
+        return get_svg_info(&#34;vector_image&#34;, name, image_cache=image_cache)
+
+    # Load raster data.
+    if isinstance(name, str):
+        img = None
+    elif isinstance(name, Image.Image):
+        bytes_ = name.tobytes()
+        img_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        img_hash.update(bytes_)
+        name, img = img_hash.hexdigest(), name
+    elif isinstance(name, (bytes, io.BytesIO)):
+        bytes_ = name.getvalue() if isinstance(name, io.BytesIO) else name
+        bytes_ = bytes_.strip()
+        img_hash = hashlib.new(&#34;md5&#34;, usedforsecurity=False)  # nosec B324
+        img_hash.update(bytes_)
+        name, img = img_hash.hexdigest(), name
+    else:
+        name, img = str(name), name
+    info = image_cache.images.get(name)
+    if info:
+        info[&#34;usages&#34;] += 1
+    else:
+        info = get_img_info(name, img, image_cache.image_filter, dims)
+        info[&#34;i&#34;] = len(image_cache.images) + 1
+        info[&#34;usages&#34;] = 1
+        info[&#34;iccp_i&#34;] = None
+        iccp = info.get(&#34;iccp&#34;)
+        if iccp:
+            LOGGER.debug(
+                &#34;ICC profile found for image %s - It will be inserted in the PDF document&#34;,
+                name,
+            )
+            if iccp in image_cache.icc_profiles:
+                info[&#34;iccp_i&#34;] = image_cache.icc_profiles[iccp]
+            else:
+                iccp_i = len(image_cache.icc_profiles)
+                image_cache.icc_profiles[iccp] = iccp_i
+                info[&#34;iccp_i&#34;] = iccp_i
+            info[&#34;iccp&#34;] = None
+        image_cache.images[name] = info
+    return name, img, info</code></pre>
+</details>
+</dd>
 <dt id="fpdf.image_parsing.transcode_monochrome"><code class="name flex">
 <span>def <span class="ident">transcode_monochrome</span></span>(<span>img)</span>
 </code></dt>
@@ -981,7 +1063,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L479-L529" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L470-L520" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -1041,206 +1123,6 @@ It always return a BytesIO buffer.</p></div>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="fpdf.image_parsing.ImageInfo"><code class="flex name class">
-<span>class <span class="ident">ImageInfo</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Information about an image used in the PDF document (base class).
-We subclass this to distinguish between raster and vector images.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L70-L127" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class ImageInfo(dict):
-    &#34;&#34;&#34;Information about an image used in the PDF document (base class).
-    We subclass this to distinguish between raster and vector images.&#34;&#34;&#34;
-
-    @property
-    def width(self):
-        &#34;Intrinsic image width&#34;
-        return self[&#34;w&#34;]
-
-    @property
-    def height(self):
-        &#34;Intrinsic image height&#34;
-        return self[&#34;h&#34;]
-
-    @property
-    def rendered_width(self):
-        &#34;Only available if the image has been placed on the document&#34;
-        return self[&#34;rendered_width&#34;]
-
-    @property
-    def rendered_height(self):
-        &#34;Only available if the image has been placed on the document&#34;
-        return self[&#34;rendered_height&#34;]
-
-    def __str__(self):
-        d = {k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;smask&#34;) else v) for k, v in self.items()}
-        return f&#34;self.__class__.__name__({d})&#34;
-
-    def scale_inside_box(self, x, y, w, h):
-        &#34;&#34;&#34;
-        Make an image fit within a bounding box, maintaining its proportions.
-        In the reduced dimension it will be centered within the available space.
-        &#34;&#34;&#34;
-        ratio = self.width / self.height
-        if h * ratio &lt; w:
-            new_w = h * ratio
-            new_h = h
-            x += (w - new_w) / 2
-        else:  # =&gt; too wide, limiting width:
-            new_h = w / ratio
-            new_w = w
-            y += (h - new_h) / 2
-        return x, y, new_w, new_h
-
-    @staticmethod
-    def x_by_align(x, w, pdf, keep_aspect_ratio):
-        if keep_aspect_ratio:
-            raise ValueError(
-                &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
-            )
-        x = Align.coerce(x)
-        if x == Align.C:
-            return (pdf.w - w) / 2
-        if x == Align.R:
-            return pdf.w - w - pdf.r_margin
-        if x == Align.L:
-            return pdf.l_margin
-        raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>builtins.dict</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="fpdf.image_parsing.RasterImageInfo" href="#fpdf.image_parsing.RasterImageInfo">RasterImageInfo</a></li>
-<li><a title="fpdf.image_parsing.VectorImageInfo" href="#fpdf.image_parsing.VectorImageInfo">VectorImageInfo</a></li>
-</ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="fpdf.image_parsing.ImageInfo.x_by_align"><code class="name flex">
-<span>def <span class="ident">x_by_align</span></span>(<span>x, w, pdf, keep_aspect_ratio)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L114-L127" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@staticmethod
-def x_by_align(x, w, pdf, keep_aspect_ratio):
-    if keep_aspect_ratio:
-        raise ValueError(
-            &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
-        )
-    x = Align.coerce(x)
-    if x == Align.C:
-        return (pdf.w - w) / 2
-    if x == Align.R:
-        return pdf.w - w - pdf.r_margin
-    if x == Align.L:
-        return pdf.l_margin
-    raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Instance variables</h3>
-<dl>
-<dt id="fpdf.image_parsing.ImageInfo.height"><code class="name">var <span class="ident">height</span></code></dt>
-<dd>
-<div class="desc"><p>Intrinsic image height</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L79-L82" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def height(self):
-    &#34;Intrinsic image height&#34;
-    return self[&#34;h&#34;]</code></pre>
-</details>
-</dd>
-<dt id="fpdf.image_parsing.ImageInfo.rendered_height"><code class="name">var <span class="ident">rendered_height</span></code></dt>
-<dd>
-<div class="desc"><p>Only available if the image has been placed on the document</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L89-L92" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def rendered_height(self):
-    &#34;Only available if the image has been placed on the document&#34;
-    return self[&#34;rendered_height&#34;]</code></pre>
-</details>
-</dd>
-<dt id="fpdf.image_parsing.ImageInfo.rendered_width"><code class="name">var <span class="ident">rendered_width</span></code></dt>
-<dd>
-<div class="desc"><p>Only available if the image has been placed on the document</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L84-L87" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def rendered_width(self):
-    &#34;Only available if the image has been placed on the document&#34;
-    return self[&#34;rendered_width&#34;]</code></pre>
-</details>
-</dd>
-<dt id="fpdf.image_parsing.ImageInfo.width"><code class="name">var <span class="ident">width</span></code></dt>
-<dd>
-<div class="desc"><p>Intrinsic image width</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L74-L77" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def width(self):
-    &#34;Intrinsic image width&#34;
-    return self[&#34;w&#34;]</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="fpdf.image_parsing.ImageInfo.scale_inside_box"><code class="name flex">
-<span>def <span class="ident">scale_inside_box</span></span>(<span>self, x, y, w, h)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Make an image fit within a bounding box, maintaining its proportions.
-In the reduced dimension it will be centered within the available space.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L98-L112" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def scale_inside_box(self, x, y, w, h):
-    &#34;&#34;&#34;
-    Make an image fit within a bounding box, maintaining its proportions.
-    In the reduced dimension it will be centered within the available space.
-    &#34;&#34;&#34;
-    ratio = self.width / self.height
-    if h * ratio &lt; w:
-        new_w = h * ratio
-        new_h = h
-        x += (w - new_w) / 2
-    else:  # =&gt; too wide, limiting width:
-        new_h = w / ratio
-        new_w = w
-        y += (h - new_h) / 2
-    return x, y, new_w, new_h</code></pre>
-</details>
-</dd>
-</dl>
-</dd>
 <dt id="fpdf.image_parsing.ImageSettings"><code class="flex name class">
 <span>class <span class="ident">ImageSettings</span></span>
 <span>(</span><span>compression_level: int = -1)</span>
@@ -1250,7 +1132,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class ImageSettings:
@@ -1265,105 +1147,6 @@ class ImageSettings:
 </dd>
 </dl>
 </dd>
-<dt id="fpdf.image_parsing.RasterImageInfo"><code class="flex name class">
-<span>class <span class="ident">RasterImageInfo</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Information about a raster image used in the PDF document</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L130-L141" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class RasterImageInfo(ImageInfo):
-    &#34;Information about a raster image used in the PDF document&#34;
-
-    def size_in_document_units(self, w, h, k):
-        if w == 0 and h == 0:  # Put image at 72 dpi
-            w = self[&#34;w&#34;] / k
-            h = self[&#34;h&#34;] / k
-        elif w == 0:
-            w = h * self[&#34;w&#34;] / self[&#34;h&#34;]
-        elif h == 0:
-            h = w * self[&#34;h&#34;] / self[&#34;w&#34;]
-        return w, h</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.image_parsing.ImageInfo" href="#fpdf.image_parsing.ImageInfo">ImageInfo</a></li>
-<li>builtins.dict</li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="fpdf.image_parsing.RasterImageInfo.size_in_document_units"><code class="name flex">
-<span>def <span class="ident">size_in_document_units</span></span>(<span>self, w, h, k)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L133-L141" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">def size_in_document_units(self, w, h, k):
-    if w == 0 and h == 0:  # Put image at 72 dpi
-        w = self[&#34;w&#34;] / k
-        h = self[&#34;h&#34;] / k
-    elif w == 0:
-        w = h * self[&#34;w&#34;] / self[&#34;h&#34;]
-    elif h == 0:
-        h = w * self[&#34;h&#34;] / self[&#34;w&#34;]
-    return w, h</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.image_parsing.ImageInfo" href="#fpdf.image_parsing.ImageInfo">ImageInfo</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.image_parsing.ImageInfo.height" href="#fpdf.image_parsing.ImageInfo.height">height</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.rendered_height" href="#fpdf.image_parsing.ImageInfo.rendered_height">rendered_height</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.rendered_width" href="#fpdf.image_parsing.ImageInfo.rendered_width">rendered_width</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.scale_inside_box" href="#fpdf.image_parsing.ImageInfo.scale_inside_box">scale_inside_box</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.width" href="#fpdf.image_parsing.ImageInfo.width">width</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
-<dt id="fpdf.image_parsing.VectorImageInfo"><code class="flex name class">
-<span>class <span class="ident">VectorImageInfo</span></span>
-<span>(</span><span>*args, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Information about a vector image used in the PDF document</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L144-L146" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">class VectorImageInfo(ImageInfo):
-    &#34;Information about a vector image used in the PDF document&#34;
-    # pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="fpdf.image_parsing.ImageInfo" href="#fpdf.image_parsing.ImageInfo">ImageInfo</a></li>
-<li>builtins.dict</li>
-</ul>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="fpdf.image_parsing.ImageInfo" href="#fpdf.image_parsing.ImageInfo">ImageInfo</a></b></code>:
-<ul class="hlist">
-<li><code><a title="fpdf.image_parsing.ImageInfo.height" href="#fpdf.image_parsing.ImageInfo.height">height</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.rendered_height" href="#fpdf.image_parsing.ImageInfo.rendered_height">rendered_height</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.rendered_width" href="#fpdf.image_parsing.ImageInfo.rendered_width">rendered_width</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.scale_inside_box" href="#fpdf.image_parsing.ImageInfo.scale_inside_box">scale_inside_box</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.width" href="#fpdf.image_parsing.ImageInfo.width">width</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="fpdf.image_parsing.temp_attr"><code class="flex name class">
 <span>class <span class="ident">temp_attr</span></span>
 <span>(</span><span>obj, field, value)</span>
@@ -1373,7 +1156,7 @@ class ImageSettings:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/2465ea47e1b86c62e27fa9a7043f7611f4e7b0e1/fpdf/image_parsing.py#L431-L452" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/2a40d5b3e6e0ef5ee5014ef99f428289b9a1b96d/fpdf/image_parsing.py#L422-L443" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
@@ -1420,36 +1203,17 @@ class ImageSettings:
 <li><code><a title="fpdf.image_parsing.get_svg_info" href="#fpdf.image_parsing.get_svg_info">get_svg_info</a></code></li>
 <li><code><a title="fpdf.image_parsing.is_iccp_valid" href="#fpdf.image_parsing.is_iccp_valid">is_iccp_valid</a></code></li>
 <li><code><a title="fpdf.image_parsing.load_image" href="#fpdf.image_parsing.load_image">load_image</a></code></li>
+<li><code><a title="fpdf.image_parsing.preload_image" href="#fpdf.image_parsing.preload_image">preload_image</a></code></li>
 <li><code><a title="fpdf.image_parsing.transcode_monochrome" href="#fpdf.image_parsing.transcode_monochrome">transcode_monochrome</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="fpdf.image_parsing.ImageInfo" href="#fpdf.image_parsing.ImageInfo">ImageInfo</a></code></h4>
-<ul class="two-column">
-<li><code><a title="fpdf.image_parsing.ImageInfo.height" href="#fpdf.image_parsing.ImageInfo.height">height</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.rendered_height" href="#fpdf.image_parsing.ImageInfo.rendered_height">rendered_height</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.rendered_width" href="#fpdf.image_parsing.ImageInfo.rendered_width">rendered_width</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.scale_inside_box" href="#fpdf.image_parsing.ImageInfo.scale_inside_box">scale_inside_box</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.width" href="#fpdf.image_parsing.ImageInfo.width">width</a></code></li>
-<li><code><a title="fpdf.image_parsing.ImageInfo.x_by_align" href="#fpdf.image_parsing.ImageInfo.x_by_align">x_by_align</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="fpdf.image_parsing.ImageSettings" href="#fpdf.image_parsing.ImageSettings">ImageSettings</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.image_parsing.ImageSettings.compression_level" href="#fpdf.image_parsing.ImageSettings.compression_level">compression_level</a></code></li>
 </ul>
-</li>
-<li>
-<h4><code><a title="fpdf.image_parsing.RasterImageInfo" href="#fpdf.image_parsing.RasterImageInfo">RasterImageInfo</a></code></h4>
-<ul class="">
-<li><code><a title="fpdf.image_parsing.RasterImageInfo.size_in_document_units" href="#fpdf.image_parsing.RasterImageInfo.size_in_document_units">size_in_document_units</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="fpdf.image_parsing.VectorImageInfo" href="#fpdf.image_parsing.VectorImageInfo">VectorImageInfo</a></code></h4>
 </li>
 <li>
 <h4><code><a title="fpdf.image_parsing.temp_attr" href="#fpdf.image_parsing.temp_attr">temp_attr</a></code></h4>
