@@ -29,7 +29,7 @@ in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L1-L1062" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L1-L1066" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Utilities to parse SVG graphics into fpdf.drawing objects.
@@ -962,7 +962,10 @@ class SVGObject:
             elif child.tag in xmlns_lookup(&#34;svg&#34;, &#34;image&#34;):
                 pdf_group.add_item(self.build_image(child))
             else:
-                LOGGER.debug(&#34;Unsupported SVG tag: &lt;%s&gt;&#34;, child.tag)
+                LOGGER.warning(
+                    &#34;Ignoring unsupported SVG tag: &lt;%s&gt; (contributions are welcome to add support for it)&#34;,
+                    child.tag,
+                )
 
         self.update_xref(group.attrib.get(&#34;id&#34;), pdf_group)
 
@@ -1013,16 +1016,16 @@ class SVGObject:
         width = float(image.attrib.get(&#34;width&#34;, 0))
         height = float(image.attrib.get(&#34;height&#34;, 0))
         if &#34;preserveAspectRatio&#34; in image.attrib:
-            raise NotImplementedError(
-                &#39;&#34;preserveAspectRatio&#34; defined on &lt;image&gt; is currently not supported (but contributions are welcome!)&#39;
+            LOGGER.warning(
+                &#39;&#34;preserveAspectRatio&#34; defined on &lt;image&gt; is currently not supported (contributions are welcome to add support for it)&#39;
             )
         if &#34;style&#34; in image.attrib:
-            raise NotImplementedError(
-                &#39;&#34;style&#34; defined on &lt;image&gt; is currently not supported (but contributions are welcome!)&#39;
+            LOGGER.warning(
+                &#39;&#34;style&#34; defined on &lt;image&gt; is currently not supported (contributions are welcome to add support for it)&#39;
             )
         if &#34;transform&#34; in image.attrib:
-            raise NotImplementedError(
-                &#39;&#34;transform&#34; defined on &lt;image&gt; is currently not supported (but contributions are welcome!)&#39;
+            LOGGER.warning(
+                &#39;&#34;transform&#34; defined on &lt;image&gt; is currently not supported (contributions are welcome to add support for it)&#39;
             )
         # Note: at this moment, self.image_cache is not set yet:
         svg_image = SVGImage(
@@ -1070,9 +1073,10 @@ class SVGImage(NamedTuple):
 
         _, _, info = preload_image(image_cache, self.href)
         if isinstance(info, VectorImageInfo):
-            raise NotImplementedError(
-                &#34;Inserting .svg vector graphics in &lt;image&gt; tags is currently not supported (but contributions are welcome!)&#34;
+            LOGGER.warning(
+                &#34;Inserting .svg vector graphics in &lt;image&gt; tags is currently not supported (contributions are welcome to add support for it)&#34;
             )
+            return &#34;&#34;, last_item, initial_point
         w, h = info.size_in_document_units(self.width, self.height)
         stream_content = stream_content_for_raster_image(
             info=info,
@@ -1118,7 +1122,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L561-L613" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L561-L613" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PathPen(BasePen):
     def __init__(self, pdf_path, *args, **kwargs):
@@ -1192,7 +1196,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L594-L606" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L594-L606" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def arcTo(self, rx, ry, rotation, arc, sweep, end):
     self.pdf_path.arc_to(
@@ -1220,7 +1224,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L1007-L1062" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L1010-L1066" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SVGImage(NamedTuple):
     href: str
@@ -1255,9 +1259,10 @@ that are referenced as components are looked up by their name.</p></div>
 
         _, _, info = preload_image(image_cache, self.href)
         if isinstance(info, VectorImageInfo):
-            raise NotImplementedError(
-                &#34;Inserting .svg vector graphics in &lt;image&gt; tags is currently not supported (but contributions are welcome!)&#34;
+            LOGGER.warning(
+                &#34;Inserting .svg vector graphics in &lt;image&gt; tags is currently not supported (contributions are welcome to add support for it)&#34;
             )
+            return &#34;&#34;, last_item, initial_point
         w, h = info.size_in_document_units(self.width, self.height)
         stream_content = stream_content_for_raster_image(
             info=info,
@@ -1320,7 +1325,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L624-L1004" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L624-L1007" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SVGObject:
     &#34;&#34;&#34;
@@ -1630,7 +1635,10 @@ that are referenced as components are looked up by their name.</p></div>
             elif child.tag in xmlns_lookup(&#34;svg&#34;, &#34;image&#34;):
                 pdf_group.add_item(self.build_image(child))
             else:
-                LOGGER.debug(&#34;Unsupported SVG tag: &lt;%s&gt;&#34;, child.tag)
+                LOGGER.warning(
+                    &#34;Ignoring unsupported SVG tag: &lt;%s&gt; (contributions are welcome to add support for it)&#34;,
+                    child.tag,
+                )
 
         self.update_xref(group.attrib.get(&#34;id&#34;), pdf_group)
 
@@ -1681,16 +1689,16 @@ that are referenced as components are looked up by their name.</p></div>
         width = float(image.attrib.get(&#34;width&#34;, 0))
         height = float(image.attrib.get(&#34;height&#34;, 0))
         if &#34;preserveAspectRatio&#34; in image.attrib:
-            raise NotImplementedError(
-                &#39;&#34;preserveAspectRatio&#34; defined on &lt;image&gt; is currently not supported (but contributions are welcome!)&#39;
+            LOGGER.warning(
+                &#39;&#34;preserveAspectRatio&#34; defined on &lt;image&gt; is currently not supported (contributions are welcome to add support for it)&#39;
             )
         if &#34;style&#34; in image.attrib:
-            raise NotImplementedError(
-                &#39;&#34;style&#34; defined on &lt;image&gt; is currently not supported (but contributions are welcome!)&#39;
+            LOGGER.warning(
+                &#39;&#34;style&#34; defined on &lt;image&gt; is currently not supported (contributions are welcome to add support for it)&#39;
             )
         if &#34;transform&#34; in image.attrib:
-            raise NotImplementedError(
-                &#39;&#34;transform&#34; defined on &lt;image&gt; is currently not supported (but contributions are welcome!)&#39;
+            LOGGER.warning(
+                &#39;&#34;transform&#34; defined on &lt;image&gt; is currently not supported (contributions are welcome to add support for it)&#39;
             )
         # Note: at this moment, self.image_cache is not set yet:
         svg_image = SVGImage(
@@ -1727,7 +1735,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L629-L644" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L629-L644" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@classmethod
 def from_file(cls, filename, *args, encoding=&#34;utf-8&#34;, **kwargs):
@@ -1771,7 +1779,7 @@ written.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L823-L848" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L823-L848" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def draw_to_page(self, pdf, x=None, y=None, debug_stream=None):
     &#34;&#34;&#34;
@@ -1824,7 +1832,7 @@ viewbox aspect ratio does not match that of the viewport.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L717-L737" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L717-L737" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transform_to_page_viewport(self, pdf, align_viewbox=True):
     &#34;&#34;&#34;
@@ -1883,7 +1891,7 @@ converted from the SVG, scaled to the given viewport size.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/121a93c56e8afa1058b02b525c1828b05454553f/fpdf/svg.py#L739-L821" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c76329a894d6b362223b5189c6b0f7f1fba43754/fpdf/svg.py#L739-L821" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transform_to_rect_viewport(
     self, scale, width, height, align_viewbox=True, ignore_svg_top_attrs=False
