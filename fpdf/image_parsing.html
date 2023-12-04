@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L1-L572" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L1-L574" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import base64, hashlib, io, zlib
 from dataclasses import dataclass
@@ -99,21 +99,23 @@ TIFFBitRevTable = [
 def preload_image(image_cache: ImageCache, name, dims=None):
     &#34;&#34;&#34;
     Read an image and load it into memory.
-    For raster images: Following this call, the image is inserted in `.images`,
-    and following calls to this method (or `FPDF.image`) will return (or re-use)
-    the same cached values, without re-reading the image.
-    For vector images: The data is loaded and the metadata extracted.
+
+    For raster images: following this call, the image is inserted in `image_cache.images`,
+    and following calls to `FPDF.image()` will re-use the same cached values, without re-reading the image.
+
+    For vector images: the data is loaded and the metadata extracted.
 
     Args:
+        image_cache: an `ImageCache` instance, usually the `.image_cache` attribute of a `FPDF` instance.
         name: either a string representing a file path to an image, an URL to an image,
-            an io.BytesIO, or a instance of `PIL.Image.Image`
+            an io.BytesIO, or a instance of `PIL.Image.Image`.
         dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
             (raster only) before storing it in the PDF.
 
-    Returns: A tuple, consisting of the name, the image data, and an instance of a
-        subclass of `ImageInfo`,
+    Returns: A tuple, consisting of 3 values: the name, the image data,
+        and an instance of a subclass of `ImageInfo`.
     &#34;&#34;&#34;
-    # Identify and load SVG data.
+    # Identify and load SVG data:
     if str(name).endswith(&#34;.svg&#34;):
         return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
     if isinstance(name, bytes) and _is_svg(name.strip()):
@@ -616,7 +618,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L446-L467" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L448-L469" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -658,7 +660,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L205-L419" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L207-L421" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
@@ -885,7 +887,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L191-L202" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L193-L204" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_svg_info(filename, img, image_cache):
     svg = SVGObject(img.getvalue(), image_cache=image_cache)
@@ -909,7 +911,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L173-L188" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L175-L190" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -939,7 +941,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L140-L160" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L142-L162" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
@@ -968,45 +970,48 @@ It always return a BytesIO buffer.</p></div>
 <span>def <span class="ident">preload_image</span></span>(<span>image_cache: <a title="fpdf.image_datastructures.ImageCache" href="image_datastructures.html#fpdf.image_datastructures.ImageCache">ImageCache</a>, name, dims=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Read an image and load it into memory.
-For raster images: Following this call, the image is inserted in <code>.images</code>,
-and following calls to this method (or <code>FPDF.image</code>) will return (or re-use)
-the same cached values, without re-reading the image.
-For vector images: The data is loaded and the metadata extracted.</p>
+<div class="desc"><p>Read an image and load it into memory.</p>
+<p>For raster images: following this call, the image is inserted in <code>image_cache.images</code>,
+and following calls to <code>FPDF.image()</code> will re-use the same cached values, without re-reading the image.</p>
+<p>For vector images: the data is loaded and the metadata extracted.</p>
 <h2 id="args">Args</h2>
 <dl>
+<dt><strong><code>image_cache</code></strong></dt>
+<dd>an <code>ImageCache</code> instance, usually the <code>.image_cache</code> attribute of a <code>FPDF</code> instance.</dd>
 <dt><strong><code>name</code></strong></dt>
 <dd>either a string representing a file path to an image, an URL to an image,
-an io.BytesIO, or a instance of <code>PIL.Image.Image</code></dd>
+an io.BytesIO, or a instance of <code>PIL.Image.Image</code>.</dd>
 <dt><strong><code>dims</code></strong> :&ensp;<code>Tuple[float]</code></dt>
 <dd>optional dimensions as a tuple (width, height) to resize the image
 (raster only) before storing it in the PDF.</dd>
 </dl>
-<p>Returns: A tuple, consisting of the name, the image data, and an instance of a
-subclass of <code>ImageInfo</code>,</p></div>
+<p>Returns: A tuple, consisting of 3 values: the name, the image data,
+and an instance of a subclass of <code>ImageInfo</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L70-L133" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L70-L135" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def preload_image(image_cache: ImageCache, name, dims=None):
     &#34;&#34;&#34;
     Read an image and load it into memory.
-    For raster images: Following this call, the image is inserted in `.images`,
-    and following calls to this method (or `FPDF.image`) will return (or re-use)
-    the same cached values, without re-reading the image.
-    For vector images: The data is loaded and the metadata extracted.
+
+    For raster images: following this call, the image is inserted in `image_cache.images`,
+    and following calls to `FPDF.image()` will re-use the same cached values, without re-reading the image.
+
+    For vector images: the data is loaded and the metadata extracted.
 
     Args:
+        image_cache: an `ImageCache` instance, usually the `.image_cache` attribute of a `FPDF` instance.
         name: either a string representing a file path to an image, an URL to an image,
-            an io.BytesIO, or a instance of `PIL.Image.Image`
+            an io.BytesIO, or a instance of `PIL.Image.Image`.
         dims (Tuple[float]): optional dimensions as a tuple (width, height) to resize the image
             (raster only) before storing it in the PDF.
 
-    Returns: A tuple, consisting of the name, the image data, and an instance of a
-        subclass of `ImageInfo`,
+    Returns: A tuple, consisting of 3 values: the name, the image data,
+        and an instance of a subclass of `ImageInfo`.
     &#34;&#34;&#34;
-    # Identify and load SVG data.
+    # Identify and load SVG data:
     if str(name).endswith(&#34;.svg&#34;):
         return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
     if isinstance(name, bytes) and _is_svg(name.strip()):
@@ -1063,7 +1068,7 @@ subclass of <code>ImageInfo</code>,</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L470-L520" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L472-L522" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -1132,7 +1137,7 @@ subclass of <code>ImageInfo</code>,</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class ImageSettings:
@@ -1156,7 +1161,7 @@ class ImageSettings:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/bc44876c9e2b2a96d77ac4d135be01620332c65d/fpdf/image_parsing.py#L422-L443" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/28b10818161184ab97403f3e853b044bba6c8e19/fpdf/image_parsing.py#L424-L445" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
