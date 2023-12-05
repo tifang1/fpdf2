@@ -41,7 +41,7 @@ Gives direct access to some classes defined in submodules:</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/c4da2ef98a4fb22d4e34dead33d839077e8b690f/fpdf/__init__.py#L1-L73" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/526f1ce72854a4f141c9eb531c1dadc8961da70e/fpdf/__init__.py#L1-L86" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Root module.
@@ -60,7 +60,7 @@ Gives direct access to some classes defined in submodules:
 * `fpdf.template.FlexTemplate`
 &#34;&#34;&#34;
 
-import sys
+import warnings, sys
 
 from .enums import Align, TextMode, XPos, YPos
 from .errors import FPDFException
@@ -75,6 +75,19 @@ from .html import HTMLMixin, HTML2FPDF
 from .prefs import ViewerPreferences
 from .template import Template, FlexTemplate
 from .deprecation import WarnOnDeprecatedModuleAttributes
+
+try:
+    # This module only exists in PyFPDF, it has been removed in fpdf2 since v2.5.7:
+    # pylint: disable=import-self
+    from . import ttfonts
+
+    warnings.warn(
+        &#34;You have both PyFPDF &amp; fpdf2 installed. &#34;
+        &#34;Both packages cannot be installed at the same time as they share the same module namespace. &#34;
+        &#34;To only keep fpdf2, run: pip uninstall --yes pypdf &amp;&amp; pip install --upgrade fpdf2&#34;
+    )
+except ImportError:
+    pass  # no PyFPDF installation detected
 
 FPDF_VERSION = _FPDF_VERSION
 &#34;Current fpdf2 version, also available as `__version__`&#34;
