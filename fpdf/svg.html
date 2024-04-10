@@ -29,7 +29,7 @@ in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L1-L1095" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L1-L1076" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 Utilities to parse SVG graphics into fpdf.drawing objects.
@@ -332,28 +332,9 @@ svg_attr_map = {
 
 
 @force_nodocument
-def parse_style(svg_element):
-    &#34;&#34;&#34;Parse `style=&#34;...&#34;` making it&#39;s key-value pairs element&#39;s attributes&#34;&#34;&#34;
-    try:
-        style = svg_element.attrib[&#34;style&#34;]
-    except KeyError:
-        pass
-    else:
-        for element in style.split(&#34;;&#34;):
-            if not element:
-                continue
-
-            pair = element.split(&#34;:&#34;)
-            if len(pair) == 2 and pair[0] and pair[1]:
-                attr, value = pair
-
-                svg_element.attrib[attr.strip()] = value.strip()
-
-
-@force_nodocument
 def apply_styles(stylable, svg_element):
     &#34;&#34;&#34;Apply the known styles from `svg_element` to the pdf path/group `stylable`.&#34;&#34;&#34;
-    parse_style(svg_element)
+    html.parse_style(svg_element.attrib)
 
     stylable.style.auto_close = False
 
@@ -1146,12 +1127,17 @@ class SVGImage(NamedTuple):
 _curveToOne. You may additionally override _closePath, _endPath,
 addComponent, addVarComponent, and/or _qCurveToOne. You should not
 override any other methods.</p>
-<p>Takes a single 'glyphSet' argument (dict), in which the glyphs
-that are referenced as components are looked up by their name.</p></div>
+<p>Takes a 'glyphSet' argument (dict), in which the glyphs that are referenced
+as components are looked up by their name.</p>
+<p>If the optional 'reverseFlipped' argument is True, components whose transformation
+matrix has a negative determinant will be decomposed with a reversed path direction
+to compensate for the flip.</p>
+<p>The optional 'skipMissingComponents' argument can be set to True/False to
+override the homonymous class attribute for a given pen instance.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L571-L623" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L552-L604" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PathPen(BasePen):
     def __init__(self, pdf_path, *args, **kwargs):
@@ -1225,7 +1211,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L604-L616" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L585-L597" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def arcTo(self, rx, ry, rotation, arc, sweep, end):
     self.pdf_path.arc_to(
@@ -1253,7 +1239,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L1039-L1095" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L1020-L1076" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SVGImage(NamedTuple):
     href: str
@@ -1354,7 +1340,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L634-L1036" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L615-L1017" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SVGObject:
     &#34;&#34;&#34;
@@ -1783,7 +1769,7 @@ that are referenced as components are looked up by their name.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L639-L654" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L620-L635" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@classmethod
 def from_file(cls, filename, *args, encoding=&#34;utf-8&#34;, **kwargs):
@@ -1827,7 +1813,7 @@ written.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L833-L858" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L814-L839" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def draw_to_page(self, pdf, x=None, y=None, debug_stream=None):
     &#34;&#34;&#34;
@@ -1880,7 +1866,7 @@ viewbox aspect ratio does not match that of the viewport.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L727-L747" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L708-L728" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transform_to_page_viewport(self, pdf, align_viewbox=True):
     &#34;&#34;&#34;
@@ -1939,7 +1925,7 @@ converted from the SVG, scaled to the given viewport size.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/148a1b6e52a3e875ade111da4e5cb65038099d32/fpdf/svg.py#L749-L831" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/356b6dd4a26c1b20135c02f645649b48d693e408/fpdf/svg.py#L730-L812" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transform_to_rect_viewport(
     self, scale, width, height, align_viewbox=True, ignore_svg_top_attrs=False
