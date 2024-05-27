@@ -26,7 +26,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L1-L675" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L1-L686" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;PDF Template Helpers for fpdf.py&#34;&#34;&#34;
 
@@ -114,6 +114,7 @@ class FlexTemplate:
             &#34;priority&#34;: int,
             &#34;multiline&#34;: (bool, type(None)),
             &#34;rotate&#34;: (int, float),
+            &#34;wrapmode&#34;: (str, type(None)),
         }
 
         self.elements = elements
@@ -220,6 +221,7 @@ class FlexTemplate:
             (&#34;priority&#34;, int, False),
             (&#34;multiline&#34;, self._parse_multiline, False),
             (&#34;rotate&#34;, _varsep_float, False),
+            (&#34;wrapmode&#34;, str, False),
         )
         self.elements = []
         if encoding is None:
@@ -320,6 +322,7 @@ class FlexTemplate:
             align=element.get(&#34;align&#34;, &#34;&#34;),
             dry_run=True,
             output=&#34;LINES&#34;,
+            wrapmode=element.get(&#34;wrapmode&#34;, &#34;WORD&#34;),
         )
 
     def _text(
@@ -340,6 +343,7 @@ class FlexTemplate:
         foreground=0,
         background=None,
         multiline=None,
+        wrapmode=&#34;WORD&#34;,
         **__,
     ):
         if not text:
@@ -373,7 +377,13 @@ class FlexTemplate:
             pdf.cell(w=width, h=height, text=text, border=0, align=align, fill=fill)
         elif multiline:  # automatic word - warp
             pdf.multi_cell(
-                w=width, h=height, text=text, border=0, align=align, fill=fill
+                w=width,
+                h=height,
+                text=text,
+                border=0,
+                align=align,
+                fill=fill,
+                wrapmode=wrapmode,
             )
         else:  # trim to fit exactly the space defined
             text = pdf.multi_cell(
@@ -381,6 +391,7 @@ class FlexTemplate:
                 h=height,
                 text=text,
                 align=align,
+                wrapmode=wrapmode,
                 dry_run=True,
                 output=&#34;LINES&#34;,
             )[0]
@@ -730,7 +741,7 @@ a document in any combination.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L25-L570" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L25-L581" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FlexTemplate:
     &#34;&#34;&#34;
@@ -794,6 +805,7 @@ a document in any combination.</p>
             &#34;priority&#34;: int,
             &#34;multiline&#34;: (bool, type(None)),
             &#34;rotate&#34;: (int, float),
+            &#34;wrapmode&#34;: (str, type(None)),
         }
 
         self.elements = elements
@@ -900,6 +912,7 @@ a document in any combination.</p>
             (&#34;priority&#34;, int, False),
             (&#34;multiline&#34;, self._parse_multiline, False),
             (&#34;rotate&#34;, _varsep_float, False),
+            (&#34;wrapmode&#34;, str, False),
         )
         self.elements = []
         if encoding is None:
@@ -1000,6 +1013,7 @@ a document in any combination.</p>
             align=element.get(&#34;align&#34;, &#34;&#34;),
             dry_run=True,
             output=&#34;LINES&#34;,
+            wrapmode=element.get(&#34;wrapmode&#34;, &#34;WORD&#34;),
         )
 
     def _text(
@@ -1020,6 +1034,7 @@ a document in any combination.</p>
         foreground=0,
         background=None,
         multiline=None,
+        wrapmode=&#34;WORD&#34;,
         **__,
     ):
         if not text:
@@ -1053,7 +1068,13 @@ a document in any combination.</p>
             pdf.cell(w=width, h=height, text=text, border=0, align=align, fill=fill)
         elif multiline:  # automatic word - warp
             pdf.multi_cell(
-                w=width, h=height, text=text, border=0, align=align, fill=fill
+                w=width,
+                h=height,
+                text=text,
+                border=0,
+                align=align,
+                fill=fill,
+                wrapmode=wrapmode,
             )
         else:  # trim to fit exactly the space defined
             text = pdf.multi_cell(
@@ -1061,6 +1082,7 @@ a document in any combination.</p>
                 h=height,
                 text=text,
                 align=align,
+                wrapmode=wrapmode,
                 dry_run=True,
                 output=&#34;LINES&#34;,
             )[0]
@@ -1295,7 +1317,7 @@ a document in any combination.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L59-L130" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L59-L131" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_elements(self, elements):
     &#34;&#34;&#34;
@@ -1325,6 +1347,7 @@ a document in any combination.</p>
         &#34;priority&#34;: int,
         &#34;multiline&#34;: (bool, type(None)),
         &#34;rotate&#34;: (int, float),
+        &#34;wrapmode&#34;: (str, type(None)),
     }
 
     self.elements = elements
@@ -1387,7 +1410,7 @@ Default is the system default encoding.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L150-L220" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L151-L222" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def parse_csv(self, infile, delimiter=&#34;,&#34;, decimal_sep=&#34;.&#34;, encoding=None):
     &#34;&#34;&#34;
@@ -1432,6 +1455,7 @@ Default is the system default encoding.</p></div>
         (&#34;priority&#34;, int, False),
         (&#34;multiline&#34;, self._parse_multiline, False),
         (&#34;rotate&#34;, _varsep_float, False),
+        (&#34;wrapmode&#34;, str, False),
     )
     self.elements = []
     if encoding is None:
@@ -1474,7 +1498,7 @@ Default is the system default encoding.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L527-L570" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L538-L581" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self, offsetx=0.0, offsety=0.0, rotate=0.0, scale=1.0):
     &#34;&#34;&#34;
@@ -1530,7 +1554,7 @@ Default is the system default encoding.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L222-L229" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L224-L231" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def __setitem__(self, name, value):
     assert isinstance(
@@ -1557,7 +1581,7 @@ when rendered in the element font style and size.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L255-L293" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L257-L296" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def split_multicell(self, text, element_name):
     &#34;&#34;&#34;
@@ -1597,6 +1621,7 @@ when rendered in the element font style and size.</p></div>
         align=element.get(&#34;align&#34;, &#34;&#34;),
         dry_run=True,
         output=&#34;LINES&#34;,
+        wrapmode=element.get(&#34;wrapmode&#34;, &#34;WORD&#34;),
     )</code></pre>
 </details>
 </dd>
@@ -1626,7 +1651,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L573-L675" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L584-L686" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Template(FlexTemplate):
     &#34;&#34;&#34;
@@ -1746,7 +1771,7 @@ One of "mm", "cm", "in", "pt", or a number for points per unit.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L647-L651" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L658-L662" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def add_page(self):
     &#34;&#34;&#34;Finish the current page, and proceed to the next one.&#34;&#34;&#34;
@@ -1767,7 +1792,7 @@ Alternatively, the <code>.pdf.output()</code> method can be manually called.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/10e529df32739024c9d0f2338b9c4cd3593a4e08/fpdf/template.py#L654-L675" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/eabddeed536134ed6fd7c5ab05afb9c42dc15f88/fpdf/template.py#L665-L686" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self, outfile=None, dest=None):
     &#34;&#34;&#34;
