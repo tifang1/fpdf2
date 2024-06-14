@@ -25,12 +25,10 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L1-L97" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L1-L82" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">from dataclasses import dataclass, field
 from typing import Dict
-
-from .enums import Align
 
 
 class ImageInfo(dict):
@@ -58,7 +56,9 @@ class ImageInfo(dict):
         return self[&#34;rendered_height&#34;]
 
     def __str__(self):
-        d = {k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;smask&#34;) else v) for k, v in self.items()}
+        d = {
+            k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;iccp&#34;, &#34;smask&#34;) else v) for k, v in self.items()
+        }
         return f&#34;self.__class__.__name__({d})&#34;
 
     def scale_inside_box(self, x, y, w, h):
@@ -76,21 +76,6 @@ class ImageInfo(dict):
             new_w = w
             y += (h - new_h) / 2
         return x, y, new_w, new_h
-
-    @staticmethod
-    def x_by_align(x, w, pdf, keep_aspect_ratio):
-        if keep_aspect_ratio:
-            raise ValueError(
-                &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
-            )
-        x = Align.coerce(x)
-        if x == Align.C:
-            return (pdf.w - w) / 2
-        if x == Align.R:
-            return pdf.w - w - pdf.r_margin
-        if x == Align.L:
-            return pdf.l_margin
-        raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)
 
 
 class RasterImageInfo(ImageInfo):
@@ -144,7 +129,7 @@ class ImageCache:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L86-L97" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L71-L82" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class ImageCache:
@@ -184,7 +169,7 @@ class ImageCache:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L95-L97" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L80-L82" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def reset_usages(self):
     for img in self.images.values():
@@ -203,7 +188,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L7-L64" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -230,7 +215,9 @@ We subclass this to distinguish between raster and vector images.</p></div>
         return self[&#34;rendered_height&#34;]
 
     def __str__(self):
-        d = {k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;smask&#34;) else v) for k, v in self.items()}
+        d = {
+            k: (&#34;...&#34; if k in (&#34;data&#34;, &#34;iccp&#34;, &#34;smask&#34;) else v) for k, v in self.items()
+        }
         return f&#34;self.__class__.__name__({d})&#34;
 
     def scale_inside_box(self, x, y, w, h):
@@ -247,22 +234,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
             new_h = w / ratio
             new_w = w
             y += (h - new_h) / 2
-        return x, y, new_w, new_h
-
-    @staticmethod
-    def x_by_align(x, w, pdf, keep_aspect_ratio):
-        if keep_aspect_ratio:
-            raise ValueError(
-                &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
-            )
-        x = Align.coerce(x)
-        if x == Align.C:
-            return (pdf.w - w) / 2
-        if x == Align.R:
-            return pdf.w - w - pdf.r_margin
-        if x == Align.L:
-            return pdf.l_margin
-        raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)</code></pre>
+        return x, y, new_w, new_h</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -273,35 +245,6 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <li><a title="fpdf.image_datastructures.RasterImageInfo" href="#fpdf.image_datastructures.RasterImageInfo">RasterImageInfo</a></li>
 <li><a title="fpdf.image_datastructures.VectorImageInfo" href="#fpdf.image_datastructures.VectorImageInfo">VectorImageInfo</a></li>
 </ul>
-<h3>Static methods</h3>
-<dl>
-<dt id="fpdf.image_datastructures.ImageInfo.x_by_align"><code class="name flex">
-<span>def <span class="ident">x_by_align</span></span>(<span>x, w, pdf, keep_aspect_ratio)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L51-L64" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@staticmethod
-def x_by_align(x, w, pdf, keep_aspect_ratio):
-    if keep_aspect_ratio:
-        raise ValueError(
-            &#34;FPDF.image(): &#39;keep_aspect_ratio&#39; cannot be used with an enum value provided to `x`&#34;
-        )
-    x = Align.coerce(x)
-    if x == Align.C:
-        return (pdf.w - w) / 2
-    if x == Align.R:
-        return pdf.w - w - pdf.r_margin
-    if x == Align.L:
-        return pdf.l_margin
-    raise ValueError(f&#34;Unsupported &#39;x&#39; value passed to .image(): {x}&#34;)</code></pre>
-</details>
-</dd>
-</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="fpdf.image_datastructures.ImageInfo.height"><code class="name">var <span class="ident">height</span></code></dt>
@@ -310,7 +253,7 @@ def x_by_align(x, w, pdf, keep_aspect_ratio):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L16-L19" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L14-L17" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def height(self):
@@ -324,7 +267,7 @@ def height(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L26-L29" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L24-L27" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def rendered_height(self):
@@ -338,7 +281,7 @@ def rendered_height(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L21-L24" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L19-L22" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def rendered_width(self):
@@ -352,7 +295,7 @@ def rendered_width(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L11-L14" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L9-L12" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def width(self):
@@ -372,7 +315,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L35-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L35-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def scale_inside_box(self, x, y, w, h):
     &#34;&#34;&#34;
@@ -402,7 +345,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L67-L78" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -432,7 +375,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L70-L78" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L55-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def size_in_document_units(self, w, h, scale=1):
     if w == 0 and h == 0:  # Put image at 72 dpi
@@ -468,7 +411,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_datastructures.py#L81-L83" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -519,13 +462,12 @@ In the reduced dimension it will be centered within the available space.</p></di
 </li>
 <li>
 <h4><code><a title="fpdf.image_datastructures.ImageInfo" href="#fpdf.image_datastructures.ImageInfo">ImageInfo</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="fpdf.image_datastructures.ImageInfo.height" href="#fpdf.image_datastructures.ImageInfo.height">height</a></code></li>
 <li><code><a title="fpdf.image_datastructures.ImageInfo.rendered_height" href="#fpdf.image_datastructures.ImageInfo.rendered_height">rendered_height</a></code></li>
 <li><code><a title="fpdf.image_datastructures.ImageInfo.rendered_width" href="#fpdf.image_datastructures.ImageInfo.rendered_width">rendered_width</a></code></li>
 <li><code><a title="fpdf.image_datastructures.ImageInfo.scale_inside_box" href="#fpdf.image_datastructures.ImageInfo.scale_inside_box">scale_inside_box</a></code></li>
 <li><code><a title="fpdf.image_datastructures.ImageInfo.width" href="#fpdf.image_datastructures.ImageInfo.width">width</a></code></li>
-<li><code><a title="fpdf.image_datastructures.ImageInfo.x_by_align" href="#fpdf.image_datastructures.ImageInfo.x_by_align">x_by_align</a></code></li>
 </ul>
 </li>
 <li>

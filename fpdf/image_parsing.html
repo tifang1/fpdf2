@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L1-L576" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L1-L579" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import base64, hashlib, io, zlib
 from dataclasses import dataclass
@@ -117,7 +117,10 @@ def preload_image(image_cache: ImageCache, name, dims=None):
     &#34;&#34;&#34;
     # Identify and load SVG data:
     if str(name).endswith(&#34;.svg&#34;):
-        return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
+        try:
+            return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
+        except Exception as error:
+            raise ValueError(f&#34;Could not parse file: {name}&#34;) from error
     if isinstance(name, bytes) and _is_svg(name.strip()):
         return get_svg_info(name, io.BytesIO(name), image_cache=image_cache)
     if isinstance(name, io.BytesIO) and _is_svg(name.getvalue().strip()):
@@ -620,7 +623,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L450-L471" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L453-L474" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ccitt_payload_location_from_pil(img):
     &#34;&#34;&#34;
@@ -662,7 +665,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L207-L423" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L210-L426" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_img_info(filename, img=None, image_filter=&#34;AUTO&#34;, dims=None):
     &#34;&#34;&#34;
@@ -891,7 +894,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L193-L204" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L196-L207" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_svg_info(filename, img, image_cache):
     svg = SVGObject(img.getvalue(), image_cache=image_cache)
@@ -915,7 +918,7 @@ def _has_alpha(img, alpha_channel):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L175-L190" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L178-L193" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_iccp_valid(iccp, filename):
     &#34;Checks the validity of an ICC profile&#34;
@@ -945,7 +948,7 @@ It always return a BytesIO buffer.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L142-L162" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L145-L165" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def load_image(filename):
     &#34;&#34;&#34;
@@ -994,7 +997,7 @@ and an instance of a subclass of <code>ImageInfo</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L70-L135" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L70-L138" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def preload_image(image_cache: ImageCache, name, dims=None):
     &#34;&#34;&#34;
@@ -1017,7 +1020,10 @@ and an instance of a subclass of <code>ImageInfo</code>.</p></div>
     &#34;&#34;&#34;
     # Identify and load SVG data:
     if str(name).endswith(&#34;.svg&#34;):
-        return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
+        try:
+            return get_svg_info(name, load_image(str(name)), image_cache=image_cache)
+        except Exception as error:
+            raise ValueError(f&#34;Could not parse file: {name}&#34;) from error
     if isinstance(name, bytes) and _is_svg(name.strip()):
         return get_svg_info(name, io.BytesIO(name), image_cache=image_cache)
     if isinstance(name, io.BytesIO) and _is_svg(name.getvalue().strip()):
@@ -1072,7 +1078,7 @@ and an instance of a subclass of <code>ImageInfo</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L474-L524" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L477-L527" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def transcode_monochrome(img):
     &#34;&#34;&#34;
@@ -1141,7 +1147,7 @@ and an instance of a subclass of <code>ImageInfo</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class ImageSettings:
@@ -1165,7 +1171,7 @@ class ImageSettings:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/fbbb3f701fd35abaff1cf0b04a8576fe45e204e2/fpdf/image_parsing.py#L426-L447" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c48dafa696b97fad2e1a8de78b8009d02988de2b/fpdf/image_parsing.py#L429-L450" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
