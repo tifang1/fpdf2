@@ -29,7 +29,7 @@ in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L1-L1056" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1-L1110" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 HTML renderer
@@ -49,7 +49,7 @@ from .enums import TextEmphasis, XPos, YPos
 from .errors import FPDFException
 from .fonts import FontFace
 from .table import Table
-from .util import int2roman
+from .util import int2roman, get_scale_factor
 
 LOGGER = logging.getLogger(__name__)
 BULLET_WIN1252 = &#34;\x95&#34;  # BULLET character in Windows-1252 encoding
@@ -67,7 +67,7 @@ DEFAULT_TAG_STYLES = {
     &#34;h6&#34;: FontFace(color=(150, 0, 0), size_pt=8),
     &#34;pre&#34;: FontFace(family=&#34;Courier&#34;),
 }
-DEFAULT_TAG_INDENTS = {
+DEFAULT_TAG_INDENTS_MM = {
     &#34;blockquote&#34;: 0,
     &#34;dd&#34;: 10,
     &#34;li&#34;: 5,
@@ -303,8 +303,8 @@ class HTML2FPDF(HTMLParser):
         self,
         pdf,
         image_map=None,
-        li_tag_indent=5,
-        dd_tag_indent=10,
+        li_tag_indent=None,
+        dd_tag_indent=None,
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         li_prefix_color=(190, 0, 0),
@@ -313,6 +313,7 @@ class HTML2FPDF(HTMLParser):
         warn_on_tags_not_matching=True,
         tag_indents=None,
         tag_styles=None,
+        list_vertical_margin=None,
         **_,
     ):
         &#34;&#34;&#34;
@@ -329,8 +330,11 @@ class HTML2FPDF(HTMLParser):
             heading_sizes (dict): [**DEPRECATED since v2.7.9**] font size per heading level names (&#34;h1&#34;, &#34;h2&#34;...) - Set tag_styles instead
             pre_code_font (str): [**DEPRECATED since v2.7.9**] font to use for &lt;pre&gt; &amp; &lt;code&gt; blocks - Set tag_styles instead
             warn_on_tags_not_matching (bool): control warnings production for unmatched HTML tags
-            tag_indents (dict): mapping of HTML tag names to numeric values representing their horizontal left identation
+            tag_indents (dict): mapping of HTML tag names to numeric values representing their horizontal left identation.
+                The indent values are in the chosen pdf document units.
             tag_styles (dict): mapping of HTML tag names to colors
+            list_vertical_margin (float): size of margins that precede lists.
+                The margin value is in the chosen pdf document units.
         &#34;&#34;&#34;
         super().__init__()
         self.pdf = pdf
@@ -367,8 +371,17 @@ class HTML2FPDF(HTMLParser):
         self.align = &#34;&#34;
         self.style_stack = []  # list of FontFace
         self.indent = 0
+        self.line_height_stack = []
         self.ol_type = []  # when inside a &lt;ol&gt; tag, can be &#34;a&#34;, &#34;A&#34;, &#34;i&#34;, &#34;I&#34; or &#34;1&#34;
         self.bullet = []
+        self.default_conversion_factor = (
+            get_scale_factor(&#34;mm&#34;) / self.pdf.k
+        )  # factor for converting default values from mm to document units
+        if list_vertical_margin is None:
+            # Default value of 2 to be multiplied by the conversion factor
+            # for list_vertical_margin is given in mm
+            list_vertical_margin = 2 * self.default_conversion_factor
+        self.list_vertical_margin = list_vertical_margin
         self.font_color = pdf.text_color.colors255
         self.heading_level = None
         self.heading_above = 0.2  # extra space above heading, relative to font size
@@ -385,8 +398,11 @@ class HTML2FPDF(HTMLParser):
         #                    &#34;inserted&#34; is a special attribute indicating that a cell has be inserted in self.table_row
 
         if not tag_indents:
-            tag_indents = {}
-        if dd_tag_indent != DEFAULT_TAG_INDENTS[&#34;dd&#34;]:
+            tag_indents = {
+                k: v * self.default_conversion_factor
+                for k, v in DEFAULT_TAG_INDENTS_MM.items()
+            }
+        if dd_tag_indent is not None:
             warnings.warn(
                 (
                     &#34;The dd_tag_indent parameter is deprecated since v2.7.9 &#34;
@@ -397,7 +413,7 @@ class HTML2FPDF(HTMLParser):
                 stacklevel=get_stack_level(),
             )
             tag_indents[&#34;dd&#34;] = dd_tag_indent
-        if li_tag_indent != DEFAULT_TAG_INDENTS[&#34;li&#34;]:
+        if li_tag_indent is not None:
             warnings.warn(
                 (
                     &#34;The li_tag_indent parameter is deprecated since v2.7.9 &#34;
@@ -409,11 +425,11 @@ class HTML2FPDF(HTMLParser):
             )
             tag_indents[&#34;li&#34;] = li_tag_indent
         for tag in tag_indents:
-            if tag not in DEFAULT_TAG_INDENTS:
+            if tag not in DEFAULT_TAG_INDENTS_MM:
                 raise NotImplementedError(
                     f&#34;Cannot set indent for HTML tag &lt;{tag}&gt; (contributions are welcome to add support for this)&#34;
                 )
-        self.tag_indents = {**DEFAULT_TAG_INDENTS, **tag_indents}
+        self.tag_indents = {**DEFAULT_TAG_INDENTS_MM, **tag_indents}
 
         if not tag_styles:
             tag_styles = {}
@@ -453,7 +469,13 @@ class HTML2FPDF(HTMLParser):
             )
 
     def _new_paragraph(
-        self, align=None, line_height=1.0, top_margin=0, bottom_margin=0
+        self,
+        align=None,
+        line_height=1.0,
+        top_margin=0,
+        bottom_margin=0,
+        indent=0,
+        bullet=&#34;&#34;,
     ):
         self._end_paragraph()
         self.align = align or &#34;&#34;
@@ -465,6 +487,8 @@ class HTML2FPDF(HTMLParser):
             skip_leading_spaces=True,
             top_margin=top_margin,
             bottom_margin=bottom_margin,
+            indent=indent,
+            bullet_string=bullet,
         )
         self.follows_trailing_space = True
         self.follows_heading = False
@@ -578,10 +602,20 @@ class HTML2FPDF(HTMLParser):
         parse_style(attrs)
         self._tags_stack.append(tag)
         if tag == &#34;dt&#34;:
-            self._write_paragraph(&#34;\n&#34;)
+            self._new_paragraph(
+                line_height=(
+                    self.line_height_stack[-1] if self.line_height_stack else None
+                ),
+            )
             tag = &#34;b&#34;
         if tag == &#34;dd&#34;:
-            self._write_paragraph(&#34;\n&#34; + &#34;\u00a0&#34; * self.tag_indents[&#34;dd&#34;])
+            self.follows_heading = True
+            self._new_paragraph(
+                line_height=(
+                    self.line_height_stack[-1] if self.line_height_stack else None
+                ),
+                indent=self.tag_indents[&#34;dd&#34;] * (self.indent + 1),
+            )
         if tag == &#34;strong&#34;:
             tag = &#34;b&#34;
         if tag == &#34;em&#34;:
@@ -692,38 +726,52 @@ class HTML2FPDF(HTMLParser):
                 size=tag_style.size_pt or self.font_size,
             )
             self.indent += 1
-            self._new_paragraph(top_margin=3, bottom_margin=3)
-            if self.tag_indents[&#34;blockquote&#34;]:
-                self._write_paragraph(&#34;\u00a0&#34; * self.tag_indents[&#34;blockquote&#34;])
+            self._new_paragraph(
+                # Default values to be multiplied by the conversion factor
+                # for top_margin and bottom_margin here are given in mm
+                top_margin=3 * self.default_conversion_factor,
+                bottom_margin=3 * self.default_conversion_factor,
+                indent=self.tag_indents[&#34;blockquote&#34;] * self.indent,
+            )
         if tag == &#34;ul&#34;:
             self.indent += 1
             bullet_char = (
                 ul_prefix(attrs[&#34;type&#34;]) if &#34;type&#34; in attrs else self.ul_bullet_char
             )
             self.bullet.append(bullet_char)
-            line_height = None
             if &#34;line-height&#34; in attrs:
                 try:
                     # YYY parse and convert non-float line_height values
-                    line_height = float(attrs.get(&#34;line-height&#34;))
+                    self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
                 except ValueError:
                     pass
-            self._new_paragraph(line_height=line_height)
+            else:
+                self.line_height_stack.append(None)
+            if self.indent == 1:
+                self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+                self._write_paragraph(&#34;\u00a0&#34;)
+            self._end_paragraph()
         if tag == &#34;ol&#34;:
             self.indent += 1
             start = int(attrs[&#34;start&#34;]) if &#34;start&#34; in attrs else 1
             self.bullet.append(start - 1)
             self.ol_type.append(attrs.get(&#34;type&#34;, &#34;1&#34;))
-            line_height = None
             if &#34;line-height&#34; in attrs:
                 try:
                     # YYY parse and convert non-float line_height values
-                    line_height = float(attrs.get(&#34;line-height&#34;))
+                    self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
                 except ValueError:
                     pass
-            self._new_paragraph(line_height=line_height)
+            else:
+                self.line_height_stack.append(None)
+            if self.indent == 1:
+                self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+                self._write_paragraph(&#34;\u00a0&#34;)
+            self._end_paragraph()
         if tag == &#34;li&#34;:
-            self._ln(2)
+            # Default value of 2 for h to be multiplied by the conversion factor
+            # in self._ln(h) here is given in mm
+            self._ln(2 * self.default_conversion_factor)
             self.set_text_color(*self.li_prefix_color)
             if self.bullet:
                 bullet = self.bullet[self.indent - 1]
@@ -734,9 +782,14 @@ class HTML2FPDF(HTMLParser):
                 bullet += 1
                 self.bullet[self.indent - 1] = bullet
                 ol_type = self.ol_type[self.indent - 1]
-                bullet = f&#34;{ol_prefix(ol_type, bullet)}. &#34;
-            indent = &#34;\u00a0&#34; * self.tag_indents[&#34;li&#34;] * self.indent
-            self._write_paragraph(f&#34;{indent}{bullet} &#34;)
+                bullet = f&#34;{ol_prefix(ol_type, bullet)}.&#34;
+            self._new_paragraph(
+                line_height=(
+                    self.line_height_stack[-1] if self.line_height_stack else None
+                ),
+                indent=self.tag_indents[&#34;li&#34;] * self.indent,
+                bullet=bullet,
+            )
             self.set_text_color(*self.font_color)
         if tag == &#34;font&#34;:
             # save previous font state:
@@ -935,6 +988,7 @@ class HTML2FPDF(HTMLParser):
             self.indent -= 1
             if tag == &#34;ol&#34;:
                 self.ol_type.pop()
+            self.line_height_stack.pop()
             self.bullet.pop()
         if tag == &#34;table&#34;:
             self.table.render()
@@ -1105,7 +1159,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L233-L242" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L233-L242" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def color_as_decimal(color=&#34;#000000&#34;):
     &#34;&#34;&#34;
@@ -1127,7 +1181,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L1027-L1038" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1081-L1092" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ol_prefix(ol_type, index):
     if ol_type == &#34;1&#34;:
@@ -1151,7 +1205,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L245-L260" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L245-L260" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def parse_style(elem_attrs):
     &#34;&#34;&#34;Parse `style=&#34;...&#34;` making it&#39;s key-value pairs element&#39;s attributes&#34;&#34;&#34;
@@ -1179,7 +1233,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L1017-L1024" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1071-L1078" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ul_prefix(ul_type):
     if ul_type == &#34;circle&#34;:
@@ -1198,7 +1252,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <dl>
 <dt id="fpdf.html.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, li_tag_indent=5, dd_tag_indent=10, table_line_separators=False, ul_bullet_char='\x95', li_prefix_color=(190, 0, 0), heading_sizes=None, pre_code_font='Courier', warn_on_tags_not_matching=True, tag_indents=None, tag_styles=None, **_)</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=None, dd_tag_indent=None, table_line_separators=False, ul_bullet_char='\x95', li_prefix_color=(190, 0, 0), heading_sizes=None, pre_code_font='Courier', warn_on_tags_not_matching=True, tag_indents=None, tag_styles=None, list_vertical_margin=None, **_)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -1226,16 +1280,20 @@ to new image URLs</dd>
 <dt><strong><code>warn_on_tags_not_matching</code></strong> :&ensp;<code>bool</code></dt>
 <dd>control warnings production for unmatched HTML tags</dd>
 <dt><strong><code>tag_indents</code></strong> :&ensp;<code>dict</code></dt>
-<dd>mapping of HTML tag names to numeric values representing their horizontal left identation</dd>
+<dd>mapping of HTML tag names to numeric values representing their horizontal left identation.
+The indent values are in the chosen pdf document units.</dd>
 <dt><strong><code>tag_styles</code></strong> :&ensp;<code>dict</code></dt>
 <dd>mapping of HTML tag names to colors</dd>
+<dt><strong><code>list_vertical_margin</code></strong> :&ensp;<code>float</code></dt>
+<dd>size of margins that precede lists.
+The margin value is in the chosen pdf document units.</dd>
 </dl></div>
   
     
       <details class="source">
         <summary>
             <span>Expand source code</span>
-              <a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L263-L1014" class="git-link">Browse git</a>
+              <a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L263-L1068" class="git-link">Browse git</a>
         </summary>
         <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
@@ -1247,8 +1305,8 @@ to new image URLs</dd>
         self,
         pdf,
         image_map=None,
-        li_tag_indent=5,
-        dd_tag_indent=10,
+        li_tag_indent=None,
+        dd_tag_indent=None,
         table_line_separators=False,
         ul_bullet_char=BULLET_WIN1252,
         li_prefix_color=(190, 0, 0),
@@ -1257,6 +1315,7 @@ to new image URLs</dd>
         warn_on_tags_not_matching=True,
         tag_indents=None,
         tag_styles=None,
+        list_vertical_margin=None,
         **_,
     ):
         &#34;&#34;&#34;
@@ -1273,8 +1332,11 @@ to new image URLs</dd>
             heading_sizes (dict): [**DEPRECATED since v2.7.9**] font size per heading level names (&#34;h1&#34;, &#34;h2&#34;...) - Set tag_styles instead
             pre_code_font (str): [**DEPRECATED since v2.7.9**] font to use for &lt;pre&gt; &amp; &lt;code&gt; blocks - Set tag_styles instead
             warn_on_tags_not_matching (bool): control warnings production for unmatched HTML tags
-            tag_indents (dict): mapping of HTML tag names to numeric values representing their horizontal left identation
+            tag_indents (dict): mapping of HTML tag names to numeric values representing their horizontal left identation.
+                The indent values are in the chosen pdf document units.
             tag_styles (dict): mapping of HTML tag names to colors
+            list_vertical_margin (float): size of margins that precede lists.
+                The margin value is in the chosen pdf document units.
         &#34;&#34;&#34;
         super().__init__()
         self.pdf = pdf
@@ -1311,8 +1373,17 @@ to new image URLs</dd>
         self.align = &#34;&#34;
         self.style_stack = []  # list of FontFace
         self.indent = 0
+        self.line_height_stack = []
         self.ol_type = []  # when inside a &lt;ol&gt; tag, can be &#34;a&#34;, &#34;A&#34;, &#34;i&#34;, &#34;I&#34; or &#34;1&#34;
         self.bullet = []
+        self.default_conversion_factor = (
+            get_scale_factor(&#34;mm&#34;) / self.pdf.k
+        )  # factor for converting default values from mm to document units
+        if list_vertical_margin is None:
+            # Default value of 2 to be multiplied by the conversion factor
+            # for list_vertical_margin is given in mm
+            list_vertical_margin = 2 * self.default_conversion_factor
+        self.list_vertical_margin = list_vertical_margin
         self.font_color = pdf.text_color.colors255
         self.heading_level = None
         self.heading_above = 0.2  # extra space above heading, relative to font size
@@ -1329,8 +1400,11 @@ to new image URLs</dd>
         #                    &#34;inserted&#34; is a special attribute indicating that a cell has be inserted in self.table_row
 
         if not tag_indents:
-            tag_indents = {}
-        if dd_tag_indent != DEFAULT_TAG_INDENTS[&#34;dd&#34;]:
+            tag_indents = {
+                k: v * self.default_conversion_factor
+                for k, v in DEFAULT_TAG_INDENTS_MM.items()
+            }
+        if dd_tag_indent is not None:
             warnings.warn(
                 (
                     &#34;The dd_tag_indent parameter is deprecated since v2.7.9 &#34;
@@ -1341,7 +1415,7 @@ to new image URLs</dd>
                 stacklevel=get_stack_level(),
             )
             tag_indents[&#34;dd&#34;] = dd_tag_indent
-        if li_tag_indent != DEFAULT_TAG_INDENTS[&#34;li&#34;]:
+        if li_tag_indent is not None:
             warnings.warn(
                 (
                     &#34;The li_tag_indent parameter is deprecated since v2.7.9 &#34;
@@ -1353,11 +1427,11 @@ to new image URLs</dd>
             )
             tag_indents[&#34;li&#34;] = li_tag_indent
         for tag in tag_indents:
-            if tag not in DEFAULT_TAG_INDENTS:
+            if tag not in DEFAULT_TAG_INDENTS_MM:
                 raise NotImplementedError(
                     f&#34;Cannot set indent for HTML tag &lt;{tag}&gt; (contributions are welcome to add support for this)&#34;
                 )
-        self.tag_indents = {**DEFAULT_TAG_INDENTS, **tag_indents}
+        self.tag_indents = {**DEFAULT_TAG_INDENTS_MM, **tag_indents}
 
         if not tag_styles:
             tag_styles = {}
@@ -1397,7 +1471,13 @@ to new image URLs</dd>
             )
 
     def _new_paragraph(
-        self, align=None, line_height=1.0, top_margin=0, bottom_margin=0
+        self,
+        align=None,
+        line_height=1.0,
+        top_margin=0,
+        bottom_margin=0,
+        indent=0,
+        bullet=&#34;&#34;,
     ):
         self._end_paragraph()
         self.align = align or &#34;&#34;
@@ -1409,6 +1489,8 @@ to new image URLs</dd>
             skip_leading_spaces=True,
             top_margin=top_margin,
             bottom_margin=bottom_margin,
+            indent=indent,
+            bullet_string=bullet,
         )
         self.follows_trailing_space = True
         self.follows_heading = False
@@ -1522,10 +1604,20 @@ to new image URLs</dd>
         parse_style(attrs)
         self._tags_stack.append(tag)
         if tag == &#34;dt&#34;:
-            self._write_paragraph(&#34;\n&#34;)
+            self._new_paragraph(
+                line_height=(
+                    self.line_height_stack[-1] if self.line_height_stack else None
+                ),
+            )
             tag = &#34;b&#34;
         if tag == &#34;dd&#34;:
-            self._write_paragraph(&#34;\n&#34; + &#34;\u00a0&#34; * self.tag_indents[&#34;dd&#34;])
+            self.follows_heading = True
+            self._new_paragraph(
+                line_height=(
+                    self.line_height_stack[-1] if self.line_height_stack else None
+                ),
+                indent=self.tag_indents[&#34;dd&#34;] * (self.indent + 1),
+            )
         if tag == &#34;strong&#34;:
             tag = &#34;b&#34;
         if tag == &#34;em&#34;:
@@ -1636,38 +1728,52 @@ to new image URLs</dd>
                 size=tag_style.size_pt or self.font_size,
             )
             self.indent += 1
-            self._new_paragraph(top_margin=3, bottom_margin=3)
-            if self.tag_indents[&#34;blockquote&#34;]:
-                self._write_paragraph(&#34;\u00a0&#34; * self.tag_indents[&#34;blockquote&#34;])
+            self._new_paragraph(
+                # Default values to be multiplied by the conversion factor
+                # for top_margin and bottom_margin here are given in mm
+                top_margin=3 * self.default_conversion_factor,
+                bottom_margin=3 * self.default_conversion_factor,
+                indent=self.tag_indents[&#34;blockquote&#34;] * self.indent,
+            )
         if tag == &#34;ul&#34;:
             self.indent += 1
             bullet_char = (
                 ul_prefix(attrs[&#34;type&#34;]) if &#34;type&#34; in attrs else self.ul_bullet_char
             )
             self.bullet.append(bullet_char)
-            line_height = None
             if &#34;line-height&#34; in attrs:
                 try:
                     # YYY parse and convert non-float line_height values
-                    line_height = float(attrs.get(&#34;line-height&#34;))
+                    self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
                 except ValueError:
                     pass
-            self._new_paragraph(line_height=line_height)
+            else:
+                self.line_height_stack.append(None)
+            if self.indent == 1:
+                self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+                self._write_paragraph(&#34;\u00a0&#34;)
+            self._end_paragraph()
         if tag == &#34;ol&#34;:
             self.indent += 1
             start = int(attrs[&#34;start&#34;]) if &#34;start&#34; in attrs else 1
             self.bullet.append(start - 1)
             self.ol_type.append(attrs.get(&#34;type&#34;, &#34;1&#34;))
-            line_height = None
             if &#34;line-height&#34; in attrs:
                 try:
                     # YYY parse and convert non-float line_height values
-                    line_height = float(attrs.get(&#34;line-height&#34;))
+                    self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
                 except ValueError:
                     pass
-            self._new_paragraph(line_height=line_height)
+            else:
+                self.line_height_stack.append(None)
+            if self.indent == 1:
+                self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+                self._write_paragraph(&#34;\u00a0&#34;)
+            self._end_paragraph()
         if tag == &#34;li&#34;:
-            self._ln(2)
+            # Default value of 2 for h to be multiplied by the conversion factor
+            # in self._ln(h) here is given in mm
+            self._ln(2 * self.default_conversion_factor)
             self.set_text_color(*self.li_prefix_color)
             if self.bullet:
                 bullet = self.bullet[self.indent - 1]
@@ -1678,9 +1784,14 @@ to new image URLs</dd>
                 bullet += 1
                 self.bullet[self.indent - 1] = bullet
                 ol_type = self.ol_type[self.indent - 1]
-                bullet = f&#34;{ol_prefix(ol_type, bullet)}. &#34;
-            indent = &#34;\u00a0&#34; * self.tag_indents[&#34;li&#34;] * self.indent
-            self._write_paragraph(f&#34;{indent}{bullet} &#34;)
+                bullet = f&#34;{ol_prefix(ol_type, bullet)}.&#34;
+            self._new_paragraph(
+                line_height=(
+                    self.line_height_stack[-1] if self.line_height_stack else None
+                ),
+                indent=self.tag_indents[&#34;li&#34;] * self.indent,
+                bullet=bullet,
+            )
             self.set_text_color(*self.font_color)
         if tag == &#34;font&#34;:
             # save previous font state:
@@ -1879,6 +1990,7 @@ to new image URLs</dd>
             self.indent -= 1
             if tag == &#34;ol&#34;:
                 self.ol_type.pop()
+            self.line_height_stack.pop()
             self.bullet.pop()
         if tag == &#34;table&#34;:
             self.table.render()
@@ -2016,7 +2128,7 @@ to new image URLs</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L1013-L1014" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1067-L1068" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def error(self, message):
     raise RuntimeError(message)</code></pre>
@@ -2032,7 +2144,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L935-L945" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L989-L999" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def feed(self, data):
     super().feed(data)
@@ -2055,7 +2167,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L463-L525" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L487-L549" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_data(self, data):
     if self.td_th is not None:
@@ -2130,7 +2242,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L845-L933" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L898-L987" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_endtag(self, tag):
     LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
@@ -2192,6 +2304,7 @@ as you want (may include '\n').</p></div>
         self.indent -= 1
         if tag == &#34;ol&#34;:
             self.ol_type.pop()
+        self.line_height_stack.pop()
         self.bullet.pop()
     if tag == &#34;table&#34;:
         self.table.render()
@@ -2231,7 +2344,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L541-L843" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L565-L896" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     self._pre_started = False
@@ -2240,10 +2353,20 @@ as you want (may include '\n').</p></div>
     parse_style(attrs)
     self._tags_stack.append(tag)
     if tag == &#34;dt&#34;:
-        self._write_paragraph(&#34;\n&#34;)
+        self._new_paragraph(
+            line_height=(
+                self.line_height_stack[-1] if self.line_height_stack else None
+            ),
+        )
         tag = &#34;b&#34;
     if tag == &#34;dd&#34;:
-        self._write_paragraph(&#34;\n&#34; + &#34;\u00a0&#34; * self.tag_indents[&#34;dd&#34;])
+        self.follows_heading = True
+        self._new_paragraph(
+            line_height=(
+                self.line_height_stack[-1] if self.line_height_stack else None
+            ),
+            indent=self.tag_indents[&#34;dd&#34;] * (self.indent + 1),
+        )
     if tag == &#34;strong&#34;:
         tag = &#34;b&#34;
     if tag == &#34;em&#34;:
@@ -2354,38 +2477,52 @@ as you want (may include '\n').</p></div>
             size=tag_style.size_pt or self.font_size,
         )
         self.indent += 1
-        self._new_paragraph(top_margin=3, bottom_margin=3)
-        if self.tag_indents[&#34;blockquote&#34;]:
-            self._write_paragraph(&#34;\u00a0&#34; * self.tag_indents[&#34;blockquote&#34;])
+        self._new_paragraph(
+            # Default values to be multiplied by the conversion factor
+            # for top_margin and bottom_margin here are given in mm
+            top_margin=3 * self.default_conversion_factor,
+            bottom_margin=3 * self.default_conversion_factor,
+            indent=self.tag_indents[&#34;blockquote&#34;] * self.indent,
+        )
     if tag == &#34;ul&#34;:
         self.indent += 1
         bullet_char = (
             ul_prefix(attrs[&#34;type&#34;]) if &#34;type&#34; in attrs else self.ul_bullet_char
         )
         self.bullet.append(bullet_char)
-        line_height = None
         if &#34;line-height&#34; in attrs:
             try:
                 # YYY parse and convert non-float line_height values
-                line_height = float(attrs.get(&#34;line-height&#34;))
+                self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
             except ValueError:
                 pass
-        self._new_paragraph(line_height=line_height)
+        else:
+            self.line_height_stack.append(None)
+        if self.indent == 1:
+            self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+            self._write_paragraph(&#34;\u00a0&#34;)
+        self._end_paragraph()
     if tag == &#34;ol&#34;:
         self.indent += 1
         start = int(attrs[&#34;start&#34;]) if &#34;start&#34; in attrs else 1
         self.bullet.append(start - 1)
         self.ol_type.append(attrs.get(&#34;type&#34;, &#34;1&#34;))
-        line_height = None
         if &#34;line-height&#34; in attrs:
             try:
                 # YYY parse and convert non-float line_height values
-                line_height = float(attrs.get(&#34;line-height&#34;))
+                self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
             except ValueError:
                 pass
-        self._new_paragraph(line_height=line_height)
+        else:
+            self.line_height_stack.append(None)
+        if self.indent == 1:
+            self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+            self._write_paragraph(&#34;\u00a0&#34;)
+        self._end_paragraph()
     if tag == &#34;li&#34;:
-        self._ln(2)
+        # Default value of 2 for h to be multiplied by the conversion factor
+        # in self._ln(h) here is given in mm
+        self._ln(2 * self.default_conversion_factor)
         self.set_text_color(*self.li_prefix_color)
         if self.bullet:
             bullet = self.bullet[self.indent - 1]
@@ -2396,9 +2533,14 @@ as you want (may include '\n').</p></div>
             bullet += 1
             self.bullet[self.indent - 1] = bullet
             ol_type = self.ol_type[self.indent - 1]
-            bullet = f&#34;{ol_prefix(ol_type, bullet)}. &#34;
-        indent = &#34;\u00a0&#34; * self.tag_indents[&#34;li&#34;] * self.indent
-        self._write_paragraph(f&#34;{indent}{bullet} &#34;)
+            bullet = f&#34;{ol_prefix(ol_type, bullet)}.&#34;
+        self._new_paragraph(
+            line_height=(
+                self.line_height_stack[-1] if self.line_height_stack else None
+            ),
+            indent=self.tag_indents[&#34;li&#34;] * self.indent,
+            bullet=bullet,
+        )
         self.set_text_color(*self.font_color)
     if tag == &#34;font&#34;:
         # save previous font state:
@@ -2546,7 +2688,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L981-L993" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1035-L1047" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def put_link(self, text):
     # Put a hyperlink
@@ -2571,7 +2713,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L996-L1010" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1050-L1064" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render_toc(self, pdf, outline):
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
@@ -2598,7 +2740,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L947-L962" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1001-L1016" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_font(self, family=None, size=None, set_default=False):
     if family:
@@ -2626,7 +2768,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L964-L973" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1018-L1027" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_style(self, tag=None, enable=False):
     # Modify style and select corresponding font
@@ -2648,7 +2790,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L975-L979" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1029-L1033" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_text_color(self, r=None, g=0, b=0):
     prev_page = self.pdf.page
@@ -2669,7 +2811,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/html.py#L1041-L1056" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1095-L1110" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     &#34;&#34;&#34;

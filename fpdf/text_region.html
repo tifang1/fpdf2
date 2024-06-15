@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L1-L624" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L1-L727" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import math
 from typing import NamedTuple, Sequence, List, NewType
@@ -35,6 +35,8 @@ from .enums import Align, XPos, YPos, WrapMode
 from .image_datastructures import VectorImageInfo
 from .image_parsing import preload_image
 from .line_break import MultiLineBreak, FORM_FEED
+from .util import get_scale_factor
+
 
 # Since Python doesn&#39;t have &#34;friend classes&#34;...
 # pylint: disable=protected-access
@@ -78,6 +80,25 @@ class LineWrapper(NamedTuple):
     last_line: bool = False
 
 
+class Bullet:
+    def __init__(
+        self,
+        bullet_fragments,
+        text_line,
+        bullet_r_margin,
+    ):
+        self.fragments = bullet_fragments
+        self.text_line = text_line
+        self.r_margin = bullet_r_margin
+        self.rendered_flag = False
+
+    def get_fragments_width(self):
+        fragments_width = 0
+        for frag in self.fragments:
+            fragments_width += frag.get_width()
+        return fragments_width
+
+
 class Paragraph:  # pylint: disable=function-redefined
     def __init__(
         self,
@@ -86,6 +107,9 @@ class Paragraph:  # pylint: disable=function-redefined
         line_height=None,
         top_margin: float = 0,
         bottom_margin: float = 0,
+        indent: float = 0,
+        bullet_r_margin=None,
+        bullet_string: str = &#34;&#34;,
         skip_leading_spaces: bool = False,
         wrapmode: WrapMode = None,
     ):
@@ -104,12 +128,24 @@ class Paragraph:  # pylint: disable=function-redefined
             self.line_height = line_height
         self.top_margin = top_margin
         self.bottom_margin = bottom_margin
+        self.indent = indent
         self.skip_leading_spaces = skip_leading_spaces
         if wrapmode is None:
             self.wrapmode = self._region.wrapmode
         else:
             self.wrapmode = WrapMode.coerce(wrapmode)
         self._text_fragments = []
+        if bullet_r_margin is None:
+            # Default value of 2 to be multiplied by the conversion factor
+            # for bullet_r_margin is given in mm
+            bullet_r_margin = 2 * get_scale_factor(&#34;mm&#34;) / self.pdf.k
+        if bullet_string:
+            self.bullet = Bullet(
+                *self.generate_bullet_frags_and_tl(bullet_string, bullet_r_margin),
+                bullet_r_margin,
+            )
+        else:
+            self.bullet = None
 
     def __str__(self):
         return (
@@ -135,6 +171,32 @@ class Paragraph:  # pylint: disable=function-redefined
                 frag.link = link
         self._text_fragments.extend(fragments)
 
+    def generate_bullet_frags_and_tl(self, bullet_string: str, bullet_r_margin: float):
+        if not bullet_string:
+            return None
+        bullet_string = self.pdf.normalize_text(bullet_string)
+        if not self.pdf.font_family:
+            raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+        bullet_fragments = self.pdf._preload_font_styles(bullet_string, markdown=False)
+        fragments_width = 0
+        for frag in bullet_fragments:
+            fragments_width += frag.get_width()
+        bullet_line_break = MultiLineBreak(
+            bullet_fragments,
+            max_width=self._region.get_width,
+            margins=(
+                self.pdf.c_margin + (self.indent - fragments_width - bullet_r_margin),
+                self.pdf.c_margin,
+            ),
+            align=self.text_align or self._region.text_align or Align.L,
+            wrapmode=self.wrapmode,
+            line_height=self.line_height,
+            skip_leading_spaces=self.skip_leading_spaces
+            or self._region.skip_leading_spaces,
+        )
+        bullet_text_line = bullet_line_break.get_line()
+        return bullet_fragments, bullet_text_line
+
     def ln(self, h=None):
         if not self.pdf.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
@@ -149,7 +211,7 @@ class Paragraph:  # pylint: disable=function-redefined
         multi_line_break = MultiLineBreak(
             self._text_fragments,
             max_width=self._region.get_width,
-            margins=(self.pdf.c_margin, self.pdf.c_margin),
+            margins=(self.pdf.c_margin + self.indent, self.pdf.c_margin),
             align=self.text_align or self._region.text_align or Align.L,
             print_sh=print_sh,
             wrapmode=self.wrapmode,
@@ -356,8 +418,26 @@ class ParagraphCollectorMixin:
         skip_leading_spaces: bool = False,
         top_margin=0,
         bottom_margin=0,
+        indent=0,
+        bullet_string=&#34;&#34;,
+        bullet_r_margin=None,
         wrapmode: WrapMode = None,
     ):
+        &#34;&#34;&#34;
+        Args:
+            text_align (Align, optional): the horizontal alignment of the paragraph.
+            line_height (float, optional): factor by which the line spacing will be different from the font height. (Default: by region)
+            top_margin (float, optional):  how much spacing is added above the paragraph.
+                No spacing will be added at the top of the paragraph if the current y position is at (or above) the
+                top margin of the page. (Default: 0.0)
+            bottom_margin (float, optional): those two values determine how much spacing is added below the paragraph.
+                No spacing will be added at the bottom if it would result in overstepping the bottom margin of the page. (Default: 0.0)
+            indent (float, optional): determines the indentation of the paragraph. (Default: 0.0)
+            bullet_string (str, optional): determines the fragments and text lines of the bullet. (Default: &#34;&#34;)
+            bullet_r_margin (float, optional): determines the spacing between the bullet and the bulleted line
+            skip_leading_spaces (float, optional): removes all space characters at the beginning of each line. (Default: False)
+            wrapmode (WrapMode): determines the way text wrapping is handled. (Default: None)
+        &#34;&#34;&#34;
         if self._active_paragraph == &#34;EXPLICIT&#34;:
             raise FPDFException(&#34;Unable to nest paragraphs.&#34;)
         p = Paragraph(
@@ -368,6 +448,9 @@ class ParagraphCollectorMixin:
             wrapmode=wrapmode,
             top_margin=top_margin,
             bottom_margin=bottom_margin,
+            indent=indent,
+            bullet_string=bullet_string,
+            bullet_r_margin=bullet_r_margin,
         )
         self._paragraphs.append(p)
         self._active_paragraph = &#34;EXPLICIT&#34;
@@ -456,6 +539,8 @@ class TextRegion(ParagraphCollectorMixin):
             else:
                 text_line = tl_wrapper.line
                 text_rendered = False
+                cur_paragraph = tl_wrapper.paragraph
+                cur_bullet = cur_paragraph.bullet
                 for frag in text_line.fragments:
                     if frag.characters:
                         text_rendered = True
@@ -463,10 +548,11 @@ class TextRegion(ParagraphCollectorMixin):
                 if (
                     text_rendered
                     and tl_wrapper.first_line
-                    and tl_wrapper.paragraph.top_margin
+                    and not cur_bullet
+                    and cur_paragraph.top_margin
                     and self.pdf.y &gt; self.pdf.t_margin
                 ):
-                    self.pdf.y += tl_wrapper.paragraph.top_margin
+                    self.pdf.y += cur_paragraph.top_margin
                 else:
                     if self.pdf.y + text_line.height &gt; bottom:
                         last_line_height = prev_line_height
@@ -476,6 +562,22 @@ class TextRegion(ParagraphCollectorMixin):
                 col_left, col_right = self.current_x_extents(self.pdf.y, 0)
                 if self.pdf.x &lt; col_left or self.pdf.x &gt;= col_right:
                     self.pdf.x = col_left
+                self.pdf.x += cur_paragraph.indent
+                if cur_bullet and not cur_bullet.rendered_flag:
+                    bullet_indent_shift = (
+                        cur_bullet.get_fragments_width() + cur_bullet.r_margin
+                    )
+                    self.pdf.x -= bullet_indent_shift
+                    self.pdf._render_styled_text_line(
+                        cur_bullet.text_line,
+                        h=cur_bullet.text_line.height,
+                        border=0,
+                        new_x=XPos.LEFT,
+                        new_y=YPos.TOP,
+                        fill=False,
+                    )
+                    cur_bullet.rendered_flag = True
+                    self.pdf.x += bullet_indent_shift
                 # Don&#39;t check the return, we never render past the bottom here.
                 self.pdf._render_styled_text_line(
                     text_line,
@@ -485,10 +587,11 @@ class TextRegion(ParagraphCollectorMixin):
                     new_y=YPos.NEXT,
                     fill=False,
                 )
+                self.pdf.x -= cur_paragraph.indent
                 if tl_wrapper.last_line:
-                    margin = tl_wrapper.paragraph.bottom_margin
+                    margin = cur_paragraph.bottom_margin
                     if margin and text_rendered and (self.pdf.y + margin) &lt; bottom:
-                        self.pdf.y += tl_wrapper.paragraph.bottom_margin
+                        self.pdf.y += cur_paragraph.bottom_margin
                 rendered_lines += 1
                 if text_line.trailing_form_feed:  # column break
                     break
@@ -662,6 +765,56 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="fpdf.text_region.Bullet"><code class="flex name class">
+<span>class <span class="ident">Bullet</span></span>
+<span>(</span><span>bullet_fragments, text_line, bullet_r_margin)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L54-L70" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class Bullet:
+    def __init__(
+        self,
+        bullet_fragments,
+        text_line,
+        bullet_r_margin,
+    ):
+        self.fragments = bullet_fragments
+        self.text_line = text_line
+        self.r_margin = bullet_r_margin
+        self.rendered_flag = False
+
+    def get_fragments_width(self):
+        fragments_width = 0
+        for frag in self.fragments:
+            fragments_width += frag.get_width()
+        return fragments_width</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.text_region.Bullet.get_fragments_width"><code class="name flex">
+<span>def <span class="ident">get_fragments_width</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L66-L70" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def get_fragments_width(self):
+    fragments_width = 0
+    for frag in self.fragments:
+        fragments_width += frag.get_width()
+    return fragments_width</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
 <dt id="fpdf.text_region.Extents"><code class="flex name class">
 <span>class <span class="ident">Extents</span></span>
 <span>(</span><span>left: float, right: float)</span>
@@ -671,7 +824,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L14-L16" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L16-L18" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Extents(NamedTuple):
     left: float
@@ -702,7 +855,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L147-L248" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L209-L310" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageParagraph:
     def __init__(
@@ -817,7 +970,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L183-L189" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L245-L251" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def build_line(self):
     # We do double duty as a &#34;text line wrapper&#34; here, since all the necessary
@@ -836,7 +989,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L191-L248" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L253-L310" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self, col_left, col_width, max_height):
     if not self.img:
@@ -911,7 +1064,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L40-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L42-L51" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class LineWrapper(NamedTuple):
     &#34;&#34;&#34;Connects each TextLine with the Paragraph it was written to.
@@ -950,14 +1103,14 @@ top/bottom margins when rendering the line.</p></div>
 </dd>
 <dt id="fpdf.text_region.Paragraph"><code class="flex name class">
 <span>class <span class="ident">Paragraph</span></span>
-<span>(</span><span>region, text_align=None, line_height=None, top_margin: float = 0, bottom_margin: float = 0, skip_leading_spaces: bool = False, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = None)</span>
+<span>(</span><span>region, text_align=None, line_height=None, top_margin: float = 0, bottom_margin: float = 0, indent: float = 0, bullet_r_margin=None, bullet_string: str = '', skip_leading_spaces: bool = False, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L52-L144" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L73-L206" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Paragraph:  # pylint: disable=function-redefined
     def __init__(
@@ -967,6 +1120,9 @@ top/bottom margins when rendering the line.</p></div>
         line_height=None,
         top_margin: float = 0,
         bottom_margin: float = 0,
+        indent: float = 0,
+        bullet_r_margin=None,
+        bullet_string: str = &#34;&#34;,
         skip_leading_spaces: bool = False,
         wrapmode: WrapMode = None,
     ):
@@ -985,12 +1141,24 @@ top/bottom margins when rendering the line.</p></div>
             self.line_height = line_height
         self.top_margin = top_margin
         self.bottom_margin = bottom_margin
+        self.indent = indent
         self.skip_leading_spaces = skip_leading_spaces
         if wrapmode is None:
             self.wrapmode = self._region.wrapmode
         else:
             self.wrapmode = WrapMode.coerce(wrapmode)
         self._text_fragments = []
+        if bullet_r_margin is None:
+            # Default value of 2 to be multiplied by the conversion factor
+            # for bullet_r_margin is given in mm
+            bullet_r_margin = 2 * get_scale_factor(&#34;mm&#34;) / self.pdf.k
+        if bullet_string:
+            self.bullet = Bullet(
+                *self.generate_bullet_frags_and_tl(bullet_string, bullet_r_margin),
+                bullet_r_margin,
+            )
+        else:
+            self.bullet = None
 
     def __str__(self):
         return (
@@ -1016,6 +1184,32 @@ top/bottom margins when rendering the line.</p></div>
                 frag.link = link
         self._text_fragments.extend(fragments)
 
+    def generate_bullet_frags_and_tl(self, bullet_string: str, bullet_r_margin: float):
+        if not bullet_string:
+            return None
+        bullet_string = self.pdf.normalize_text(bullet_string)
+        if not self.pdf.font_family:
+            raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+        bullet_fragments = self.pdf._preload_font_styles(bullet_string, markdown=False)
+        fragments_width = 0
+        for frag in bullet_fragments:
+            fragments_width += frag.get_width()
+        bullet_line_break = MultiLineBreak(
+            bullet_fragments,
+            max_width=self._region.get_width,
+            margins=(
+                self.pdf.c_margin + (self.indent - fragments_width - bullet_r_margin),
+                self.pdf.c_margin,
+            ),
+            align=self.text_align or self._region.text_align or Align.L,
+            wrapmode=self.wrapmode,
+            line_height=self.line_height,
+            skip_leading_spaces=self.skip_leading_spaces
+            or self._region.skip_leading_spaces,
+        )
+        bullet_text_line = bullet_line_break.get_line()
+        return bullet_fragments, bullet_text_line
+
     def ln(self, h=None):
         if not self.pdf.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
@@ -1030,7 +1224,7 @@ top/bottom margins when rendering the line.</p></div>
         multi_line_break = MultiLineBreak(
             self._text_fragments,
             max_width=self._region.get_width,
-            margins=(self.pdf.c_margin, self.pdf.c_margin),
+            margins=(self.pdf.c_margin + self.indent, self.pdf.c_margin),
             align=self.text_align or self._region.text_align or Align.L,
             print_sh=print_sh,
             wrapmode=self.wrapmode,
@@ -1063,14 +1257,14 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L118-L144" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L180-L206" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def build_lines(self, print_sh) -&gt; List[LineWrapper]:
     text_lines = []
     multi_line_break = MultiLineBreak(
         self._text_fragments,
         max_width=self._region.get_width,
-        margins=(self.pdf.c_margin, self.pdf.c_margin),
+        margins=(self.pdf.c_margin + self.indent, self.pdf.c_margin),
         align=self.text_align or self._region.text_align or Align.L,
         print_sh=print_sh,
         wrapmode=self.wrapmode,
@@ -1094,6 +1288,43 @@ top/bottom margins when rendering the line.</p></div>
     return text_lines</code></pre>
 </details>
 </dd>
+<dt id="fpdf.text_region.Paragraph.generate_bullet_frags_and_tl"><code class="name flex">
+<span>def <span class="ident">generate_bullet_frags_and_tl</span></span>(<span>self, bullet_string: str, bullet_r_margin: float)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L145-L169" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">def generate_bullet_frags_and_tl(self, bullet_string: str, bullet_r_margin: float):
+    if not bullet_string:
+        return None
+    bullet_string = self.pdf.normalize_text(bullet_string)
+    if not self.pdf.font_family:
+        raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
+    bullet_fragments = self.pdf._preload_font_styles(bullet_string, markdown=False)
+    fragments_width = 0
+    for frag in bullet_fragments:
+        fragments_width += frag.get_width()
+    bullet_line_break = MultiLineBreak(
+        bullet_fragments,
+        max_width=self._region.get_width,
+        margins=(
+            self.pdf.c_margin + (self.indent - fragments_width - bullet_r_margin),
+            self.pdf.c_margin,
+        ),
+        align=self.text_align or self._region.text_align or Align.L,
+        wrapmode=self.wrapmode,
+        line_height=self.line_height,
+        skip_leading_spaces=self.skip_leading_spaces
+        or self._region.skip_leading_spaces,
+    )
+    bullet_text_line = bullet_line_break.get_line()
+    return bullet_fragments, bullet_text_line</code></pre>
+</details>
+</dd>
 <dt id="fpdf.text_region.Paragraph.ln"><code class="name flex">
 <span>def <span class="ident">ln</span></span>(<span>self, h=None)</span>
 </code></dt>
@@ -1102,7 +1333,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L109-L116" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L171-L178" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ln(self, h=None):
     if not self.pdf.font_family:
@@ -1122,7 +1353,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L98-L107" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L134-L143" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def write(self, text: str, link=None):
     if not self.pdf.font_family:
@@ -1147,7 +1378,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L251-L385" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L313-L468" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ParagraphCollectorMixin:
     def __init__(
@@ -1228,8 +1459,26 @@ top/bottom margins when rendering the line.</p></div>
         skip_leading_spaces: bool = False,
         top_margin=0,
         bottom_margin=0,
+        indent=0,
+        bullet_string=&#34;&#34;,
+        bullet_r_margin=None,
         wrapmode: WrapMode = None,
     ):
+        &#34;&#34;&#34;
+        Args:
+            text_align (Align, optional): the horizontal alignment of the paragraph.
+            line_height (float, optional): factor by which the line spacing will be different from the font height. (Default: by region)
+            top_margin (float, optional):  how much spacing is added above the paragraph.
+                No spacing will be added at the top of the paragraph if the current y position is at (or above) the
+                top margin of the page. (Default: 0.0)
+            bottom_margin (float, optional): those two values determine how much spacing is added below the paragraph.
+                No spacing will be added at the bottom if it would result in overstepping the bottom margin of the page. (Default: 0.0)
+            indent (float, optional): determines the indentation of the paragraph. (Default: 0.0)
+            bullet_string (str, optional): determines the fragments and text lines of the bullet. (Default: &#34;&#34;)
+            bullet_r_margin (float, optional): determines the spacing between the bullet and the bulleted line
+            skip_leading_spaces (float, optional): removes all space characters at the beginning of each line. (Default: False)
+            wrapmode (WrapMode): determines the way text wrapping is handled. (Default: None)
+        &#34;&#34;&#34;
         if self._active_paragraph == &#34;EXPLICIT&#34;:
             raise FPDFException(&#34;Unable to nest paragraphs.&#34;)
         p = Paragraph(
@@ -1240,6 +1489,9 @@ top/bottom margins when rendering the line.</p></div>
             wrapmode=wrapmode,
             top_margin=top_margin,
             bottom_margin=bottom_margin,
+            indent=indent,
+            bullet_string=bullet_string,
+            bullet_r_margin=bullet_r_margin,
         )
         self._paragraphs.append(p)
         self._active_paragraph = &#34;EXPLICIT&#34;
@@ -1299,7 +1551,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L347-L351" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L430-L434" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def end_paragraph(self):
     if not self._active_paragraph:
@@ -1316,7 +1568,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L353-L385" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L436-L468" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def image(
     self,
@@ -1361,7 +1613,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L319-L321" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L381-L383" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ln(self, h=None):
     self._check_paragraph()
@@ -1369,14 +1621,37 @@ top/bottom margins when rendering the line.</p></div>
 </details>
 </dd>
 <dt id="fpdf.text_region.ParagraphCollectorMixin.paragraph"><code class="name flex">
-<span>def <span class="ident">paragraph</span></span>(<span>self, text_align=None, line_height=None, skip_leading_spaces: bool = False, top_margin=0, bottom_margin=0, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = None)</span>
+<span>def <span class="ident">paragraph</span></span>(<span>self, text_align=None, line_height=None, skip_leading_spaces: bool = False, top_margin=0, bottom_margin=0, indent=0, bullet_string='', bullet_r_margin=None, wrapmode: <a title="fpdf.enums.WrapMode" href="enums.html#fpdf.enums.WrapMode">WrapMode</a> = None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>text_align</code></strong> :&ensp;<code>Align</code>, optional</dt>
+<dd>the horizontal alignment of the paragraph.</dd>
+<dt><strong><code>line_height</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>factor by which the line spacing will be different from the font height. (Default: by region)</dd>
+<dt><strong><code>top_margin</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>how much spacing is added above the paragraph.
+No spacing will be added at the top of the paragraph if the current y position is at (or above) the
+top margin of the page. (Default: 0.0)</dd>
+<dt><strong><code>bottom_margin</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>those two values determine how much spacing is added below the paragraph.
+No spacing will be added at the bottom if it would result in overstepping the bottom margin of the page. (Default: 0.0)</dd>
+<dt><strong><code>indent</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>determines the indentation of the paragraph. (Default: 0.0)</dd>
+<dt><strong><code>bullet_string</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>determines the fragments and text lines of the bullet. (Default: "")</dd>
+<dt><strong><code>bullet_r_margin</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>determines the spacing between the bullet and the bulleted line</dd>
+<dt><strong><code>skip_leading_spaces</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>removes all space characters at the beginning of each line. (Default: False)</dd>
+<dt><strong><code>wrapmode</code></strong> :&ensp;<code>WrapMode</code></dt>
+<dd>determines the way text wrapping is handled. (Default: None)</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L323-L345" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L385-L428" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def paragraph(
     self,
@@ -1385,8 +1660,26 @@ top/bottom margins when rendering the line.</p></div>
     skip_leading_spaces: bool = False,
     top_margin=0,
     bottom_margin=0,
+    indent=0,
+    bullet_string=&#34;&#34;,
+    bullet_r_margin=None,
     wrapmode: WrapMode = None,
 ):
+    &#34;&#34;&#34;
+    Args:
+        text_align (Align, optional): the horizontal alignment of the paragraph.
+        line_height (float, optional): factor by which the line spacing will be different from the font height. (Default: by region)
+        top_margin (float, optional):  how much spacing is added above the paragraph.
+            No spacing will be added at the top of the paragraph if the current y position is at (or above) the
+            top margin of the page. (Default: 0.0)
+        bottom_margin (float, optional): those two values determine how much spacing is added below the paragraph.
+            No spacing will be added at the bottom if it would result in overstepping the bottom margin of the page. (Default: 0.0)
+        indent (float, optional): determines the indentation of the paragraph. (Default: 0.0)
+        bullet_string (str, optional): determines the fragments and text lines of the bullet. (Default: &#34;&#34;)
+        bullet_r_margin (float, optional): determines the spacing between the bullet and the bulleted line
+        skip_leading_spaces (float, optional): removes all space characters at the beginning of each line. (Default: False)
+        wrapmode (WrapMode): determines the way text wrapping is handled. (Default: None)
+    &#34;&#34;&#34;
     if self._active_paragraph == &#34;EXPLICIT&#34;:
         raise FPDFException(&#34;Unable to nest paragraphs.&#34;)
     p = Paragraph(
@@ -1397,6 +1690,9 @@ top/bottom margins when rendering the line.</p></div>
         wrapmode=wrapmode,
         top_margin=top_margin,
         bottom_margin=bottom_margin,
+        indent=indent,
+        bullet_string=bullet_string,
+        bullet_r_margin=bullet_r_margin,
     )
     self._paragraphs.append(p)
     self._active_paragraph = &#34;EXPLICIT&#34;
@@ -1411,7 +1707,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L315-L317" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L377-L379" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def write(self, text: str, link=None):  # pylint: disable=unused-argument
     self._check_paragraph()
@@ -1429,7 +1725,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L499-L518" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L602-L621" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextColumnarMixin:
     &#34;&#34;&#34;Enable a TextRegion to perform page breaks&#34;&#34;&#34;
@@ -1466,7 +1762,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L521-L624" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L624-L727" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextColumns(TextRegion, TextColumnarMixin):
     def __init__(
@@ -1589,7 +1885,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L553-L557" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L656-L660" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def new_column(self):
     if self._paragraphs:
@@ -1606,7 +1902,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L608-L620" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L711-L723" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self):
     if not self._paragraphs:
@@ -1629,6 +1925,7 @@ top/bottom margins when rendering the line.</p></div>
 <li><code><b><a title="fpdf.text_region.TextRegion" href="#fpdf.text_region.TextRegion">TextRegion</a></b></code>:
 <ul class="hlist">
 <li><code><a title="fpdf.text_region.TextRegion.current_x_extents" href="#fpdf.text_region.TextRegion.current_x_extents">current_x_extents</a></code></li>
+<li><code><a title="fpdf.text_region.TextRegion.paragraph" href="#fpdf.text_region.ParagraphCollectorMixin.paragraph">paragraph</a></code></li>
 </ul>
 </li>
 </ul>
@@ -1642,7 +1939,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L388-L496" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L471-L599" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextRegion(ParagraphCollectorMixin):
     &#34;&#34;&#34;Abstract base class for all text region subclasses.&#34;&#34;&#34;
@@ -1686,6 +1983,8 @@ top/bottom margins when rendering the line.</p></div>
             else:
                 text_line = tl_wrapper.line
                 text_rendered = False
+                cur_paragraph = tl_wrapper.paragraph
+                cur_bullet = cur_paragraph.bullet
                 for frag in text_line.fragments:
                     if frag.characters:
                         text_rendered = True
@@ -1693,10 +1992,11 @@ top/bottom margins when rendering the line.</p></div>
                 if (
                     text_rendered
                     and tl_wrapper.first_line
-                    and tl_wrapper.paragraph.top_margin
+                    and not cur_bullet
+                    and cur_paragraph.top_margin
                     and self.pdf.y &gt; self.pdf.t_margin
                 ):
-                    self.pdf.y += tl_wrapper.paragraph.top_margin
+                    self.pdf.y += cur_paragraph.top_margin
                 else:
                     if self.pdf.y + text_line.height &gt; bottom:
                         last_line_height = prev_line_height
@@ -1706,6 +2006,22 @@ top/bottom margins when rendering the line.</p></div>
                 col_left, col_right = self.current_x_extents(self.pdf.y, 0)
                 if self.pdf.x &lt; col_left or self.pdf.x &gt;= col_right:
                     self.pdf.x = col_left
+                self.pdf.x += cur_paragraph.indent
+                if cur_bullet and not cur_bullet.rendered_flag:
+                    bullet_indent_shift = (
+                        cur_bullet.get_fragments_width() + cur_bullet.r_margin
+                    )
+                    self.pdf.x -= bullet_indent_shift
+                    self.pdf._render_styled_text_line(
+                        cur_bullet.text_line,
+                        h=cur_bullet.text_line.height,
+                        border=0,
+                        new_x=XPos.LEFT,
+                        new_y=YPos.TOP,
+                        fill=False,
+                    )
+                    cur_bullet.rendered_flag = True
+                    self.pdf.x += bullet_indent_shift
                 # Don&#39;t check the return, we never render past the bottom here.
                 self.pdf._render_styled_text_line(
                     text_line,
@@ -1715,10 +2031,11 @@ top/bottom margins when rendering the line.</p></div>
                     new_y=YPos.NEXT,
                     fill=False,
                 )
+                self.pdf.x -= cur_paragraph.indent
                 if tl_wrapper.last_line:
-                    margin = tl_wrapper.paragraph.bottom_margin
+                    margin = cur_paragraph.bottom_margin
                     if margin and text_rendered and (self.pdf.y + margin) &lt; bottom:
-                        self.pdf.y += tl_wrapper.paragraph.bottom_margin
+                        self.pdf.y += cur_paragraph.bottom_margin
                 rendered_lines += 1
                 if text_line.trailing_form_feed:  # column break
                     break
@@ -1772,7 +2089,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L475-L486" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L578-L589" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def collect_lines(self):
     text_lines = []
@@ -1800,7 +2117,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L391-L399" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L474-L482" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def current_x_extents(self, y, height):
     &#34;&#34;&#34;
@@ -1821,7 +2138,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L491-L496" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L594-L599" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_width(self, height):
     start, end = self.current_x_extents(self.pdf.y, height)
@@ -1839,13 +2156,21 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L488-L489" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L591-L592" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self):
     raise NotImplementedError()</code></pre>
 </details>
 </dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.text_region.ParagraphCollectorMixin" href="#fpdf.text_region.ParagraphCollectorMixin">ParagraphCollectorMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.text_region.ParagraphCollectorMixin.paragraph" href="#fpdf.text_region.ParagraphCollectorMixin.paragraph">paragraph</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="fpdf.text_region.TextRegionMixin"><code class="flex name class">
 <span>class <span class="ident">TextRegionMixin</span></span>
@@ -1856,7 +2181,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L19-L33" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L21-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextRegionMixin:
     &#34;&#34;&#34;Mix-in to be added to FPDF() in order to support text regions.&#34;&#34;&#34;
@@ -1888,7 +2213,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L32-L33" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L34-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def clear_text_region(self):
     self.__current_text_region = None</code></pre>
@@ -1902,7 +2227,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L29-L30" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L31-L32" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_current_text_region(self, region):
     return self.__current_text_region == region</code></pre>
@@ -1916,7 +2241,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/71c00c73a3d62ae36a3cbf28e4aa36de1ecb9d9f/fpdf/text_region.py#L26-L27" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L28-L29" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def register_text_region(self, region):
     self.__current_text_region = region</code></pre>
@@ -1940,6 +2265,12 @@ For that reason we include the current y and the line height.</p></div>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="fpdf.text_region.Bullet" href="#fpdf.text_region.Bullet">Bullet</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.text_region.Bullet.get_fragments_width" href="#fpdf.text_region.Bullet.get_fragments_width">get_fragments_width</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="fpdf.text_region.Extents" href="#fpdf.text_region.Extents">Extents</a></code></h4>
 <ul class="">
@@ -1967,6 +2298,7 @@ For that reason we include the current y and the line height.</p></div>
 <h4><code><a title="fpdf.text_region.Paragraph" href="#fpdf.text_region.Paragraph">Paragraph</a></code></h4>
 <ul class="">
 <li><code><a title="fpdf.text_region.Paragraph.build_lines" href="#fpdf.text_region.Paragraph.build_lines">build_lines</a></code></li>
+<li><code><a title="fpdf.text_region.Paragraph.generate_bullet_frags_and_tl" href="#fpdf.text_region.Paragraph.generate_bullet_frags_and_tl">generate_bullet_frags_and_tl</a></code></li>
 <li><code><a title="fpdf.text_region.Paragraph.ln" href="#fpdf.text_region.Paragraph.ln">ln</a></code></li>
 <li><code><a title="fpdf.text_region.Paragraph.write" href="#fpdf.text_region.Paragraph.write">write</a></code></li>
 </ul>
