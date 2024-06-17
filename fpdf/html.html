@@ -29,7 +29,7 @@ in non-backward-compatible ways.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1-L1110" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1-L1103" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
 HTML renderer
@@ -358,13 +358,10 @@ class HTML2FPDF(HTMLParser):
         self.emphasis = dict(b=False, i=False, u=False)
         self.font_size = pdf.font_size_pt
         self.set_font(pdf.font_family or &#34;times&#34;, size=self.font_size, set_default=True)
-        self._prev_font = (pdf.font_family, self.font_size, self.emphasis)
-        self.pdf._push_local_stack()  # xpylint: disable=protected-access
 
         self._pre_formatted = False  # preserve whitespace while True.
-        self._pre_started = (
-            False  # nothing written yet to &lt;pre&gt;, remove one initial nl.
-        )
+        # nothing written yet to &lt;pre&gt;, remove one initial nl:
+        self._pre_started = False
         self.follows_trailing_space = False  # The last write has ended with a space.
         self.follows_heading = False  # We don&#39;t want extra space below a heading.
         self.href = &#34;&#34;
@@ -497,11 +494,7 @@ class HTML2FPDF(HTMLParser):
         self.align = &#34;&#34;
         if self._paragraph:
             self._column.end_paragraph()
-            our_context = (
-                self.pdf._pop_local_stack()  # pylint: disable=protected-access
-            )
             self._column.render()
-            self.pdf._push_local_stack(our_context)  # pylint: disable=protected-access
             self._paragraph = None
             self.follows_trailing_space = True
 
@@ -563,15 +556,12 @@ class HTML2FPDF(HTMLParser):
         elif self._pre_formatted:  # pre blocks
             # If we want to mimick the exact HTML semantics about newlines at the
             # beginning and end of the block, then this needs some more thought.
-            s_nl = data.startswith(&#34;\n&#34;) and self._pre_started
+            if data.startswith(&#34;\n&#34;) and self._pre_started:
+                if data.endswith(&#34;\n&#34;):
+                    data = data[1:-1]
+                else:
+                    data = data[1:]
             self._pre_started = False
-            e_nl = data.endswith(&#34;\n&#34;)
-            if s_nl and e_nl:
-                data = data[1:-1]
-            elif s_nl:
-                data = data[1:]
-            # elif e_nl:
-            #    data = data[:-1]
             self._write_data(data)
         else:
             data = _WS_SUB_PAT.sub(&#34; &#34;, data)
@@ -683,7 +673,13 @@ class HTML2FPDF(HTMLParser):
                 size=tag_style.size_pt or self.font_size,
             )
         if tag == &#34;hr&#34;:
-            self.pdf.add_page(same=True)
+            self.pdf.line(
+                x1=self.pdf.l_margin,
+                y1=self.pdf.y,
+                x2=self.pdf.l_margin + self.pdf.epw,
+                y2=self.pdf.y,
+            )
+            self._write_paragraph(&#34;\n&#34;)
         if tag == &#34;code&#34;:
             self.style_stack.append(
                 FontFace(
@@ -700,6 +696,7 @@ class HTML2FPDF(HTMLParser):
                 size=tag_style.size_pt or self.font_size,
             )
         if tag == &#34;pre&#34;:
+            self._end_paragraph()
             self.style_stack.append(
                 FontFace(
                     family=self.font_family,
@@ -715,8 +712,8 @@ class HTML2FPDF(HTMLParser):
                 size=tag_style.size_pt or self.font_size,
             )
             self._pre_formatted = True
-            self._new_paragraph()
             self._pre_started = True
+            self._new_paragraph()
         if tag == &#34;blockquote&#34;:
             tag_style = self.tag_styles[tag]
             if tag_style.color:
@@ -961,12 +958,12 @@ class HTML2FPDF(HTMLParser):
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
         if tag == &#34;pre&#34;:
-            self._end_paragraph()
             font_face = self.style_stack.pop()
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
             self._pre_formatted = False
             self._pre_started = False
+            self._end_paragraph()
         if tag == &#34;blockquote&#34;:
             self._end_paragraph()
             self.set_text_color(*self.font_color)
@@ -1024,10 +1021,6 @@ class HTML2FPDF(HTMLParser):
         while self._tags_stack and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS:
             self._tags_stack.pop()
         self._end_paragraph()  # render the final chunk of text and clean up our local context.
-        self.pdf._pop_local_stack()  # pylint: disable=protected-access
-        if self._prev_font[0]:  # restore previously defined font settings
-            self.emphasis = self._prev_font[2]
-            self.set_font(self._prev_font[0], size=self._prev_font[1], set_default=True)
         if self._tags_stack and self.warn_on_tags_not_matching:
             LOGGER.warning(&#34;Missing HTML end tag for &lt;%s&gt;&#34;, self._tags_stack[-1])
 
@@ -1159,7 +1152,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L233-L242" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L233-L242" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def color_as_decimal(color=&#34;#000000&#34;):
     &#34;&#34;&#34;
@@ -1181,7 +1174,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1081-L1092" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1074-L1085" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ol_prefix(ol_type, index):
     if ol_type == &#34;1&#34;:
@@ -1205,7 +1198,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L245-L260" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L245-L260" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def parse_style(elem_attrs):
     &#34;&#34;&#34;Parse `style=&#34;...&#34;` making it&#39;s key-value pairs element&#39;s attributes&#34;&#34;&#34;
@@ -1233,7 +1226,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1071-L1078" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1064-L1071" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ul_prefix(ul_type):
     if ul_type == &#34;circle&#34;:
@@ -1293,7 +1286,7 @@ The margin value is in the chosen pdf document units.</dd>
       <details class="source">
         <summary>
             <span>Expand source code</span>
-              <a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L263-L1068" class="git-link">Browse git</a>
+              <a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L263-L1061" class="git-link">Browse git</a>
         </summary>
         <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
@@ -1360,13 +1353,10 @@ The margin value is in the chosen pdf document units.</dd>
         self.emphasis = dict(b=False, i=False, u=False)
         self.font_size = pdf.font_size_pt
         self.set_font(pdf.font_family or &#34;times&#34;, size=self.font_size, set_default=True)
-        self._prev_font = (pdf.font_family, self.font_size, self.emphasis)
-        self.pdf._push_local_stack()  # xpylint: disable=protected-access
 
         self._pre_formatted = False  # preserve whitespace while True.
-        self._pre_started = (
-            False  # nothing written yet to &lt;pre&gt;, remove one initial nl.
-        )
+        # nothing written yet to &lt;pre&gt;, remove one initial nl:
+        self._pre_started = False
         self.follows_trailing_space = False  # The last write has ended with a space.
         self.follows_heading = False  # We don&#39;t want extra space below a heading.
         self.href = &#34;&#34;
@@ -1499,11 +1489,7 @@ The margin value is in the chosen pdf document units.</dd>
         self.align = &#34;&#34;
         if self._paragraph:
             self._column.end_paragraph()
-            our_context = (
-                self.pdf._pop_local_stack()  # pylint: disable=protected-access
-            )
             self._column.render()
-            self.pdf._push_local_stack(our_context)  # pylint: disable=protected-access
             self._paragraph = None
             self.follows_trailing_space = True
 
@@ -1565,15 +1551,12 @@ The margin value is in the chosen pdf document units.</dd>
         elif self._pre_formatted:  # pre blocks
             # If we want to mimick the exact HTML semantics about newlines at the
             # beginning and end of the block, then this needs some more thought.
-            s_nl = data.startswith(&#34;\n&#34;) and self._pre_started
+            if data.startswith(&#34;\n&#34;) and self._pre_started:
+                if data.endswith(&#34;\n&#34;):
+                    data = data[1:-1]
+                else:
+                    data = data[1:]
             self._pre_started = False
-            e_nl = data.endswith(&#34;\n&#34;)
-            if s_nl and e_nl:
-                data = data[1:-1]
-            elif s_nl:
-                data = data[1:]
-            # elif e_nl:
-            #    data = data[:-1]
             self._write_data(data)
         else:
             data = _WS_SUB_PAT.sub(&#34; &#34;, data)
@@ -1685,7 +1668,13 @@ The margin value is in the chosen pdf document units.</dd>
                 size=tag_style.size_pt or self.font_size,
             )
         if tag == &#34;hr&#34;:
-            self.pdf.add_page(same=True)
+            self.pdf.line(
+                x1=self.pdf.l_margin,
+                y1=self.pdf.y,
+                x2=self.pdf.l_margin + self.pdf.epw,
+                y2=self.pdf.y,
+            )
+            self._write_paragraph(&#34;\n&#34;)
         if tag == &#34;code&#34;:
             self.style_stack.append(
                 FontFace(
@@ -1702,6 +1691,7 @@ The margin value is in the chosen pdf document units.</dd>
                 size=tag_style.size_pt or self.font_size,
             )
         if tag == &#34;pre&#34;:
+            self._end_paragraph()
             self.style_stack.append(
                 FontFace(
                     family=self.font_family,
@@ -1717,8 +1707,8 @@ The margin value is in the chosen pdf document units.</dd>
                 size=tag_style.size_pt or self.font_size,
             )
             self._pre_formatted = True
-            self._new_paragraph()
             self._pre_started = True
+            self._new_paragraph()
         if tag == &#34;blockquote&#34;:
             tag_style = self.tag_styles[tag]
             if tag_style.color:
@@ -1963,12 +1953,12 @@ The margin value is in the chosen pdf document units.</dd>
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
         if tag == &#34;pre&#34;:
-            self._end_paragraph()
             font_face = self.style_stack.pop()
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
             self._pre_formatted = False
             self._pre_started = False
+            self._end_paragraph()
         if tag == &#34;blockquote&#34;:
             self._end_paragraph()
             self.set_text_color(*self.font_color)
@@ -2026,10 +2016,6 @@ The margin value is in the chosen pdf document units.</dd>
         while self._tags_stack and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS:
             self._tags_stack.pop()
         self._end_paragraph()  # render the final chunk of text and clean up our local context.
-        self.pdf._pop_local_stack()  # pylint: disable=protected-access
-        if self._prev_font[0]:  # restore previously defined font settings
-            self.emphasis = self._prev_font[2]
-            self.set_font(self._prev_font[0], size=self._prev_font[1], set_default=True)
         if self._tags_stack and self.warn_on_tags_not_matching:
             LOGGER.warning(&#34;Missing HTML end tag for &lt;%s&gt;&#34;, self._tags_stack[-1])
 
@@ -2128,7 +2114,7 @@ The margin value is in the chosen pdf document units.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1067-L1068" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1060-L1061" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def error(self, message):
     raise RuntimeError(message)</code></pre>
@@ -2144,17 +2130,13 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L989-L999" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L986-L992" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def feed(self, data):
     super().feed(data)
     while self._tags_stack and self._tags_stack[-1] in self.HTML_UNCLOSED_TAGS:
         self._tags_stack.pop()
     self._end_paragraph()  # render the final chunk of text and clean up our local context.
-    self.pdf._pop_local_stack()  # pylint: disable=protected-access
-    if self._prev_font[0]:  # restore previously defined font settings
-        self.emphasis = self._prev_font[2]
-        self.set_font(self._prev_font[0], size=self._prev_font[1], set_default=True)
     if self._tags_stack and self.warn_on_tags_not_matching:
         LOGGER.warning(&#34;Missing HTML end tag for &lt;%s&gt;&#34;, self._tags_stack[-1])</code></pre>
 </details>
@@ -2167,7 +2149,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L487-L549" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L480-L539" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_data(self, data):
     if self.td_th is not None:
@@ -2215,15 +2197,12 @@ as you want (may include '\n').</p></div>
     elif self._pre_formatted:  # pre blocks
         # If we want to mimick the exact HTML semantics about newlines at the
         # beginning and end of the block, then this needs some more thought.
-        s_nl = data.startswith(&#34;\n&#34;) and self._pre_started
+        if data.startswith(&#34;\n&#34;) and self._pre_started:
+            if data.endswith(&#34;\n&#34;):
+                data = data[1:-1]
+            else:
+                data = data[1:]
         self._pre_started = False
-        e_nl = data.endswith(&#34;\n&#34;)
-        if s_nl and e_nl:
-            data = data[1:-1]
-        elif s_nl:
-            data = data[1:]
-        # elif e_nl:
-        #    data = data[:-1]
         self._write_data(data)
     else:
         data = _WS_SUB_PAT.sub(&#34; &#34;, data)
@@ -2242,7 +2221,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L898-L987" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L895-L984" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_endtag(self, tag):
     LOGGER.debug(&#34;ENDTAG %s&#34;, tag)
@@ -2277,12 +2256,12 @@ as you want (may include '\n').</p></div>
         self.set_font(font_face.family, font_face.size_pt)
         self.set_text_color(*font_face.color.colors255)
     if tag == &#34;pre&#34;:
-        self._end_paragraph()
         font_face = self.style_stack.pop()
         self.set_font(font_face.family, font_face.size_pt)
         self.set_text_color(*font_face.color.colors255)
         self._pre_formatted = False
         self._pre_started = False
+        self._end_paragraph()
     if tag == &#34;blockquote&#34;:
         self._end_paragraph()
         self.set_text_color(*self.font_color)
@@ -2344,7 +2323,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L565-L896" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L555-L893" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def handle_starttag(self, tag, attrs):
     self._pre_started = False
@@ -2434,7 +2413,13 @@ as you want (may include '\n').</p></div>
             size=tag_style.size_pt or self.font_size,
         )
     if tag == &#34;hr&#34;:
-        self.pdf.add_page(same=True)
+        self.pdf.line(
+            x1=self.pdf.l_margin,
+            y1=self.pdf.y,
+            x2=self.pdf.l_margin + self.pdf.epw,
+            y2=self.pdf.y,
+        )
+        self._write_paragraph(&#34;\n&#34;)
     if tag == &#34;code&#34;:
         self.style_stack.append(
             FontFace(
@@ -2451,6 +2436,7 @@ as you want (may include '\n').</p></div>
             size=tag_style.size_pt or self.font_size,
         )
     if tag == &#34;pre&#34;:
+        self._end_paragraph()
         self.style_stack.append(
             FontFace(
                 family=self.font_family,
@@ -2466,8 +2452,8 @@ as you want (may include '\n').</p></div>
             size=tag_style.size_pt or self.font_size,
         )
         self._pre_formatted = True
-        self._new_paragraph()
         self._pre_started = True
+        self._new_paragraph()
     if tag == &#34;blockquote&#34;:
         tag_style = self.tag_styles[tag]
         if tag_style.color:
@@ -2688,7 +2674,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1035-L1047" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1028-L1040" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def put_link(self, text):
     # Put a hyperlink
@@ -2713,7 +2699,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1050-L1064" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1043-L1057" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render_toc(self, pdf, outline):
     &#34;This method can be overriden by subclasses to customize the Table of Contents style.&#34;
@@ -2740,7 +2726,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1001-L1016" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L994-L1009" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_font(self, family=None, size=None, set_default=False):
     if family:
@@ -2768,7 +2754,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1018-L1027" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1011-L1020" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_style(self, tag=None, enable=False):
     # Modify style and select corresponding font
@@ -2790,7 +2776,7 @@ as you want (may include '\n').</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1029-L1033" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1022-L1026" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def set_text_color(self, r=None, g=0, b=0):
     prev_page = self.pdf.page
@@ -2811,7 +2797,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/html.py#L1095-L1110" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/html.py#L1088-L1103" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     &#34;&#34;&#34;

@@ -25,7 +25,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L1-L727" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L1-L727" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">import math
 from typing import NamedTuple, Sequence, List, NewType
@@ -747,7 +747,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
         _first_page_top = max(self.pdf.t_margin, self.pdf.y)
         self._render_page_lines(text_lines, _first_page_top, page_bottom)
         while text_lines:
-            self.pdf.add_page(same=True)
+            self.pdf._perform_page_break()
             self._cur_column = 0
             self._render_page_lines(text_lines, self.pdf.y, page_bottom)
 
@@ -774,7 +774,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L54-L70" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L54-L70" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Bullet:
     def __init__(
@@ -804,7 +804,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L66-L70" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L66-L70" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_fragments_width(self):
     fragments_width = 0
@@ -824,7 +824,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L16-L18" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L16-L18" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Extents(NamedTuple):
     left: float
@@ -855,7 +855,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L209-L310" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L209-L310" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageParagraph:
     def __init__(
@@ -970,7 +970,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L245-L251" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L245-L251" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def build_line(self):
     # We do double duty as a &#34;text line wrapper&#34; here, since all the necessary
@@ -989,7 +989,7 @@ class TextColumns(TextRegion, TextColumnarMixin):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L253-L310" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L253-L310" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self, col_left, col_width, max_height):
     if not self.img:
@@ -1064,7 +1064,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L42-L51" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L42-L51" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class LineWrapper(NamedTuple):
     &#34;&#34;&#34;Connects each TextLine with the Paragraph it was written to.
@@ -1110,7 +1110,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L73-L206" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L73-L206" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Paragraph:  # pylint: disable=function-redefined
     def __init__(
@@ -1257,7 +1257,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L180-L206" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L180-L206" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def build_lines(self, print_sh) -&gt; List[LineWrapper]:
     text_lines = []
@@ -1296,7 +1296,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L145-L169" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L145-L169" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def generate_bullet_frags_and_tl(self, bullet_string: str, bullet_r_margin: float):
     if not bullet_string:
@@ -1333,7 +1333,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L171-L178" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L171-L178" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ln(self, h=None):
     if not self.pdf.font_family:
@@ -1353,7 +1353,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L134-L143" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L134-L143" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def write(self, text: str, link=None):
     if not self.pdf.font_family:
@@ -1378,7 +1378,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L313-L468" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L313-L468" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ParagraphCollectorMixin:
     def __init__(
@@ -1551,7 +1551,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L430-L434" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L430-L434" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def end_paragraph(self):
     if not self._active_paragraph:
@@ -1568,7 +1568,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L436-L468" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L436-L468" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def image(
     self,
@@ -1613,7 +1613,7 @@ top/bottom margins when rendering the line.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L381-L383" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L381-L383" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def ln(self, h=None):
     self._check_paragraph()
@@ -1651,7 +1651,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L385-L428" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L385-L428" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def paragraph(
     self,
@@ -1707,7 +1707,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L377-L379" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L377-L379" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def write(self, text: str, link=None):  # pylint: disable=unused-argument
     self._check_paragraph()
@@ -1725,7 +1725,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L602-L621" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L602-L621" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextColumnarMixin:
     &#34;&#34;&#34;Enable a TextRegion to perform page breaks&#34;&#34;&#34;
@@ -1762,7 +1762,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L624-L727" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L624-L727" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextColumns(TextRegion, TextColumnarMixin):
     def __init__(
@@ -1861,7 +1861,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
         _first_page_top = max(self.pdf.t_margin, self.pdf.y)
         self._render_page_lines(text_lines, _first_page_top, page_bottom)
         while text_lines:
-            self.pdf.add_page(same=True)
+            self.pdf._perform_page_break()
             self._cur_column = 0
             self._render_page_lines(text_lines, self.pdf.y, page_bottom)
 
@@ -1885,7 +1885,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L656-L660" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L656-L660" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def new_column(self):
     if self._paragraphs:
@@ -1902,7 +1902,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L711-L723" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L711-L723" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self):
     if not self._paragraphs:
@@ -1914,7 +1914,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
     _first_page_top = max(self.pdf.t_margin, self.pdf.y)
     self._render_page_lines(text_lines, _first_page_top, page_bottom)
     while text_lines:
-        self.pdf.add_page(same=True)
+        self.pdf._perform_page_break()
         self._cur_column = 0
         self._render_page_lines(text_lines, self.pdf.y, page_bottom)</code></pre>
 </details>
@@ -1939,7 +1939,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L471-L599" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L471-L599" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextRegion(ParagraphCollectorMixin):
     &#34;&#34;&#34;Abstract base class for all text region subclasses.&#34;&#34;&#34;
@@ -2089,7 +2089,7 @@ No spacing will be added at the bottom if it would result in overstepping the bo
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L578-L589" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L578-L589" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def collect_lines(self):
     text_lines = []
@@ -2117,7 +2117,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L474-L482" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L474-L482" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def current_x_extents(self, y, height):
     &#34;&#34;&#34;
@@ -2138,7 +2138,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L594-L599" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L594-L599" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def get_width(self, height):
     start, end = self.current_x_extents(self.pdf.y, height)
@@ -2156,7 +2156,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L591-L592" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L591-L592" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def render(self):
     raise NotImplementedError()</code></pre>
@@ -2181,7 +2181,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L21-L35" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L21-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextRegionMixin:
     &#34;&#34;&#34;Mix-in to be added to FPDF() in order to support text regions.&#34;&#34;&#34;
@@ -2213,7 +2213,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L34-L35" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L34-L35" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def clear_text_region(self):
     self.__current_text_region = None</code></pre>
@@ -2227,7 +2227,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L31-L32" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L31-L32" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def is_current_text_region(self, region):
     return self.__current_text_region == region</code></pre>
@@ -2241,7 +2241,7 @@ For that reason we include the current y and the line height.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/1547d4d8ddbf6e69110d02d32271476da9b7b969/fpdf/text_region.py#L28-L29" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/68cf5941a30460520596011829eb866b2e28de21/fpdf/text_region.py#L28-L29" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def register_text_region(self, region):
     self.__current_text_region = region</code></pre>
