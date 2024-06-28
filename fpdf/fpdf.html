@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/fpdf.py#L232-L5264" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/fpdf.py#L202-L5233" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -171,7 +171,7 @@ Default to "mm".</dd>
         self._toc_placeholder = None  # optional ToCPlaceholder instance
         self._outline = []  # list of OutlineSection
         self._sign_key = None
-        self.section_title_styles = {}  # level -&gt; TitleStyle
+        self.section_title_styles = {}  # level -&gt; TextStyle
 
         self.core_fonts_encoding = &#34;latin-1&#34;
         &#34;Font encoding, Latin-1 by default&#34;
@@ -277,25 +277,24 @@ Default to "mm".</dd>
 
         Args:
             text (str): HTML content to render
-            image_map (function): an optional one-argument function that map &lt;img&gt; &#34;src&#34;
-                to new image URLs
-            li_tag_indent (int): [**DEPRECATED since v2.7.8**]
-                numeric indentation of &lt;li&gt; elements - Set tag_indents instead
-            dd_tag_indent (int): [**DEPRECATED since v2.7.8**]
-                numeric indentation of &lt;dd&gt; elements - Set tag_indents instead
-            table_line_separators (bool): enable horizontal line separators in &lt;table&gt;
-            ul_bullet_char (str): bullet character preceding &lt;li&gt; items in &lt;ul&gt; lists.
-            li_prefix_color (tuple | str | drawing.Device* instance):
-                color for bullets or numbers preceding &lt;li&gt; tags.
-                This applies to both &lt;ul&gt; &amp; &lt;ol&gt; lists.
-            heading_sizes (dict): [**DEPRECATED since v2.7.8**]
-                font size per heading level names (&#34;h1&#34;, &#34;h2&#34;...) - Set tag_styles instead
-            pre_code_font (str): [**DEPRECATED since v2.7.8**]
-                font to use for &lt;pre&gt; &amp; &lt;code&gt; blocks - Set tag_styles instead
-            warn_on_tags_not_matching (bool): control warnings production for unmatched HTML tags
-            tag_indents (dict):
-                mapping of HTML tag names to numeric values representing their horizontal left identation
-            tag_styles (dict): mapping of HTML tag names to colors
+            image_map (function): an optional one-argument function that map `&lt;img&gt;` &#34;src&#34; to new image URLs
+            li_tag_indent (int): [**DEPRECATED since v2.7.9**]
+                numeric indentation of `&lt;li&gt;` elements - Set `tag_styles` instead
+            dd_tag_indent (int): [**DEPRECATED since v2.7.9**]
+                numeric indentation of `&lt;dd&gt;` elements - Set `tag_styles` instead
+            table_line_separators (bool): enable horizontal line separators in `&lt;table&gt;`. Defaults to `False`.
+            ul_bullet_char (str): bullet character preceding `&lt;li&gt;` items in `&lt;ul&gt;` lists.
+                Can also be configured using the HTML `type` attribute of `&lt;ul&gt;` tags.
+            li_prefix_color (tuple, str, fpdf.drawing.DeviceCMYK, fpdf.drawing.DeviceGray, fpdf.drawing.DeviceRGB): color for bullets
+                or numbers preceding `&lt;li&gt;` tags. This applies to both `&lt;ul&gt;` &amp; `&lt;ol&gt;` lists.
+            heading_sizes (dict): [**DEPRECATED since v2.7.9**]
+                font size per heading level names (&#34;h1&#34;, &#34;h2&#34;...) - Set `tag_styles` instead
+            pre_code_font (str): [**DEPRECATED since v2.7.9**]
+                font to use for `&lt;pre&gt;` &amp; `&lt;code&gt;` blocks - Set `tag_styles` instead
+            warn_on_tags_not_matching (bool): control warnings production for unmatched HTML tags. Defaults to `True`.
+            tag_indents (dict): [**DEPRECATED since v2.7.10**]
+                mapping of HTML tag names to numeric values representing their horizontal left identation. - Set `tag_styles` instead
+            tag_styles (dict[str, fpdf.fonts.TextStyle]): mapping of HTML tag names to `fpdf.TextStyle` or `fpdf.FontFace` instances
         &#34;&#34;&#34;
         html2pdf = self.HTML2FPDF_CLASS(self, *args, **kwargs)
         with self.local_context():
@@ -4897,18 +4896,18 @@ Default to "mm".</dd>
         After calling this method, calls to `FPDF.start_section` will render section names visually.
 
         Args:
-            level0 (TitleStyle): style for the top level section titles
-            level1 (TitleStyle): optional style for the level 1 section titles
-            level2 (TitleStyle): optional style for the level 2 section titles
-            level3 (TitleStyle): optional style for the level 3 section titles
-            level4 (TitleStyle): optional style for the level 4 section titles
-            level5 (TitleStyle): optional style for the level 5 section titles
-            level6 (TitleStyle): optional style for the level 6 section titles
+            level0 (TextStyle): style for the top level section titles
+            level1 (TextStyle): optional style for the level 1 section titles
+            level2 (TextStyle): optional style for the level 2 section titles
+            level3 (TextStyle): optional style for the level 3 section titles
+            level4 (TextStyle): optional style for the level 4 section titles
+            level5 (TextStyle): optional style for the level 5 section titles
+            level6 (TextStyle): optional style for the level 6 section titles
         &#34;&#34;&#34;
         for level in (level0, level1, level2, level3, level4, level5, level6):
-            if level and not isinstance(level, TitleStyle):
+            if level and not isinstance(level, TextStyle):
                 raise TypeError(
-                    f&#34;Arguments must all be TitleStyle instances, got: {type(level)}&#34;
+                    f&#34;Arguments must all be TextStyle instances, got: {type(level)}&#34;
                 )
         self.section_title_styles = {
             0: level0,
@@ -4979,7 +4978,7 @@ Default to "mm".</dd>
         )
 
     @contextmanager
-    def _use_title_style(self, title_style: TitleStyle):
+    def _use_title_style(self, title_style: TextStyle):
         if title_style:
             if title_style.t_margin:
                 self.ln(title_style.t_margin)
@@ -5041,7 +5040,7 @@ Default to "mm".</dd>
                 relative to the page, when it&#39;s not using the full page width.
             borders_layout (str, fpdf.enums.TableBordersLayout): optional, default to ALL. Control what cell
                 borders are drawn.
-            cell_fill_color (int, tuple, fpdf.drawing.DeviceGray, fpdf.drawing.DeviceRGB): optional.
+            cell_fill_color (int, tuple, fpdf.drawing.DeviceCMYK, fpdf.drawing.DeviceGray, fpdf.drawing.DeviceRGB): optional.
                 Defines the cells background color.
             cell_fill_mode (str, fpdf.enums.TableCellFillMode): optional. Defines which cells are filled
                 with color in the background.
@@ -6827,19 +6826,19 @@ or a RGB tuple representing a color to fill the background with or <code>None</c
 After calling this method, calls to <code><a title="fpdf.fpdf.FPDF.start_section" href="#fpdf.fpdf.FPDF.start_section">FPDF.start_section()</a></code> will render section names visually.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>level0</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level0</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>style for the top level section titles</dd>
-<dt><strong><code>level1</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level1</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>optional style for the level 1 section titles</dd>
-<dt><strong><code>level2</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level2</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>optional style for the level 2 section titles</dd>
-<dt><strong><code>level3</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level3</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>optional style for the level 3 section titles</dd>
-<dt><strong><code>level4</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level4</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>optional style for the level 4 section titles</dd>
-<dt><strong><code>level5</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level5</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>optional style for the level 5 section titles</dd>
-<dt><strong><code>level6</code></strong> :&ensp;<code><a title="fpdf.fpdf.TitleStyle" href="#fpdf.fpdf.TitleStyle">TitleStyle</a></code></dt>
+<dt><strong><code>level6</code></strong> :&ensp;<code>TextStyle</code></dt>
 <dd>optional style for the level 6 section titles</dd>
 </dl></div>
 </dd>
@@ -7146,7 +7145,7 @@ relative to the page, when it's not using the full page width.</dd>
 <dt><strong><code>borders_layout</code></strong> :&ensp;<code>str, <a title="fpdf.enums.TableBordersLayout" href="enums.html#fpdf.enums.TableBordersLayout">TableBordersLayout</a></code></dt>
 <dd>optional, default to ALL. Control what cell
 borders are drawn.</dd>
-<dt><strong><code>cell_fill_color</code></strong> :&ensp;<code>int, tuple, <a title="fpdf.drawing.DeviceGray" href="drawing.html#fpdf.drawing.DeviceGray">DeviceGray</a>, <a title="fpdf.drawing.DeviceRGB" href="drawing.html#fpdf.drawing.DeviceRGB">DeviceRGB</a></code></dt>
+<dt><strong><code>cell_fill_color</code></strong> :&ensp;<code>int, tuple, <a title="fpdf.drawing.DeviceCMYK" href="drawing.html#fpdf.drawing.DeviceCMYK">DeviceCMYK</a>, <a title="fpdf.drawing.DeviceGray" href="drawing.html#fpdf.drawing.DeviceGray">DeviceGray</a>, <a title="fpdf.drawing.DeviceRGB" href="drawing.html#fpdf.drawing.DeviceRGB">DeviceRGB</a></code></dt>
 <dd>optional.
 Defines the cells background color.</dd>
 <dt><strong><code>cell_fill_mode</code></strong> :&ensp;<code>str, <a title="fpdf.enums.TableCellFillMode" href="enums.html#fpdf.enums.TableCellFillMode">TableCellFillMode</a></code></dt>
@@ -7346,91 +7345,74 @@ cf. <a href="https://py-pdf.github.io/fpdf2/HTML.html">https://py-pdf.github.io/
 <dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
 <dd>HTML content to render</dd>
 <dt><strong><code>image_map</code></strong> :&ensp;<code>function</code></dt>
-<dd>an optional one-argument function that map <img> "src"
-to new image URLs</dd>
+<dd>an optional one-argument function that map <code>&lt;img&gt;</code> "src" to new image URLs</dd>
 <dt><strong><code>li_tag_indent</code></strong> :&ensp;<code>int</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.8</strong>]
-numeric indentation of <li> elements - Set tag_indents instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+numeric indentation of <code>&lt;li&gt;</code> elements - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>dd_tag_indent</code></strong> :&ensp;<code>int</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.8</strong>]
-numeric indentation of <dd> elements - Set tag_indents instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+numeric indentation of <code>&lt;dd&gt;</code> elements - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>table_line_separators</code></strong> :&ensp;<code>bool</code></dt>
-<dd>enable horizontal line separators in <table></dd>
+<dd>enable horizontal line separators in <code>&lt;table&gt;</code>. Defaults to <code>False</code>.</dd>
 <dt><strong><code>ul_bullet_char</code></strong> :&ensp;<code>str</code></dt>
-<dd>bullet character preceding <li> items in <ul> lists.</dd>
-<dt>li_prefix_color (tuple | str | drawing.Device* instance):</dt>
-<dt>color for bullets or numbers preceding <li> tags.</dt>
-<dt>This applies to both <ul> &amp; <ol> lists.</dt>
+<dd>bullet character preceding <code>&lt;li&gt;</code> items in <code>&lt;ul&gt;</code> lists.
+Can also be configured using the HTML <code>type</code> attribute of <code>&lt;ul&gt;</code> tags.</dd>
+<dt><strong><code>li_prefix_color</code></strong> :&ensp;<code>tuple, str, <a title="fpdf.drawing.DeviceCMYK" href="drawing.html#fpdf.drawing.DeviceCMYK">DeviceCMYK</a>, <a title="fpdf.drawing.DeviceGray" href="drawing.html#fpdf.drawing.DeviceGray">DeviceGray</a>, <a title="fpdf.drawing.DeviceRGB" href="drawing.html#fpdf.drawing.DeviceRGB">DeviceRGB</a></code></dt>
+<dd>color for bullets
+or numbers preceding <code>&lt;li&gt;</code> tags. This applies to both <code>&lt;ul&gt;</code> &amp; <code>&lt;ol&gt;</code> lists.</dd>
 <dt><strong><code>heading_sizes</code></strong> :&ensp;<code>dict</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.8</strong>]
-font size per heading level names ("h1", "h2"&hellip;) - Set tag_styles instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+font size per heading level names ("h1", "h2"&hellip;) - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>pre_code_font</code></strong> :&ensp;<code>str</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.8</strong>]
-font to use for <pre> &amp; <code> blocks - Set tag_styles instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+font to use for <code>&lt;pre&gt;</code> &amp; <code>&lt;code&gt;</code> blocks - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>warn_on_tags_not_matching</code></strong> :&ensp;<code>bool</code></dt>
-<dd>control warnings production for unmatched HTML tags</dd>
-<dt>tag_indents (dict):</dt>
-<dt>mapping of HTML tag names to numeric values representing their horizontal left identation</dt>
-<dt><strong><code>tag_styles</code></strong> :&ensp;<code>dict</code></dt>
-<dd>mapping of HTML tag names to colors</dd>
+<dd>control warnings production for unmatched HTML tags. Defaults to <code>True</code>.</dd>
+<dt><strong><code>tag_indents</code></strong> :&ensp;<code>dict</code></dt>
+<dd>[<strong>DEPRECATED since v2.7.10</strong>]
+mapping of HTML tag names to numeric values representing their horizontal left identation. - Set <code>tag_styles</code> instead</dd>
+<dt><strong><code>tag_styles</code></strong> :&ensp;<code>dict[str, <a title="fpdf.fonts.TextStyle" href="fonts.html#fpdf.fonts.TextStyle">TextStyle</a>]</code></dt>
+<dd>mapping of HTML tag names to <code>fpdf.TextStyle</code> or <code>fpdf.FontFace</code> instances</dd>
 </dl></div>
-  
-
 </dd>
-  
-              
-    <dt id="fpdf.fpdf.FPDF.x_by_align"><code class="name flex">
-        
-        <span>def <span class="ident">x_by_align</span></span>(<span>self, x, w, h, img_info, keep_aspect_ratio)</span>
-    </code></dt>
-    <dd>
-  
-  <div class="desc"></div>
-  
-
+<dt id="fpdf.fpdf.FPDF.x_by_align"><code class="name flex">
+<span>def <span class="ident">x_by_align</span></span>(<span>self, x, w, h, img_info, keep_aspect_ratio)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
 </dd>
-  
-          </dl>
-
-          
-              <h3>Inherited members</h3>
-              <ul class="hlist">
-                  <li><code><b><a title="fpdf.graphics_state.GraphicsStateMixin" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin">GraphicsStateMixin</a></b></code>:
-                      <ul class="hlist">
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.char_vpos" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.char_vpos">char_vpos</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.denom_lift">denom_lift</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.denom_scale">denom_scale</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.font_face" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.font_face">font_face</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.nom_lift">nom_lift</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.nom_scale">nom_scale</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sub_lift">sub_lift</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sub_scale">sub_scale</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sup_lift">sup_lift</a></code></li>
-                              <li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sup_scale">sup_scale</a></code></li>
-                      </ul>
-
-                  </li>
-              </ul>
-
-      </dd>
-      
-      <dt id="fpdf.fpdf.ImageInfo"><code class="flex name class">
-          <span>class <span class="ident">ImageInfo</span></span>
-              <span>(</span><span>*args, **kwargs)</span>
-      </code></dt>
-
-      <dd>
-  
-  <div class="desc"><p>Information about an image used in the PDF document (base class).
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.graphics_state.GraphicsStateMixin" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin">GraphicsStateMixin</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.char_vpos" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.char_vpos">char_vpos</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.denom_lift">denom_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.denom_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.denom_scale">denom_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.font_face" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.font_face">font_face</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.nom_lift">nom_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.nom_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.nom_scale">nom_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sub_lift">sub_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sub_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sub_scale">sub_scale</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_lift" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sup_lift">sup_lift</a></code></li>
+<li><code><a title="fpdf.graphics_state.GraphicsStateMixin.sup_scale" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin.sup_scale">sup_scale</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="fpdf.fpdf.ImageInfo"><code class="flex name class">
+<span>class <span class="ident">ImageInfo</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Information about an image used in the PDF document (base class).
 We subclass this to distinguish between raster and vector images.</p></div>
-  
-    
-      <details class="source">
-        <summary>
-            <span>Expand source code</span>
-              <a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
-        </summary>
-        <pre><code class="python">class ImageInfo(dict):
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
     We subclass this to distinguish between raster and vector images.&#34;&#34;&#34;
 
@@ -7560,7 +7542,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7611,7 +7593,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/enums.py#L407-L416" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7678,55 +7660,38 @@ In the reduced dimension it will be centered within the available space.</p></di
 </dd>
 <dt id="fpdf.fpdf.TitleStyle"><code class="flex name class">
 <span>class <span class="ident">TitleStyle</span></span>
-<span>(</span><span>font_family: Optional[str] = None, font_style: Optional[str] = None, font_size_pt: Optional[int] = None, color: Union[int, tuple] = None, underline: bool = False, t_margin: Optional[int] = None, l_margin: Optional[int] = None, b_margin: Optional[int] = None)</span>
+<span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Represent basic font styling properties.
-This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href="graphics_state.html#fpdf.graphics_state.GraphicsStateMixin">GraphicsStateMixin</a></code> properties.</p></div>
+<div class="desc"><p>Subclass of <code>FontFace</code> that allows to specify vertical &amp; horizontal spacing</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/fpdf.py#L145-L172" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">class TitleStyle(FontFace):
-    def __init__(
-        self,
-        font_family: Optional[str] = None,  # None means &#34;no override&#34;
-        #                                     Whereas &#34;&#34; means &#34;no emphasis&#34;
-        font_style: Optional[str] = None,
-        font_size_pt: Optional[int] = None,
-        color: Union[int, tuple] = None,  # grey scale or (red, green, blue),
-        underline: bool = False,
-        t_margin: Optional[int] = None,
-        l_margin: Optional[int] = None,
-        b_margin: Optional[int] = None,
-    ):
-        super().__init__(
-            font_family,
-            ((font_style or &#34;&#34;) + &#34;U&#34;) if underline else font_style,
-            font_size_pt,
-            color,
+<pre><code class="python">class TitleStyle(TextStyle):
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            (
+                &#34;fpdf.TitleStyle is deprecated since 2.7.10.&#34;
+                &#34; It has been replaced by fpdf.TextStyle.&#34;
+            ),
+            DeprecationWarning,
+            stacklevel=get_stack_level(),
         )
-        self.t_margin = t_margin
-        self.l_margin = l_margin
-        self.b_margin = b_margin
-
-    def __repr__(self):
-        return (
-            super().__repr__()[:-1]
-            + f&#34;, t_margin={self.t_margin}, l_margin={self.l_margin}, b_margin={self.b_margin})&#34;
-        )</code></pre>
+        super().__init__(*args, **kwargs)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="fpdf.fonts.TextStyle" href="fonts.html#fpdf.fonts.TextStyle">TextStyle</a></li>
 <li><a title="fpdf.fonts.FontFace" href="fonts.html#fpdf.fonts.FontFace">FontFace</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="fpdf.fonts.FontFace" href="fonts.html#fpdf.fonts.FontFace">FontFace</a></b></code>:
+<li><code><b><a title="fpdf.fonts.TextStyle" href="fonts.html#fpdf.fonts.TextStyle">TextStyle</a></b></code>:
 <ul class="hlist">
-<li><code><a title="fpdf.fonts.FontFace.combine" href="fonts.html#fpdf.fonts.FontFace.combine">combine</a></code></li>
-<li><code><a title="fpdf.fonts.FontFace.replace" href="fonts.html#fpdf.fonts.FontFace.replace">replace</a></code></li>
+<li><code><a title="fpdf.fonts.TextStyle.combine" href="fonts.html#fpdf.fonts.FontFace.combine">combine</a></code></li>
+<li><code><a title="fpdf.fonts.TextStyle.replace" href="fonts.html#fpdf.fonts.FontFace.replace">replace</a></code></li>
 </ul>
 </li>
 </ul>
@@ -7740,7 +7705,7 @@ This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7773,7 +7738,7 @@ This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/enums.py#L419-L444" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7860,7 +7825,7 @@ This is a subset of <code><a title="fpdf.graphics_state.GraphicsStateMixin" href
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/enums.py#L447-L463" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;

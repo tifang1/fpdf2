@@ -50,11 +50,11 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="fpdf.html.parse_style"><code class="name flex">
-<span>def <span class="ident">parse_style</span></span>(<span>elem_attrs)</span>
+<dt id="fpdf.html.parse_css_style"><code class="name flex">
+<span>def <span class="ident">parse_css_style</span></span>(<span>style_attr)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Parse <code>style="..."</code> making it's key-value pairs element's attributes</p></div>
+<div class="desc"><p>Parse <code>style="..."</code> HTML attributes, and return a dict of key-value</p></div>
 </dd>
 <dt id="fpdf.html.ul_prefix"><code class="name flex">
 <span>def <span class="ident">ul_prefix</span></span>(<span>ul_type)</span>
@@ -69,7 +69,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <dl>
 <dt id="fpdf.html.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, li_tag_indent=None, dd_tag_indent=None, table_line_separators=False, ul_bullet_char='\x95', li_prefix_color=(190, 0, 0), heading_sizes=None, pre_code_font='Courier', warn_on_tags_not_matching=True, tag_indents=None, tag_styles=None, list_vertical_margin=None, **_)</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=None, dd_tag_indent=None, table_line_separators=False, ul_bullet_char='\x95', li_prefix_color=(190, 0, 0), heading_sizes=None, pre_code_font=None, warn_on_tags_not_matching=True, tag_indents=None, tag_styles=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -78,41 +78,41 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <dt><strong><code>pdf</code></strong> :&ensp;<code>FPDF</code></dt>
 <dd>an instance of <code>fpdf.FPDF</code></dd>
 <dt><strong><code>image_map</code></strong> :&ensp;<code>function</code></dt>
-<dd>an optional one-argument function that map <img> "src"
-to new image URLs</dd>
+<dd>an optional one-argument function that map <code>&lt;img&gt;</code> "src" to new image URLs</dd>
 <dt><strong><code>li_tag_indent</code></strong> :&ensp;<code>int</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.9</strong>] numeric indentation of <li> elements - Set tag_indents instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+numeric indentation of <code>&lt;li&gt;</code> elements - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>dd_tag_indent</code></strong> :&ensp;<code>int</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.9</strong>] numeric indentation of <dd> elements - Set tag_indents instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+numeric indentation of <code>&lt;dd&gt;</code> elements - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>table_line_separators</code></strong> :&ensp;<code>bool</code></dt>
-<dd>enable horizontal line separators in <table></dd>
+<dd>enable horizontal line separators in <code>&lt;table&gt;</code>. Defaults to <code>False</code>.</dd>
 <dt><strong><code>ul_bullet_char</code></strong> :&ensp;<code>str</code></dt>
-<dd>bullet character preceding <li> items in <ul> lists.</dd>
-<dt>li_prefix_color (tuple | str | drawing.Device* instance): color for bullets or numbers preceding <li> tags.</dt>
-<dt>This applies to both <ul> &amp; <ol> lists.</dt>
+<dd>bullet character preceding <code>&lt;li&gt;</code> items in <code>&lt;ul&gt;</code> lists.
+Can also be configured using the HTML <code>type</code> attribute of <code>&lt;ul&gt;</code> tags.</dd>
+<dt><strong><code>li_prefix_color</code></strong> :&ensp;<code>tuple, str, <a title="fpdf.drawing.DeviceCMYK" href="drawing.html#fpdf.drawing.DeviceCMYK">DeviceCMYK</a>, <a title="fpdf.drawing.DeviceGray" href="drawing.html#fpdf.drawing.DeviceGray">DeviceGray</a>, <a title="fpdf.drawing.DeviceRGB" href="drawing.html#fpdf.drawing.DeviceRGB">DeviceRGB</a></code></dt>
+<dd>color for bullets
+or numbers preceding <code>&lt;li&gt;</code> tags. This applies to both <code>&lt;ul&gt;</code> &amp; <code>&lt;ol&gt;</code> lists.</dd>
 <dt><strong><code>heading_sizes</code></strong> :&ensp;<code>dict</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.9</strong>] font size per heading level names ("h1", "h2"&hellip;) - Set tag_styles instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+font size per heading level names ("h1", "h2"&hellip;) - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>pre_code_font</code></strong> :&ensp;<code>str</code></dt>
-<dd>[<strong>DEPRECATED since v2.7.9</strong>] font to use for <pre> &amp; <code> blocks - Set tag_styles instead</dd>
+<dd>[<strong>DEPRECATED since v2.7.9</strong>]
+font to use for <code>&lt;pre&gt;</code> &amp; <code>&lt;code&gt;</code> blocks - Set <code>tag_styles</code> instead</dd>
 <dt><strong><code>warn_on_tags_not_matching</code></strong> :&ensp;<code>bool</code></dt>
-<dd>control warnings production for unmatched HTML tags</dd>
+<dd>control warnings production for unmatched HTML tags. Defaults to <code>True</code>.</dd>
 <dt><strong><code>tag_indents</code></strong> :&ensp;<code>dict</code></dt>
-<dd>mapping of HTML tag names to numeric values representing their horizontal left identation.
-The indent values are in the chosen pdf document units.</dd>
-<dt><strong><code>tag_styles</code></strong> :&ensp;<code>dict</code></dt>
-<dd>mapping of HTML tag names to colors</dd>
-<dt><strong><code>list_vertical_margin</code></strong> :&ensp;<code>float</code></dt>
-<dd>size of margins that precede lists.
-The margin value is in the chosen pdf document units.</dd>
+<dd>[<strong>DEPRECATED since v2.7.10</strong>]
+mapping of HTML tag names to numeric values representing their horizontal left identation. - Set <code>tag_styles</code> instead</dd>
+<dt><strong><code>tag_styles</code></strong> :&ensp;<code>dict[str, <a title="fpdf.fonts.TextStyle" href="fonts.html#fpdf.fonts.TextStyle">TextStyle</a>]</code></dt>
+<dd>mapping of HTML tag names to <code>fpdf.TextStyle</code> or <code>fpdf.FontFace</code> instances</dd>
 </dl></div>
-  
-    
-      <details class="source">
-        <summary>
-            <span>Expand source code</span>
-              <a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/html.py#L263-L1085" class="git-link">Browse git</a>
-        </summary>
-        <pre><code class="python">class HTML2FPDF(HTMLParser):
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/html.py#L257-L1141" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
 
     HTML_UNCLOSED_TAGS = (&#34;br&#34;, &#34;dd&#34;, &#34;dt&#34;, &#34;hr&#34;, &#34;img&#34;, &#34;li&#34;, &#34;td&#34;, &#34;tr&#34;)
@@ -128,32 +128,32 @@ The margin value is in the chosen pdf document units.</dd>
         ul_bullet_char=BULLET_WIN1252,
         li_prefix_color=(190, 0, 0),
         heading_sizes=None,
-        pre_code_font=DEFAULT_TAG_STYLES[&#34;pre&#34;].family,
+        pre_code_font=None,
         warn_on_tags_not_matching=True,
         tag_indents=None,
         tag_styles=None,
-        list_vertical_margin=None,
-        **_,
     ):
         &#34;&#34;&#34;
         Args:
             pdf (FPDF): an instance of `fpdf.FPDF`
-            image_map (function): an optional one-argument function that map &lt;img&gt; &#34;src&#34;
-                to new image URLs
-            li_tag_indent (int): [**DEPRECATED since v2.7.9**] numeric indentation of &lt;li&gt; elements - Set tag_indents instead
-            dd_tag_indent (int): [**DEPRECATED since v2.7.9**] numeric indentation of &lt;dd&gt; elements - Set tag_indents instead
-            table_line_separators (bool): enable horizontal line separators in &lt;table&gt;
-            ul_bullet_char (str): bullet character preceding &lt;li&gt; items in &lt;ul&gt; lists.
-            li_prefix_color (tuple | str | drawing.Device* instance): color for bullets or numbers preceding &lt;li&gt; tags.
-                This applies to both &lt;ul&gt; &amp; &lt;ol&gt; lists.
-            heading_sizes (dict): [**DEPRECATED since v2.7.9**] font size per heading level names (&#34;h1&#34;, &#34;h2&#34;...) - Set tag_styles instead
-            pre_code_font (str): [**DEPRECATED since v2.7.9**] font to use for &lt;pre&gt; &amp; &lt;code&gt; blocks - Set tag_styles instead
-            warn_on_tags_not_matching (bool): control warnings production for unmatched HTML tags
-            tag_indents (dict): mapping of HTML tag names to numeric values representing their horizontal left identation.
-                The indent values are in the chosen pdf document units.
-            tag_styles (dict): mapping of HTML tag names to colors
-            list_vertical_margin (float): size of margins that precede lists.
-                The margin value is in the chosen pdf document units.
+            image_map (function): an optional one-argument function that map `&lt;img&gt;` &#34;src&#34; to new image URLs
+            li_tag_indent (int): [**DEPRECATED since v2.7.9**]
+                numeric indentation of `&lt;li&gt;` elements - Set `tag_styles` instead
+            dd_tag_indent (int): [**DEPRECATED since v2.7.9**]
+                numeric indentation of `&lt;dd&gt;` elements - Set `tag_styles` instead
+            table_line_separators (bool): enable horizontal line separators in `&lt;table&gt;`. Defaults to `False`.
+            ul_bullet_char (str): bullet character preceding `&lt;li&gt;` items in `&lt;ul&gt;` lists.
+                Can also be configured using the HTML `type` attribute of `&lt;ul&gt;` tags.
+            li_prefix_color (tuple, str, fpdf.drawing.DeviceCMYK, fpdf.drawing.DeviceGray, fpdf.drawing.DeviceRGB): color for bullets
+                or numbers preceding `&lt;li&gt;` tags. This applies to both `&lt;ul&gt;` &amp; `&lt;ol&gt;` lists.
+            heading_sizes (dict): [**DEPRECATED since v2.7.9**]
+                font size per heading level names (&#34;h1&#34;, &#34;h2&#34;...) - Set `tag_styles` instead
+            pre_code_font (str): [**DEPRECATED since v2.7.9**]
+                font to use for `&lt;pre&gt;` &amp; `&lt;code&gt;` blocks - Set `tag_styles` instead
+            warn_on_tags_not_matching (bool): control warnings production for unmatched HTML tags. Defaults to `True`.
+            tag_indents (dict): [**DEPRECATED since v2.7.10**]
+                mapping of HTML tag names to numeric values representing their horizontal left identation. - Set `tag_styles` instead
+            tag_styles (dict[str, fpdf.fonts.TextStyle]): mapping of HTML tag names to `fpdf.TextStyle` or `fpdf.FontFace` instances
         &#34;&#34;&#34;
         super().__init__()
         self.pdf = pdf
@@ -174,7 +174,7 @@ The margin value is in the chosen pdf document units.</dd>
         # If a font was defined previously, we reinstate that seperately after we&#39;re finished here.
         # In this case the TOC will be rendered with that font and not ours. But adding a TOC tag only
         # makes sense if the whole document gets converted from HTML, so this should be acceptable.
-        self.emphasis = dict(b=False, i=False, u=False)
+        self.emphasis = TextEmphasis.NONE
         self.font_size = pdf.font_size_pt
         self.set_font(pdf.font_family or &#34;times&#34;, size=self.font_size, set_default=True)
         self._page_break_after_paragraph = False
@@ -190,17 +190,8 @@ The margin value is in the chosen pdf document units.</dd>
         self.line_height_stack = []
         self.ol_type = []  # when inside a &lt;ol&gt; tag, can be &#34;a&#34;, &#34;A&#34;, &#34;i&#34;, &#34;I&#34; or &#34;1&#34;
         self.bullet = []
-        # factor for converting default values from mm to document units:
-        self.default_conversion_factor = get_scale_factor(&#34;mm&#34;) / self.pdf.k
-        if list_vertical_margin is None:
-            # Default value of 2 to be multiplied by the conversion factor
-            # for list_vertical_margin is given in mm
-            list_vertical_margin = 2 * self.default_conversion_factor
-        self.list_vertical_margin = list_vertical_margin
         self.font_color = pdf.text_color.colors255
         self.heading_level = None
-        self.heading_above = 0.2  # extra space above heading, relative to font size
-        self.heading_below = 0.4  # extra space below heading, relative to font size
         self._tags_stack = []
         self._column = self.pdf.text_columns(skip_leading_spaces=True)
         self._paragraph = self._column.paragraph()
@@ -212,48 +203,28 @@ The margin value is in the chosen pdf document units.</dd>
         self.td_th = None  # becomes a dict of attributes when processing &lt;td&gt;/&lt;th&gt; tags
         #                    &#34;inserted&#34; is a special attribute indicating that a cell has be inserted in self.table_row
 
-        if not tag_indents:
-            tag_indents = {
-                k: v * self.default_conversion_factor
-                for k, v in DEFAULT_TAG_INDENTS_MM.items()
-            }
-        if dd_tag_indent is not None:
-            warnings.warn(
-                (
-                    &#34;The dd_tag_indent parameter is deprecated since v2.7.9 &#34;
-                    &#34;and will be removed in a future release. &#34;
-                    &#34;Set the `tag_indents` parameter instead.&#34;
-                ),
-                DeprecationWarning,
-                stacklevel=get_stack_level(),
-            )
-            tag_indents[&#34;dd&#34;] = dd_tag_indent
-        if li_tag_indent is not None:
-            warnings.warn(
-                (
-                    &#34;The li_tag_indent parameter is deprecated since v2.7.9 &#34;
-                    &#34;and will be removed in a future release. &#34;
-                    &#34;Set the `tag_indents` parameter instead.&#34;
-                ),
-                DeprecationWarning,
-                stacklevel=get_stack_level(),
-            )
-            tag_indents[&#34;li&#34;] = li_tag_indent
-        for tag in tag_indents:
-            if tag not in DEFAULT_TAG_INDENTS_MM:
-                raise NotImplementedError(
-                    f&#34;Cannot set indent for HTML tag &lt;{tag}&gt; (contributions are welcome to add support for this)&#34;
-                )
-        self.tag_indents = {**DEFAULT_TAG_INDENTS_MM, **tag_indents}
-
-        if not tag_styles:
-            tag_styles = {}
-        for tag in tag_styles:
+        self.tag_styles = _scale_units(pdf, DEFAULT_TAG_STYLES)
+        for tag, tag_style in (tag_styles or {}).items():
             if tag not in DEFAULT_TAG_STYLES:
                 raise NotImplementedError(
                     f&#34;Cannot set style for HTML tag &lt;{tag}&gt; (contributions are welcome to add support for this)&#34;
                 )
-        self.tag_styles = {**DEFAULT_TAG_STYLES, **tag_styles}
+            if isinstance(tag_style, FontFace) and not isinstance(tag_style, TextStyle):
+                # pylint: disable=redefined-loop-name
+                tag_style = TextStyle(
+                    font_family=tag_style.family,
+                    font_style=(
+                        &#34;&#34; if not tag_style.emphasis else tag_style.emphasis.style
+                    ),
+                    font_size_pt=tag_style.size_pt,
+                    color=tag_style.color,
+                    fill_color=tag_style.fill_color,
+                    # Using default tag margins:
+                    t_margin=self.tag_styles[tag].t_margin,
+                    l_margin=self.tag_styles[tag].l_margin,
+                    b_margin=self.tag_styles[tag].b_margin,
+                )
+            self.tag_styles[tag] = tag_style
         if heading_sizes is not None:
             warnings.warn(
                 (
@@ -265,8 +236,8 @@ The margin value is in the chosen pdf document units.</dd>
                 stacklevel=get_stack_level(),
             )
             for tag, size in heading_sizes.items():
-                self.tag_styles[tag] = self.tag_styles[tag].replace(size_pt=size)
-        if pre_code_font != DEFAULT_TAG_STYLES[&#34;pre&#34;].family:
+                self.tag_styles[tag] = self.tag_styles[tag].replace(font_size_pt=size)
+        if pre_code_font is not None:
             warnings.warn(
                 (
                     &#34;The pre_code_font parameter is deprecated since v2.7.9 &#34;
@@ -277,11 +248,53 @@ The margin value is in the chosen pdf document units.</dd>
                 stacklevel=get_stack_level(),
             )
             self.tag_styles[&#34;code&#34;] = self.tag_styles[&#34;code&#34;].replace(
-                family=pre_code_font
+                font_family=pre_code_font
             )
             self.tag_styles[&#34;pre&#34;] = self.tag_styles[&#34;pre&#34;].replace(
-                family=pre_code_font
+                font_family=pre_code_font
             )
+        if dd_tag_indent is not None:
+            warnings.warn(
+                (
+                    &#34;The dd_tag_indent parameter is deprecated since v2.7.9 &#34;
+                    &#34;and will be removed in a future release. &#34;
+                    &#34;Set the `tag_styles` parameter instead.&#34;
+                ),
+                DeprecationWarning,
+                stacklevel=get_stack_level(),
+            )
+            self.tag_styles[&#34;dd&#34;] = self.tag_styles[&#34;pre&#34;].replace(
+                l_margin=dd_tag_indent
+            )
+        if li_tag_indent is not None:
+            warnings.warn(
+                (
+                    &#34;The li_tag_indent parameter is deprecated since v2.7.9 &#34;
+                    &#34;and will be removed in a future release. &#34;
+                    &#34;Set the `tag_styles` parameter instead.&#34;
+                ),
+                DeprecationWarning,
+                stacklevel=get_stack_level(),
+            )
+            self.tag_styles[&#34;li&#34;] = self.tag_styles[&#34;li&#34;].replace(
+                l_margin=li_tag_indent
+            )
+        if tag_indents:
+            warnings.warn(
+                (
+                    &#34;The tag_indents parameter is deprecated since v2.7.10 &#34;
+                    &#34;and will be removed in a future release. &#34;
+                    &#34;Set the `tag_styles` parameter instead.&#34;
+                ),
+                DeprecationWarning,
+                stacklevel=get_stack_level(),
+            )
+            for tag, indent in tag_indents.items():
+                if tag not in self.tag_styles:
+                    raise NotImplementedError(
+                        f&#34;Cannot set style for HTML tag &lt;{tag}&gt; (contributions are welcome to add support for this)&#34;
+                    )
+                self.tag_styles[tag] = self.tag_styles[tag].replace(l_margin=indent)
 
     def _new_paragraph(
         self,
@@ -363,13 +376,17 @@ The margin value is in the chosen pdf document units.</dd>
                 emphasis |= TextEmphasis.I
             if self.td_th.get(&#34;U&#34;):
                 emphasis |= TextEmphasis.U
-            style = None
+            font_style = None
             if bgcolor or emphasis:
-                style = FontFace(
+                font_style = FontFace(
                     emphasis=emphasis, fill_color=bgcolor, color=self.pdf.text_color
                 )
             self.table_row.cell(
-                text=data, align=align, style=style, colspan=colspan, rowspan=rowspan
+                text=data,
+                align=align,
+                style=font_style,
+                colspan=colspan,
+                rowspan=rowspan,
             )
             self.td_th[&#34;inserted&#34;] = True
         elif self.table is not None:
@@ -413,9 +430,9 @@ The margin value is in the chosen pdf document units.</dd>
         self._pre_started = False
         attrs = dict(attrs)
         LOGGER.debug(&#34;STARTTAG %s %s&#34;, tag, attrs)
-        parse_style(attrs)
+        css_style = parse_css_style(attrs.get(&#34;style&#34;, &#34;&#34;))
         self._tags_stack.append(tag)
-        if attrs.get(&#34;break-before&#34;) == &#34;page&#34;:
+        if css_style.get(&#34;break-before&#34;) == &#34;page&#34;:
             self._end_paragraph()
             # pylint: disable=protected-access
             self.pdf._perform_page_break()
@@ -432,7 +449,7 @@ The margin value is in the chosen pdf document units.</dd>
                 line_height=(
                     self.line_height_stack[-1] if self.line_height_stack else None
                 ),
-                indent=self.tag_indents[&#34;dd&#34;] * (self.indent + 1),
+                indent=self.tag_styles[&#34;dd&#34;].l_margin * (self.indent + 1),
             )
         if tag == &#34;strong&#34;:
             tag = &#34;b&#34;
@@ -458,19 +475,23 @@ The margin value is in the chosen pdf document units.</dd>
                 align = attrs.get(&#34;align&#34;)[0].upper()
                 if not align in [&#34;L&#34;, &#34;R&#34;, &#34;J&#34;, &#34;C&#34;]:
                     align = None
-            line_height = None
-            if &#34;line-height&#34; in attrs:
+            line_height = css_style.get(&#34;line-height&#34;, attrs.get(&#34;line-height&#34;))
+            # &#34;line-height&#34; attributes are not valid in HTML,
+            # but we support it for backward compatibility,
+            # because fpdf2 honors it since 2.6.1 and PR #629
+            if line_height:
                 try:
                     # YYY parse and convert non-float line_height values
-                    line_height = float(attrs.get(&#34;line-height&#34;))
+                    line_height = float(line_height)
                 except ValueError:
-                    pass
+                    line_height = None
             self._new_paragraph(align=align, line_height=line_height)
         if tag in HEADING_TAGS:
             prev_font_height = self.font_size / self.pdf.k
             self.style_stack.append(
                 FontFace(
                     family=self.font_family,
+                    emphasis=self.emphasis,
                     size_pt=self.font_size,
                     color=self.font_color,
                 )
@@ -486,11 +507,15 @@ The margin value is in the chosen pdf document units.</dd>
                 align = None
             self._new_paragraph(
                 align=align,
-                top_margin=prev_font_height + self.heading_above * hsize,
-                bottom_margin=self.heading_below * hsize,
+                top_margin=prev_font_height + tag_style.t_margin * hsize,
+                bottom_margin=tag_style.b_margin * hsize,
             )
             color = None
-            if &#34;color&#34; in attrs:
+            if &#34;color&#34; in css_style:
+                color = color_as_decimal(css_style[&#34;color&#34;])
+            elif &#34;color&#34; in attrs:
+                # &#34;color&#34; attributes are not valid in HTML,
+                # but we support it for backward compatibility:
                 color = color_as_decimal(attrs[&#34;color&#34;])
             elif tag_style.color:
                 color = tag_style.color.colors255
@@ -502,7 +527,7 @@ The margin value is in the chosen pdf document units.</dd>
             )
         if tag == &#34;hr&#34;:
             self._end_paragraph()
-            width = attrs.get(&#34;width&#34;)
+            width = css_style.get(&#34;width&#34;, attrs.get(&#34;width&#34;))
             if width:
                 if width[-1] == &#34;%&#34;:
                     width = self.pdf.epw * int(width[:-1]) / 100
@@ -523,6 +548,7 @@ The margin value is in the chosen pdf document units.</dd>
             self.style_stack.append(
                 FontFace(
                     family=self.font_family,
+                    emphasis=self.emphasis,
                     size_pt=self.font_size,
                     color=self.font_color,
                 )
@@ -539,6 +565,7 @@ The margin value is in the chosen pdf document units.</dd>
             self.style_stack.append(
                 FontFace(
                     family=self.font_family,
+                    emphasis=self.emphasis,
                     size_pt=self.font_size,
                     color=self.font_color,
                 )
@@ -554,9 +581,19 @@ The margin value is in the chosen pdf document units.</dd>
             self._pre_started = True
             self._new_paragraph()
         if tag == &#34;blockquote&#34;:
+            self.style_stack.append(
+                FontFace(
+                    family=self.font_family,
+                    emphasis=self.emphasis,
+                    size_pt=self.font_size,
+                    color=self.font_color,
+                )
+            )
             tag_style = self.tag_styles[tag]
             if tag_style.color:
                 self.set_text_color(*tag_style.color.colors255)
+            if tag_style.emphasis:
+                self.emphasis = tag_style.emphasis
             self.set_font(
                 family=tag_style.family or self.font_family,
                 size=tag_style.size_pt or self.font_size,
@@ -565,9 +602,9 @@ The margin value is in the chosen pdf document units.</dd>
             self._new_paragraph(
                 # Default values to be multiplied by the conversion factor
                 # for top_margin and bottom_margin here are given in mm
-                top_margin=3 * self.default_conversion_factor,
-                bottom_margin=3 * self.default_conversion_factor,
-                indent=self.tag_indents[&#34;blockquote&#34;] * self.indent,
+                top_margin=self.tag_styles[&#34;blockquote&#34;].t_margin,
+                bottom_margin=self.tag_styles[&#34;blockquote&#34;].b_margin,
+                indent=self.tag_styles[&#34;blockquote&#34;].l_margin * self.indent,
             )
         if tag == &#34;ul&#34;:
             self.indent += 1
@@ -575,16 +612,22 @@ The margin value is in the chosen pdf document units.</dd>
                 ul_prefix(attrs[&#34;type&#34;]) if &#34;type&#34; in attrs else self.ul_bullet_char
             )
             self.bullet.append(bullet_char)
-            if &#34;line-height&#34; in attrs:
+            line_height = css_style.get(&#34;line-height&#34;, attrs.get(&#34;line-height&#34;))
+            # &#34;line-height&#34; attributes are not valid in HTML,
+            # but we support it for backward compatibility,
+            # because fpdf2 honors it since 2.6.1 and PR #629
+            if line_height:
                 try:
                     # YYY parse and convert non-float line_height values
-                    self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
+                    self.line_height_stack.append(float(line_height))
                 except ValueError:
                     pass
             else:
                 self.line_height_stack.append(None)
             if self.indent == 1:
-                self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+                self._new_paragraph(
+                    top_margin=self.tag_styles[&#34;ul&#34;].t_margin, line_height=0
+                )
                 self._write_paragraph(&#34;\u00a0&#34;)
             self._end_paragraph()
         if tag == &#34;ol&#34;:
@@ -592,22 +635,28 @@ The margin value is in the chosen pdf document units.</dd>
             start = int(attrs[&#34;start&#34;]) if &#34;start&#34; in attrs else 1
             self.bullet.append(start - 1)
             self.ol_type.append(attrs.get(&#34;type&#34;, &#34;1&#34;))
-            if &#34;line-height&#34; in attrs:
+            line_height = css_style.get(&#34;line-height&#34;, attrs.get(&#34;line-height&#34;))
+            # &#34;line-height&#34; attributes are not valid in HTML,
+            # but we support it for backward compatibility,
+            # because fpdf2 honors it since 2.6.1 and PR #629
+            if line_height:
                 try:
                     # YYY parse and convert non-float line_height values
-                    self.line_height_stack.append(float(attrs.get(&#34;line-height&#34;)))
+                    self.line_height_stack.append(float(line_height))
                 except ValueError:
                     pass
             else:
                 self.line_height_stack.append(None)
             if self.indent == 1:
-                self._new_paragraph(top_margin=self.list_vertical_margin, line_height=0)
+                self._new_paragraph(
+                    top_margin=self.tag_styles[&#34;ol&#34;].t_margin, line_height=0
+                )
                 self._write_paragraph(&#34;\u00a0&#34;)
             self._end_paragraph()
         if tag == &#34;li&#34;:
             # Default value of 2 for h to be multiplied by the conversion factor
             # in self._ln(h) here is given in mm
-            self._ln(2 * self.default_conversion_factor)
+            self._ln(self.tag_styles[&#34;li&#34;].t_margin)
             self.set_text_color(*self.li_prefix_color)
             if self.bullet:
                 bullet = self.bullet[self.indent - 1]
@@ -623,7 +672,7 @@ The margin value is in the chosen pdf document units.</dd>
                 line_height=(
                     self.line_height_stack[-1] if self.line_height_stack else None
                 ),
-                indent=self.tag_indents[&#34;li&#34;] * self.indent,
+                indent=self.tag_styles[&#34;li&#34;].l_margin * self.indent,
                 bullet=bullet,
             )
             self.set_text_color(*self.font_color)
@@ -632,6 +681,7 @@ The margin value is in the chosen pdf document units.</dd>
             self.style_stack.append(
                 FontFace(
                     family=self.font_family,
+                    emphasis=self.emphasis,
                     size_pt=self.font_size,
                     color=self.font_color,
                 )
@@ -644,12 +694,14 @@ The margin value is in the chosen pdf document units.</dd>
                 # This may result in a FPDFException &#34;font not found&#34;.
                 self.set_font(face)
                 self.font_family = face
-            if &#34;size&#34; in attrs:
+            if &#34;font-size&#34; in css_style:
+                self.font_size = int(css_style.get(&#34;font-size&#34;))
+            elif &#34;size&#34; in attrs:
                 self.font_size = int(attrs.get(&#34;size&#34;))
             self.set_font()
             self.set_text_color(*self.font_color)
         if tag == &#34;table&#34;:
-            width = attrs.get(&#34;width&#34;)
+            width = css_style.get(&#34;width&#34;, attrs.get(&#34;width&#34;))
             if width:
                 if width[-1] == &#34;%&#34;:
                     width = self.pdf.epw * int(width[:-1]) / 100
@@ -760,7 +812,7 @@ The margin value is in the chosen pdf document units.</dd>
             self.pdf.char_vpos = &#34;SUP&#34;
         if tag == &#34;sub&#34;:
             self.pdf.char_vpos = &#34;SUB&#34;
-        if attrs.get(&#34;break-after&#34;) == &#34;page&#34;:
+        if css_style.get(&#34;break-after&#34;) == &#34;page&#34;:
             if tag in (&#34;br&#34;, &#34;hr&#34;, &#34;img&#34;):
                 self._end_paragraph()
                 # pylint: disable=protected-access
@@ -792,24 +844,30 @@ The margin value is in the chosen pdf document units.</dd>
         if tag in HEADING_TAGS:
             self.heading_level = None
             font_face = self.style_stack.pop()
+            self.emphasis = font_face.emphasis
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
             self._end_paragraph()
             self.follows_heading = True  # We don&#39;t want extra space below a heading.
         if tag == &#34;code&#34;:
             font_face = self.style_stack.pop()
+            self.emphasis = font_face.emphasis
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
         if tag == &#34;pre&#34;:
             font_face = self.style_stack.pop()
+            self.emphasis = font_face.emphasis
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
             self._pre_formatted = False
             self._pre_started = False
             self._end_paragraph()
         if tag == &#34;blockquote&#34;:
+            font_face = self.style_stack.pop()
+            self.emphasis = font_face.emphasis
+            self.set_font(font_face.family, font_face.size_pt)
+            self.set_text_color(*font_face.color.colors255)
             self._end_paragraph()
-            self.set_text_color(*self.font_color)
             self.indent -= 1
         if tag in (&#34;strong&#34;, &#34;dt&#34;):
             tag = &#34;b&#34;
@@ -849,6 +907,7 @@ The margin value is in the chosen pdf document units.</dd>
         if tag == &#34;font&#34;:
             # recover last font state
             font_face = self.style_stack.pop()
+            self.emphasis = font_face.emphasis
             self.font_color = font_face.color.colors255
             self.set_font(font_face.family, font_face.size_pt)
             self.set_text_color(*font_face.color.colors255)
@@ -873,7 +932,7 @@ The margin value is in the chosen pdf document units.</dd>
         if size:
             self.font_size = size
             self.h = size / self.pdf.k
-        style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.emphasis.get(s)).upper()
+        style = self.emphasis.style
         LOGGER.debug(f&#34;set_font: %s style=%s h={self.h:.2f}&#34;, self.font_family, style)
         prev_page = self.pdf.page
         if not set_default:  # make sure there&#39;s at least one font defined in the PDF.
@@ -884,11 +943,14 @@ The margin value is in the chosen pdf document units.</dd>
             self.pdf.set_font_size(self.font_size)
         self.pdf.page = prev_page
 
-    def set_style(self, tag=None, enable=False):
-        # Modify style and select corresponding font
-        if tag:
-            self.emphasis[tag.lower()] = enable
-        style = &#34;&#34;.join(s for s in (&#34;b&#34;, &#34;i&#34;, &#34;u&#34;) if self.emphasis.get(s))
+    def set_style(self, tag, enable):
+        &#34;Modify style and select corresponding font&#34;
+        emphasis = TextEmphasis.coerce(tag.upper())
+        if enable:
+            self.emphasis = self.emphasis.add(emphasis)
+        else:
+            self.emphasis = self.emphasis.remove(emphasis)
+        style = self.emphasis.style
         LOGGER.debug(&#34;SET_FONT_STYLE %s&#34;, style)
         prev_page = self.pdf.page
         self.pdf.page = 0
@@ -1005,10 +1067,10 @@ as you want (may include '\n').</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.set_style"><code class="name flex">
-<span>def <span class="ident">set_style</span></span>(<span>self, tag=None, enable=False)</span>
+<span>def <span class="ident">set_style</span></span>(<span>self, tag, enable)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Modify style and select corresponding font</p></div>
 </dd>
 <dt id="fpdf.html.HTML2FPDF.set_text_color"><code class="name flex">
 <span>def <span class="ident">set_text_color</span></span>(<span>self, r=None, g=0, b=0)</span>
@@ -1028,7 +1090,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/b9599236e1b18ddb79e74f6976525ae2075597e5/fpdf/html.py#L1112-L1127" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/html.py#L1180-L1195" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     &#34;&#34;&#34;
@@ -1065,7 +1127,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <ul class="">
 <li><code><a title="fpdf.html.color_as_decimal" href="#fpdf.html.color_as_decimal">color_as_decimal</a></code></li>
 <li><code><a title="fpdf.html.ol_prefix" href="#fpdf.html.ol_prefix">ol_prefix</a></code></li>
-<li><code><a title="fpdf.html.parse_style" href="#fpdf.html.parse_style">parse_style</a></code></li>
+<li><code><a title="fpdf.html.parse_css_style" href="#fpdf.html.parse_css_style">parse_css_style</a></code></li>
 <li><code><a title="fpdf.html.ul_prefix" href="#fpdf.html.ul_prefix">ul_prefix</a></code></li>
 </ul>
 </li>
