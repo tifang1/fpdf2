@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/fpdf.py#L202-L5233" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/fpdf.py#L202-L5241" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -187,11 +187,12 @@ Default to "mm".</dd>
         # Graphics state variables defined as properties by GraphicsStateMixin.
         # We set their default values here.
         self.font_family = &#34;&#34;  # current font family
-        self.font_style = &#34;&#34;  # current font style
+        # current font style (BOLD/ITALICS - does not handle UNDERLINE):
+        self.font_style = &#34;&#34;
+        self.underline = False  # underlining flag
         self.font_size_pt = 12  # current font size in points
         self.font_stretching = 100  # current font stretching
         self.char_spacing = 0  # current character spacing
-        self.underline = False  # underlining flag
         self.current_font = None  # None or an instance of CoreFont or TTFFont
         self.draw_color = self.DEFAULT_DRAW_COLOR
         self.fill_color = self.DEFAULT_FILL_COLOR
@@ -304,11 +305,18 @@ Default to "mm".</dd>
         self.pdf_version = max(self.pdf_version, version)
 
     @property
-    def is_ttf_font(self):
+    def emphasis(self) -&gt; TextEmphasis:
+        &#34;The current text emphasis: bold, italics and/or underlined.&#34;
+        return TextEmphasis.coerce(
+            f&#34;{self.font_style}U&#34; if self.underline else self.font_style
+        )
+
+    @property
+    def is_ttf_font(self) -&gt; bool:
         return self.current_font and self.current_font.type == &#34;TTF&#34;
 
     @property
-    def page_mode(self):
+    def page_mode(self) -&gt; PageMode:
         return self._page_mode
 
     @page_mode.setter
@@ -5207,6 +5215,21 @@ def default_page_dimensions(self):
     )</code></pre>
 </details>
 </dd>
+<dt id="fpdf.fpdf.FPDF.emphasis"><code class="name">prop <span class="ident">emphasis</span> : <a title="fpdf.enums.TextEmphasis" href="enums.html#fpdf.enums.TextEmphasis">TextEmphasis</a></code></dt>
+<dd>
+<div class="desc"><p>The current text emphasis: bold, italics and/or underlined.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def emphasis(self) -&gt; TextEmphasis:
+    &#34;The current text emphasis: bold, italics and/or underlined.&#34;
+    return TextEmphasis.coerce(
+        f&#34;{self.font_style}U&#34; if self.underline else self.font_style
+    )</code></pre>
+</details>
+</dd>
 <dt id="fpdf.fpdf.FPDF.eph"><code class="name">prop <span class="ident">eph</span></code></dt>
 <dd>
 <div class="desc"><p>Effective page height: the page height minus its vertical margins.</p></div>
@@ -5237,7 +5260,7 @@ def epw(self):
     return self.w - self.l_margin - self.r_margin</code></pre>
 </details>
 </dd>
-<dt id="fpdf.fpdf.FPDF.is_ttf_font"><code class="name">prop <span class="ident">is_ttf_font</span></code></dt>
+<dt id="fpdf.fpdf.FPDF.is_ttf_font"><code class="name">prop <span class="ident">is_ttf_font</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -5245,7 +5268,7 @@ def epw(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def is_ttf_font(self):
+def is_ttf_font(self) -&gt; bool:
     return self.current_font and self.current_font.type == &#34;TTF&#34;</code></pre>
 </details>
 </dd>
@@ -5261,7 +5284,7 @@ def page_layout(self):
     return self._page_layout</code></pre>
 </details>
 </dd>
-<dt id="fpdf.fpdf.FPDF.page_mode"><code class="name">prop <span class="ident">page_mode</span></code></dt>
+<dt id="fpdf.fpdf.FPDF.page_mode"><code class="name">prop <span class="ident">page_mode</span> : <a title="fpdf.enums.PageMode" href="enums.html#fpdf.enums.PageMode">PageMode</a></code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
@@ -5269,7 +5292,7 @@ def page_layout(self):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def page_mode(self):
+def page_mode(self) -&gt; PageMode:
     return self._page_mode</code></pre>
 </details>
 </dd>
@@ -7410,7 +7433,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7542,7 +7565,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7593,7 +7616,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7667,7 +7690,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7705,7 +7728,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7738,7 +7761,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7825,7 +7848,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3b6cd42f9c76c8ef021996ebb3c6b5001535d8d3/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
@@ -7937,6 +7960,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <li><code><a title="fpdf.fpdf.FPDF.ellipse" href="#fpdf.fpdf.FPDF.ellipse">ellipse</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.elliptic_clip" href="#fpdf.fpdf.FPDF.elliptic_clip">elliptic_clip</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.embed_file" href="#fpdf.fpdf.FPDF.embed_file">embed_file</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.emphasis" href="#fpdf.fpdf.FPDF.emphasis">emphasis</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.eph" href="#fpdf.fpdf.FPDF.eph">eph</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.epw" href="#fpdf.fpdf.FPDF.epw">epw</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.file_attachment_annotation" href="#fpdf.fpdf.FPDF.file_attachment_annotation">file_attachment_annotation</a></code></li>
