@@ -88,9 +88,10 @@ in non-backward-compatible ways.</p>
 <dl>
 <dt><strong><code>hexstr</code></strong> :&ensp;<code>str</code></dt>
 <dd>
-<p>of the form <code>#RGB</code>, <code>#RGBA</code>, <code>#RRGGBB</code>, or <code>#RRGGBBAA</code>. Must
-include the leading octothorp. Forms omitting the alpha field are
-interpreted as not specifying the opacity, so it will not be explicitly set.</p>
+<p>of the form <code>#RGB</code>, <code>#RGBA</code>, <code>#RRGGBB</code>, or <code>#RRGGBBAA</code> (case
+insensitive). Must include the leading octothorp. Forms omitting the alpha
+field are interpreted as not specifying the opacity, so it will not be
+explicitly set.</p>
 <p>An alpha value of <code>00</code> is fully transparent and <code>FF</code> is fully opaque.</p>
 </dd>
 </dl>
@@ -222,7 +223,7 @@ using a number of parameters to determine how it is constructed.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2363-L2579" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2364-L2580" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Arc(NamedTuple):
     &#34;&#34;&#34;
@@ -482,7 +483,7 @@ element, two off-curve control points, and an end point.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2047-L2116" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2048-L2117" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BezierCurve(NamedTuple):
     &#34;&#34;&#34;
@@ -610,7 +611,7 @@ this warning is here.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L3834-L3933" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L3835-L3934" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ClippingPath(PaintedPath):
     &#34;&#34;&#34;
@@ -796,7 +797,7 @@ to the start of the current path.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L3031-L3090" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L3032-L3091" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Close(NamedTuple):
     &#34;&#34;&#34;
@@ -873,7 +874,7 @@ to the start of the current path.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L298-L329" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L298-L329" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DeviceCMYK(
     NamedTuple(
@@ -947,7 +948,7 @@ def colors(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L246-L274" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L246-L274" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DeviceGray(
     NamedTuple(
@@ -1031,7 +1032,7 @@ def colors255(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L182-L226" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L182-L226" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DeviceRGB(
     NamedTuple(
@@ -1133,7 +1134,7 @@ is correctly scaled).</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L3093-L3260" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L3094-L3261" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class DrawingContext:
     &#34;&#34;&#34;
@@ -1393,7 +1394,7 @@ this context (an empty string is returned if there are no paths or groups)</p></
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2860-L2967" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2861-L2968" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Ellipse(NamedTuple):
     &#34;&#34;&#34;
@@ -1528,7 +1529,7 @@ this context (an empty string is returned if there are no paths or groups)</p></
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L3936-L4220" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L3937-L4221" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GraphicsContext:
     def __init__(self):
@@ -1898,7 +1899,7 @@ caution.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L69-L89" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L69-L89" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GraphicsStateDictRegistry(OrderedDict):
     &#34;&#34;&#34;
@@ -1950,7 +1951,7 @@ which use None as hints to the auto paint style detection code.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1079-L1510" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1080-L1511" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class GraphicsStyle:
     &#34;&#34;&#34;
@@ -2648,7 +2649,7 @@ def stroke_width(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1791-L1850" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1792-L1851" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HorizontalLine(NamedTuple):
     &#34;&#34;&#34;
@@ -2732,7 +2733,7 @@ def stroke_width(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2970-L3028" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2971-L3029" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImplicitClose(NamedTuple):
     &#34;&#34;&#34;
@@ -2811,7 +2812,7 @@ point specified by <code>pt</code>.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1657-L1722" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1658-L1723" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Line(NamedTuple):
     &#34;&#34;&#34;
@@ -2916,7 +2917,7 @@ def end_point(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1525-L1589" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1526-L1590" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Move(NamedTuple):
     &#34;&#34;&#34;
@@ -3022,7 +3023,7 @@ primitive path elements and <code><a title="fpdf.drawing.GraphicsContext" href="
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L3263-L3831" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L3264-L3832" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PaintedPath:
     &#34;&#34;&#34;
@@ -4128,7 +4129,7 @@ retrieved from the end point of the previous path element.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L504-L716" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L505-L717" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Point(NamedTuple):
     &#34;&#34;&#34;
@@ -4541,7 +4542,7 @@ element, one off-curve control point, and an end point.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2199-L2288" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2200-L2289" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class QuadraticBezierCurve(NamedTuple):
     &#34;&#34;&#34;
@@ -4681,7 +4682,7 @@ def end_point(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2664-L2725" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2665-L2726" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Rectangle(NamedTuple):
     &#34;&#34;&#34;A pdf primitive rectangle.&#34;&#34;&#34;
@@ -4774,7 +4775,7 @@ using a number of parameters to determine how it is constructed.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2582-L2661" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2583-L2662" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeArc(NamedTuple):
     &#34;&#34;&#34;
@@ -4896,7 +4897,7 @@ point of the previous path element.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2119-L2196" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2120-L2197" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeBezierCurve(NamedTuple):
     &#34;&#34;&#34;
@@ -5008,7 +5009,7 @@ computes its abscissa offset from the end of that element.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1853-L1916" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1854-L1917" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeHorizontalLine(NamedTuple):
     &#34;&#34;&#34;
@@ -5101,7 +5102,7 @@ point are resolved during the rendering process.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1725-L1788" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1726-L1789" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeLine(NamedTuple):
     &#34;&#34;&#34;
@@ -5192,7 +5193,7 @@ element.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1592-L1654" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1593-L1655" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeMove(NamedTuple):
     &#34;&#34;&#34;
@@ -5281,7 +5282,7 @@ point of the previous path element.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2291-L2360" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2292-L2361" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeQuadraticBezierCurve(NamedTuple):
     &#34;&#34;&#34;
@@ -5381,7 +5382,7 @@ computes its ordinate offset from the end of that element.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1981-L2044" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1982-L2045" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RelativeVerticalLine(NamedTuple):
     &#34;&#34;&#34;
@@ -5471,7 +5472,7 @@ previous path element.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L2728-L2857" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L2729-L2858" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RoundedRectangle(NamedTuple):
     &#34;&#34;&#34;
@@ -5670,7 +5671,7 @@ manipulations following verb-ish naming (<code>translate</code>, <code>scale</co
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L719-L1068" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L720-L1069" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Transform(NamedTuple):
     &#34;&#34;&#34;
@@ -6293,7 +6294,7 @@ mutating self.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/drawing.py#L1919-L1978" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/drawing.py#L1920-L1979" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VerticalLine(NamedTuple):
     &#34;&#34;&#34;

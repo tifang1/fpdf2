@@ -91,13 +91,14 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/fpdf.py#L202-L5241" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/fpdf.py#L202-L5254" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
     MARKDOWN_BOLD_MARKER = &#34;**&#34;
     MARKDOWN_ITALICS_MARKER = &#34;__&#34;
     MARKDOWN_UNDERLINE_MARKER = &#34;--&#34;
+    MARKDOWN_ESCAPE_CHARACTER = &#34;\\&#34;
     MARKDOWN_LINK_REGEX = re.compile(r&#34;^\[([^][]+)\]\(([^()]+)\)(.*)$&#34;, re.DOTALL)
     MARKDOWN_LINK_COLOR = None
     MARKDOWN_LINK_UNDERLINE = True
@@ -2830,7 +2831,7 @@ Default to "mm".</dd>
                 (identifier returned by `FPDF.add_link`) or external URL.
             center (bool): center the cell horizontally on the page.
             markdown (bool): enable minimal markdown-like markup to render part
-                of text as bold / italics / underlined. Default to False.
+                of text as bold / italics / underlined. Supports `\\` as escape character. Default to False.
             txt (str): [**DEPRECATED since v2.7.6**] String to print. Default value: empty string.
 
         Returns: a boolean indicating if page break was triggered
@@ -3349,6 +3350,7 @@ Default to "mm".</dd>
             font_glyphs = self.current_font.cmap
         else:
             font_glyphs = []
+        num_escape_chars = 0
 
         while text:
             is_marker = text[:2] in (
@@ -3374,16 +3376,27 @@ Default to "mm".</dd>
                     and (not txt_frag or txt_frag[-1] != half_marker)
                     and (len(text) &lt; 3 or text[2] != half_marker)
                 ):
-                    if txt_frag:
-                        yield frag()
-                    if text[:2] == self.MARKDOWN_BOLD_MARKER:
-                        in_bold = not in_bold
-                    if text[:2] == self.MARKDOWN_ITALICS_MARKER:
-                        in_italics = not in_italics
-                    if text[:2] == self.MARKDOWN_UNDERLINE_MARKER:
-                        in_underline = not in_underline
-                    text = text[2:]
-                    continue
+                    txt_frag = (
+                        txt_frag[: -((num_escape_chars + 1) // 2)]
+                        if num_escape_chars &gt; 0
+                        else txt_frag
+                    )
+                    if num_escape_chars % 2 == 0:
+                        if txt_frag:
+                            yield frag()
+                        if text[:2] == self.MARKDOWN_BOLD_MARKER:
+                            in_bold = not in_bold
+                        if text[:2] == self.MARKDOWN_ITALICS_MARKER:
+                            in_italics = not in_italics
+                        if text[:2] == self.MARKDOWN_UNDERLINE_MARKER:
+                            in_underline = not in_underline
+                        text = text[2:]
+                        continue
+                num_escape_chars = (
+                    num_escape_chars + 1
+                    if text[0] == self.MARKDOWN_ESCAPE_CHARACTER
+                    else 0
+                )
                 is_link = self.MARKDOWN_LINK_REGEX.match(text)
                 if is_link:
                     link_text, link_dest, text = is_link.groups()
@@ -3567,7 +3580,7 @@ Default to "mm".</dd>
             ln (int): **DEPRECATED since 2.5.1**: Use `new_x` and `new_y` instead.
             max_line_height (float): optional maximum height of each sub-cell generated
             markdown (bool): enable minimal markdown-like markup to render part
-                of text as bold / italics / underlined. Default to False.
+                of text as bold / italics / underlined. Supports `\\` as escape character. Default to False.
             print_sh (bool): Treat a soft-hyphen (\\u00ad) as a normal printable
                 character, instead of a line breaking opportunity. Default value: False
             wrapmode (fpdf.enums.WrapMode): &#34;WORD&#34; for word based line wrapping (default),
@@ -5149,6 +5162,10 @@ Default to "mm".</dd>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="fpdf.fpdf.FPDF.MARKDOWN_ESCAPE_CHARACTER"><code class="name">var <span class="ident">MARKDOWN_ESCAPE_CHARACTER</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER"><code class="name">var <span class="ident">MARKDOWN_ITALICS_MARKER</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -5572,7 +5589,7 @@ or transparent (<code>False</code>). Default value: False.</dd>
 <dd>center the cell horizontally on the page.</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable minimal markdown-like markup to render part
-of text as bold / italics / underlined. Default to False.</dd>
+of text as bold / italics / underlined. Supports <code>\</code> as escape character. Default to False.</dd>
 <dt><strong><code>txt</code></strong> :&ensp;<code>str</code></dt>
 <dd>[<strong>DEPRECATED since v2.7.6</strong>] String to print. Default value: empty string.</dd>
 </dl>
@@ -6166,7 +6183,7 @@ Use <code>dry_run=True</code> and <code>output=("LINES",)</code> instead.</dd>
 <dd>optional maximum height of each sub-cell generated</dd>
 <dt><strong><code>markdown</code></strong> :&ensp;<code>bool</code></dt>
 <dd>enable minimal markdown-like markup to render part
-of text as bold / italics / underlined. Default to False.</dd>
+of text as bold / italics / underlined. Supports <code>\</code> as escape character. Default to False.</dd>
 <dt><strong><code>print_sh</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Treat a soft-hyphen (\u00ad) as a normal printable
 character, instead of a line breaking opportunity. Default value: False</dd>
@@ -7433,7 +7450,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7565,7 +7582,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7616,7 +7633,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7690,7 +7707,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7728,7 +7745,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7761,7 +7778,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7848,7 +7865,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/6f7a207d9c0b7e3f537b6a5f9f25e6ab0b693f8e/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/6e3d9d3d63373bf8f459f2dd6ee914cf47f9bb3e/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
@@ -7935,6 +7952,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <ul class="">
 <li><code><a title="fpdf.fpdf.FPDF.HTML2FPDF_CLASS" href="#fpdf.fpdf.FPDF.HTML2FPDF_CLASS">HTML2FPDF_CLASS</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_BOLD_MARKER">MARKDOWN_BOLD_MARKER</a></code></li>
+<li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_ESCAPE_CHARACTER" href="#fpdf.fpdf.FPDF.MARKDOWN_ESCAPE_CHARACTER">MARKDOWN_ESCAPE_CHARACTER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER" href="#fpdf.fpdf.FPDF.MARKDOWN_ITALICS_MARKER">MARKDOWN_ITALICS_MARKER</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_LINK_COLOR" href="#fpdf.fpdf.FPDF.MARKDOWN_LINK_COLOR">MARKDOWN_LINK_COLOR</a></code></li>
 <li><code><a title="fpdf.fpdf.FPDF.MARKDOWN_LINK_REGEX" href="#fpdf.fpdf.FPDF.MARKDOWN_LINK_REGEX">MARKDOWN_LINK_REGEX</a></code></li>
