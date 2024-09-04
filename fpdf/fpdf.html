@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/fpdf.py#L202-L5254" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/fpdf.py#L202-L5257" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -3471,6 +3471,9 @@ Default to "mm".</dd>
         return False
 
     def _perform_page_break(self):
+        # Defensive check, this should have tested by a previous call to .will_page_break():
+        if not self.accept_page_break or self.in_footer:
+            return
         x = self.x
         # If we are in a .local_context(), we need to temporarily leave it,
         # by popping out every GraphicsState:
@@ -7450,7 +7453,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7582,7 +7585,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7633,7 +7636,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7707,7 +7710,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7745,7 +7748,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7778,7 +7781,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7865,7 +7868,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/9e71e0576f3718eb4a38a1472cc71ca6d251c79e/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/be0ca31e4c2bf2e5ce2dba93710e703a40bde626/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
