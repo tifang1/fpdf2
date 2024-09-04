@@ -12,11 +12,11 @@
 <span class=k>with</span> <span class=n>cols</span><span class=p>:</span>
     <span class=n>cols</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=n>LOREM_IPSUM</span><span class=p>[:</span><span class=mi>400</span><span class=p>])</span>
     <span class=k>with</span> <span class=n>cols</span><span class=o>.</span><span class=n>paragraph</span><span class=p>(</span>
-            <span class=n>text_align</span><span class=o>=</span><span class=s2>&quot;J&quot;</span><span class=p>,</span>
-            <span class=n>top_margin</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span><span class=p>,</span>
-            <span class=n>bottom_margin</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span>
-            <span class=p>)</span> <span class=k>as</span> <span class=n>par</span><span class=p>:</span>
-        <span class=n>par</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=n>LOREM_IPSUM</span><span class=p>[:</span><span class=mi>400</span><span class=p>])</span>
+        <span class=n>text_align</span><span class=o>=</span><span class=s2>&quot;J&quot;</span><span class=p>,</span>
+        <span class=n>top_margin</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span><span class=p>,</span>
+        <span class=n>bottom_margin</span><span class=o>=</span><span class=n>pdf</span><span class=o>.</span><span class=n>font_size</span>
+    <span class=p>)</span> <span class=k>as</span> <span class=n>paragraph</span><span class=p>:</span>
+        <span class=n>paragraph</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=n>LOREM_IPSUM</span><span class=p>[:</span><span class=mi>400</span><span class=p>])</span>
     <span class=n>cols</span><span class=o>.</span><span class=n>write</span><span class=p>(</span><span class=n>text</span><span class=o>=</span><span class=n>LOREM_IPSUM</span><span class=p>[:</span><span class=mi>400</span><span class=p>])</span>
 </code></pre></div> <img alt="Single Text Column" src=tcols-single.png></p> <h4 id=multi-column-example>Multi-Column Example<a class=headerlink href=#multi-column-example title="Permanent link">&para;</a></h4> <p>Here we have a layout with three columns. Note that font type and text size can be varied within a text region, while still maintaining the justified (in this case) horizontal alignment.</p> <p><div class=highlight><pre><span></span><code><span class=kn>from</span> <span class=nn>fpdf</span> <span class=kn>import</span> <span class=n>FPDF</span>
 
