@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/fpdf.py#L202-L5263" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/fpdf.py#L202-L5265" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -1432,22 +1432,24 @@ Default to "mm".</dd>
         )
 
     @check_page
-    def circle(self, x, y, r, style=None):
+    def circle(self, x, y, radius, style=None):
         &#34;&#34;&#34;
         Outputs a circle.
         It can be drawn (border only), filled (with no border) or both.
 
+        WARNING: This method changed parameters in [release 2.8.0](https://github.com/py-pdf/fpdf2/releases/tag/2.8.0)
+
         Args:
             x (float): Abscissa of upper-left bounding box.
             y (float): Ordinate of upper-left bounding box.
-            r (float): Radius of the circle.
+            radius (float): Radius of the circle.
             style (str): Style of rendering. Possible values are:
 
             * `D` or None: draw border. This is the default value.
             * `F`: fill
             * `DF` or `FD`: draw and fill
         &#34;&#34;&#34;
-        self.ellipse(x, y, r, r, style)
+        self.ellipse(x - radius, y - radius, 2 * radius, 2 * radius, style)
 
     @check_page
     def regular_polygon(self, x, y, numSides, polyWidth, rotateDegrees=0, style=None):
@@ -5605,18 +5607,19 @@ of text as bold / italics / underlined. Supports <code>\</code> as escape charac
 <p>Returns: a boolean indicating if page break was triggered</p></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.circle"><code class="name flex">
-<span>def <span class="ident">circle</span></span>(<span>self, x, y, r, style=None)</span>
+<span>def <span class="ident">circle</span></span>(<span>self, x, y, radius, style=None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Outputs a circle.
 It can be drawn (border only), filled (with no border) or both.</p>
+<p>WARNING: This method changed parameters in <a href="https://github.com/py-pdf/fpdf2/releases/tag/2.8.0">release 2.8.0</a></p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>x</code></strong> :&ensp;<code>float</code></dt>
 <dd>Abscissa of upper-left bounding box.</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
 <dd>Ordinate of upper-left bounding box.</dd>
-<dt><strong><code>r</code></strong> :&ensp;<code>float</code></dt>
+<dt><strong><code>radius</code></strong> :&ensp;<code>float</code></dt>
 <dd>Radius of the circle.</dd>
 <dt><strong><code>style</code></strong> :&ensp;<code>str</code></dt>
 <dd>Style of rendering. Possible values are:</dd>
@@ -7461,7 +7464,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7593,7 +7596,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7644,7 +7647,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7718,7 +7721,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7756,7 +7759,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7789,7 +7792,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7876,7 +7879,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/4de4a2f60924a830130cd2492de953a68993b212/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/921ad544aa6b526e7e55f84b12b58f3e304b02a8/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
