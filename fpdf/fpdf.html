@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/fpdf.py#L202-L5268" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/fpdf.py#L202-L5268" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -470,8 +470,6 @@ Default to "mm".</dd>
             raise FPDFException(f&#34;Incorrect zoom display mode: {zoom}&#34;)
         self.page_layout = LAYOUT_ALIASES.get(layout, layout)
 
-    # Disabling this check - importing outside toplevel to check module is present
-    # pylint: disable=import-outside-toplevel, unused-import
     def set_text_shaping(
         self,
         use_shaping_engine: bool = True,
@@ -495,16 +493,18 @@ Default to "mm".</dd>
             script: a valid OpenType script tag like &#34;arab&#34; or &#34;latn&#34;
             language: a valid OpenType language tag like &#34;eng&#34; or &#34;fra&#34;
         &#34;&#34;&#34;
-        if use_shaping_engine:
-            try:
-                import uharfbuzz
-            except ImportError as exc:
-                raise FPDFException(
-                    &#34;The uharfbuzz package could not be imported, but is required for text shaping. Try: pip install uharfbuzz&#34;
-                ) from exc
-        else:
+        if not use_shaping_engine:
             self.text_shaping = None
             return
+
+        try:
+            # pylint: disable=import-outside-toplevel, unused-import
+            import uharfbuzz
+        except ImportError as exc:
+            raise FPDFException(
+                &#34;The uharfbuzz package could not be imported, but is required for text shaping. Try: pip install uharfbuzz&#34;
+            ) from exc
+
         #
         # Features must be a dictionary contaning opentype features and a boolean flag
         # stating whether the feature should be enabled or disabled.
@@ -4043,8 +4043,8 @@ Default to "mm".</dd>
                 bytes, an io.BytesIO, or a instance of `PIL.Image.Image`
             x (float, fpdf.enums.Align): optional horizontal position where to put the image on the page.
                 If not specified or equal to None, the current abscissa is used.
-                `Align.C` can also be passed to center the image horizontally;
-                and `Align.R` to place it along the right page margin
+                `fpdf.enums.Align.C` can also be passed to center the image horizontally;
+                and `fpdf.enums.Align.R` to place it along the right page margin
             y (float): optional vertical position where to put the image on the page.
                 If not specified or equal to None, the current ordinate is used.
                 After the call, the current ordinate is moved to the bottom of the image
@@ -5936,8 +5936,8 @@ bytes, an io.BytesIO, or a instance of <code>PIL.Image.Image</code></dd>
 <dt><strong><code>x</code></strong> :&ensp;<code>float, <a title="fpdf.enums.Align" href="enums.html#fpdf.enums.Align">Align</a></code></dt>
 <dd>optional horizontal position where to put the image on the page.
 If not specified or equal to None, the current abscissa is used.
-<code>Align.C</code> can also be passed to center the image horizontally;
-and <code>Align.R</code> to place it along the right page margin</dd>
+<code><a title="fpdf.enums.Align.C" href="enums.html#fpdf.enums.Align.C">Align.C</a></code> can also be passed to center the image horizontally;
+and <code><a title="fpdf.enums.Align.R" href="enums.html#fpdf.enums.Align.R">Align.R</a></code> to place it along the right page margin</dd>
 <dt><strong><code>y</code></strong> :&ensp;<code>float</code></dt>
 <dd>optional vertical position where to put the image on the page.
 If not specified or equal to None, the current ordinate is used.
@@ -7470,7 +7470,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7602,7 +7602,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7653,7 +7653,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/enums.py#L415-L424" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7727,7 +7727,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7765,7 +7765,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7798,7 +7798,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/enums.py#L427-L452" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7885,7 +7885,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a9975a7a5cc5709b0c22e23c6539446cdcb5e422/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/enums.py#L455-L471" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
