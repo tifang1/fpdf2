@@ -39,6 +39,12 @@ hljs.highlightAll();
 <dd>
 <div class="desc"><p>returns the byte offset and length of the CCITT payload in the original TIFF data</p></div>
 </dd>
+<dt id="fpdf.image_parsing.clear_table"><code class="name flex">
+<span>def <span class="ident">clear_table</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reset the encoding table and coding state to initial conditions.</p></div>
+</dd>
 <dt id="fpdf.image_parsing.get_img_info"><code class="name flex">
 <span>def <span class="ident">get_img_info</span></span>(<span>filename, img=None, image_filter='AUTO', dims=None)</span>
 </code></dt>
@@ -72,6 +78,13 @@ hljs.highlightAll();
 <div class="desc"><p>This method is used to load external resources, such as images.
 It is automatically called when resource added to document by <code>fpdf.FPDF.image()</code>.
 It always return a BytesIO buffer.</p></div>
+</dd>
+<dt id="fpdf.image_parsing.pack_codes_into_bytes"><code class="name flex">
+<span>def <span class="ident">pack_codes_into_bytes</span></span>(<span>codes)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert the list of result codes into a continuous byte stream, with codes packed as per the code bit-width.
+The bit-width starts at 9 bits and expands as needed.</p></div>
 </dd>
 <dt id="fpdf.image_parsing.preload_image"><code class="name flex">
 <span>def <span class="ident">preload_image</span></span>(<span>image_cache: <a title="fpdf.image_datastructures.ImageCache" href="image_datastructures.html#fpdf.image_datastructures.ImageCache">ImageCache</a>, name, dims=None)</span>
@@ -115,7 +128,7 @@ and an instance of a subclass of <code>ImageInfo</code>.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/8d7cbf1d4628b61b8b19e516b15a69fb06de4986/fpdf/image_parsing.py#L28-L31" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@dataclass
 class ImageSettings:
@@ -139,7 +152,7 @@ class ImageSettings:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/26dfb934b332aac3543be36e1507c2f6e1c7f829/fpdf/image_parsing.py#L429-L450" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/8d7cbf1d4628b61b8b19e516b15a69fb06de4986/fpdf/image_parsing.py#L439-L460" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class temp_attr:
     &#34;&#34;&#34;
@@ -181,10 +194,12 @@ class ImageSettings:
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="fpdf.image_parsing.ccitt_payload_location_from_pil" href="#fpdf.image_parsing.ccitt_payload_location_from_pil">ccitt_payload_location_from_pil</a></code></li>
+<li><code><a title="fpdf.image_parsing.clear_table" href="#fpdf.image_parsing.clear_table">clear_table</a></code></li>
 <li><code><a title="fpdf.image_parsing.get_img_info" href="#fpdf.image_parsing.get_img_info">get_img_info</a></code></li>
 <li><code><a title="fpdf.image_parsing.get_svg_info" href="#fpdf.image_parsing.get_svg_info">get_svg_info</a></code></li>
 <li><code><a title="fpdf.image_parsing.is_iccp_valid" href="#fpdf.image_parsing.is_iccp_valid">is_iccp_valid</a></code></li>
 <li><code><a title="fpdf.image_parsing.load_image" href="#fpdf.image_parsing.load_image">load_image</a></code></li>
+<li><code><a title="fpdf.image_parsing.pack_codes_into_bytes" href="#fpdf.image_parsing.pack_codes_into_bytes">pack_codes_into_bytes</a></code></li>
 <li><code><a title="fpdf.image_parsing.preload_image" href="#fpdf.image_parsing.preload_image">preload_image</a></code></li>
 <li><code><a title="fpdf.image_parsing.transcode_monochrome" href="#fpdf.image_parsing.transcode_monochrome">transcode_monochrome</a></code></li>
 </ul>
