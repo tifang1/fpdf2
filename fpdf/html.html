@@ -112,7 +112,7 @@ mapping of HTML tag names to numeric values representing their horizontal left i
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/cb2f7d57b9406b010f9ec7b6c79108ef8f9292a7/fpdf/html.py#L298-L1154" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/html.py#L298-L1158" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
@@ -907,7 +907,11 @@ mapping of HTML tag names to numeric values representing their horizontal left i
                     self.td_th.get(&#34;bgcolor&#34;, self.tr.get(&#34;bgcolor&#34;, None))
                 )
                 style = FontFace(fill_color=bgcolor) if bgcolor else None
-                self.table_row.cell(text=&#34;&#34;, style=style)
+                colspan = int(self.td_th.get(&#34;colspan&#34;, &#34;1&#34;))
+                rowspan = int(self.td_th.get(&#34;rowspan&#34;, &#34;1&#34;))
+                self.table_row.cell(
+                    text=&#34;&#34;, style=style, colspan=colspan, rowspan=rowspan
+                )
             self.td_th = None
         if tag == &#34;font&#34;:
             if self.style_stack:
@@ -1046,7 +1050,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/cb2f7d57b9406b010f9ec7b6c79108ef8f9292a7/fpdf/html.py#L1196-L1211" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/html.py#L1200-L1215" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     &#34;&#34;&#34;
