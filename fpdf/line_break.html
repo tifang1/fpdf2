@@ -53,7 +53,7 @@ normally, instead of triggering a line break. Default: False</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/line_break.py#L409-L569" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L462-L633" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class CurrentLine:
     def __init__(self, max_width: float, print_sh: bool = False):
@@ -94,8 +94,7 @@ normally, instead of triggering a line break. Default: False</p></div>
         self,
         character: str,
         character_width: float,
-        graphics_state: dict,
-        k: float,
+        original_fragment: Fragment,
         original_fragment_index: int,
         original_character_index: int,
         height: float,
@@ -104,16 +103,29 @@ normally, instead of triggering a line break. Default: False</p></div>
         assert character != NEWLINE
         self.height = height
         if not self.fragments:
-            self.fragments.append(Fragment(&#34;&#34;, graphics_state, k, url))
+            self.fragments.append(
+                original_fragment.__class__(
+                    characters=&#34;&#34;,
+                    graphics_state=original_fragment.graphics_state,
+                    k=original_fragment.k,
+                    link=url,
+                )
+            )
 
         # characters are expected to be grouped into fragments by font and
         # character attributes. If the last existing fragment doesn&#39;t match
         # the properties of the pending character -&gt; add a new fragment.
-        elif (
-            graphics_state != self.fragments[-1].graphics_state
-            or k != self.fragments[-1].k
-        ):
-            self.fragments.append(Fragment(&#34;&#34;, graphics_state, k, url))
+        elif isinstance(
+            original_fragment, Fragment
+        ) and not original_fragment.has_same_style(self.fragments[-1]):
+            self.fragments.append(
+                original_fragment.__class__(
+                    characters=&#34;&#34;,
+                    graphics_state=original_fragment.graphics_state,
+                    k=original_fragment.k,
+                    link=url,
+                )
+            )
         active_fragment = self.fragments[-1]
 
         if character in BREAKING_SPACE_SYMBOLS_STR:
@@ -140,8 +152,8 @@ normally, instead of triggering a line break. Default: False</p></div>
                 self.number_of_spaces,
                 HYPHEN,
                 character_width,
-                graphics_state,
-                k,
+                original_fragment.graphics_state,
+                original_fragment.k,
             )
 
         if character != SOFT_HYPHEN or self.print_sh:
@@ -199,8 +211,7 @@ normally, instead of triggering a line break. Default: False</p></div>
             self.add_character(
                 self.hyphen_break_hint.curchar,
                 self.hyphen_break_hint.curchar_width,
-                self.hyphen_break_hint.graphics_state,
-                self.hyphen_break_hint.k,
+                self.hyphen_break_hint,
                 self.hyphen_break_hint.original_fragment_index,
                 self.hyphen_break_hint.original_character_index,
                 self.height,
@@ -238,7 +249,7 @@ def width(self):
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.line_break.CurrentLine.add_character"><code class="name flex">
-<span>def <span class="ident">add_character</span></span>(<span>self, character: str, character_width: float, graphics_state: dict, k: float, original_fragment_index: int, original_character_index: int, height: float, url: str = None)</span>
+<span>def <span class="ident">add_character</span></span>(<span>self, character: str, character_width: float, original_fragment: <a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a>, original_fragment_index: int, original_character_index: int, height: float, url: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -278,7 +289,7 @@ def width(self):
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/line_break.py#L44-L350" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L45-L359" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Fragment:
     &#34;&#34;&#34;
@@ -473,6 +484,14 @@ def width(self):
                 w += char_spacing * (char_len - 1)
         return w / self.k
 
+    def has_same_style(self, other: &#34;Fragment&#34;):
+        &#34;&#34;&#34;Returns if 2 fragments are equivalent other than the characters/string&#34;&#34;&#34;
+        return (
+            self.graphics_state == other.graphics_state
+            and self.k == other.k
+            and isinstance(other, self.__class__)
+        )
+
     def get_character_width(self, character: str, print_sh=False, initial_cs=True):
         &#34;&#34;&#34;
         Return the width of a single character out of the stored text.
@@ -588,6 +607,10 @@ def width(self):
         ret += f&#34;({escaped_text}) Tj&#34;
         return ret</code></pre>
 </details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="fpdf.line_break.TotalPagesSubstitutionFragment" href="#fpdf.line_break.TotalPagesSubstitutionFragment">TotalPagesSubstitutionFragment</a></li>
+</ul>
 <h3>Instance variables</h3>
 <dl>
 <dt id="fpdf.line_break.Fragment.char_spacing"><code class="name">prop <span class="ident">char_spacing</span></code></dt>
@@ -897,6 +920,12 @@ same as the contents of the fragment). If given, this takes
 precedence over the start/end arguments.</dd>
 </dl></div>
 </dd>
+<dt id="fpdf.line_break.Fragment.has_same_style"><code class="name flex">
+<span>def <span class="ident">has_same_style</span></span>(<span>self, other: <a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns if 2 fragments are equivalent other than the characters/string</p></div>
+</dd>
 <dt id="fpdf.line_break.Fragment.render_pdf_text"><code class="name flex">
 <span>def <span class="ident">render_pdf_text</span></span>(<span>self, frag_ws, current_ws, word_spacing, adjust_x, adjust_y, h)</span>
 </code></dt>
@@ -938,7 +967,7 @@ precedence over the start/end arguments.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/line_break.py#L396-L406" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L449-L459" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HyphenHint(NamedTuple):
     original_fragment_index: int
@@ -1038,7 +1067,7 @@ at the beginning will be skipped. Default value: False.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/line_break.py#L572-L733" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L636-L796" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class MultiLineBreak:
     def __init__(
@@ -1187,8 +1216,7 @@ at the beginning will be skipped. Default value: False.</dd>
             current_line.add_character(
                 character,
                 character_width,
-                current_fragment.graphics_state,
-                current_fragment.k,
+                current_fragment,
                 self.fragment_index,
                 self.character_index,
                 current_font_height * self.line_height,
@@ -1222,7 +1250,7 @@ at the beginning will be skipped. Default value: False.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/line_break.py#L387-L393" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L440-L446" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class SpaceHint(NamedTuple):
     original_fragment_index: int
@@ -1273,7 +1301,7 @@ at the beginning will be skipped. Default value: False.</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/3fba534532e8ff481638641e02b69827ed101b6a/fpdf/line_break.py#L353-L384" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L406-L437" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextLine(NamedTuple):
     fragments: tuple
@@ -1357,6 +1385,107 @@ at the beginning will be skipped. Default value: False.</dd>
 </dd>
 </dl>
 </dd>
+<dt id="fpdf.line_break.TotalPagesSubstitutionFragment"><code class="flex name class">
+<span>class <span class="ident">TotalPagesSubstitutionFragment</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A special type of text fragment that represents a placeholder for the total number of pages
+in a PDF document.</p>
+<p>A placeholder will be generated during the initial content rendering phase of a PDF document.
+This placeholder is later replaced by the total number of pages in the document when the final
+output is being produced.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/py-pdf/fpdf2/blob/9df0cae2392fd8bbeed6c18e9ffd82b6938e0a0c/fpdf/line_break.py#L362-L403" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class TotalPagesSubstitutionFragment(Fragment):
+    &#34;&#34;&#34;
+    A special type of text fragment that represents a placeholder for the total number of pages
+    in a PDF document.
+
+    A placeholder will be generated during the initial content rendering phase of a PDF document.
+    This placeholder is later replaced by the total number of pages in the document when the final
+    output is being produced.
+    &#34;&#34;&#34;
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.uuid = uuid4()
+
+    def get_placeholder_string(self):
+        &#34;&#34;&#34;
+        This method returns a placeholder string containing a universally unique identifier (UUID4),
+        ensuring that the placeholder is distinct and does not conflict with other placeholders
+        within the document.
+        &#34;&#34;&#34;
+        return f&#34;::placeholder:{self.uuid}::&#34;
+
+    def render_pdf_text(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        This method is invoked during the page content rendering phase, which is common to all
+        `Fragment` instances. It stores the provided arguments and keyword arguments to preserve
+        the necessary information and graphic state for the final substitution rendering.
+
+        The method then returns the unique placeholder string.
+        &#34;&#34;&#34;
+        self._render_args = args
+        self._render_kwargs = kwargs
+        return self.get_placeholder_string()
+
+    def render_text_substitution(self, replacement_text: str):
+        &#34;&#34;&#34;
+        This method is invoked at the output phase. It calls `render_pdf_text()` from the superclass
+        to render the fragment with the preserved rendering state (stored in `_render_args` and `_render_kwargs`)
+        and insert the final text in place of the placeholder.
+        &#34;&#34;&#34;
+        self.characters = list(replacement_text)
+        return super().render_pdf_text(*self._render_args, **self._render_kwargs)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="fpdf.line_break.TotalPagesSubstitutionFragment.get_placeholder_string"><code class="name flex">
+<span>def <span class="ident">get_placeholder_string</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method returns a placeholder string containing a universally unique identifier (UUID4),
+ensuring that the placeholder is distinct and does not conflict with other placeholders
+within the document.</p></div>
+</dd>
+<dt id="fpdf.line_break.TotalPagesSubstitutionFragment.render_pdf_text"><code class="name flex">
+<span>def <span class="ident">render_pdf_text</span></span>(<span>self, *args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method is invoked during the page content rendering phase, which is common to all
+<code><a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a></code> instances. It stores the provided arguments and keyword arguments to preserve
+the necessary information and graphic state for the final substitution rendering.</p>
+<p>The method then returns the unique placeholder string.</p></div>
+</dd>
+<dt id="fpdf.line_break.TotalPagesSubstitutionFragment.render_text_substitution"><code class="name flex">
+<span>def <span class="ident">render_text_substitution</span></span>(<span>self, replacement_text: str)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This method is invoked at the output phase. It calls <code>render_pdf_text()</code> from the superclass
+to render the fragment with the preserved rendering state (stored in <code>_render_args</code> and <code>_render_kwargs</code>)
+and insert the final text in place of the placeholder.</p></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="fpdf.line_break.Fragment" href="#fpdf.line_break.Fragment">Fragment</a></b></code>:
+<ul class="hlist">
+<li><code><a title="fpdf.line_break.Fragment.get_character_width" href="#fpdf.line_break.Fragment.get_character_width">get_character_width</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.get_width" href="#fpdf.line_break.Fragment.get_width">get_width</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.has_same_style" href="#fpdf.line_break.Fragment.has_same_style">has_same_style</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 </dl>
 </section>
 </article>
@@ -1399,6 +1528,7 @@ at the beginning will be skipped. Default value: False.</dd>
 <li><code><a title="fpdf.line_break.Fragment.fragment_direction" href="#fpdf.line_break.Fragment.fragment_direction">fragment_direction</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_character_width" href="#fpdf.line_break.Fragment.get_character_width">get_character_width</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.get_width" href="#fpdf.line_break.Fragment.get_width">get_width</a></code></li>
+<li><code><a title="fpdf.line_break.Fragment.has_same_style" href="#fpdf.line_break.Fragment.has_same_style">has_same_style</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.is_ttf_font" href="#fpdf.line_break.Fragment.is_ttf_font">is_ttf_font</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.lift" href="#fpdf.line_break.Fragment.lift">lift</a></code></li>
 <li><code><a title="fpdf.line_break.Fragment.line_width" href="#fpdf.line_break.Fragment.line_width">line_width</a></code></li>
@@ -1460,6 +1590,14 @@ at the beginning will be skipped. Default value: False.</dd>
 <li><code><a title="fpdf.line_break.TextLine.text_width" href="#fpdf.line_break.TextLine.text_width">text_width</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.trailing_form_feed" href="#fpdf.line_break.TextLine.trailing_form_feed">trailing_form_feed</a></code></li>
 <li><code><a title="fpdf.line_break.TextLine.trailing_nl" href="#fpdf.line_break.TextLine.trailing_nl">trailing_nl</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="fpdf.line_break.TotalPagesSubstitutionFragment" href="#fpdf.line_break.TotalPagesSubstitutionFragment">TotalPagesSubstitutionFragment</a></code></h4>
+<ul class="">
+<li><code><a title="fpdf.line_break.TotalPagesSubstitutionFragment.get_placeholder_string" href="#fpdf.line_break.TotalPagesSubstitutionFragment.get_placeholder_string">get_placeholder_string</a></code></li>
+<li><code><a title="fpdf.line_break.TotalPagesSubstitutionFragment.render_pdf_text" href="#fpdf.line_break.TotalPagesSubstitutionFragment.render_pdf_text">render_pdf_text</a></code></li>
+<li><code><a title="fpdf.line_break.TotalPagesSubstitutionFragment.render_text_substitution" href="#fpdf.line_break.TotalPagesSubstitutionFragment.render_text_substitution">render_text_substitution</a></code></li>
 </ul>
 </li>
 </ul>
