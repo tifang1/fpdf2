@@ -69,7 +69,7 @@ cf. <a href="https://en.wikipedia.org/wiki/Web_colors#HTML_color_names">https://
 <dl>
 <dt id="fpdf.html.HTML2FPDF"><code class="flex name class">
 <span>class <span class="ident">HTML2FPDF</span></span>
-<span>(</span><span>pdf, image_map=None, li_tag_indent=None, dd_tag_indent=None, table_line_separators=False, ul_bullet_char='\x95', li_prefix_color=(190, 0, 0), heading_sizes=None, pre_code_font=None, warn_on_tags_not_matching=True, tag_indents=None, tag_styles=None, font_family='times')</span>
+<span>(</span><span>pdf, image_map=None, li_tag_indent=None, dd_tag_indent=None, table_line_separators=False, ul_bullet_char='\x95', li_prefix_color=(190, 0, 0), heading_sizes=None, pre_code_font=None, warn_on_tags_not_matching=True, tag_indents=None, tag_styles=None, font_family='times', render_title_tag=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Render basic HTML to FPDF</p>
@@ -108,11 +108,13 @@ mapping of HTML tag names to numeric values representing their horizontal left i
 <dd>mapping of HTML tag names to <code>fpdf.TextStyle</code> or <code>fpdf.FontFace</code> instances</dd>
 <dt><strong><code>font_family</code></strong> :&ensp;<code>str</code></dt>
 <dd>optional font family. Default to Times.</dd>
+<dt><strong><code>render_title_tag</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Render the document <title> at the beginning of the PDF. Default to False.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a0e62e03588d4dbf42413c74d76570f9eb08b78a/fpdf/html.py#L298-L1158" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/7b3f1bdd23026b7d68a38699c7fe1d6977080c3f/fpdf/html.py#L304-L1180" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTML2FPDF(HTMLParser):
     &#34;Render basic HTML to FPDF&#34;
@@ -135,6 +137,7 @@ mapping of HTML tag names to numeric values representing their horizontal left i
         tag_indents=None,
         tag_styles=None,
         font_family=&#34;times&#34;,
+        render_title_tag=False,
     ):
         &#34;&#34;&#34;
         Args:
@@ -158,6 +161,7 @@ mapping of HTML tag names to numeric values representing their horizontal left i
                 mapping of HTML tag names to numeric values representing their horizontal left identation. - Set `tag_styles` instead
             tag_styles (dict[str, fpdf.fonts.TextStyle]): mapping of HTML tag names to `fpdf.TextStyle` or `fpdf.FontFace` instances
             font_family (str): optional font family. Default to Times.
+            render_title_tag (bool): Render the document &lt;title&gt; at the beginning of the PDF. Default to False.
         &#34;&#34;&#34;
         super().__init__()
         self.pdf = pdf
@@ -203,6 +207,9 @@ mapping of HTML tag names to numeric values representing their horizontal left i
         self._tags_stack = []
         self._column = self.pdf.text_columns(skip_leading_spaces=True)
         self._paragraph = self._column.paragraph()
+        # &lt;title&gt;-related properties:
+        self.render_title_tag = render_title_tag
+        self._in_title = False
         # &lt;table&gt;-related properties:
         self.table_line_separators = table_line_separators
         self.table = None  # becomes a Table instance when processing &lt;table&gt; tags
@@ -382,6 +389,13 @@ mapping of HTML tag names to numeric values representing their horizontal left i
         self.follows_trailing_space = True
 
     def handle_data(self, data):
+        if self._in_title:
+            if self.pdf.title:
+                LOGGER.warning(&#39;Ignoring repeated &lt;title&gt; &#34;%s&#34;&#39;, data)
+            else:
+                self.pdf.set_title(data)
+            if not self.render_title_tag:
+                return
         if self.td_th is not None:
             data = data.strip()
             if not data:
@@ -541,7 +555,7 @@ mapping of HTML tag names to numeric values representing their horizontal left i
                     color=self.font_color,
                 )
             )
-            self.heading_level = int(tag[1:])
+            self.heading_level = 0 if tag == &#34;title&#34; else int(tag[1:])
             tag_style = self.tag_styles[tag]
             hsize = (tag_style.size_pt or self.font_size_pt) / self.pdf.k
             if attrs:
@@ -813,6 +827,8 @@ mapping of HTML tag names to numeric values representing their horizontal left i
             self.pdf.char_vpos = &#34;SUP&#34;
         if tag == &#34;sub&#34;:
             self.pdf.char_vpos = &#34;SUB&#34;
+        if tag == &#34;title&#34;:
+            self._in_title = True
         if css_style.get(&#34;break-after&#34;) == &#34;page&#34;:
             if tag in (&#34;br&#34;, &#34;hr&#34;, &#34;img&#34;):
                 self._end_paragraph()
@@ -924,6 +940,8 @@ mapping of HTML tag names to numeric values representing their horizontal left i
             self.pdf.char_vpos = &#34;LINE&#34;
         if tag == &#34;sub&#34;:
             self.pdf.char_vpos = &#34;LINE&#34;
+        if tag == &#34;title&#34;:
+            self._in_title = False
 
     def feed(self, data):
         super().feed(data)
@@ -1050,7 +1068,7 @@ You can now directly use the <code>FPDF.write_html()</code> method</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/a0e62e03588d4dbf42413c74d76570f9eb08b78a/fpdf/html.py#L1200-L1215" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/7b3f1bdd23026b7d68a38699c7fe1d6977080c3f/fpdf/html.py#L1222-L1237" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class HTMLMixin:
     &#34;&#34;&#34;
