@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/fpdf.py#L207-L5304" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/fpdf.py#L207-L5307" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -2209,7 +2209,7 @@ Default to "mm".</dd>
 
     @check_page
     def text_annotation(
-        self, x, y, text, w=1, h=1, name=None, flags=DEFAULT_ANNOT_FLAGS
+        self, x, y, text, w=1, h=1, name=None, flags=DEFAULT_ANNOT_FLAGS, title=&#34;&#34;
     ):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
@@ -2222,6 +2222,8 @@ Default to "mm".</dd>
             h (float): optional height of the link rectangle
             name (fpdf.enums.AnnotationName, str): optional icon that shall be used in displaying the annotation
             flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+            title (str): the text label that shall be displayed in the title bar of the annotation’s
+                pop-up window when open and active. This entry shall identify the user who added the annotation.
         &#34;&#34;&#34;
         annotation = AnnotationDict(
             &#34;Text&#34;,
@@ -2232,6 +2234,7 @@ Default to "mm".</dd>
             contents=text,
             name=AnnotationName.coerce(name) if name else None,
             flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
+            title=title,
         )
         self.pages[self.page].annots.append(annotation)
         return annotation
@@ -7306,7 +7309,7 @@ but it is usually easier to use the <code><a title="fpdf.fpdf.FPDF.cell" href="#
 <code><a title="fpdf.fpdf.FPDF.cell" href="#fpdf.fpdf.FPDF.cell">FPDF.cell()</a></code> and <code><a title="fpdf.fpdf.FPDF.multi_cell" href="#fpdf.fpdf.FPDF.multi_cell">FPDF.multi_cell()</a></code> like markdown and text shaping.</p></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.text_annotation"><code class="name flex">
-<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1, name=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;,))</span>
+<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1, name=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;,), title='')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a text annotation on a rectangular area of the page.</p>
@@ -7326,6 +7329,9 @@ but it is usually easier to use the <code><a title="fpdf.fpdf.FPDF.cell" href="#
 <dd>optional icon that shall be used in displaying the annotation</dd>
 <dt><strong><code>flags</code></strong> :&ensp;<code>Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]</code></dt>
 <dd>optional list of flags defining annotation properties</dd>
+<dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
+<dd>the text label that shall be displayed in the title bar of the annotation’s
+pop-up window when open and active. This entry shall identify the user who added the annotation.</dd>
 </dl></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.text_columns"><code class="name flex">
@@ -7505,7 +7511,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7637,7 +7643,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7688,7 +7694,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/enums.py#L483-L492" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/enums.py#L483-L492" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7762,7 +7768,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7800,7 +7806,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7833,7 +7839,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/enums.py#L495-L520" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/enums.py#L495-L520" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7920,7 +7926,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/304d5ca01071df452a492b9c6a050402af1218f3/fpdf/enums.py#L523-L539" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/enums.py#L523-L539" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
