@@ -44,7 +44,7 @@ hljs.highlightAll();
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/c3ae7422fb6cac9f480de2d8be8f9b3da1983e7b/fpdf/prefs.py#L5-L181" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/prefs.py#L5-L192" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ViewerPreferences:
     &#34;Specifies the way the document shall be displayed on the screen&#34;
@@ -68,25 +68,43 @@ hljs.highlightAll();
         print_clip=None,
     ):
         self.hide_toolbar = hide_toolbar
-        &#34;A flag specifying whether to hide the conforming reader’s tool bars when the document is active&#34;
+        &#34;&#34;&#34;
+        (`bool`)
+        A flag specifying whether to hide the conforming reader’s tool bars when the document is active
+        &#34;&#34;&#34;
         self.hide_menubar = hide_menubar
-        &#34;A flag specifying whether to hide the conforming reader’s menu bar when the document is active&#34;
+        &#34;&#34;&#34;
+        (`bool`)
+        A flag specifying whether to hide the conforming reader’s menu bar when the document is active
+        &#34;&#34;&#34;
         self.hide_window_u_i = hide_window_u_i
         &#34;&#34;&#34;
+        (`bool`)
         A flag specifying whether to hide user interface elements in the document’s window
         (such as scroll bars and navigation controls), leaving only the document’s contents displayed
         &#34;&#34;&#34;
         self.fit_window = fit_window
-        &#34;A flag specifying whether to resize the document’s window to fit the size of the first displayed page&#34;
+        &#34;&#34;&#34;
+        (`bool`)
+        A flag specifying whether to resize the document’s window to fit the size of the first displayed page
+        &#34;&#34;&#34;
         self.center_window = center_window
-        &#34;A flag specifying whether to position the document’s window in the center of the screen&#34;
+        &#34;&#34;&#34;
+        (`bool`)
+        A flag specifying whether to position the document’s window in the center of the screen
+        &#34;&#34;&#34;
         self.display_doc_title = display_doc_title
         &#34;&#34;&#34;
+        (`bool`)
         A flag specifying whether the window’s title bar should display the document title
         taken from the Title entry of the document information dictionary.
         If false, the title bar should instead display the name of the PDF file containing the document.
         &#34;&#34;&#34;
         self.non_full_screen_page_mode = non_full_screen_page_mode
+        &#34;&#34;&#34;
+        (`fpdf.enums.PageMode`)
+        The document’s page mode, specifying how to display the document on exiting full-screen mode
+        &#34;&#34;&#34;
         if self.non_full_screen_page_mode in (
             PageMode.FULL_SCREEN,
             PageMode.USE_ATTACHMENTS,
@@ -96,11 +114,13 @@ hljs.highlightAll();
             )
         self.num_copies = num_copies
         &#34;&#34;&#34;
+        (`int`)
         The number of copies that shall be printed when the print dialog is opened for this file.
         Values outside this range shall be ignored. Default value: as defined by the conforming reader, but typically 1
         &#34;&#34;&#34;
         self.print_page_range = print_page_range
         &#34;&#34;&#34;
+        (`list[int]`)
         The page numbers used to initialize the print dialog box when the file is printed.
         The array shall contain an even number of integers to be interpreted in pairs,
         with each pair specifying the first and last pages in a sub-range of pages to be printed.
@@ -108,38 +128,41 @@ hljs.highlightAll();
         &#34;&#34;&#34;
         self.direction = direction
         &#34;&#34;&#34;
+        (`fpdf.enums.TextDirection`)
         The predominant reading order for text.
-        _cf. `fpdf.enums.TextDirection`
         &#34;&#34;&#34;
         self.duplex = duplex
         &#34;&#34;&#34;
+        (`fpdf.enums.Duplex`)
         The paper handling option that shall be used when printing the file from the print dialog.
-        _cf. `fpdf.enums.Duplex`
         &#34;&#34;&#34;
         self.view_area = view_area
         &#34;&#34;&#34;
+        (`fpdf.enums.PageBoundaries`)
         The name of the page boundary representing the area of a page that shall be displayed when viewing the document on the screen.
         Default value: CropBox.
         &#34;&#34;&#34;
         self.view_clip = view_clip
         &#34;&#34;&#34;
+        (`fpdf.enums.PageBoundaries`)
         The name of the page boundary to which the contents of a page shall be clipped when viewing the document on the screen.
         Default value: CropBox.
         &#34;&#34;&#34;
         self.print_area = print_area
         &#34;&#34;&#34;
+        (`fpdf.enums.PageBoundaries`)
         The name of the page boundary representing the area of a page that shall be rendered when printing the document.
         Default value: CropBox.
         &#34;&#34;&#34;
         self.print_clip = print_clip
         &#34;&#34;&#34;
+        (`fpdf.enums.PageBoundaries`)
         The name of the page boundary to which the contents of a page shall be clipped when printing the document.
         Default value: CropBox.
         &#34;&#34;&#34;
 
     @property
     def non_full_screen_page_mode(self):
-        &#34;(`fpdf.enums.PageMode`) The document’s page mode, specifying how to display the document on exiting full-screen mode&#34;
         return self._non_full_screen_page_mode
 
     @non_full_screen_page_mode.setter
@@ -150,7 +173,6 @@ hljs.highlightAll();
 
     @property
     def direction(self):
-        &#34;(`fpdf.enums.TextDirection`) The predominant reading order for text&#34;
         return self._direction
 
     @direction.setter
@@ -159,7 +181,6 @@ hljs.highlightAll();
 
     @property
     def duplex(self):
-        &#34;(`fpdf.enums.Duplexe`) The paper handling option that shall be used when printing the file from the print dialog&#34;
         return self._duplex
 
     @duplex.setter
@@ -168,10 +189,6 @@ hljs.highlightAll();
 
     @property
     def view_area(self):
-        &#34;&#34;&#34;
-        (`fpdf.enums.PageBoundaries`) The name of the page boundary representing the area of a page that shall be displayed
-        when viewing the document on the screen
-        &#34;&#34;&#34;
         return self._view_area
 
     @view_area.setter
@@ -182,10 +199,6 @@ hljs.highlightAll();
 
     @property
     def view_clip(self):
-        &#34;&#34;&#34;
-        (`fpdf.enums.PageBoundaries`) The name of the page boundary to which the contents of a page shall be clipped
-        when viewing the document on the screen.
-        &#34;&#34;&#34;
         return self._view_clip
 
     @view_clip.setter
@@ -196,7 +209,6 @@ hljs.highlightAll();
 
     @property
     def print_area(self):
-        &#34;(`fpdf.enums.PageBoundaries`) The name of the page boundary representing the area of a page that shall be rendered when printing the document&#34;
         return self._print_area
 
     @print_area.setter
@@ -207,7 +219,6 @@ hljs.highlightAll();
 
     @property
     def print_clip(self):
-        &#34;(`fpdf.enums.PageBoundaries`) The name of the page boundary to which the contents of a page shall be clipped when printing the document&#34;
         return self._print_clip
 
     @print_clip.setter
@@ -228,80 +239,86 @@ hljs.highlightAll();
 <dl>
 <dt id="fpdf.prefs.ViewerPreferences.center_window"><code class="name">var <span class="ident">center_window</span></code></dt>
 <dd>
-<div class="desc"><p>A flag specifying whether to position the document’s window in the center of the screen</p></div>
+<div class="desc"><p>(<code>bool</code>)
+A flag specifying whether to position the document’s window in the center of the screen</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.direction"><code class="name">var <span class="ident">direction</span></code></dt>
 <dd>
-<div class="desc"><p>The predominant reading order for text.
-_cf. <code><a title="fpdf.enums.TextDirection" href="enums.html#fpdf.enums.TextDirection">TextDirection</a></code></p></div>
+<div class="desc"><p>(<code><a title="fpdf.enums.TextDirection" href="enums.html#fpdf.enums.TextDirection">TextDirection</a></code>)
+The predominant reading order for text.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def direction(self):
-    &#34;(`fpdf.enums.TextDirection`) The predominant reading order for text&#34;
     return self._direction</code></pre>
 </details>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.display_doc_title"><code class="name">var <span class="ident">display_doc_title</span></code></dt>
 <dd>
-<div class="desc"><p>A flag specifying whether the window’s title bar should display the document title
+<div class="desc"><p>(<code>bool</code>)
+A flag specifying whether the window’s title bar should display the document title
 taken from the Title entry of the document information dictionary.
 If false, the title bar should instead display the name of the PDF file containing the document.</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.duplex"><code class="name">var <span class="ident">duplex</span></code></dt>
 <dd>
-<div class="desc"><p>The paper handling option that shall be used when printing the file from the print dialog.
-_cf. <code><a title="fpdf.enums.Duplex" href="enums.html#fpdf.enums.Duplex">Duplex</a></code></p></div>
+<div class="desc"><p>(<code><a title="fpdf.enums.Duplex" href="enums.html#fpdf.enums.Duplex">Duplex</a></code>)
+The paper handling option that shall be used when printing the file from the print dialog.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def duplex(self):
-    &#34;(`fpdf.enums.Duplexe`) The paper handling option that shall be used when printing the file from the print dialog&#34;
     return self._duplex</code></pre>
 </details>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.fit_window"><code class="name">var <span class="ident">fit_window</span></code></dt>
 <dd>
-<div class="desc"><p>A flag specifying whether to resize the document’s window to fit the size of the first displayed page</p></div>
+<div class="desc"><p>(<code>bool</code>)
+A flag specifying whether to resize the document’s window to fit the size of the first displayed page</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.hide_menubar"><code class="name">var <span class="ident">hide_menubar</span></code></dt>
 <dd>
-<div class="desc"><p>A flag specifying whether to hide the conforming reader’s menu bar when the document is active</p></div>
+<div class="desc"><p>(<code>bool</code>)
+A flag specifying whether to hide the conforming reader’s menu bar when the document is active</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.hide_toolbar"><code class="name">var <span class="ident">hide_toolbar</span></code></dt>
 <dd>
-<div class="desc"><p>A flag specifying whether to hide the conforming reader’s tool bars when the document is active</p></div>
+<div class="desc"><p>(<code>bool</code>)
+A flag specifying whether to hide the conforming reader’s tool bars when the document is active</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.hide_window_u_i"><code class="name">var <span class="ident">hide_window_u_i</span></code></dt>
 <dd>
-<div class="desc"><p>A flag specifying whether to hide user interface elements in the document’s window
+<div class="desc"><p>(<code>bool</code>)
+A flag specifying whether to hide user interface elements in the document’s window
 (such as scroll bars and navigation controls), leaving only the document’s contents displayed</p></div>
 </dd>
-<dt id="fpdf.prefs.ViewerPreferences.non_full_screen_page_mode"><code class="name">prop <span class="ident">non_full_screen_page_mode</span></code></dt>
+<dt id="fpdf.prefs.ViewerPreferences.non_full_screen_page_mode"><code class="name">var <span class="ident">non_full_screen_page_mode</span></code></dt>
 <dd>
-<div class="desc"><p>(<code><a title="fpdf.enums.PageMode" href="enums.html#fpdf.enums.PageMode">PageMode</a></code>) The document’s page mode, specifying how to display the document on exiting full-screen mode</p></div>
+<div class="desc"><p>(<code><a title="fpdf.enums.PageMode" href="enums.html#fpdf.enums.PageMode">PageMode</a></code>)
+The document’s page mode, specifying how to display the document on exiting full-screen mode</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def non_full_screen_page_mode(self):
-    &#34;(`fpdf.enums.PageMode`) The document’s page mode, specifying how to display the document on exiting full-screen mode&#34;
     return self._non_full_screen_page_mode</code></pre>
 </details>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.num_copies"><code class="name">var <span class="ident">num_copies</span></code></dt>
 <dd>
-<div class="desc"><p>The number of copies that shall be printed when the print dialog is opened for this file.
+<div class="desc"><p>(<code>int</code>)
+The number of copies that shall be printed when the print dialog is opened for this file.
 Values outside this range shall be ignored. Default value: as defined by the conforming reader, but typically 1</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.print_area"><code class="name">var <span class="ident">print_area</span></code></dt>
 <dd>
-<div class="desc"><p>The name of the page boundary representing the area of a page that shall be rendered when printing the document.
+<div class="desc"><p>(<code><a title="fpdf.enums.PageBoundaries" href="enums.html#fpdf.enums.PageBoundaries">PageBoundaries</a></code>)
+The name of the page boundary representing the area of a page that shall be rendered when printing the document.
 Default value: CropBox.</p></div>
 <details class="source">
 <summary>
@@ -309,13 +326,13 @@ Default value: CropBox.</p></div>
 </summary>
 <pre><code class="python">@property
 def print_area(self):
-    &#34;(`fpdf.enums.PageBoundaries`) The name of the page boundary representing the area of a page that shall be rendered when printing the document&#34;
     return self._print_area</code></pre>
 </details>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.print_clip"><code class="name">var <span class="ident">print_clip</span></code></dt>
 <dd>
-<div class="desc"><p>The name of the page boundary to which the contents of a page shall be clipped when printing the document.
+<div class="desc"><p>(<code><a title="fpdf.enums.PageBoundaries" href="enums.html#fpdf.enums.PageBoundaries">PageBoundaries</a></code>)
+The name of the page boundary to which the contents of a page shall be clipped when printing the document.
 Default value: CropBox.</p></div>
 <details class="source">
 <summary>
@@ -323,20 +340,21 @@ Default value: CropBox.</p></div>
 </summary>
 <pre><code class="python">@property
 def print_clip(self):
-    &#34;(`fpdf.enums.PageBoundaries`) The name of the page boundary to which the contents of a page shall be clipped when printing the document&#34;
     return self._print_clip</code></pre>
 </details>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.print_page_range"><code class="name">var <span class="ident">print_page_range</span></code></dt>
 <dd>
-<div class="desc"><p>The page numbers used to initialize the print dialog box when the file is printed.
+<div class="desc"><p>(<code>list[int]</code>)
+The page numbers used to initialize the print dialog box when the file is printed.
 The array shall contain an even number of integers to be interpreted in pairs,
 with each pair specifying the first and last pages in a sub-range of pages to be printed.
 The first page of the PDF file shall be denoted by 1.</p></div>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.view_area"><code class="name">var <span class="ident">view_area</span></code></dt>
 <dd>
-<div class="desc"><p>The name of the page boundary representing the area of a page that shall be displayed when viewing the document on the screen.
+<div class="desc"><p>(<code><a title="fpdf.enums.PageBoundaries" href="enums.html#fpdf.enums.PageBoundaries">PageBoundaries</a></code>)
+The name of the page boundary representing the area of a page that shall be displayed when viewing the document on the screen.
 Default value: CropBox.</p></div>
 <details class="source">
 <summary>
@@ -344,16 +362,13 @@ Default value: CropBox.</p></div>
 </summary>
 <pre><code class="python">@property
 def view_area(self):
-    &#34;&#34;&#34;
-    (`fpdf.enums.PageBoundaries`) The name of the page boundary representing the area of a page that shall be displayed
-    when viewing the document on the screen
-    &#34;&#34;&#34;
     return self._view_area</code></pre>
 </details>
 </dd>
 <dt id="fpdf.prefs.ViewerPreferences.view_clip"><code class="name">var <span class="ident">view_clip</span></code></dt>
 <dd>
-<div class="desc"><p>The name of the page boundary to which the contents of a page shall be clipped when viewing the document on the screen.
+<div class="desc"><p>(<code><a title="fpdf.enums.PageBoundaries" href="enums.html#fpdf.enums.PageBoundaries">PageBoundaries</a></code>)
+The name of the page boundary to which the contents of a page shall be clipped when viewing the document on the screen.
 Default value: CropBox.</p></div>
 <details class="source">
 <summary>
@@ -361,10 +376,6 @@ Default value: CropBox.</p></div>
 </summary>
 <pre><code class="python">@property
 def view_clip(self):
-    &#34;&#34;&#34;
-    (`fpdf.enums.PageBoundaries`) The name of the page boundary to which the contents of a page shall be clipped
-    when viewing the document on the screen.
-    &#34;&#34;&#34;
     return self._view_clip</code></pre>
 </details>
 </dd>
