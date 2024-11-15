@@ -37,14 +37,14 @@ hljs.highlightAll();
 <dl>
 <dt id="fpdf.annotations.AnnotationDict"><code class="flex name class">
 <span>class <span class="ident">AnnotationDict</span></span>
-<span>(</span><span>subtype: str, x: int, y: int, width: int, height: int, flags: Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, action: <a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a> = None, color: tuple = None, modification_time: datetime.datetime = None, title: str = None, quad_points: tuple = None, border_width: int = 0, name: Union[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, <a title="fpdf.enums.FileAttachmentAnnotationName" href="enums.html#fpdf.enums.FileAttachmentAnnotationName">FileAttachmentAnnotationName</a>] = None, ink_list: Tuple[int] = (), file_spec: str = None, field_type: str = None, value=None, default_appearance: str = None)</span>
+<span>(</span><span>subtype: str, x: int, y: int, width: int, height: int, flags: Union[Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, action: <a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a> = None, color: tuple = None, modification_time: datetime.datetime = None, title: str = None, quad_points: tuple = None, border_width: int = 0, name: Union[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, <a title="fpdf.enums.FileAttachmentAnnotationName" href="enums.html#fpdf.enums.FileAttachmentAnnotationName">FileAttachmentAnnotationName</a>] = None, ink_list: Tuple[int] = (), file_spec: str = None, field_type: str = None, value=None, default_appearance: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A PDF annotation that get serialized as an inline &lt;<dictionnary>&gt;</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/annotations.py#L85-L120" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/annotations.py#L85-L120" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class AnnotationDict(AnnotationMixin):
     &#34;A PDF annotation that get serialized as an inline &lt;&lt;dictionnary&gt;&gt;&#34;
@@ -174,14 +174,14 @@ hljs.highlightAll();
 </dd>
 <dt id="fpdf.annotations.AnnotationMixin"><code class="flex name class">
 <span>class <span class="ident">AnnotationMixin</span></span>
-<span>(</span><span>subtype: str, x: int, y: int, width: int, height: int, flags: Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, action: <a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a> = None, color: tuple = None, modification_time: datetime.datetime = None, title: str = None, quad_points: tuple = None, border_width: int = 0, name: Union[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, <a title="fpdf.enums.FileAttachmentAnnotationName" href="enums.html#fpdf.enums.FileAttachmentAnnotationName">FileAttachmentAnnotationName</a>] = None, ink_list: Tuple[int] = (), file_spec: str = None, field_type: str = None, value=None, default_appearance: str = None)</span>
+<span>(</span><span>subtype: str, x: int, y: int, width: int, height: int, flags: Union[Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]] = (&lt;AnnotationFlag.PRINT: 4&gt;,), contents: str = None, dest: <a title="fpdf.syntax.Destination" href="syntax.html#fpdf.syntax.Destination">Destination</a> = None, action: <a title="fpdf.actions.Action" href="actions.html#fpdf.actions.Action">Action</a> = None, color: tuple = None, modification_time: datetime.datetime = None, title: str = None, quad_points: tuple = None, border_width: int = 0, name: Union[<a title="fpdf.enums.AnnotationName" href="enums.html#fpdf.enums.AnnotationName">AnnotationName</a>, <a title="fpdf.enums.FileAttachmentAnnotationName" href="enums.html#fpdf.enums.FileAttachmentAnnotationName">FileAttachmentAnnotationName</a>] = None, ink_list: Tuple[int] = (), file_spec: str = None, field_type: str = None, value=None, default_appearance: str = None)</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/annotations.py#L25-L75" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/annotations.py#L25-L75" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class AnnotationMixin:
     def __init__(
@@ -191,7 +191,7 @@ hljs.highlightAll();
         y: int,
         width: int,
         height: int,
-        flags: Tuple[AnnotationFlag] = DEFAULT_ANNOT_FLAGS,
+        flags: Union[Tuple[AnnotationFlag], Tuple[str]] = DEFAULT_ANNOT_FLAGS,
         contents: str = None,
         dest: Destination = None,
         action: Action = None,
@@ -209,11 +209,11 @@ hljs.highlightAll();
     ):
         self.type = Name(&#34;Annot&#34;)
         self.subtype = Name(subtype)
-        self.rect = f&#34;[{x:.2f} {y:.2f} {x + width:.2f} {y - height:.2f}]&#34;
+        self.rect = f&#34;[{x:.2f} {y - height:.2f} {x + width:.2f} {y:.2f}]&#34;
         self.border = f&#34;[0 0 {border_width}]&#34;
         self.f_t = Name(field_type) if field_type else None
         self.v = value
-        self.f = sum(flags)
+        self.f = sum(tuple(AnnotationFlag.coerce(flag) for flag in flags))
         self.contents = PDFString(contents, encrypt=True) if contents else None
         self.a = action
         self.dest = dest
@@ -250,7 +250,7 @@ hljs.highlightAll();
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/annotations.py#L164-L177" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/annotations.py#L164-L177" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FileSpec(NamedTuple):
     embedded_file: PDFEmbeddedFile
@@ -305,7 +305,7 @@ hljs.highlightAll();
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/annotations.py#L78-L82" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/annotations.py#L78-L82" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFAnnotation(AnnotationMixin, PDFObject):
     &#34;A PDF annotation that get serialized as an obj&lt;&lt;/&gt;&gt;endobj block&#34;
@@ -339,7 +339,7 @@ hljs.highlightAll();
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/annotations.py#L123-L161" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/annotations.py#L123-L161" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class PDFEmbeddedFile(PDFContentStream):
     def __init__(

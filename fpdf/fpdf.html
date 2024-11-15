@@ -91,7 +91,7 @@ Default to "mm".</dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/fpdf.py#L207-L5307" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/fpdf.py#L207-L5307" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class FPDF(GraphicsStateMixin, TextRegionMixin):
     &#34;PDF Generation class&#34;
@@ -2064,7 +2064,7 @@ Default to "mm".</dd>
         link.zoom = zoom
 
     @check_page
-    def link(self, x, y, w, h, link, alt_text=None, border_width=0):
+    def link(self, x, y, w, h, link, alt_text=None, **kwargs):
         &#34;&#34;&#34;
         Puts a link annotation on a rectangular area of the page.
         Text or image links are generally put via `FPDF.cell`,
@@ -2102,7 +2102,7 @@ Default to "mm".</dd>
             height=h * self.k,
             action=action,
             dest=dest,
-            border_width=border_width,
+            **kwargs,
         )
         self.pages[self.page].annots.append(link_annot)
         if alt_text is not None:
@@ -2202,15 +2202,13 @@ Default to "mm".</dd>
             h * self.k,
             file_spec=embedded_file.file_spec(),
             name=FileAttachmentAnnotationName.coerce(name) if name else None,
-            flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
+            flags=flags,
         )
         self.pages[self.page].annots.append(annotation)
         return annotation
 
     @check_page
-    def text_annotation(
-        self, x, y, text, w=1, h=1, name=None, flags=DEFAULT_ANNOT_FLAGS, title=&#34;&#34;
-    ):
+    def text_annotation(self, x, y, text, w=1, h=1, name=None, **kwargs):
         &#34;&#34;&#34;
         Puts a text annotation on a rectangular area of the page.
 
@@ -2233,8 +2231,7 @@ Default to "mm".</dd>
             h * self.k,
             contents=text,
             name=AnnotationName.coerce(name) if name else None,
-            flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
-            title=title,
+            **kwargs,
         )
         self.pages[self.page].annots.append(annotation)
         return annotation
@@ -2247,7 +2244,7 @@ Default to "mm".</dd>
         y=None,
         w=None,
         h=None,
-        flags=DEFAULT_ANNOT_FLAGS,
+        **kwargs,
     ):
         &#34;&#34;&#34;
         Puts a free text annotation on a rectangular area of the page.
@@ -2262,6 +2259,8 @@ Default to "mm".</dd>
             h (float): optional height of the link rectangle. Default value: None, meaning an height equal
                 to the current font size
             flags (Tuple[fpdf.enums.AnnotationFlag], Tuple[str]): optional list of flags defining annotation properties
+            color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for the annotation background
+            border_width (float): width of the annotation border
         &#34;&#34;&#34;
         if not self.font_family:
             raise FPDFException(&#34;No font set, you need to call set_font() beforehand&#34;)
@@ -2281,15 +2280,15 @@ Default to "mm".</dd>
             w * self.k,
             h * self.k,
             contents=text,
-            flags=tuple(AnnotationFlag.coerce(flag) for flag in flags),
             default_appearance=f&#34;({self.draw_color.serialize()} /F{self.current_font.i} {self.font_size_pt:.2f} Tf)&#34;,
+            **kwargs,
         )
         self.fonts_used_per_page_number[self.page].add(self.current_font.i)
         self.pages[self.page].annots.append(annotation)
         return annotation
 
     @check_page
-    def add_action(self, action, x, y, w, h):
+    def add_action(self, action, x, y, w, h, **kwargs):
         &#34;&#34;&#34;
         Puts an Action annotation on a rectangular area of the page.
 
@@ -2307,13 +2306,14 @@ Default to "mm".</dd>
             w * self.k,
             h * self.k,
             action=action,
+            **kwargs,
         )
         self.pages[self.page].annots.append(annotation)
         return annotation
 
     @contextmanager
     def highlight(
-        self, text, title=&#34;&#34;, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None
+        self, text, type=&#34;Highlight&#34;, color=(1, 1, 0), modification_time=None, **kwargs
     ):
         &#34;&#34;&#34;
         Context manager that adds a single highlight annotation based on the text lines inserted
@@ -2337,10 +2337,10 @@ Default to "mm".</dd>
                 type,
                 text,
                 quad_points=quad_points,
-                title=title,
-                color=color,
                 modification_time=modification_time,
                 page=page,
+                color=color,
+                **kwargs,
             )
         self._text_quad_points = defaultdict(list)
         self._record_text_quad_points = False
@@ -2361,10 +2361,10 @@ Default to "mm".</dd>
         type,
         text,
         quad_points,
-        title=&#34;&#34;,
         color=(1, 1, 0),
         modification_time=None,
         page=None,
+        **kwargs,
     ):
         &#34;&#34;&#34;
         Adds a text markup annotation on some quadrilateral areas of the page.
@@ -2400,24 +2400,24 @@ Default to "mm".</dd>
             y=y_max,
             width=x_max - x_min,
             height=y_max - y_min,
-            color=color,
             modification_time=modification_time,
-            title=title,
             quad_points=quad_points,
+            color=color,
+            **kwargs,
         )
         self.pages[page].annots.append(annotation)
         return annotation
 
     @check_page
     def ink_annotation(
-        self, coords, contents=&#34;&#34;, title=&#34;&#34;, color=(1, 1, 0), border_width=1
+        self, coords, text=&#34;&#34;, color=(1, 1, 0), border_width=1, **kwargs
     ):
         &#34;&#34;&#34;
         Adds add an ink annotation on the page.
 
         Args:
             coords (tuple): an iterable of coordinates (pairs of numbers) defining a path
-            contents (str): textual description
+            text (str): textual description
             title (str): the text label that shall be displayed in the title bar of the annotation’s
                 pop-up window when open and active. This entry shall identify the user who added the annotation.
             color (tuple): a tuple of numbers in the range 0.0 to 1.0, representing a colour used for
@@ -2436,10 +2436,10 @@ Default to "mm".</dd>
             width=x_max - x_min,
             height=y_max - y_min,
             ink_list=ink_list,
-            color=color,
+            contents=text,
             border_width=border_width,
-            contents=contents,
-            title=title,
+            color=color,
+            **kwargs,
         )
         self.pages[self.page].annots.append(annotation)
         return annotation
@@ -5386,7 +5386,7 @@ but is less compatible with the PDF spec.</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="fpdf.fpdf.FPDF.add_action"><code class="name flex">
-<span>def <span class="ident">add_action</span></span>(<span>self, action, x, y, w, h)</span>
+<span>def <span class="ident">add_action</span></span>(<span>self, action, x, y, w, h, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts an Action annotation on a rectangular area of the page.</p>
@@ -5483,7 +5483,7 @@ As of june 2021, onored by Adobe Acrobat reader, but ignored by Sumatra PDF read
 </dl></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.add_text_markup_annotation"><code class="name flex">
-<span>def <span class="ident">add_text_markup_annotation</span></span>(<span>self, type, text, quad_points, title='', color=(1, 1, 0), modification_time=None, page=None)</span>
+<span>def <span class="ident">add_text_markup_annotation</span></span>(<span>self, type, text, quad_points, color=(1, 1, 0), modification_time=None, page=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds a text markup annotation on some quadrilateral areas of the page.</p>
@@ -5855,7 +5855,7 @@ The default implementation performs nothing: you have to override this method
 in a subclass to implement your own rendering logic.</p></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.free_text_annotation"><code class="name flex">
-<span>def <span class="ident">free_text_annotation</span></span>(<span>self, text, x=None, y=None, w=None, h=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;,))</span>
+<span>def <span class="ident">free_text_annotation</span></span>(<span>self, text, x=None, y=None, w=None, h=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a free text annotation on a rectangular area of the page.</p>
@@ -5876,6 +5876,10 @@ Default value: None, meaning the current ordinate is used</dd>
 to the current font size</dd>
 <dt><strong><code>flags</code></strong> :&ensp;<code>Tuple[<a title="fpdf.enums.AnnotationFlag" href="enums.html#fpdf.enums.AnnotationFlag">AnnotationFlag</a>], Tuple[str]</code></dt>
 <dd>optional list of flags defining annotation properties</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>a tuple of numbers in the range 0.0 to 1.0, representing a colour used for the annotation background</dd>
+<dt><strong><code>border_width</code></strong> :&ensp;<code>float</code></dt>
+<dd>width of the annotation border</dd>
 </dl></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.get_fallback_font"><code class="name flex">
@@ -5927,7 +5931,7 @@ The default implementation performs nothing: you have to override this method
 in a subclass to implement your own rendering logic.</p></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.highlight"><code class="name flex">
-<span>def <span class="ident">highlight</span></span>(<span>self, text, title='', type='Highlight', color=(1, 1, 0), modification_time=None)</span>
+<span>def <span class="ident">highlight</span></span>(<span>self, text, type='Highlight', color=(1, 1, 0), modification_time=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Context manager that adds a single highlight annotation based on the text lines inserted
@@ -6010,7 +6014,7 @@ otherwise, auto page break detection will be performed.</p>
 <p>Returns: an instance of a subclass of <code><a title="fpdf.fpdf.ImageInfo" href="#fpdf.fpdf.ImageInfo">ImageInfo</a></code>.</p></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.ink_annotation"><code class="name flex">
-<span>def <span class="ident">ink_annotation</span></span>(<span>self, coords, contents='', title='', color=(1, 1, 0), border_width=1)</span>
+<span>def <span class="ident">ink_annotation</span></span>(<span>self, coords, text='', color=(1, 1, 0), border_width=1, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Adds add an ink annotation on the page.</p>
@@ -6018,7 +6022,7 @@ otherwise, auto page break detection will be performed.</p>
 <dl>
 <dt><strong><code>coords</code></strong> :&ensp;<code>tuple</code></dt>
 <dd>an iterable of coordinates (pairs of numbers) defining a path</dd>
-<dt><strong><code>contents</code></strong> :&ensp;<code>str</code></dt>
+<dt><strong><code>text</code></strong> :&ensp;<code>str</code></dt>
 <dd>textual description</dd>
 <dt><strong><code>title</code></strong> :&ensp;<code>str</code></dt>
 <dd>the text label that shall be displayed in the title bar of the annotation’s
@@ -6072,7 +6076,7 @@ will occur immediately after calling this method.</dd>
 </dl></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.link"><code class="name flex">
-<span>def <span class="ident">link</span></span>(<span>self, x, y, w, h, link, alt_text=None, border_width=0)</span>
+<span>def <span class="ident">link</span></span>(<span>self, x, y, w, h, link, alt_text=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a link annotation on a rectangular area of the page.
@@ -7309,7 +7313,7 @@ but it is usually easier to use the <code><a title="fpdf.fpdf.FPDF.cell" href="#
 <code><a title="fpdf.fpdf.FPDF.cell" href="#fpdf.fpdf.FPDF.cell">FPDF.cell()</a></code> and <code><a title="fpdf.fpdf.FPDF.multi_cell" href="#fpdf.fpdf.FPDF.multi_cell">FPDF.multi_cell()</a></code> like markdown and text shaping.</p></div>
 </dd>
 <dt id="fpdf.fpdf.FPDF.text_annotation"><code class="name flex">
-<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1, name=None, flags=(&lt;AnnotationFlag.PRINT: 4&gt;,), title='')</span>
+<span>def <span class="ident">text_annotation</span></span>(<span>self, x, y, text, w=1, h=1, name=None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Puts a text annotation on a rectangular area of the page.</p>
@@ -7511,7 +7515,7 @@ We subclass this to distinguish between raster and vector images.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/image_datastructures.py#L5-L49" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ImageInfo(dict):
     &#34;&#34;&#34;Information about an image used in the PDF document (base class).
@@ -7643,7 +7647,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/image_datastructures.py#L52-L63" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class RasterImageInfo(ImageInfo):
     &#34;Information about a raster image used in the PDF document&#34;
@@ -7694,7 +7698,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/enums.py#L483-L492" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/enums.py#L483-L492" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TextMode(CoerciveIntEnum):
     &#34;Values described in PDF spec section &#39;Text Rendering Mode&#39;&#34;
@@ -7768,7 +7772,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/fonts.py#L172-L182" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class TitleStyle(TextStyle):
     def __init__(self, *args, **kwargs):
@@ -7806,7 +7810,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/image_datastructures.py#L66-L68" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class VectorImageInfo(ImageInfo):
     &#34;Information about a vector image used in the PDF document&#34;
@@ -7839,7 +7843,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/enums.py#L495-L520" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/enums.py#L495-L520" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class XPos(CoerciveEnum):
     &#34;Positional values in horizontal direction for use after printing text.&#34;
@@ -7926,7 +7930,7 @@ In the reduced dimension it will be centered within the available space.</p></di
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/py-pdf/fpdf2/blob/57637108c5cbece6c78e84e5748b02fc07a75929/fpdf/enums.py#L523-L539" class="git-link">Browse git</a>
+<a href="https://github.com/py-pdf/fpdf2/blob/316b6e47a04c9f6a874dd8bc85e26b24d85e558d/fpdf/enums.py#L523-L539" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class YPos(CoerciveEnum):
     &#34;Positional values in vertical direction for use after printing text&#34;
